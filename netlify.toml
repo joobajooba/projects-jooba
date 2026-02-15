@@ -2,7 +2,7 @@
 # https://docs.netlify.com/configure-builds/file-based-configuration/
 
 [build]
-  # Publish the repository root (where index.html lives)
-  publish = "."
+  # Publish directory (must exist for Netlify deploy)
+  publish = "public"
   # No build step needed for static HTML
   command = ""
