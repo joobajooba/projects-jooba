@@ -1,0 +1,8 @@
+# Netlify configuration for projects-jooba
+# https://docs.netlify.com/configure-builds/file-based-configuration/
+
+[build]
+  # Publish the repository root (where index.html lives)
+  publish = "."
+  # No build step needed for static HTML
+  command = ""
