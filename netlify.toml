@@ -1,8 +1,9 @@
 # Netlify configuration for projects-jooba
 # https://docs.netlify.com/configure-builds/file-based-configuration/
+#
+# In Netlify UI: Site configuration → Build & deploy → Build settings
+# Set "Publish directory" to a single dot: .   (or leave blank to use this file)
 
 [build]
-  # Publish directory (must exist for Netlify deploy)
-  publish = "public"
-  # No build step needed for static HTML
+  publish = "."
   command = ""
