@@ -43,6 +43,13 @@
   font-size: 0.9rem;
 }
 
+.profile-picture-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
 .profile-picture-upload {
   padding: 0.5rem 1rem;
   background: #444;
@@ -52,6 +59,7 @@
   cursor: pointer;
   font-size: 0.9rem;
   text-align: center;
+  width: 100%;
 }
 
 .profile-picture-upload:hover {
@@ -60,6 +68,32 @@
 
 .profile-picture-upload input {
   display: none;
+}
+
+.profile-picture-nft-btn {
+  padding: 0.5rem 1rem;
+  background: #4a9eff;
+  border: 1px solid #4a9eff;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-family: 'TT Octosquares', system-ui, sans-serif;
+  font-weight: 700;
+  text-align: center;
+  width: 100%;
+  transition: background 0.2s;
+}
+
+.profile-picture-nft-btn:hover:not(:disabled) {
+  background: #5aaeff;
+}
+
+.profile-picture-nft-btn:disabled {
+  background: #444;
+  color: #888;
+  cursor: not-allowed;
+  border-color: #666;
 }
 
 .profile-right-panel {

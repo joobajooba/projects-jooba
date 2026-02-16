@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import { useUser } from '../hooks/useUser';
 import { supabase } from '../lib/supabase';
+import NFTSelector from '../components/NFTSelector';
 import './Profile.css';
 
 export default function Profile() {
@@ -16,6 +17,7 @@ export default function Profile() {
   const [x, setX] = useState('');
   const [profilePictureUrl, setProfilePictureUrl] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [showNFTSelector, setShowNFTSelector] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -29,6 +31,36 @@ export default function Profile() {
   useEffect(() => {
     setIsEditing(editMode);
   }, [editMode]);
+
+  const handleNFTSelect = async (imageUrl) => {
+    if (!address || !supabase) {
+      console.error('Missing address or Supabase client');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      // Save the NFT image URL directly to the profile
+      const { error } = await supabase
+        .from('users')
+        .update({ profile_picture_url: imageUrl })
+        .eq('wallet_address', address.toLowerCase());
+
+      if (error) {
+        console.error('Error saving NFT profile picture:', error);
+        alert(`Failed to save NFT as profile picture: ${error.message}`);
+        return;
+      }
+
+      setProfilePictureUrl(imageUrl);
+      await refetch();
+    } catch (err) {
+      console.error('Error saving NFT profile picture:', err);
+      alert('Failed to save NFT as profile picture. Please check console for details.');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handlePictureChange = async (e) => {
     const file = e.target.files?.[0];
@@ -188,15 +220,24 @@ export default function Profile() {
               </div>
             )}
             {isEditing && (
-              <label className="profile-picture-upload">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePictureChange}
+              <div className="profile-picture-actions">
+                <label className="profile-picture-upload">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePictureChange}
+                    disabled={uploading}
+                  />
+                  {uploading ? 'Uploading...' : 'Upload Picture'}
+                </label>
+                <button
+                  className="profile-picture-nft-btn"
+                  onClick={() => setShowNFTSelector(true)}
                   disabled={uploading}
-                />
-                {uploading ? 'Uploading...' : 'Upload Picture'}
-              </label>
+                >
+                  Choose NFT
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -270,6 +311,12 @@ export default function Profile() {
           </div>
         </div>
       </div>
+      {showNFTSelector && (
+        <NFTSelector
+          onSelect={handleNFTSelect}
+          onClose={() => setShowNFTSelector(false)}
+        />
+      )}
     </main>
   );
 }
