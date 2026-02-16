@@ -1,4 +1,5 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import FBXViewer from './FBXViewer';
 import './index.css';
 
 export default function App() {
@@ -13,6 +14,9 @@ export default function App() {
         </div>
         <ConnectButton />
       </nav>
+      <main>
+        <FBXViewer />
+      </main>
     </>
   );
 }

@@ -4,3 +4,5 @@ dist
 .env.local
 *.log
 .vscode
+# root copy of FBX (served from public/_9419.fbx)
+/_9419.fbx
