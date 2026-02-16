@@ -41,3 +41,29 @@ html, body {
 .navbar a:hover {
   color: #fff;
 }
+
+.home-main {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: calc(100vh - 60px);
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+.home-content {
+  flex: 1;
+}
+
+.home-image-wrap {
+  flex-shrink: 0;
+  max-width: 50%;
+}
+
+.home-image {
+  width: 100%;
+  max-width: 500px;
+  height: auto;
+  border-radius: 8px;
+  display: block;
+}

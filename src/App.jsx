@@ -1,5 +1,4 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import FBXViewer from './FBXViewer';
 import './index.css';
 
 export default function App() {
@@ -14,8 +13,11 @@ export default function App() {
         </div>
         <ConnectButton />
       </nav>
-      <main>
-        <FBXViewer />
+      <main className="home-main">
+        <div className="home-content" />
+        <div className="home-image-wrap">
+          <img src="/Yuga_9419_heart.jpg" alt="Yuga 9419 heart" className="home-image" />
+        </div>
       </main>
     </>
   );
