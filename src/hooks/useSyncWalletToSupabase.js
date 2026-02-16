@@ -25,42 +25,50 @@ export function useSyncWalletToSupabase() {
 
       try {
         const walletAddress = address.toLowerCase();
-        const now = new Date().toISOString();
 
         // First, check if user already exists
-        const { data: existingUser } = await supabase
+        const { data: existingUser, error: checkError } = await supabase
           .from('users')
           .select('wallet_address')
           .eq('wallet_address', walletAddress)
-          .single();
+          .maybeSingle();
+
+        if (checkError && checkError.code !== 'PGRST116') {
+          console.error('Error checking existing user:', checkError);
+          return;
+        }
 
         let result;
         if (existingUser) {
-          // Update existing user
-          result = await supabase
-            .from('users')
-            .update({ updated_at: now })
-            .eq('wallet_address', walletAddress)
-            .select();
+          // User already exists, no need to update
+          console.log('Wallet address already exists in Supabase:', address);
+          syncedRef.current = address;
+          return;
         } else {
-          // Insert new user
+          // Insert new user - only use wallet_address column
           result = await supabase
             .from('users')
             .insert({
               wallet_address: walletAddress,
-              created_at: now,
-              updated_at: now,
             })
             .select();
-        }
 
-        if (result.error) {
-          console.error('Error syncing wallet to Supabase:', result.error);
-          return;
-        }
+          if (result.error) {
+            console.error('Error syncing wallet to Supabase:', result.error);
+            console.error('Error details:', JSON.stringify(result.error, null, 2));
+            
+            // Check if it's an RLS policy error
+            if (result.error.message?.includes('row-level security')) {
+              console.error('⚠️ Row Level Security (RLS) is blocking inserts.');
+              console.error('You need to create a policy in Supabase that allows users to insert their own wallet_address.');
+              console.error('Go to: https://supabase.com/dashboard/project/jitkwbatwymqtlzxiyil/auth/policies');
+            }
+            return;
+          }
 
-        console.log('Wallet address synced to Supabase:', address);
-        syncedRef.current = address; // Mark as synced
+          console.log('✅ Wallet address synced to Supabase:', address);
+          syncedRef.current = address; // Mark as synced
+        }
       } catch (err) {
         console.error('Unexpected error syncing wallet:', err);
       }
