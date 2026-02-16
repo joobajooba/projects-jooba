@@ -67,15 +67,66 @@ html, body {
 
 .home-main {
   display: flex;
-  align-items: center;
-  justify-content: flex-end;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
   min-height: calc(100vh - 60px);
   padding: 2rem;
   box-sizing: border-box;
 }
 
-.home-content {
+.home-welcome-panel {
   flex: 1;
+  max-width: 600px;
+  padding: 2rem;
+  background: rgba(26, 26, 26, 0.8);
+  border-radius: 8px;
+  border: 1px solid #444;
+}
+
+.home-welcome-title {
+  font-size: 2rem;
+  font-weight: 700;
+  font-family: 'TT Octosquares', system-ui, sans-serif;
+  color: #e0e0e0;
+  margin: 0 0 1.5rem 0;
+  letter-spacing: 0.02em;
+}
+
+.home-welcome-text {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #e0e0e0;
+  margin: 0 0 1rem 0;
+}
+
+.home-welcome-projects {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+}
+
+.home-welcome-projects li {
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-family: 'TT Octosquares', system-ui, sans-serif;
+  color: #e0e0e0;
+  margin: 0.75rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.home-welcome-bops {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.home-npc-logo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
 }
 
 .home-image-wrap {
