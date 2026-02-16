@@ -82,27 +82,48 @@ export default function Profile() {
 
     try {
       const updateData = {};
-      if (username !== undefined) updateData.username = username;
-      if (otherisde !== undefined) updateData.otherisde = otherisde;
-      if (x !== undefined) updateData.x = x;
-      if (profilePictureUrl !== undefined) updateData.profile_picture_url = profilePictureUrl;
+      // Include all fields - convert empty strings to null for database
+      if (username !== undefined) updateData.username = (username && username.trim()) || null;
+      if (otherisde !== undefined) updateData.otherisde = (otherisde && otherisde.trim()) || null;
+      if (x !== undefined) updateData.x = (x && x.trim()) || null;
+      if (profilePictureUrl !== undefined) updateData.profile_picture_url = profilePictureUrl || null;
 
-      const { error } = await supabase
-        .from('users')
-        .update(updateData)
-        .eq('wallet_address', address.toLowerCase());
-
-      if (error) {
-        console.error('Error saving profile:', error);
-        alert('Failed to save profile. Please check console for details.');
+      // Don't send empty update
+      if (Object.keys(updateData).length === 0) {
+        console.log('No data to update');
         return;
       }
 
+      console.log('Updating profile with data:', updateData);
+      console.log('Wallet address:', address.toLowerCase());
+
+      const { data, error } = await supabase
+        .from('users')
+        .update(updateData)
+        .eq('wallet_address', address.toLowerCase())
+        .select();
+
+      if (error) {
+        console.error('Error saving profile:', error);
+        console.error('Error details:', {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint
+        });
+        alert(`Failed to save profile: ${error.message}. Check console for details.`);
+        return;
+      }
+
+      console.log('Profile updated successfully:', data);
       setIsEditing(false);
       setSearchParams({});
+      
+      // Refresh user data
+      window.location.reload();
     } catch (err) {
-      console.error('Error saving profile:', err);
-      alert('Failed to save profile. Please check console for details.');
+      console.error('Unexpected error saving profile:', err);
+      alert(`Failed to save profile: ${err.message}. Check console for details.`);
     }
   };
 
