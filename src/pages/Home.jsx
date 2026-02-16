@@ -10,11 +10,11 @@ export default function Home() {
           To interact with the games, connect your wallet, create your profile, and appear on the leaderboards, you must hold at least one asset from one of the following projects:
         </p>
         <ul className="home-welcome-projects">
-          <li>🔥 Not A Punks Cult</li>
-          <li className="home-welcome-bops">
+          <li className="home-welcome-npc">
             <img src="/npc_logo.png" alt="NPC Logo" className="home-npc-logo" />
-            Bops
+            Not A Punks Cult
           </li>
+          <li>🔥 Bops</li>
         </ul>
         <p className="home-welcome-text">
           Holding an asset acts as your access pass, linking your on-chain identity to your in-platform profile. Once connected, you can play games, earn points, track your progress, and compete against other community members.

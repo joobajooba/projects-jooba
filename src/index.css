@@ -78,10 +78,41 @@ html, body {
 .home-welcome-panel {
   flex: 1;
   max-width: 600px;
-  padding: 2rem;
+  padding: 0;
   background: rgba(26, 26, 26, 0.8);
-  border-radius: 8px;
-  border: 1px solid #444;
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+.home-welcome-panel::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 10px;
+  padding: 3px;
+  background: linear-gradient(90deg,
+    #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8f00ff);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.home-welcome-panel > * {
+  position: relative;
+  z-index: 1;
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+
+.home-welcome-panel > h1:first-child {
+  padding-top: 2rem;
+}
+
+.home-welcome-panel > p:last-child {
+  padding-bottom: 2rem;
 }
 
 .home-welcome-title {
@@ -94,7 +125,7 @@ html, body {
 }
 
 .home-welcome-text {
-  font-size: 1rem;
+  font-size: 2rem;
   line-height: 1.6;
   color: #e0e0e0;
   margin: 0 0 1rem 0;
@@ -117,7 +148,7 @@ html, body {
   gap: 0.5rem;
 }
 
-.home-welcome-bops {
+.home-welcome-npc {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -130,14 +161,18 @@ html, body {
 }
 
 .home-image-wrap {
-  flex-shrink: 0;
-  max-width: 50%;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
 }
 
 .home-image {
   width: 100%;
-  max-width: 500px;
   height: auto;
+  max-height: calc(100vh - 60px);
+  object-fit: contain;
   border-radius: 8px;
   display: block;
 }
