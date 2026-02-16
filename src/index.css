@@ -79,6 +79,13 @@ html, body {
   box-sizing: border-box;
 }
 
+.games-container {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
 .games-box-outer {
   padding: 3px;
   background: linear-gradient(90deg,
@@ -100,7 +107,7 @@ html, body {
   overflow: hidden;
 }
 
-.games-box-wordle {
+.games-box-title {
   flex-shrink: 0;
   padding: 0.75rem;
   font-size: 1.25rem;
