@@ -20,6 +20,12 @@ export function useUser() {
     }
 
     async function fetchUser() {
+      // Skip if Supabase client is not initialized
+      if (!supabase) {
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       setError(null);
       

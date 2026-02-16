@@ -17,6 +17,12 @@ export function useSyncWalletToSupabase() {
     }
 
     async function syncWalletAddress() {
+      // Skip if Supabase client is not initialized (missing env var)
+      if (!supabase) {
+        console.warn('Supabase client not initialized. Set VITE_SUPABASE_ANON_KEY in environment variables.');
+        return;
+      }
+
       try {
         const walletAddress = address.toLowerCase();
         const now = new Date().toISOString();
