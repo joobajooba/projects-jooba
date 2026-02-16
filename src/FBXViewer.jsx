@@ -1,8 +1,10 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import './FBXViewer.css';
+
+const MODEL_URL = '/9419.glb';
 
 export default function FBXViewer() {
   const containerRef = useRef(null);
@@ -41,27 +43,28 @@ export default function FBXViewer() {
     directionalLight.position.set(5, 10, 5);
     scene.add(directionalLight);
 
-    const loader = new FBXLoader();
+    const loader = new GLTFLoader();
     loader.load(
-      '/_9419.fbx',
-      (fbx) => {
-        fbx.traverse((child) => {
+      MODEL_URL,
+      (gltf) => {
+        const model = gltf.scene;
+        model.traverse((child) => {
           if (child.isMesh) {
             child.castShadow = true;
             child.receiveShadow = true;
           }
         });
-        const box = new THREE.Box3().setFromObject(fbx);
+        const box = new THREE.Box3().setFromObject(model);
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
-        fbx.position.sub(center);
+        model.position.sub(center);
         const maxDim = Math.max(size.x, size.y, size.z);
         const scale = 2 / Math.max(maxDim, 1);
-        fbx.scale.setScalar(scale);
-        scene.add(fbx);
+        model.scale.setScalar(scale);
+        scene.add(model);
       },
       undefined,
-      (err) => console.error('FBX load error:', err)
+      (err) => console.error('Model load error:', err)
     );
 
     const handleResize = () => {
