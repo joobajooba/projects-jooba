@@ -34,8 +34,8 @@ export function useSyncWalletToSupabase() {
           });
 
         if (result.error) {
-          // If it's a unique constraint violation, user already exists - that's okay
-          if (result.error.code === '23505') {
+          // If it's a unique constraint violation (23505) or conflict (409), user already exists - that's okay
+          if (result.error.code === '23505' || result.status === 409) {
             syncedRef.current = address;
             return;
           }
