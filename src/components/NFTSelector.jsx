@@ -40,10 +40,11 @@ export default function NFTSelector({ onSelect, onClose }) {
       return;
     }
 
-    // Try Alchemy v2 API first (more reliable)
-    const url = `https://${network}.g.alchemy.com/v2/${apiKey}/getNFTs?owner=${address}&withMetadata=true&pageSize=50`;
+    // Alchemy NFT API uses /nft/v3/ path (not /v2/ which is RPC only)
+    // getNFTsForOwner is the correct endpoint for "all NFTs owned by address"
+    const url = `https://${network}.g.alchemy.com/nft/v3/${apiKey}/getNFTsForOwner?owner=${address}&withMetadata=true&pageSize=50`;
     
-    console.log('Fetching NFTs from Alchemy:', { network, address: address.substring(0, 10) + '...' });
+    console.log('Fetching NFTs from Alchemy NFT API:', { network, address: address.substring(0, 10) + '...', url: url.replace(apiKey, '***') });
     
     try {
       const response = await fetch(url);
@@ -52,23 +53,23 @@ export default function NFTSelector({ onSelect, onClose }) {
         const errorText = await response.text();
         console.error('Alchemy API error:', response.status, errorText);
         
-        // If 403, try v3 endpoint
-        if (response.status === 403) {
-          console.log('Trying Alchemy v3 endpoint...');
-          const v3Url = `https://${network}.g.alchemy.com/nft/v3/${apiKey}/getNFTs?owner=${address}&withMetadata=true&pageSize=50`;
-          const v3Response = await fetch(v3Url);
+        // Fallback: try legacy getNFTs path (v2 NFT API)
+        if (response.status === 403 || response.status === 404) {
+          console.log('Trying Alchemy NFT v2 getNFTs endpoint...');
+          const v2Url = `https://${network}.g.alchemy.com/nft/v2/${apiKey}/getNFTs?owner=${address}&withMetadata=true&pageSize=50`;
+          const v2Response = await fetch(v2Url);
           
-          if (!v3Response.ok) {
-            throw new Error(`Alchemy API error (${v3Response.status}): ${v3Response.statusText}. Please check your API key.`);
+          if (!v2Response.ok) {
+            throw new Error(`Alchemy API error (${v2Response.status}): ${v2Response.statusText}. Please check your API key.`);
           }
           
-          const v3Data = await v3Response.json();
-          console.log('Alchemy v3 API response:', {
-            totalNFTs: (v3Data.nfts || v3Data.ownedNfts || []).length,
-            rawData: v3Data
+          const v2Data = await v2Response.json();
+          console.log('Alchemy NFT v2 API response:', {
+            totalNFTs: (v2Data.nfts || v2Data.ownedNfts || []).length,
+            rawData: v2Data
           });
           
-          const allNFTs = v3Data.nfts || v3Data.ownedNfts || [];
+          const allNFTs = v2Data.nfts || v2Data.ownedNfts || [];
           const nftsWithImages = allNFTs.filter(nft => {
             const imageUrl = nft.image?.originalUrl || 
                             nft.image?.cachedUrl || 
@@ -80,10 +81,10 @@ export default function NFTSelector({ onSelect, onClose }) {
             return imageUrl && imageUrl !== 'null' && !imageUrl.includes('data:image/svg');
           });
           
-          console.log(`Found ${nftsWithImages.length} NFTs with images from v3 API`);
+          console.log(`Found ${nftsWithImages.length} NFTs with images from v2 API`);
           
           if (nftsWithImages.length === 0 && allNFTs.length > 0) {
-            console.warn('No NFTs with images found in v3, showing all NFTs');
+            console.warn('No NFTs with images found in v2, showing all NFTs');
             setNfts(allNFTs.map(nft => ({
               ...nft,
               image: nft.image?.originalUrl || 
@@ -116,29 +117,25 @@ export default function NFTSelector({ onSelect, onClose }) {
       const allNFTs = data.nfts || data.ownedNfts || [];
       console.log(`Total NFTs returned: ${allNFTs.length}`);
       
+      // Alchemy v3 uses media[].gateway for image URL
+      const getImageUrl = (nft) =>
+        nft.image?.originalUrl ||
+        nft.image?.cachedUrl ||
+        nft.image?.pngUrl ||
+        nft.image?.thumbnailUrl ||
+        nft.image ||
+        nft.media?.[0]?.gateway ||
+        nft.media?.[0]?.raw ||
+        nft.rawMetadata?.image;
+
       // Filter NFTs that have images (but be less strict)
       const nftsWithImages = allNFTs.filter(nft => {
-        const imageUrl = nft.image?.originalUrl || 
-                        nft.image?.cachedUrl || 
-                        nft.image?.pngUrl ||
-                        nft.image?.thumbnailUrl ||
-                        nft.image ||
-                        nft.media?.[0]?.gateway ||
-                        nft.media?.[0]?.raw;
+        const imageUrl = getImageUrl(nft);
         
         const hasImage = imageUrl && 
                         imageUrl !== 'null' && 
                         imageUrl !== 'undefined' &&
                         !imageUrl.includes('data:image/svg');
-        
-        if (!hasImage) {
-          console.log('NFT filtered out (no image):', {
-            name: nft.name || nft.title,
-            contract: nft.contract?.address,
-            tokenId: nft.tokenId || nft.id?.tokenId,
-            image: nft.image
-          });
-        }
         
         return hasImage;
       });
@@ -383,6 +380,9 @@ export default function NFTSelector({ onSelect, onClose }) {
                       selectedNft.image?.pngUrl ||
                       selectedNft.image?.thumbnailUrl ||
                       selectedNft.image ||
+                      selectedNft.media?.[0]?.gateway ||
+                      selectedNft.media?.[0]?.raw ||
+                      selectedNft.rawMetadata?.image ||
                       selectedNft.image_url ||
                       selectedNft.image_original_url;
       
@@ -444,12 +444,15 @@ export default function NFTSelector({ onSelect, onClose }) {
                                 nft.image?.pngUrl ||
                                 nft.image?.thumbnailUrl ||
                                 nft.image ||
+                                nft.media?.[0]?.gateway ||
+                                nft.media?.[0]?.raw ||
+                                nft.rawMetadata?.image ||
                                 nft.image_url ||
                                 nft.image_original_url;
                 
                 const name = nft.name || 
                            nft.title || 
-                           `${nft.collection?.name || 'NFT'} #${nft.tokenId || nft.identifier || index}`;
+                           `${nft.contract?.name || nft.collection?.name || 'NFT'} #${nft.tokenId || nft.id?.tokenId || nft.identifier || index}`;
 
                 return (
                   <div
