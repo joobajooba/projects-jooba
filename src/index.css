@@ -125,7 +125,7 @@ html, body {
 }
 
 .home-welcome-text {
-  font-size: 2rem;
+  font-size: 1rem;
   line-height: 1.6;
   color: #e0e0e0;
   margin: 0 0 1rem 0;
@@ -135,6 +135,8 @@ html, body {
   list-style: none;
   padding: 0;
   margin: 1rem 0;
+  padding-left: 2rem;
+  padding-right: 2rem;
 }
 
 .home-welcome-projects li {
