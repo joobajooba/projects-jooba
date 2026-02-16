@@ -1,9 +1,26 @@
+@font-face {
+  font-family: 'TT Octosquares';
+  src: url('/fonts/TT Octosquares Trial Compressed Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'TT Octosquares';
+  src: url('/fonts/TT Octosquares Trial Condensed Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 html, body {
   margin: 0;
   min-height: 100vh;
   background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
   color: #e0e0e0;
-  font-family: system-ui, sans-serif;
+  font-family: 'TT Octosquares', system-ui, sans-serif;
+  font-weight: 300;
 }
 
 .navbar {
@@ -36,6 +53,7 @@ html, body {
 .navbar a {
   color: #e0e0e0;
   text-decoration: none;
+  font-weight: 700;
 }
 
 .navbar a:hover {
@@ -111,7 +129,8 @@ html, body {
   flex-shrink: 0;
   padding: 0.75rem;
   font-size: 1.25rem;
-  font-weight: bold;
+  font-weight: 700;
+  font-family: 'TT Octosquares', system-ui, sans-serif;
   color: #e0e0e0;
   letter-spacing: 0.05em;
   text-align: center;
