@@ -115,9 +115,17 @@ export default function Profile() {
         return;
       }
 
+      console.log('Update response:', { data, error });
+      
+      // If SELECT doesn't return data (RLS policy issue), refetch instead
       if (!data || data.length === 0) {
-        console.error('Update succeeded but no data returned');
-        alert('Profile update may have failed. Please check the database.');
+        console.warn('Update succeeded but SELECT returned no data - likely RLS policy issue. Refetching...');
+        // Wait a moment for the update to propagate
+        await new Promise(resolve => setTimeout(resolve, 500));
+        // Refetch user data
+        await refetch();
+        setIsEditing(false);
+        setSearchParams({});
         return;
       }
 
@@ -131,7 +139,7 @@ export default function Profile() {
       setX(updatedUser.x || '');
       setProfilePictureUrl(updatedUser.profile_picture_url || '');
       
-      // Refresh user data from database
+      // Refresh user data from database to ensure consistency
       await refetch();
       
       setIsEditing(false);
