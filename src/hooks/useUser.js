@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAccount } from 'wagmi';
 import { supabase } from '../lib/supabase';
 
@@ -11,51 +11,57 @@ export function useUser() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  useEffect(() => {
+  const fetchUser = useCallback(async () => {
     if (!isConnected || !address) {
       setUser(null);
       setLoading(false);
       return;
     }
 
-    async function fetchUser() {
-      // Skip if Supabase client is not initialized
-      if (!supabase) {
-        setLoading(false);
+    // Skip if Supabase client is not initialized
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const { data, error: err } = await supabase
+        .from('users')
+        .select('*')
+        .eq('wallet_address', address.toLowerCase())
+        .single();
+
+      if (err) {
+        if (err.code === 'PGRST116') {
+          // No user found - this is okay
+          setUser(null);
+        } else {
+          setError(err.message);
+        }
         return;
       }
 
-      setLoading(true);
-      setError(null);
-      
-      try {
-        const { data, error: err } = await supabase
-          .from('users')
-          .select('*')
-          .eq('wallet_address', address.toLowerCase())
-          .single();
-
-        if (err) {
-          if (err.code === 'PGRST116') {
-            // No user found - this is okay
-            setUser(null);
-          } else {
-            setError(err.message);
-          }
-          return;
-        }
-
-        setUser(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
+      setUser(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-
-    fetchUser();
   }, [address, isConnected]);
 
-  return { user, loading, error };
+  useEffect(() => {
+    fetchUser();
+  }, [fetchUser, refreshKey]);
+
+  // Function to manually refresh user data
+  const refetch = useCallback(() => {
+    setRefreshKey(prev => prev + 1);
+  }, []);
+
+  return { user, loading, error, refetch };
 }

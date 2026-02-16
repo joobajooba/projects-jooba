@@ -7,7 +7,7 @@ import './Profile.css';
 
 export default function Profile() {
   const { address, isConnected } = useAccount();
-  const { user, loading } = useUser();
+  const { user, loading, refetch } = useUser();
   const [searchParams, setSearchParams] = useSearchParams();
   const editMode = searchParams.get('edit') === 'true';
   const [isEditing, setIsEditing] = useState(editMode);
@@ -115,12 +115,27 @@ export default function Profile() {
         return;
       }
 
+      if (!data || data.length === 0) {
+        console.error('Update succeeded but no data returned');
+        alert('Profile update may have failed. Please check the database.');
+        return;
+      }
+
       console.log('Profile updated successfully:', data);
+      console.log('Updated user data:', data[0]);
+      
+      // Update local state immediately with returned data
+      const updatedUser = data[0];
+      setUsername(updatedUser.username || '');
+      setOtherisde(updatedUser.otherisde || '');
+      setX(updatedUser.x || '');
+      setProfilePictureUrl(updatedUser.profile_picture_url || '');
+      
+      // Refresh user data from database
+      await refetch();
+      
       setIsEditing(false);
       setSearchParams({});
-      
-      // Refresh user data
-      window.location.reload();
     } catch (err) {
       console.error('Unexpected error saving profile:', err);
       alert(`Failed to save profile: ${err.message}. Check console for details.`);
