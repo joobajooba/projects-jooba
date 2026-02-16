@@ -22,50 +22,23 @@ export default function NFTSelector({ onSelect, onClose }) {
     fetchNFTs();
   }, [address, chainId]);
 
-  const fetchNFTs = async () => {
-    if (!address) return;
+  const fetchNFTsForChain = async (network) => {
+    // Use Alchemy NFT API
+    const apiKey = import.meta.env.VITE_ALCHEMY_API_KEY;
+    
+    if (!apiKey) {
+      console.log('No Alchemy API key found, trying OpenSea...');
+      // Fallback: Try OpenSea API
+      await fetchNFTsFromOpenSea();
+      return;
+    }
 
-    setLoading(true);
-    setError(null);
-
+    // Try Alchemy v2 API first (more reliable)
+    const url = `https://${network}.g.alchemy.com/v2/${apiKey}/getNFTs?owner=${address}&withMetadata=true&pageSize=50`;
+    
+    console.log('Fetching NFTs from Alchemy:', { network, address: address.substring(0, 10) + '...' });
+    
     try {
-      // Map chain IDs to Alchemy network names
-      const chainMap = {
-        1: 'eth-mainnet',      // Ethereum
-        137: 'polygon-mainnet',  // Polygon
-        42161: 'arb-mainnet',    // Arbitrum
-        10: 'opt-mainnet',       // Optimism
-        8453: 'base-mainnet',    // Base
-        43114: 'avax-mainnet',   // Avalanche
-        33139: 'apechain-mainnet', // ApeChain (may need custom handling)
-      };
-
-      // Check if Alchemy supports this chain
-      const network = chainMap[chainId];
-      
-      // If ApeChain or unsupported chain, try direct RPC method
-      if (!network || chainId === 33139) {
-        console.log('ApeChain detected - using RPC method for NFT fetching');
-        await fetchNFTsViaApeChainRPC();
-        return;
-      }
-      
-      // Use Alchemy NFT API
-      // Note: You'll need to add VITE_ALCHEMY_API_KEY to your .env
-      const apiKey = import.meta.env.VITE_ALCHEMY_API_KEY;
-      
-      if (!apiKey) {
-        console.log('No Alchemy API key found, trying OpenSea...');
-        // Fallback: Try OpenSea API
-        await fetchNFTsFromOpenSea();
-        return;
-      }
-
-      // Try Alchemy v2 API first (more reliable)
-      const url = `https://${network}.g.alchemy.com/v2/${apiKey}/getNFTs?owner=${address}&withMetadata=true&pageSize=50`;
-      
-      console.log('Fetching NFTs from Alchemy:', { network, address: address.substring(0, 10) + '...' });
-      
       const response = await fetch(url);
       
       if (!response.ok) {
@@ -114,9 +87,59 @@ export default function NFTSelector({ onSelect, onClose }) {
       setNfts(nftsWithImages);
     } catch (err) {
       console.error('Error fetching NFTs:', err);
+      // Fallback to OpenSea for Ethereum
+      if (network === 'eth-mainnet') {
+        await fetchNFTsFromOpenSea();
+      } else {
+        setError(`Failed to fetch NFTs: ${err.message}`);
+      }
+    }
+  };
+
+  const fetchNFTs = async () => {
+    if (!address) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Map chain IDs to Alchemy network names
+      const chainMap = {
+        1: 'eth-mainnet',      // Ethereum
+        137: 'polygon-mainnet',  // Polygon
+        42161: 'arb-mainnet',    // Arbitrum
+        10: 'opt-mainnet',       // Optimism
+        8453: 'base-mainnet',    // Base
+        43114: 'avax-mainnet',   // Avalanche
+        33139: 'apechain-mainnet', // ApeChain
+      };
+
+      // Check if Alchemy supports this chain
+      const network = chainMap[chainId];
+      
+      // Handle ApeChain separately
+      if (chainId === 33139) {
+        console.log('ApeChain detected - using ApeChain-specific method');
+        await fetchNFTsViaApeChainRPC();
+        return;
+      }
+      
+      // If no network mapped, default to Ethereum
+      if (!network) {
+        console.log(`Chain ${chainId} not mapped, defaulting to Ethereum`);
+        await fetchNFTsForChain('eth-mainnet');
+        return;
+      }
+      
+      // Fetch NFTs for supported chains (Ethereum, Polygon, etc.)
+      await fetchNFTsForChain(network);
+    } catch (err) {
+      console.error('Error fetching NFTs:', err);
       setError(err.message);
       // Fallback to OpenSea if Alchemy fails
-      await fetchNFTsFromOpenSea();
+      if (chainId === 1) {
+        await fetchNFTsFromOpenSea();
+      }
     } finally {
       setLoading(false);
     }
