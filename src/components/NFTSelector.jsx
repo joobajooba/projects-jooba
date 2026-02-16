@@ -23,8 +23,15 @@ export default function NFTSelector({ onSelect, onClose }) {
   }, [address, chainId]);
 
   const fetchNFTsForChain = async (network) => {
-    // Use Alchemy NFT API
-    const apiKey = import.meta.env.VITE_ALCHEMY_API_KEY;
+    // Get API key - prefer network-specific key, fallback to general key
+    let apiKey;
+    if (network === 'eth-mainnet') {
+      apiKey = import.meta.env.VITE_ALCHEMY_API_KEY_ETH || import.meta.env.VITE_ALCHEMY_API_KEY;
+    } else if (network === 'apechain-mainnet') {
+      apiKey = import.meta.env.VITE_ALCHEMY_API_KEY_APECHAIN || import.meta.env.VITE_ALCHEMY_API_KEY;
+    } else {
+      apiKey = import.meta.env.VITE_ALCHEMY_API_KEY;
+    }
     
     if (!apiKey) {
       console.log('No Alchemy API key found, trying OpenSea...');
@@ -190,10 +197,12 @@ export default function NFTSelector({ onSelect, onClose }) {
   const fetchNFTsViaApeChainRPC = async () => {
     try {
       console.log('Fetching NFTs from ApeChain via RPC...');
-      const apiKey = import.meta.env.VITE_ALCHEMY_API_KEY;
+      // Prefer ApeChain-specific key, fallback to general key
+      const apiKey = import.meta.env.VITE_ALCHEMY_API_KEY_APECHAIN || import.meta.env.VITE_ALCHEMY_API_KEY;
       
       if (!apiKey) {
-        setError('Alchemy API key required for ApeChain. Please add VITE_ALCHEMY_API_KEY to your environment variables.');
+        // Try ApeScan API (no key required)
+        await fetchNFTsViaApeScan();
         return;
       }
 
