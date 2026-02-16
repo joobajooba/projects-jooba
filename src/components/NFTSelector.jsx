@@ -40,11 +40,13 @@ export default function NFTSelector({ onSelect, onClose }) {
       return;
     }
 
-    // Alchemy NFT API uses /nft/v3/ path (not /v2/ which is RPC only)
-    // getNFTsForOwner is the correct endpoint for "all NFTs owned by address"
-    const url = `https://${network}.g.alchemy.com/nft/v3/${apiKey}/getNFTsForOwner?owner=${address}&withMetadata=true&pageSize=50`;
+    // Alchemy expects owner address (lowercase is safe)
+    const ownerAddress = address?.toLowerCase() || address;
     
-    console.log('Fetching NFTs from Alchemy NFT API:', { network, address: address.substring(0, 10) + '...', url: url.replace(apiKey, '***') });
+    // Alchemy NFT API: getNFTsForOwner (v3)
+    const url = `https://${network}.g.alchemy.com/nft/v3/${apiKey}/getNFTsForOwner?owner=${encodeURIComponent(ownerAddress)}&withMetadata=true&pageSize=50`;
+    
+    console.log('Fetching NFTs from Alchemy NFT API:', { network, owner: ownerAddress.substring(0, 14) + '...' });
     
     try {
       const response = await fetch(url);
@@ -56,7 +58,7 @@ export default function NFTSelector({ onSelect, onClose }) {
         // Fallback: try legacy getNFTs path (v2 NFT API)
         if (response.status === 403 || response.status === 404) {
           console.log('Trying Alchemy NFT v2 getNFTs endpoint...');
-          const v2Url = `https://${network}.g.alchemy.com/nft/v2/${apiKey}/getNFTs?owner=${address}&withMetadata=true&pageSize=50`;
+          const v2Url = `https://${network}.g.alchemy.com/nft/v2/${apiKey}/getNFTs?owner=${encodeURIComponent(ownerAddress)}&withMetadata=true&pageSize=50`;
           const v2Response = await fetch(v2Url);
           
           if (!v2Response.ok) {
@@ -108,14 +110,22 @@ export default function NFTSelector({ onSelect, onClose }) {
 
       const data = await response.json();
       
+      // Alchemy v3 returns { ownedNfts, pageKey?, totalCount }
+      const allNFTs = data.ownedNfts ?? data.nfts ?? [];
+      const totalCount = data.totalCount ?? allNFTs.length;
+      
       console.log('Alchemy API response:', {
-        totalNFTs: (data.nfts || data.ownedNfts || []).length,
-        rawData: data
+        totalCount,
+        ownedNftsLength: allNFTs.length,
+        hasPageKey: !!data.pageKey,
+        firstNft: allNFTs[0] ? { title: allNFTs[0].title, tokenId: allNFTs[0].tokenId } : null
       });
       
-      // Get all NFTs first
-      const allNFTs = data.nfts || data.ownedNfts || [];
-      console.log(`Total NFTs returned: ${allNFTs.length}`);
+      if (allNFTs.length === 0 && network === 'eth-mainnet') {
+        console.warn('Alchemy returned 0 NFTs for Ethereum; trying OpenSea as fallback...');
+        await fetchNFTsFromOpenSea();
+        return;
+      }
       
       // Alchemy v3 uses media[].gateway for image URL
       const getImageUrl = (nft) =>
@@ -162,7 +172,6 @@ export default function NFTSelector({ onSelect, onClose }) {
       }
     } catch (err) {
       console.error('Error fetching NFTs:', err);
-      // Fallback to OpenSea for Ethereum
       if (network === 'eth-mainnet') {
         await fetchNFTsFromOpenSea();
       } else {
@@ -237,44 +246,44 @@ export default function NFTSelector({ onSelect, onClose }) {
   };
 
   const fetchNFTsFromOpenSea = async () => {
+    const ownerAddress = address?.toLowerCase() || address;
     try {
-      console.log('Fetching NFTs from OpenSea...');
+      console.log('Fetching NFTs from OpenSea (fallback)...', { owner: ownerAddress.substring(0, 14) + '...' });
       
-      // OpenSea API v2 requires API key now, try v1 as fallback
-      const url = `https://api.opensea.io/api/v1/assets?owner=${address}&order_direction=desc&offset=0&limit=50`;
+      const url = `https://api.opensea.io/api/v1/assets?owner=${encodeURIComponent(ownerAddress)}&order_direction=desc&offset=0&limit=50`;
       
       const response = await fetch(url, {
-        headers: {
-          'Accept': 'application/json',
-        }
+        headers: { 'Accept': 'application/json' }
       });
 
       if (!response.ok) {
-        // If OpenSea fails, try a simple RPC call approach
-        console.log('OpenSea API failed, trying alternative method...');
-        await fetchNFTsViaRPC();
+        console.log('OpenSea v1 failed:', response.status);
+        setError('Could not load NFTs. In Alchemy Dashboard (dashboard.alchemy.com): create or open your app → ensure "NFT API" is enabled for your key, and use that key as VITE_ALCHEMY_API_KEY_ETH.');
         return;
       }
 
       const data = await response.json();
-      
-      const nftsWithImages = (data.assets || []).filter(nft => {
-        const imageUrl = nft.image_url || nft.image_original_url || nft.image_preview_url;
-        return imageUrl && imageUrl !== 'null';
+      const assets = data.assets || [];
+      const nftsWithImages = assets.filter(nft => {
+        const img = nft.image_url || nft.image_original_url || nft.image_preview_url;
+        return img && img !== 'null';
       });
 
-      console.log(`Found ${nftsWithImages.length} NFTs from OpenSea`);
+      console.log(`OpenSea: ${nftsWithImages.length} NFTs with images (${assets.length} total)`);
       
-      setNfts(nftsWithImages.map(nft => ({
-        name: nft.name || `${nft.collection?.name || 'NFT'} #${nft.token_id}`,
-        image: nft.image_url || nft.image_original_url || nft.image_preview_url,
-        contract: nft.asset_contract?.address,
-        tokenId: nft.token_id,
-      })));
+      if (nftsWithImages.length > 0) {
+        setNfts(nftsWithImages.map(nft => ({
+          name: nft.name || `${nft.collection?.name || 'NFT'} #${nft.token_id}`,
+          image: nft.image_url || nft.image_original_url || nft.image_preview_url,
+          contract: nft.asset_contract?.address,
+          tokenId: nft.token_id,
+        })));
+      } else {
+        setError('No NFTs could be loaded. In Alchemy Dashboard enable "NFT API" for your app and use that key as VITE_ALCHEMY_API_KEY_ETH. Ensure this wallet holds NFTs on Ethereum.');
+      }
     } catch (err) {
       console.error('Error fetching from OpenSea:', err);
-      // Try RPC method as last resort
-      await fetchNFTsViaRPC();
+      setError('Could not load NFTs. Enable "NFT API" for your key in Alchemy Dashboard (dashboard.alchemy.com) and set VITE_ALCHEMY_API_KEY_ETH in Vercel.');
     }
   };
 
