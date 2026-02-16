@@ -1,4 +1,7 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { Routes, Route, NavLink } from 'react-router-dom';
+import Home from './pages/Home';
+import Games from './pages/Games';
 import './index.css';
 
 export default function App() {
@@ -6,19 +9,19 @@ export default function App() {
     <>
       <nav className="navbar">
         <div className="navbar-links">
-          <a href="/">Home</a>
-          <a href="/ape-projects/">APE-Projects</a>
-          <a href="/games/">Games</a>
-          <a href="/profile/">Profile</a>
+          <NavLink to="/" end>Home</NavLink>
+          <NavLink to="/ape-projects/">APE-Projects</NavLink>
+          <NavLink to="/games/">Games</NavLink>
+          <NavLink to="/profile/">Profile</NavLink>
         </div>
         <ConnectButton />
       </nav>
-      <main className="home-main">
-        <div className="home-content" />
-        <div className="home-image-wrap">
-          <img src="/Yuga_9419_heart.jpg" alt="Yuga 9419 heart" className="home-image" />
-        </div>
-      </main>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/games/" element={<Games />} />
+        <Route path="/ape-projects/" element={<main className="games-main"><p>APE-Projects</p></main>} />
+        <Route path="/profile/" element={<main className="games-main"><p>Profile</p></main>} />
+      </Routes>
     </>
   );
 }
