@@ -288,91 +288,98 @@ export default function NFTSelector({ onSelect, onClose }) {
   };
 
   const fetchNFTsViaApeChainRPC = async () => {
-    try {
-      console.log('Fetching NFTs from ApeChain via RPC...');
-      // Prefer ApeChain-specific key, fallback to general key
-      const apiKey = import.meta.env.VITE_ALCHEMY_API_KEY_APECHAIN || import.meta.env.VITE_ALCHEMY_API_KEY;
-      
-      if (!apiKey) {
-        // Try ApeScan API (no key required)
-        await fetchNFTsViaApeScan();
-        return;
+    const ownerAddress = address?.toLowerCase() || address;
+    const apiKey = import.meta.env.VITE_ALCHEMY_API_KEY_APECHAIN || import.meta.env.VITE_ALCHEMY_API_KEY;
+
+    if (apiKey) {
+      try {
+        console.log('Fetching NFTs from ApeChain via Alchemy NFT API...');
+        const url = `https://apechain-mainnet.g.alchemy.com/nft/v3/${apiKey}/getNFTsForOwner?owner=${encodeURIComponent(ownerAddress)}&withMetadata=true&pageSize=50`;
+        const response = await fetch(url);
+
+        if (response.ok) {
+          const data = await response.json();
+          const allNFTs = data.ownedNfts ?? data.nfts ?? [];
+          console.log('Alchemy ApeChain response:', { totalCount: data.totalCount, ownedNftsLength: allNFTs.length });
+
+          const getImageUrl = (nft) =>
+            nft.image?.originalUrl || nft.image?.cachedUrl || nft.image?.pngUrl ||
+            nft.image?.thumbnailUrl || nft.image ||
+            nft.media?.[0]?.gateway || nft.media?.[0]?.raw || nft.rawMetadata?.image;
+
+          const withImages = allNFTs.filter(nft => {
+            const img = getImageUrl(nft);
+            return img && img !== 'null' && !String(img).includes('data:image/svg');
+          });
+
+          if (withImages.length > 0 || allNFTs.length > 0) {
+            const list = withImages.length > 0 ? withImages : allNFTs;
+            console.log(`Found ${list.length} NFTs from ApeChain (Alchemy)`);
+            setNfts(list);
+            return;
+          }
+        } else {
+          console.log('Alchemy ApeChain NFT API returned', response.status, '- trying ApeScan...');
+        }
+      } catch (err) {
+        console.error('Alchemy ApeChain error:', err);
       }
-
-      // Try Alchemy with apechain-mainnet (if supported)
-      // If not, we'll need to use ApeChain's RPC or another indexer
-      const url = `https://apechain-mainnet.g.alchemy.com/v2/${apiKey}/getNFTs?owner=${address}&withMetadata=true&pageSize=50`;
-      
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        // If Alchemy doesn't support ApeChain, try using ApeScan API or direct RPC
-        console.log('Alchemy ApeChain endpoint failed, trying alternative...');
-        await fetchNFTsViaApeScan();
-        return;
-      }
-
-      const data = await response.json();
-      const nftsWithImages = (data.nfts || data.ownedNfts || []).filter(nft => {
-        const imageUrl = nft.image?.originalUrl || 
-                        nft.image?.cachedUrl || 
-                        nft.image?.pngUrl ||
-                        nft.image?.thumbnailUrl ||
-                        nft.image;
-        return imageUrl && imageUrl !== 'null' && !imageUrl.includes('data:image/svg');
-      });
-
-      console.log(`Found ${nftsWithImages.length} NFTs from ApeChain`);
-      setNfts(nftsWithImages);
-    } catch (err) {
-      console.error('Error fetching ApeChain NFTs:', err);
-      await fetchNFTsViaApeScan();
     }
+
+    await fetchNFTsViaApeScan();
   };
 
   const fetchNFTsViaApeScan = async () => {
+    const ownerAddress = address?.toLowerCase() || address;
     try {
-      // Try ApeScan API (ApeChain's block explorer)
-      const url = `https://api.apescan.io/api/v2/addresses/${address}/token-balances?type=ERC721&page=1&limit=50`;
-      
+      console.log('Fetching NFTs from ApeScan (ApeChain)...', { owner: ownerAddress.substring(0, 14) + '...' });
+      // ApeScan is Etherscan-powered; try Etherscan-style API with chainid=33139 (ApeChain)
+      const url = `https://api.apescan.io/v2/api?chainid=33139&module=account&action=addresstokennftbalance&address=${encodeURIComponent(ownerAddress)}&page=1&offset=100`;
       const response = await fetch(url);
-      
+
       if (!response.ok) {
-        throw new Error(`ApeScan API error: ${response.statusText}`);
+        console.log('ApeScan API returned', response.status);
+        setError('Could not load ApeChain NFTs. Ensure VITE_ALCHEMY_API_KEY_APECHAIN is set in Vercel and NFT API is enabled for your ApeChain app in Alchemy Dashboard.');
+        return;
       }
 
       const data = await response.json();
-      
-      // ApeScan returns token balances, we need to fetch metadata for each
-      const tokens = data.data?.tokens || [];
+      const result = data.result;
+      if (data.status !== '1' || !Array.isArray(result) || result.length === 0) {
+        console.log('ApeScan result:', { status: data.status, resultLength: Array.isArray(result) ? result.length : 0 });
+        setError('No NFTs found on ApeChain for this wallet, or the explorer API did not return data. Try ensuring your Alchemy ApeChain app has NFT API enabled and the key is set as VITE_ALCHEMY_API_KEY_APECHAIN.');
+        return;
+      }
+
       const nftsWithMetadata = await Promise.all(
-        tokens.map(async (token) => {
+        result.slice(0, 50).map(async (item) => {
+          const contract = item.contract_address || item.tokenAddress;
+          const tokenId = item.token_id ?? item.tokenId;
+          if (!contract || tokenId == null) return null;
           try {
-            // Fetch token metadata
-            const metadataUrl = `https://api.apescan.io/api/v2/tokens/${token.contract_address}/${token.token_id}`;
-            const metaResponse = await fetch(metadataUrl);
-            if (metaResponse.ok) {
-              const metaData = await metaResponse.json();
-              return {
-                name: metaData.data?.name || `${token.contract_name || 'NFT'} #${token.token_id}`,
-                image: metaData.data?.image || metaData.data?.image_url,
-                contract: token.contract_address,
-                tokenId: token.token_id,
-              };
-            }
+            const metaUrl = `https://api.apescan.io/v2/api?chainid=33139&module=token&action=nftmetadata&contractaddress=${contract}&tokenid=${tokenId}`;
+            const metaRes = await fetch(metaUrl);
+            if (!metaRes.ok) return { name: `NFT #${tokenId}`, image: null, contract, tokenId };
+            const meta = await metaRes.json();
+            const image = meta.result?.image || meta.image;
+            return {
+              name: meta.result?.name || meta.name || `NFT #${tokenId}`,
+              image,
+              contract,
+              tokenId,
+            };
           } catch (e) {
-            console.error('Error fetching token metadata:', e);
+            return { name: `NFT #${tokenId}`, image: null, contract, tokenId };
           }
-          return null;
         })
       );
 
-      const nftsWithImages = nftsWithMetadata.filter(nft => nft && nft.image);
-      console.log(`Found ${nftsWithImages.length} NFTs from ApeScan`);
-      setNfts(nftsWithImages);
+      const withImages = nftsWithMetadata.filter(nft => nft && nft.image);
+      console.log(`ApeScan: ${withImages.length} NFTs with images (${nftsWithMetadata.filter(Boolean).length} total)`);
+      setNfts(withImages.length > 0 ? withImages : nftsWithMetadata.filter(Boolean));
     } catch (err) {
       console.error('Error fetching from ApeScan:', err);
-      setError('Unable to fetch NFTs from ApeChain. Please ensure:\n1. Your Alchemy API key is configured for ApeChain\n2. You have NFTs in your ApeChain wallet\n3. Try switching to Ethereum mainnet if available');
+      setError('Could not load ApeChain NFTs. Set VITE_ALCHEMY_API_KEY_APECHAIN in Vercel and enable NFT API for your ApeChain app at dashboard.alchemy.com.');
     }
   };
 
