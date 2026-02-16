@@ -33,6 +33,12 @@ html, body {
   position: relative;
 }
 
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .navbar::after {
   content: "";
   position: absolute;
