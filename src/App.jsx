@@ -1,10 +1,14 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { Routes, Route, NavLink } from 'react-router-dom';
+import { useSyncWalletToSupabase } from './hooks/useSyncWalletToSupabase';
 import Home from './pages/Home';
 import Games from './pages/Games';
 import './index.css';
 
 export default function App() {
+  // Automatically sync connected wallet to Supabase
+  useSyncWalletToSupabase();
+
   return (
     <>
       <nav className="navbar">
