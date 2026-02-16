@@ -44,13 +44,28 @@ export default function Profile() {
       const fileName = `${address.toLowerCase()}-${Date.now()}.${fileExt}`;
       const filePath = `profile-pictures/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('profile-pictures')
         .upload(filePath, file, { upsert: true });
 
       if (uploadError) {
         console.error('Upload error:', uploadError);
-        alert('Failed to upload picture. Please ensure the Supabase Storage bucket "profile-pictures" exists and is configured.');
+        console.error('Error details:', {
+          message: uploadError.message,
+          statusCode: uploadError.statusCode,
+          error: uploadError.error
+        });
+        
+        let errorMessage = 'Failed to upload picture. ';
+        if (uploadError.message?.includes('Bucket not found') || uploadError.statusCode === '404') {
+          errorMessage += 'The Storage bucket "profile-pictures" does not exist. Please create it in Supabase Dashboard → Storage.';
+        } else if (uploadError.message?.includes('new row violates row-level security')) {
+          errorMessage += 'Storage RLS policies are not configured. Please run the setup-storage-bucket.sql script.';
+        } else {
+          errorMessage += uploadError.message || 'Please check console for details.';
+        }
+        
+        alert(errorMessage);
         return;
       }
 
