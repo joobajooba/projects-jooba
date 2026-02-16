@@ -2,13 +2,11 @@
 -- Run this in Supabase SQL Editor
 
 -- Step 1: Create the storage bucket (if it doesn't exist)
--- Note: You may need to create this manually in the Supabase Dashboard first:
+-- Note: You must create this manually in the Supabase Dashboard first:
 -- Go to Storage → Create bucket → Name: "profile-pictures" → Public: Yes
+-- RLS is already enabled on storage.objects by default in Supabase
 
--- Step 2: Enable RLS on storage.objects (should already be enabled)
-ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
-
--- Step 3: Drop existing policies if they exist
+-- Step 2: Drop existing policies if they exist
 DROP POLICY IF EXISTS "Allow public uploads to profile-pictures" ON storage.objects;
 DROP POLICY IF EXISTS "Allow public reads from profile-pictures" ON storage.objects;
 DROP POLICY IF EXISTS "Allow authenticated uploads to profile-pictures" ON storage.objects;
