@@ -37,11 +37,18 @@ export default function NFTSelector({ onSelect, onClose }) {
         10: 'opt-mainnet',       // Optimism
         8453: 'base-mainnet',    // Base
         43114: 'avax-mainnet',   // Avalanche
-        // Add ApeChain if you have the chain ID
+        33139: 'apechain-mainnet', // ApeChain (may need custom handling)
       };
 
-      // Default to Ethereum if chain not mapped
-      const network = chainMap[chainId] || 'eth-mainnet';
+      // Check if Alchemy supports this chain
+      const network = chainMap[chainId];
+      
+      // If ApeChain or unsupported chain, try direct RPC method
+      if (!network || chainId === 33139) {
+        console.log('ApeChain detected - using RPC method for NFT fetching');
+        await fetchNFTsViaApeChainRPC();
+        return;
+      }
       
       // Use Alchemy NFT API
       // Note: You'll need to add VITE_ALCHEMY_API_KEY to your .env
@@ -154,6 +161,93 @@ export default function NFTSelector({ onSelect, onClose }) {
       console.error('Error fetching from OpenSea:', err);
       // Try RPC method as last resort
       await fetchNFTsViaRPC();
+    }
+  };
+
+  const fetchNFTsViaApeChainRPC = async () => {
+    try {
+      console.log('Fetching NFTs from ApeChain via RPC...');
+      const apiKey = import.meta.env.VITE_ALCHEMY_API_KEY;
+      
+      if (!apiKey) {
+        setError('Alchemy API key required for ApeChain. Please add VITE_ALCHEMY_API_KEY to your environment variables.');
+        return;
+      }
+
+      // Try Alchemy with apechain-mainnet (if supported)
+      // If not, we'll need to use ApeChain's RPC or another indexer
+      const url = `https://apechain-mainnet.g.alchemy.com/v2/${apiKey}/getNFTs?owner=${address}&withMetadata=true&pageSize=50`;
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        // If Alchemy doesn't support ApeChain, try using ApeScan API or direct RPC
+        console.log('Alchemy ApeChain endpoint failed, trying alternative...');
+        await fetchNFTsViaApeScan();
+        return;
+      }
+
+      const data = await response.json();
+      const nftsWithImages = (data.nfts || data.ownedNfts || []).filter(nft => {
+        const imageUrl = nft.image?.originalUrl || 
+                        nft.image?.cachedUrl || 
+                        nft.image?.pngUrl ||
+                        nft.image?.thumbnailUrl ||
+                        nft.image;
+        return imageUrl && imageUrl !== 'null' && !imageUrl.includes('data:image/svg');
+      });
+
+      console.log(`Found ${nftsWithImages.length} NFTs from ApeChain`);
+      setNfts(nftsWithImages);
+    } catch (err) {
+      console.error('Error fetching ApeChain NFTs:', err);
+      await fetchNFTsViaApeScan();
+    }
+  };
+
+  const fetchNFTsViaApeScan = async () => {
+    try {
+      // Try ApeScan API (ApeChain's block explorer)
+      const url = `https://api.apescan.io/api/v2/addresses/${address}/token-balances?type=ERC721&page=1&limit=50`;
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`ApeScan API error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      // ApeScan returns token balances, we need to fetch metadata for each
+      const tokens = data.data?.tokens || [];
+      const nftsWithMetadata = await Promise.all(
+        tokens.map(async (token) => {
+          try {
+            // Fetch token metadata
+            const metadataUrl = `https://api.apescan.io/api/v2/tokens/${token.contract_address}/${token.token_id}`;
+            const metaResponse = await fetch(metadataUrl);
+            if (metaResponse.ok) {
+              const metaData = await metaResponse.json();
+              return {
+                name: metaData.data?.name || `${token.contract_name || 'NFT'} #${token.token_id}`,
+                image: metaData.data?.image || metaData.data?.image_url,
+                contract: token.contract_address,
+                tokenId: token.token_id,
+              };
+            }
+          } catch (e) {
+            console.error('Error fetching token metadata:', e);
+          }
+          return null;
+        })
+      );
+
+      const nftsWithImages = nftsWithMetadata.filter(nft => nft && nft.image);
+      console.log(`Found ${nftsWithImages.length} NFTs from ApeScan`);
+      setNfts(nftsWithImages);
+    } catch (err) {
+      console.error('Error fetching from ApeScan:', err);
+      setError('Unable to fetch NFTs from ApeChain. Please ensure:\n1. Your Alchemy API key is configured for ApeChain\n2. You have NFTs in your ApeChain wallet\n3. Try switching to Ethereum mainnet if available');
     }
   };
 
