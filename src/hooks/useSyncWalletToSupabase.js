@@ -36,57 +36,56 @@ export function useSyncWalletToSupabase() {
       }
       
       console.log('✅ Supabase client initialized');
+      console.log('🔍 Supabase client details:', {
+        url: supabase?.supabaseUrl,
+        hasKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
+        keyPreview: import.meta.env.VITE_SUPABASE_ANON_KEY?.substring(0, 20) + '...',
+        keyLength: import.meta.env.VITE_SUPABASE_ANON_KEY?.length || 0
+      });
 
       try {
         const walletAddress = address.toLowerCase();
+        console.log('📝 Attempting to insert wallet address:', walletAddress);
+        console.log('🔑 Supabase URL:', supabase?.supabaseUrl);
+        console.log('🔑 Has anon key:', !!import.meta.env.VITE_SUPABASE_ANON_KEY);
 
-        // First, check if user already exists
-        const { data: existingUser, error: checkError } = await supabase
+        // Try upsert approach - insert or ignore if exists
+        // Remove .select() to avoid needing SELECT policy
+        const result = await supabase
           .from('users')
-          .select('wallet_address')
-          .eq('wallet_address', walletAddress)
-          .maybeSingle();
+          .insert({
+            wallet_address: walletAddress,
+          });
 
-        if (checkError && checkError.code !== 'PGRST116') {
-          console.error('Error checking existing user:', checkError);
-          return;
-        }
-
-        let result;
-        if (existingUser) {
-          // User already exists, no need to update
-          console.log('Wallet address already exists in Supabase:', address);
-          syncedRef.current = address;
-          return;
-        } else {
-          // Insert new user - only use wallet_address column
-          console.log('📝 Inserting new wallet address:', walletAddress);
-          result = await supabase
-            .from('users')
-            .insert({
-              wallet_address: walletAddress,
-            })
-            .select();
-
-          if (result.error) {
-            console.error('❌ Error syncing wallet to Supabase:', result.error);
-            console.error('Error code:', result.error.code);
-            console.error('Error message:', result.error.message);
-            console.error('Error details:', JSON.stringify(result.error, null, 2));
-            
-            // Check if it's an RLS policy error
-            if (result.error.message?.includes('row-level security') || result.error.code === '42501') {
-              console.error('⚠️ Row Level Security (RLS) is blocking inserts.');
-              console.error('You need to create a policy in Supabase that allows users to insert their own wallet_address.');
-              console.error('Go to: https://supabase.com/dashboard/project/jitkwbatwymqtlzxiyil/auth/policies');
-            }
+        if (result.error) {
+          // If it's a unique constraint violation, user already exists - that's okay
+          if (result.error.code === '23505') {
+            console.log('✅ Wallet address already exists in Supabase:', address);
+            syncedRef.current = address;
             return;
           }
 
-          console.log('✅ SUCCESS! Wallet address synced to Supabase:', address);
-          console.log('✅ Inserted data:', result.data);
-          syncedRef.current = address; // Mark as synced
+          console.error('❌ Error syncing wallet to Supabase:', result.error);
+          console.error('Error code:', result.error.code);
+          console.error('Error message:', result.error.message);
+          console.error('Error details:', JSON.stringify(result.error, null, 2));
+          console.error('Full error object:', result.error);
+          
+          // Check if it's an RLS policy error
+          if (result.error.message?.includes('row-level security') || result.error.code === '42501') {
+            console.error('⚠️ Row Level Security (RLS) is blocking inserts.');
+            console.error('Policy exists but may not be active. Check:');
+            console.error('1. RLS is enabled on the table');
+            console.error('2. Policy is enabled (toggle ON)');
+            console.error('3. Policy has WITH CHECK (true)');
+            console.error('Go to: https://supabase.com/dashboard/project/jitkwbatwymqtlzxiyil/auth/policies');
+          }
+          return;
         }
+
+        console.log('✅ SUCCESS! Wallet address synced to Supabase:', address);
+        console.log('✅ Result:', result);
+        syncedRef.current = address; // Mark as synced
       } catch (err) {
         console.error('Unexpected error syncing wallet:', err);
       }
