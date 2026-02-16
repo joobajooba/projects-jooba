@@ -63,15 +63,42 @@ export default function NFTSelector({ onSelect, onClose }) {
           }
           
           const v3Data = await v3Response.json();
-          const nftsWithImages = (v3Data.nfts || v3Data.ownedNfts || []).filter(nft => {
+          console.log('Alchemy v3 API response:', {
+            totalNFTs: (v3Data.nfts || v3Data.ownedNfts || []).length,
+            rawData: v3Data
+          });
+          
+          const allNFTs = v3Data.nfts || v3Data.ownedNfts || [];
+          const nftsWithImages = allNFTs.filter(nft => {
             const imageUrl = nft.image?.originalUrl || 
                             nft.image?.cachedUrl || 
                             nft.image?.pngUrl ||
                             nft.image?.thumbnailUrl ||
-                            nft.image;
+                            nft.image ||
+                            nft.media?.[0]?.gateway ||
+                            nft.media?.[0]?.raw;
             return imageUrl && imageUrl !== 'null' && !imageUrl.includes('data:image/svg');
           });
-          setNfts(nftsWithImages);
+          
+          console.log(`Found ${nftsWithImages.length} NFTs with images from v3 API`);
+          
+          if (nftsWithImages.length === 0 && allNFTs.length > 0) {
+            console.warn('No NFTs with images found in v3, showing all NFTs');
+            setNfts(allNFTs.map(nft => ({
+              ...nft,
+              image: nft.image?.originalUrl || 
+                     nft.image?.cachedUrl || 
+                     nft.image?.pngUrl ||
+                     nft.image?.thumbnailUrl ||
+                     nft.image ||
+                     nft.media?.[0]?.gateway ||
+                     nft.media?.[0]?.raw ||
+                     null,
+              name: nft.name || nft.title || `${nft.contract?.name || 'NFT'} #${nft.tokenId || nft.id?.tokenId || '?'}`
+            })));
+          } else {
+            setNfts(nftsWithImages);
+          }
           return;
         }
         
@@ -80,18 +107,62 @@ export default function NFTSelector({ onSelect, onClose }) {
 
       const data = await response.json();
       
-      // Filter NFTs that have images
-      const nftsWithImages = (data.nfts || data.ownedNfts || []).filter(nft => {
+      console.log('Alchemy API response:', {
+        totalNFTs: (data.nfts || data.ownedNfts || []).length,
+        rawData: data
+      });
+      
+      // Get all NFTs first
+      const allNFTs = data.nfts || data.ownedNfts || [];
+      console.log(`Total NFTs returned: ${allNFTs.length}`);
+      
+      // Filter NFTs that have images (but be less strict)
+      const nftsWithImages = allNFTs.filter(nft => {
         const imageUrl = nft.image?.originalUrl || 
                         nft.image?.cachedUrl || 
                         nft.image?.pngUrl ||
                         nft.image?.thumbnailUrl ||
-                        nft.image;
-        return imageUrl && imageUrl !== 'null' && !imageUrl.includes('data:image/svg');
+                        nft.image ||
+                        nft.media?.[0]?.gateway ||
+                        nft.media?.[0]?.raw;
+        
+        const hasImage = imageUrl && 
+                        imageUrl !== 'null' && 
+                        imageUrl !== 'undefined' &&
+                        !imageUrl.includes('data:image/svg');
+        
+        if (!hasImage) {
+          console.log('NFT filtered out (no image):', {
+            name: nft.name || nft.title,
+            contract: nft.contract?.address,
+            tokenId: nft.tokenId || nft.id?.tokenId,
+            image: nft.image
+          });
+        }
+        
+        return hasImage;
       });
 
-      console.log(`Found ${nftsWithImages.length} NFTs with images`);
-      setNfts(nftsWithImages);
+      console.log(`Found ${nftsWithImages.length} NFTs with images out of ${allNFTs.length} total`);
+      
+      // If no NFTs with images but we have NFTs, show them anyway (user can decide)
+      if (nftsWithImages.length === 0 && allNFTs.length > 0) {
+        console.warn('No NFTs with images found, but showing all NFTs anyway');
+        setNfts(allNFTs.map(nft => ({
+          ...nft,
+          image: nft.image?.originalUrl || 
+                 nft.image?.cachedUrl || 
+                 nft.image?.pngUrl ||
+                 nft.image?.thumbnailUrl ||
+                 nft.image ||
+                 nft.media?.[0]?.gateway ||
+                 nft.media?.[0]?.raw ||
+                 null,
+          name: nft.name || nft.title || `${nft.contract?.name || 'NFT'} #${nft.tokenId || nft.id?.tokenId || '?'}`
+        })));
+      } else {
+        setNfts(nftsWithImages);
+      }
     } catch (err) {
       console.error('Error fetching NFTs:', err);
       // Fallback to OpenSea for Ethereum
@@ -104,10 +175,19 @@ export default function NFTSelector({ onSelect, onClose }) {
   };
 
   const fetchNFTs = async () => {
-    if (!address) return;
+    if (!address) {
+      console.log('No address found');
+      return;
+    }
 
     setLoading(true);
     setError(null);
+
+    console.log('Starting NFT fetch:', {
+      address,
+      chainId,
+      addressLowercase: address.toLowerCase()
+    });
 
     try {
       // Map chain IDs to Alchemy network names
@@ -123,6 +203,12 @@ export default function NFTSelector({ onSelect, onClose }) {
 
       // Check if Alchemy supports this chain
       const network = chainMap[chainId];
+      
+      console.log('Network detection:', {
+        chainId,
+        network,
+        chainName: chainId === 1 ? 'Ethereum' : chainId === 33139 ? 'ApeChain' : 'Unknown'
+      });
       
       // Handle ApeChain separately
       if (chainId === 33139) {
@@ -145,6 +231,7 @@ export default function NFTSelector({ onSelect, onClose }) {
       setError(err.message);
       // Fallback to OpenSea if Alchemy fails
       if (chainId === 1) {
+        console.log('Falling back to OpenSea API');
         await fetchNFTsFromOpenSea();
       }
     } finally {
