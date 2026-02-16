@@ -4,7 +4,7 @@ export default function Games() {
       <div className="games-container">
         <div className="games-box-outer">
           <div className="games-box">
-            <span className="games-box-title">WORDLE</span>
+            <span className="games-box-title">Wordle</span>
             <div className="games-box-image-wrap">
               <img src="/9419_Wordle.png" alt="9419 Wordle" className="games-box-image" />
             </div>
