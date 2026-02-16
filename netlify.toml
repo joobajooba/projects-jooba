@@ -1,7 +1,6 @@
 # Netlify configuration for projects-jooba
-# Publish directory must match Netlify UI (Build settings → Publish directory).
-# This repo uses "public" so the UI and config agree.
+# Vite builds to dist/. Set Netlify UI Publish directory to "dist" if needed.
 
 [build]
-  publish = "public"
-  command = ""
+  command = "npm run build"
+  publish = "dist"
