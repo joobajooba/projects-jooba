@@ -23,8 +23,8 @@ export default function App() {
           <NavLink to="/profile/">Profile</NavLink>
         </div>
         <div className="navbar-right">
-          {isConnected && <ProfileDropdown />}
           <ConnectButton />
+          {isConnected && <ProfileDropdown />}
         </div>
       </nav>
       <Routes>
