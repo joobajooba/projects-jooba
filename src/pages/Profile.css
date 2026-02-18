@@ -7,8 +7,10 @@
 .profile-container {
   display: flex;
   gap: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
+  align-items: stretch;
+  justify-content: flex-start;
+  max-width: none;
+  margin: 0;
 }
 
 .profile-left-panel {
@@ -24,6 +26,8 @@
   flex-direction: column;
   align-items: center;
   gap: 1rem;
+  height: 360px;
+  box-sizing: border-box;
 }
 
 .profile-picture,
@@ -97,17 +101,24 @@
 }
 
 .profile-right-panel {
-  flex: 1;
+  flex: 0 0 520px;
+  width: 520px;
+  max-width: 520px;
   background: rgba(26, 26, 26, 0.8);
   border-radius: 8px;
   padding: 2rem;
+  height: 360px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .profile-info {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
 
 .profile-field {
@@ -146,6 +157,23 @@
 .profile-actions {
   display: flex;
   gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .profile-container {
+    flex-direction: column;
+  }
+
+  .profile-left-panel {
+    width: 100%;
+    max-width: 360px;
+  }
+
+  .profile-picture-container,
+  .profile-right-panel {
+    width: 100%;
+    max-width: 520px;
+  }
 }
 
 .profile-button {
