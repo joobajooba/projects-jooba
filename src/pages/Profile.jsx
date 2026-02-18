@@ -240,6 +240,32 @@ export default function Profile() {
               </div>
             )}
           </div>
+          <div className="profile-actions profile-actions-left">
+            {isEditing ? (
+              <>
+                <button onClick={handleSave} className="profile-button">Save</button>
+                <button 
+                  onClick={() => {
+                    setIsEditing(false);
+                    setSearchParams({});
+                  }} 
+                  className="profile-button profile-button-secondary"
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <button 
+                onClick={() => {
+                  setIsEditing(true);
+                  setSearchParams({ edit: 'true' });
+                }} 
+                className="profile-button"
+              >
+                Edit Profile
+              </button>
+            )}
+          </div>
         </div>
         <div className="profile-right-panel">
           <div className="profile-info">
@@ -282,32 +308,6 @@ export default function Profile() {
                 <span>{x || 'Not set'}</span>
               )}
             </div>
-          </div>
-          <div className="profile-actions">
-            {isEditing ? (
-              <>
-                <button onClick={handleSave} className="profile-button">Save</button>
-                <button 
-                  onClick={() => {
-                    setIsEditing(false);
-                    setSearchParams({});
-                  }} 
-                  className="profile-button profile-button-secondary"
-                >
-                  Cancel
-                </button>
-              </>
-            ) : (
-              <button 
-                onClick={() => {
-                  setIsEditing(true);
-                  setSearchParams({ edit: 'true' });
-                }} 
-                className="profile-button"
-              >
-                Edit Profile
-              </button>
-            )}
           </div>
         </div>
       </div>

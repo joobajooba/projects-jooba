@@ -159,6 +159,12 @@
   gap: 1rem;
 }
 
+.profile-actions-left {
+  margin-top: 1rem;
+  width: 100%;
+  justify-content: center;
+}
+
 @media (max-width: 900px) {
   .profile-container {
     flex-direction: column;
