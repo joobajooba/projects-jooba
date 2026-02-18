@@ -239,32 +239,32 @@ export default function Profile() {
                 </button>
               </div>
             )}
-          </div>
-          <div className="profile-actions profile-actions-left">
-            {isEditing ? (
-              <>
-                <button onClick={handleSave} className="profile-button">Save</button>
+            <div className="profile-actions profile-actions-left">
+              {isEditing ? (
+                <>
+                  <button onClick={handleSave} className="profile-button">Save</button>
+                  <button 
+                    onClick={() => {
+                      setIsEditing(false);
+                      setSearchParams({});
+                    }} 
+                    className="profile-button profile-button-secondary"
+                  >
+                    Cancel
+                  </button>
+                </>
+              ) : (
                 <button 
                   onClick={() => {
-                    setIsEditing(false);
-                    setSearchParams({});
+                    setIsEditing(true);
+                    setSearchParams({ edit: 'true' });
                   }} 
-                  className="profile-button profile-button-secondary"
+                  className="profile-button"
                 >
-                  Cancel
+                  Edit Profile
                 </button>
-              </>
-            ) : (
-              <button 
-                onClick={() => {
-                  setIsEditing(true);
-                  setSearchParams({ edit: 'true' });
-                }} 
-                className="profile-button"
-              >
-                Edit Profile
-              </button>
-            )}
+              )}
+            </div>
           </div>
         </div>
         <div className="profile-right-panel">

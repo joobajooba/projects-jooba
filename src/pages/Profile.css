@@ -160,9 +160,10 @@
 }
 
 .profile-actions-left {
-  margin-top: 1rem;
+  margin-top: auto;
   width: 100%;
   justify-content: center;
+  padding-top: 1rem;
 }
 
 @media (max-width: 900px) {
