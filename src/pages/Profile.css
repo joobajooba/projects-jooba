@@ -15,7 +15,7 @@
 
 .profile-left-panel {
   flex-shrink: 0;
-  width: 300px;
+  width: 150px;
 }
 
 .profile-picture-container {
@@ -32,8 +32,10 @@
 
 .profile-picture,
 .profile-picture-placeholder {
-  width: 200px;
-  height: 200px;
+  width: 100%;
+  max-width: 200px;
+  height: auto;
+  aspect-ratio: 1;
   border-radius: 8px;
   object-fit: cover;
 }
@@ -101,9 +103,9 @@
 }
 
 .profile-right-panel {
-  flex: 0 0 520px;
-  width: 520px;
-  max-width: 520px;
+  flex: 0 0 260px;
+  width: 260px;
+  max-width: 260px;
   background: rgba(26, 26, 26, 0.8);
   border-radius: 8px;
   padding: 2rem;
@@ -173,13 +175,13 @@
 
   .profile-left-panel {
     width: 100%;
-    max-width: 360px;
+    max-width: 180px;
   }
 
   .profile-picture-container,
   .profile-right-panel {
     width: 100%;
-    max-width: 520px;
+    max-width: 260px;
   }
 }
 
