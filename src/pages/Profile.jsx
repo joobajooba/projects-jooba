@@ -62,65 +62,6 @@ export default function Profile() {
     }
   };
 
-  const handlePictureChange = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file || !address || !supabase) {
-      console.error('Missing file, address, or Supabase client');
-      return;
-    }
-
-    setUploading(true);
-    try {
-      // Upload to Supabase Storage
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${address.toLowerCase()}-${Date.now()}.${fileExt}`;
-      const filePath = `profile-pictures/${fileName}`;
-
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('profile-pictures')
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        console.error('Error details:', {
-          message: uploadError.message,
-          statusCode: uploadError.statusCode,
-          error: uploadError.error
-        });
-        
-        let errorMessage = 'Failed to upload picture. ';
-        if (uploadError.message?.includes('Bucket not found') || uploadError.statusCode === '404') {
-          errorMessage += 'The Storage bucket "profile-pictures" does not exist. Please create it in Supabase Dashboard → Storage.';
-        } else if (uploadError.message?.includes('new row violates row-level security')) {
-          errorMessage += 'Storage RLS policies are not configured. Please run the setup-storage-bucket.sql script.';
-        } else {
-          errorMessage += uploadError.message || 'Please check console for details.';
-        }
-        
-        alert(errorMessage);
-        return;
-      }
-
-      // Get public URL
-      const { data } = supabase.storage
-        .from('profile-pictures')
-        .getPublicUrl(filePath);
-
-      setProfilePictureUrl(data.publicUrl);
-
-      // Update user record
-      await supabase
-        .from('users')
-        .update({ profile_picture_url: data.publicUrl })
-        .eq('wallet_address', address.toLowerCase());
-    } catch (err) {
-      console.error('Error uploading picture:', err);
-      alert('Failed to upload picture. Please check console for details.');
-    } finally {
-      setUploading(false);
-    }
-  };
-
   const handleSave = async () => {
     if (!address || !supabase) {
       console.error('Missing address or Supabase client');
@@ -221,21 +162,12 @@ export default function Profile() {
             )}
             {isEditing && (
               <div className="profile-picture-actions">
-                <label className="profile-picture-upload">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePictureChange}
-                    disabled={uploading}
-                  />
-                  {uploading ? 'Uploading...' : 'Upload Picture'}
-                </label>
                 <button
                   className="profile-picture-nft-btn"
                   onClick={() => setShowNFTSelector(true)}
                   disabled={uploading}
                 >
-                  Choose NFT
+                  {uploading ? 'Saving...' : 'Choose NFT'}
                 </button>
               </div>
             )}
