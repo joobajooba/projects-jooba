@@ -96,11 +96,13 @@
 
 .nft-selector-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(140px, 140px));
+  grid-auto-rows: minmax(180px, auto);
   gap: 1rem;
   padding: 1.5rem;
   overflow-y: auto;
   flex: 1;
+  justify-content: center;
 }
 
 .nft-selector-item {
@@ -112,6 +114,7 @@
   border: 2px solid transparent;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
 .nft-selector-item:hover {
@@ -126,20 +129,24 @@
 
 .nft-selector-item img {
   width: 100%;
-  aspect-ratio: 1;
+  height: 140px;
+  min-height: 140px;
   object-fit: cover;
   display: block;
+  flex-shrink: 0;
 }
 
 .nft-selector-placeholder {
   width: 100%;
-  aspect-ratio: 1;
+  height: 140px;
+  min-height: 140px;
   background: #333;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #888;
   font-size: 0.9rem;
+  flex-shrink: 0;
 }
 
 .nft-selector-name {
