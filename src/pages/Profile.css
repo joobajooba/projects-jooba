@@ -31,12 +31,30 @@
   box-sizing: border-box;
 }
 
+.profile-picture-wrapper {
+  padding: 3px;
+  background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
+  background-size: 200% 200%;
+  border-radius: 11px;
+  animation: rainbow-border 3s linear infinite;
+}
+
+@keyframes rainbow-border {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
 .profile-picture,
 .profile-picture-placeholder {
   width: 200px;
   height: 200px;
   border-radius: 8px;
   object-fit: cover;
+  display: block;
 }
 
 .profile-picture-placeholder {
@@ -197,9 +215,18 @@
 }
 
 
-.profile-nft-slot {
+.profile-nft-slot-wrapper {
   flex: 1;
   min-width: 0;
+  padding: 3px;
+  background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
+  background-size: 200% 200%;
+  border-radius: 11px;
+  animation: rainbow-border 3s linear infinite;
+}
+
+.profile-nft-slot {
+  width: 100%;
   height: 280px;
   background: rgba(26, 26, 26, 0.8);
   border-radius: 8px;

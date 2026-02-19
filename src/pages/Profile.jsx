@@ -233,13 +233,15 @@ export default function Profile() {
       <div className="profile-container">
         <div className="profile-left-panel">
           <div className="profile-picture-container">
-            {profilePictureUrl ? (
-              <img src={profilePictureUrl} alt="Profile" className="profile-picture" />
-            ) : (
-              <div className="profile-picture-placeholder">
-                <span>No Picture</span>
-              </div>
-            )}
+            <div className="profile-picture-wrapper">
+              {profilePictureUrl ? (
+                <img src={profilePictureUrl} alt="Profile" className="profile-picture" />
+              ) : (
+                <div className="profile-picture-placeholder">
+                  <span>No Picture</span>
+                </div>
+              )}
+            </div>
             {isOwnProfile && isEditing && (
               <div className="profile-picture-actions">
                 <button
@@ -332,19 +334,23 @@ export default function Profile() {
             {[0, 1, 2, 3, 4].map((i) => (
               <div
                 key={i}
-                className={`profile-nft-slot ${isEditing ? 'profile-nft-slot-editable' : ''}`}
-                onClick={() => isEditing && setNftSelectorSlot(i)}
-                role={isEditing ? 'button' : undefined}
-                tabIndex={isEditing ? 0 : undefined}
-                onKeyDown={(e) => isEditing && (e.key === 'Enter' || e.key === ' ') && setNftSelectorSlot(i)}
+                className={`profile-nft-slot-wrapper ${isEditing ? 'profile-nft-slot-editable' : ''}`}
               >
-                {slotUrls[i] ? (
-                  <img src={slotUrls[i]} alt={`Slot ${i + 1}`} />
-                ) : (
-                  <span className="profile-nft-slot-placeholder">
-                    {isEditing ? 'Choose NFT' : ''}
-                  </span>
-                )}
+                <div
+                  className={`profile-nft-slot ${isEditing ? 'profile-nft-slot-editable' : ''}`}
+                  onClick={() => isEditing && setNftSelectorSlot(i)}
+                  role={isEditing ? 'button' : undefined}
+                  tabIndex={isEditing ? 0 : undefined}
+                  onKeyDown={(e) => isEditing && (e.key === 'Enter' || e.key === ' ') && setNftSelectorSlot(i)}
+                >
+                  {slotUrls[i] ? (
+                    <img src={slotUrls[i]} alt={`Slot ${i + 1}`} />
+                  ) : (
+                    <span className="profile-nft-slot-placeholder">
+                      {isEditing ? 'Choose NFT' : ''}
+                    </span>
+                  )}
+                </div>
               </div>
             ))}
           </div>
