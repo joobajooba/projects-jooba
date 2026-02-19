@@ -170,7 +170,7 @@
   font-size: 0.85rem;
   cursor: pointer;
   min-width: 40px;
-  transition: background 0.2s;
+  transition: background 0.2s, color 0.2s;
   text-transform: uppercase;
 }
 
@@ -180,6 +180,21 @@
 
 .keyboard-key:active {
   background: #6b6e70;
+}
+
+.keyboard-key.correct {
+  background: #6aaa64;
+  color: white;
+}
+
+.keyboard-key.present {
+  background: #c9b458;
+  color: white;
+}
+
+.keyboard-key.absent {
+  background: #3a3a3c;
+  color: white;
 }
 
 .keyboard-key-wide {

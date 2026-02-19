@@ -54,6 +54,7 @@ export default function Wordle() {
   const [gameStatus, setGameStatus] = useState('playing'); // 'playing', 'won', 'lost'
   const [message, setMessage] = useState('');
   const [wordListsLoaded, setWordListsLoaded] = useState(false);
+  const [letterStates, setLetterStates] = useState({}); // Track letter states for keyboard
 
   useEffect(() => {
     // Load word lists, then initialize game
@@ -74,6 +75,22 @@ export default function Wordle() {
         if (savedDate.toDateString() === today.toDateString() && savedData.word === todaysWord) {
           setGuesses(savedData.guesses || []);
           setGameStatus(savedData.gameStatus || 'playing');
+          
+          // Rebuild letter states from saved guesses
+          const restoredLetterStates = {};
+          (savedData.guesses || []).forEach(guess => {
+            const evaluation = evaluateGuess(guess, todaysWord);
+            guess.split('').forEach((letter, index) => {
+              const currentState = restoredLetterStates[letter];
+              const newState = evaluation[index];
+              if (!currentState || 
+                  (currentState === 'absent' && newState !== 'absent') ||
+                  (currentState === 'present' && newState === 'correct')) {
+                restoredLetterStates[letter] = newState;
+              }
+            });
+          });
+          setLetterStates(restoredLetterStates);
         }
       }
     });
@@ -86,10 +103,11 @@ export default function Wordle() {
         date: new Date().toISOString(),
         guesses,
         gameStatus,
-        word
+        word,
+        letterStates
       }));
     }
-  }, [guesses, gameStatus, word]);
+  }, [guesses, gameStatus, word, letterStates]);
 
   const checkWord = useCallback((guess) => {
     // Check if word is valid (5 letters, in valid guesses list)
@@ -142,9 +160,25 @@ export default function Wordle() {
       }
 
       const upperGuess = currentGuess.toUpperCase();
+      const evaluation = evaluateGuess(upperGuess, word);
       const newGuesses = [...guesses, upperGuess];
       setGuesses(newGuesses);
       setCurrentGuess('');
+
+      // Update keyboard letter states
+      const newLetterStates = { ...letterStates };
+      upperGuess.split('').forEach((letter, index) => {
+        const currentState = newLetterStates[letter];
+        const newState = evaluation[index];
+        
+        // Priority: correct > present > absent
+        if (!currentState || 
+            (currentState === 'absent' && newState !== 'absent') ||
+            (currentState === 'present' && newState === 'correct')) {
+          newLetterStates[letter] = newState;
+        }
+      });
+      setLetterStates(newLetterStates);
 
       if (upperGuess === word) {
         setGameStatus('won');
@@ -180,6 +214,7 @@ export default function Wordle() {
     setCurrentGuess('');
     setGameStatus('playing');
     setMessage('');
+    setLetterStates({});
     setWord(getTodaysWord());
     localStorage.removeItem('wordle-game');
   };
@@ -236,7 +271,7 @@ export default function Wordle() {
             {['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'].map(key => (
               <button
                 key={key}
-                className="keyboard-key"
+                className={`keyboard-key ${letterStates[key] || ''}`}
                 onClick={() => handleKeyPress(key)}
               >
                 {key}
@@ -247,7 +282,7 @@ export default function Wordle() {
             {['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'].map(key => (
               <button
                 key={key}
-                className="keyboard-key"
+                className={`keyboard-key ${letterStates[key] || ''}`}
                 onClick={() => handleKeyPress(key)}
               >
                 {key}
@@ -261,7 +296,7 @@ export default function Wordle() {
             {['Z', 'X', 'C', 'V', 'B', 'N', 'M'].map(key => (
               <button
                 key={key}
-                className="keyboard-key"
+                className={`keyboard-key ${letterStates[key] || ''}`}
                 onClick={() => handleKeyPress(key)}
               >
                 {key}
