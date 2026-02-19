@@ -325,22 +325,6 @@ export default function Profile() {
           </div>
         </div>
         <div className="profile-nft-section">
-          <div className="profile-search-bar">
-            <input
-              type="text"
-              placeholder="Search profile by username..."
-              value={profileSearchInput}
-              onChange={(e) => setProfileSearchInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && setSearchParams({ username: profileSearchInput.trim() })}
-              className="profile-search-input-short"
-            />
-            <button
-              type="button"
-              onClick={() => setSearchParams({ username: profileSearchInput.trim() })}
-            >
-              Search
-            </button>
-          </div>
           {profileSearchNotFound && (
             <p className="profile-search-not-found">No profile found for &quot;{viewUsernameParam}&quot;</p>
           )}
@@ -363,10 +347,14 @@ export default function Profile() {
                 )}
               </div>
             ))}
+          </div>
+        </div>
+        <div className="profile-search-section-right">
+          <div className="profile-search-bar">
             {viewUsernameParam && (
               <button
                 type="button"
-                className="profile-nft-back-btn"
+                className="profile-search-back-btn"
                 onClick={() => {
                   setSearchParams({});
                   setProfileSearchInput('');
@@ -375,6 +363,20 @@ export default function Profile() {
                 Back to profile
               </button>
             )}
+            <input
+              type="text"
+              placeholder="Search profile by username..."
+              value={profileSearchInput}
+              onChange={(e) => setProfileSearchInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && setSearchParams({ username: profileSearchInput.trim() })}
+              className="profile-search-input-short"
+            />
+            <button
+              type="button"
+              onClick={() => setSearchParams({ username: profileSearchInput.trim() })}
+            >
+              Search
+            </button>
           </div>
         </div>
       </div>
