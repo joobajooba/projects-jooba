@@ -341,7 +341,7 @@ export default function Profile() {
               value={profileSearchInput}
               onChange={(e) => setProfileSearchInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && setSearchParams({ username: profileSearchInput.trim() })}
-              className={viewedUser ? 'profile-search-input-short' : ''}
+              className="profile-search-input-short"
             />
             <button
               type="button"
