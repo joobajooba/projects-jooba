@@ -7,30 +7,29 @@ let VALID_GUESSES = new Set(); // All valid guess words
 let ANSWER_WORDS = []; // Words that can be solutions
 
 // Fetch official Wordle word lists
-const fetchWordLists = async () => {
+const fetchWordLists = async (onLoaded) => {
   try {
     // Fetch valid guesses (all words you can guess)
     const guessesResponse = await fetch('https://raw.githubusercontent.com/tabatkins/wordle-list/main/words');
     const guessesText = await guessesResponse.text();
-    VALID_GUESSES = new Set(guessesText.trim().split('\n').map(w => w.toUpperCase()));
+    VALID_GUESSES = new Set(guessesText.trim().split('\n').map(w => w.toUpperCase().trim()).filter(w => w.length === 5));
 
     // Fetch answer words (words that can be solutions)
     const answersResponse = await fetch('https://raw.githubusercontent.com/tabatkins/wordle-list/main/answers');
     const answersText = await answersResponse.text();
-    ANSWER_WORDS = answersText.trim().split('\n').map(w => w.toUpperCase());
+    ANSWER_WORDS = answersText.trim().split('\n').map(w => w.toUpperCase().trim()).filter(w => w.length === 5);
 
     console.log(`Loaded ${VALID_GUESSES.size} valid guesses and ${ANSWER_WORDS.length} answer words`);
+    if (onLoaded) onLoaded();
   } catch (error) {
     console.error('Error fetching word lists, using fallback:', error);
-    // Fallback to a basic list if fetch fails
-    const fallback = ['APPLE', 'BEACH', 'CHAIR', 'DANCE', 'EARTH', 'FLAME', 'GLASS', 'HEART', 'IMAGE', 'KNIFE', 'LIGHT', 'MAGIC', 'NIGHT', 'OCEAN', 'PIANO', 'RIVER', 'STORM', 'TABLE', 'UNITY', 'VALUE', 'WATER', 'YOUTH', 'ZEBRA', 'BRAVE', 'CLOUD', 'DREAM', 'EAGLE', 'FROST', 'GREEN', 'HAPPY', 'IVORY', 'LEMON', 'MUSIC', 'NOVEL', 'OLIVE', 'POWER', 'QUICK', 'ROYAL', 'SMILE', 'TIGER', 'ULTRA', 'VIVID', 'WHEAT', 'YACHT', 'BLAZE', 'CRANE', 'DROVE', 'ELITE', 'FLAIR', 'GRACE', 'HONEY', 'JOKER', 'KAYAK', 'LUNAR', 'MERRY', 'NINJA', 'OPERA', 'PEARL', 'QUERY', 'RADIO', 'SCOUT', 'TULIP', 'URBAN', 'VOCAL', 'WALTZ', 'BREAD', 'CRISP', 'DUSKY', 'ELBOW', 'FJORD', 'GLIDE', 'HOVER', 'JUMPS', 'KNEAD', 'LATCH', 'MIXER', 'NUDGE', 'PIXEL', 'RELAY', 'SPLIT', 'TREND', 'UNZIP', 'VEXED'];
+    // Fallback to a comprehensive list if fetch fails
+    const fallback = ['APPLE', 'BEACH', 'CHAIR', 'DANCE', 'EARTH', 'FLAME', 'GLASS', 'HEART', 'IMAGE', 'KNIFE', 'LIGHT', 'MAGIC', 'NIGHT', 'OCEAN', 'PIANO', 'RIVER', 'STORM', 'TABLE', 'UNITY', 'VALUE', 'WATER', 'YOUTH', 'ZEBRA', 'BRAVE', 'CLOUD', 'DREAM', 'EAGLE', 'FROST', 'GREEN', 'HAPPY', 'IVORY', 'LEMON', 'MUSIC', 'NOVEL', 'OLIVE', 'POWER', 'QUICK', 'ROYAL', 'SMILE', 'TIGER', 'ULTRA', 'VIVID', 'WHEAT', 'YACHT', 'BLAZE', 'CRANE', 'DROVE', 'ELITE', 'FLAIR', 'GRACE', 'HONEY', 'JOKER', 'KAYAK', 'LUNAR', 'MERRY', 'NINJA', 'OPERA', 'PEARL', 'QUERY', 'RADIO', 'SCOUT', 'TULIP', 'URBAN', 'VOCAL', 'WALTZ', 'BREAD', 'CRISP', 'DUSKY', 'ELBOW', 'FJORD', 'GLIDE', 'HOVER', 'JUMPS', 'KNEAD', 'LATCH', 'MIXER', 'NUDGE', 'PIXEL', 'RELAY', 'SPLIT', 'TREND', 'UNZIP', 'VEXED', 'AUDIO', 'ABOUT', 'ABOVE', 'ABUSE', 'ACTOR', 'ACUTE', 'ADMIT', 'ADOPT', 'ADULT', 'AFTER', 'AGAIN', 'AGENT', 'AGREE', 'AHEAD', 'ALARM', 'ALBUM', 'ALERT', 'ALIEN', 'ALIGN', 'ALIKE', 'ALIVE', 'ALLOW', 'ALONE', 'ALONG', 'ALTER', 'AMONG', 'ANGER', 'ANGLE', 'ANGRY', 'APART', 'APPLE', 'APPLY', 'ARENA', 'ARGUE', 'ARISE', 'ARRAY', 'ARROW', 'ASIDE', 'ASSET', 'AVOID', 'AWAKE', 'AWARD', 'AWARE', 'BADLY', 'BAKER', 'BASES', 'BASIC', 'BEACH', 'BEGAN', 'BEGIN', 'BEING', 'BELOW', 'BENCH', 'BILLY', 'BIRTH', 'BLACK', 'BLAME', 'BLANK', 'BLAST', 'BLIND', 'BLOCK', 'BLOOD', 'BLOOM', 'BLOWN', 'BLUES', 'BOARD', 'BOAST', 'BOBBY', 'BOUND', 'BRAIN', 'BRAND', 'BRASS', 'BRAVE', 'BREAD', 'BREAK', 'BREED', 'BRIEF', 'BRING', 'BROAD', 'BROKE', 'BROWN', 'BRUSH', 'BUDDY', 'BUILD', 'BUNCH', 'BURST', 'CABLE', 'CALIF', 'CARRY', 'CATCH', 'CAUSE', 'CHAIN', 'CHAIR', 'CHAOS', 'CHARM', 'CHART', 'CHASE', 'CHEAP', 'CHECK', 'CHEST', 'CHIEF', 'CHILD', 'CHINA', 'CHOSE', 'CHUNK', 'CHURN', 'CIVIL', 'CLAIM', 'CLASH', 'CLASS', 'CLEAN', 'CLEAR', 'CLICK', 'CLIMB', 'CLING', 'CLOCK', 'CLOSE', 'CLOUD', 'CLOWN', 'COACH', 'COAST', 'COULD', 'COUNT', 'COUPE', 'COURT', 'COVER', 'CRACK', 'CRAFT', 'CRANE', 'CRASH', 'CRAZY', 'CREAM', 'CRIME', 'CRISP', 'CROWD', 'CROWN', 'CRUDE', 'CURVE', 'CYCLE', 'DAILY', 'DAISY', 'DANCE', 'DATED', 'DEALT', 'DEATH', 'DEBUT', 'DELAY', 'DELTA', 'DENIM', 'DENSE', 'DEPTH', 'DETER', 'DEVIL', 'DIARY', 'DIGIT', 'DINER', 'DIRTY', 'DISCO', 'DITCH', 'DIVER', 'DIZZY', 'DODGE', 'DOING', 'DOLLY', 'DONOR', 'DONUT', 'DOUBT', 'DOUGH', 'DOWRY', 'DOZEN', 'DRAFT', 'DRAIN', 'DRAMA', 'DRANK', 'DRAWN', 'DREAM', 'DRESS', 'DRIED', 'DRIFT', 'DRILL', 'DRINK', 'DRIVE', 'DROVE', 'DROWN', 'DRUNK', 'DRYER', 'DUCHY', 'DULLY', 'DUMMY', 'DUMPY', 'DUNCE', 'DUSKY', 'DUSTY', 'DUTCH', 'DUVET', 'DWARF', 'DWELL', 'DWELT', 'DYING'];
     VALID_GUESSES = new Set(fallback);
     ANSWER_WORDS = fallback;
+    if (onLoaded) onLoaded();
   }
 };
-
-// Initialize word lists on load
-fetchWordLists();
 
 // Get today's word (same word for everyone on the same day)
 // Uses the same algorithm as NYT Wordle (based on date)
@@ -54,12 +53,12 @@ export default function Wordle() {
   const [currentGuess, setCurrentGuess] = useState('');
   const [gameStatus, setGameStatus] = useState('playing'); // 'playing', 'won', 'lost'
   const [message, setMessage] = useState('');
+  const [wordListsLoaded, setWordListsLoaded] = useState(false);
 
   useEffect(() => {
-    // Wait for word lists to load, then initialize
-    const initializeGame = async () => {
-      // Give a moment for word lists to fetch
-      await new Promise(resolve => setTimeout(resolve, 100));
+    // Load word lists, then initialize game
+    fetchWordLists(() => {
+      setWordListsLoaded(true);
       
       // Initialize with today's word
       const todaysWord = getTodaysWord();
@@ -77,9 +76,7 @@ export default function Wordle() {
           setGameStatus(savedData.gameStatus || 'playing');
         }
       }
-    };
-    
-    initializeGame();
+    });
   }, []);
 
   // Save game state
