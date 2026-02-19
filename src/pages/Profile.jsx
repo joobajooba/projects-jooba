@@ -326,12 +326,22 @@ export default function Profile() {
         </div>
         <div className="profile-nft-section">
           <div className="profile-search-bar">
+            {viewedUser && (
+              <button
+                type="button"
+                className="profile-search-back-btn"
+                onClick={() => setSearchParams({})}
+              >
+                Back to profile
+              </button>
+            )}
             <input
               type="text"
               placeholder="Search profile by username..."
               value={profileSearchInput}
               onChange={(e) => setProfileSearchInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && setSearchParams({ username: profileSearchInput.trim() })}
+              className={viewedUser ? 'profile-search-input-short' : ''}
             />
             <button
               type="button"

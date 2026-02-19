@@ -120,6 +120,11 @@
   font-size: 0.95rem;
 }
 
+.profile-search-bar input.profile-search-input-short {
+  flex: 0 1 auto;
+  max-width: 200px;
+}
+
 .profile-search-bar input::placeholder {
   color: #888;
 }
@@ -144,6 +149,23 @@
 
 .profile-search-bar button:hover {
   background: #5aaeff;
+}
+
+.profile-search-back-btn {
+  padding: 0.6rem 1rem;
+  background: #444;
+  border: 1px solid #666;
+  border-radius: 4px;
+  color: #e0e0e0;
+  font-family: 'TT Octosquares', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.profile-search-back-btn:hover {
+  background: #555;
 }
 
 .profile-search-not-found {
