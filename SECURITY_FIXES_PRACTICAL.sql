@@ -123,7 +123,34 @@ USING (
 -- 4. ADD INPUT VALIDATION CONSTRAINTS
 -- ============================================
 
--- Add check constraints to prevent invalid data
+-- First, check for invalid wallet addresses
+SELECT 
+  id,
+  wallet_address,
+  LENGTH(wallet_address) as address_length,
+  CASE 
+    WHEN wallet_address IS NULL THEN 'NULL address'
+    WHEN wallet_address !~ '^0x[a-fA-F0-9]{40}$' THEN 'Invalid format'
+    ELSE 'Valid'
+  END as validation_status
+FROM "public"."users"
+WHERE wallet_address IS NULL 
+   OR wallet_address !~ '^0x[a-fA-F0-9]{40}$';
+
+-- Fix invalid wallet addresses (normalize to lowercase, ensure 0x prefix)
+-- Only update if they're close to valid format
+UPDATE "public"."users"
+SET wallet_address = LOWER(TRIM(wallet_address))
+WHERE wallet_address IS NOT NULL
+  AND LOWER(TRIM(wallet_address)) ~ '^0x[a-f0-9]{40}$';
+
+-- Remove any rows with completely invalid addresses (optional - be careful!)
+-- Uncomment only if you want to delete invalid rows:
+-- DELETE FROM "public"."users"
+-- WHERE wallet_address IS NULL 
+--    OR wallet_address !~ '^0x[a-fA-F0-9]{40}$';
+
+-- Now add check constraints to prevent invalid data
 ALTER TABLE "public"."users"
 DROP CONSTRAINT IF EXISTS "check_wallet_format";
 
