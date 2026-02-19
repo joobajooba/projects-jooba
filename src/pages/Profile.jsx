@@ -326,18 +326,6 @@ export default function Profile() {
         </div>
         <div className="profile-nft-section">
           <div className="profile-search-bar">
-            {viewUsernameParam && (
-              <button
-                type="button"
-                className="profile-search-back-btn"
-                onClick={() => {
-                  setSearchParams({});
-                  setProfileSearchInput('');
-                }}
-              >
-                Back to profile
-              </button>
-            )}
             <input
               type="text"
               placeholder="Search profile by username..."
@@ -375,6 +363,18 @@ export default function Profile() {
                 )}
               </div>
             ))}
+            {viewUsernameParam && (
+              <button
+                type="button"
+                className="profile-nft-back-btn"
+                onClick={() => {
+                  setSearchParams({});
+                  setProfileSearchInput('');
+                }}
+              >
+                Back to profile
+              </button>
+            )}
           </div>
         </div>
       </div>

@@ -187,6 +187,26 @@
   align-items: flex-end;
 }
 
+.profile-nft-back-btn {
+  padding: 0.6rem 1rem;
+  background: #444;
+  border: 1px solid #666;
+  border-radius: 4px;
+  color: #e0e0e0;
+  font-family: 'TT Octosquares', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  white-space: nowrap;
+  height: fit-content;
+  align-self: flex-end;
+  margin-left: auto;
+}
+
+.profile-nft-back-btn:hover {
+  background: #555;
+}
+
 .profile-nft-slot {
   flex: 1;
   min-width: 0;
