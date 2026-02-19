@@ -23,6 +23,8 @@ export default function Profile() {
   const [showNFTSelector, setShowNFTSelector] = useState(false);
   const [nftSelectorSlot, setNftSelectorSlot] = useState(null);
   const [slotUrls, setSlotUrls] = useState(['', '', '', '', '']);
+  const [slotMetadata, setSlotMetadata] = useState([null, null, null, null, null]);
+  const [profilePictureMetadata, setProfilePictureMetadata] = useState(null);
   const [profileSearchNotFound, setProfileSearchNotFound] = useState(false);
 
   const displayedUser = viewedUser ?? user;
@@ -69,6 +71,14 @@ export default function Profile() {
         displayedUser.nft_slot_4_url || '',
         displayedUser.nft_slot_5_url || ''
       ]);
+      setSlotMetadata([
+        displayedUser.nft_slot_1_metadata || null,
+        displayedUser.nft_slot_2_metadata || null,
+        displayedUser.nft_slot_3_metadata || null,
+        displayedUser.nft_slot_4_metadata || null,
+        displayedUser.nft_slot_5_metadata || null
+      ]);
+      setProfilePictureMetadata(displayedUser.profile_picture_metadata || null);
     }
   }, [displayedUser]);
 
@@ -76,23 +86,39 @@ export default function Profile() {
     setIsEditing(editMode && isOwnProfile);
   }, [editMode, isOwnProfile]);
 
-  const handleNFTSelect = async (imageUrl) => {
+  const handleNFTSelect = async (imageUrl, nftData = null) => {
     if (!address || !supabase) {
       console.error('Missing address or Supabase client');
       return;
     }
 
     if (nftSelectorSlot !== null) {
-      await handleSlotNFTSelect(imageUrl, nftSelectorSlot);
+      await handleSlotNFTSelect(imageUrl, nftSelectorSlot, nftData);
       setNftSelectorSlot(null);
       return;
     }
 
     setUploading(true);
     try {
+      // Extract metadata from NFT
+      const metadata = nftData ? {
+        attributes: nftData.rawMetadata?.attributes || nftData.metadata?.attributes || [],
+        name: nftData.name || nftData.title,
+        description: nftData.description || nftData.rawMetadata?.description,
+        tokenId: nftData.tokenId,
+        contractAddress: nftData.contract?.address || nftData.contractAddress,
+        // Store full rawMetadata for future use
+        rawMetadata: nftData.rawMetadata || nftData.metadata
+      } : null;
+
+      const updateData = { profile_picture_url: imageUrl };
+      if (metadata) {
+        updateData.profile_picture_metadata = metadata;
+      }
+
       const { error } = await supabase
         .from('users')
-        .update({ profile_picture_url: imageUrl })
+        .update(updateData)
         .eq('wallet_address', address.toLowerCase());
 
       if (error) {
@@ -102,6 +128,9 @@ export default function Profile() {
       }
 
       setProfilePictureUrl(imageUrl);
+      if (metadata) {
+        setProfilePictureMetadata(metadata);
+      }
       await refetch();
     } catch (err) {
       console.error('Error saving NFT profile picture:', err);
@@ -112,14 +141,32 @@ export default function Profile() {
     }
   };
 
-  const handleSlotNFTSelect = async (imageUrl, slotIndex) => {
+  const handleSlotNFTSelect = async (imageUrl, slotIndex, nftData = null) => {
     if (!address || !supabase) return;
-    const col = `nft_slot_${slotIndex + 1}_url`;
+    const urlCol = `nft_slot_${slotIndex + 1}_url`;
+    const metadataCol = `nft_slot_${slotIndex + 1}_metadata`;
+    
     setUploading(true);
     try {
+      // Extract metadata from NFT
+      const metadata = nftData ? {
+        attributes: nftData.rawMetadata?.attributes || nftData.metadata?.attributes || [],
+        name: nftData.name || nftData.title,
+        description: nftData.description || nftData.rawMetadata?.description,
+        tokenId: nftData.tokenId,
+        contractAddress: nftData.contract?.address || nftData.contractAddress,
+        // Store full rawMetadata for future use
+        rawMetadata: nftData.rawMetadata || nftData.metadata
+      } : null;
+
+      const updateData = { [urlCol]: imageUrl };
+      if (metadata) {
+        updateData[metadataCol] = metadata;
+      }
+
       const { error } = await supabase
         .from('users')
-        .update({ [col]: imageUrl })
+        .update(updateData)
         .eq('wallet_address', address.toLowerCase());
 
       if (error) {
@@ -132,6 +179,13 @@ export default function Profile() {
         next[slotIndex] = imageUrl;
         return next;
       });
+      if (metadata) {
+        setSlotMetadata(prev => {
+          const next = [...prev];
+          next[slotIndex] = metadata;
+          return next;
+        });
+      }
       await refetch();
     } catch (err) {
       console.error('Error saving slot NFT:', err);

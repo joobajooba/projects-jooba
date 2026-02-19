@@ -403,7 +403,8 @@ export default function NFTSelector({ onSelect, onClose }) {
                       selectedNft.image_original_url;
       
       if (imageUrl) {
-        onSelect(imageUrl);
+        // Pass both imageUrl and full NFT object (includes metadata)
+        onSelect(imageUrl, selectedNft);
         onClose();
       }
     }
