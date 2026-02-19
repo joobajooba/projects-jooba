@@ -4,6 +4,8 @@ import { useAccount } from 'wagmi';
 import { useUser } from '../hooks/useUser';
 import { useWordleStats } from '../hooks/useWordleStats';
 import { supabase } from '../lib/supabase';
+import { isValidEthereumAddress, sanitizeInput, isValidUrl } from '../utils/walletSecurity';
+import { checkRateLimit } from '../utils/rateLimit';
 import NFTSelector from '../components/NFTSelector';
 import './Profile.css';
 
@@ -36,12 +38,20 @@ export default function Profile() {
   useEffect(() => {
     if (viewUsernameParam && supabase) {
       setProfileSearchNotFound(false);
+      
+      // Sanitize search input
+      const sanitizedSearch = sanitizeInput(viewUsernameParam, 50);
+      if (!sanitizedSearch) {
+        setViewedUser(null);
+        return;
+      }
+
       let cancelled = false;
       (async () => {
         const { data, error } = await supabase
           .from('users')
           .select('*')
-          .ilike('username', viewUsernameParam)
+          .ilike('username', sanitizedSearch)
           .limit(1)
           .maybeSingle();
         if (!cancelled) {
@@ -166,6 +176,18 @@ export default function Profile() {
       return;
     }
 
+    // Validate wallet address
+    if (!isValidEthereumAddress(address)) {
+      alert('Invalid wallet address');
+      return;
+    }
+
+    // Validate image URL
+    if (imageUrl && !isValidUrl(imageUrl)) {
+      alert('Invalid image URL');
+      return;
+    }
+
     if (nftSelectorSlot !== null) {
       await handleSlotNFTSelect(imageUrl, nftSelectorSlot, nftData);
       setNftSelectorSlot(null);
@@ -190,10 +212,16 @@ export default function Profile() {
         updateData.profile_picture_metadata = metadata;
       }
 
+      // Ensure wallet_address matches (security check)
+      const walletAddress = address.toLowerCase();
+      if (!isValidEthereumAddress(walletAddress)) {
+        throw new Error('Invalid wallet address format');
+      }
+
       const { error } = await supabase
         .from('users')
         .update(updateData)
-        .eq('wallet_address', address.toLowerCase());
+        .eq('wallet_address', walletAddress);
 
       if (error) {
         console.error('Error saving NFT profile picture:', error);
@@ -217,6 +245,30 @@ export default function Profile() {
 
   const handleSlotNFTSelect = async (imageUrl, slotIndex, nftData = null) => {
     if (!address || !supabase) return;
+
+    // Validate inputs
+    if (!isValidEthereumAddress(address)) {
+      alert('Invalid wallet address');
+      return;
+    }
+
+    if (slotIndex < 0 || slotIndex > 4) {
+      alert('Invalid slot index');
+      return;
+    }
+
+    if (imageUrl && !isValidUrl(imageUrl)) {
+      alert('Invalid image URL');
+      return;
+    }
+
+    // Rate limiting: max 20 NFT slot updates per minute per wallet
+    const rateLimitKey = `nft_slot_update_${address.toLowerCase()}`;
+    if (!checkRateLimit(rateLimitKey, 20, 60000)) {
+      alert('Too many update attempts. Please wait a moment and try again.');
+      return;
+    }
+
     const urlCol = `nft_slot_${slotIndex + 1}_url`;
     const metadataCol = `nft_slot_${slotIndex + 1}_metadata`;
     
@@ -238,10 +290,16 @@ export default function Profile() {
         updateData[metadataCol] = metadata;
       }
 
+      // Ensure wallet_address matches (security check)
+      const walletAddress = address.toLowerCase();
+      if (!isValidEthereumAddress(walletAddress)) {
+        throw new Error('Invalid wallet address format');
+      }
+
       const { error } = await supabase
         .from('users')
         .update(updateData)
-        .eq('wallet_address', address.toLowerCase());
+        .eq('wallet_address', walletAddress);
 
       if (error) {
         console.error('Error saving slot NFT:', error);
@@ -276,13 +334,48 @@ export default function Profile() {
       return;
     }
 
+    // Validate wallet address
+    if (!isValidEthereumAddress(address)) {
+      alert('Invalid wallet address');
+      return;
+    }
+
+    // Rate limiting: max 10 profile updates per minute per wallet
+    const rateLimitKey = `profile_update_${address.toLowerCase()}`;
+    if (!checkRateLimit(rateLimitKey, 10, 60000)) {
+      alert('Too many update attempts. Please wait a moment and try again.');
+      return;
+    }
+
     try {
       const updateData = {};
-      // Include all fields - convert empty strings to null for database
-      if (username !== undefined) updateData.username = (username && username.trim()) || null;
-      if (otherisde !== undefined) updateData.otherisde = (otherisde && otherisde.trim()) || null;
-      if (x !== undefined) updateData.x = (x && x.trim()) || null;
-      if (profilePictureUrl !== undefined) updateData.profile_picture_url = profilePictureUrl || null;
+      // Sanitize and validate all inputs
+      if (username !== undefined) {
+        const sanitized = sanitizeInput(username, 50);
+        updateData.username = sanitized || null;
+      }
+      if (otherisde !== undefined) {
+        const sanitized = sanitizeInput(otherisde, 50);
+        updateData.otherisde = sanitized || null;
+      }
+      if (x !== undefined) {
+        const sanitized = sanitizeInput(x, 50);
+        updateData.x = sanitized || null;
+      }
+      if (profilePictureUrl !== undefined) {
+        // Validate URL if provided
+        if (profilePictureUrl && !isValidUrl(profilePictureUrl)) {
+          alert('Invalid profile picture URL');
+          return;
+        }
+        updateData.profile_picture_url = profilePictureUrl || null;
+      }
+
+      // Ensure wallet_address matches (security check)
+      const walletAddress = address.toLowerCase();
+      if (!isValidEthereumAddress(walletAddress)) {
+        throw new Error('Invalid wallet address format');
+      }
 
       // Don't send empty update
       if (Object.keys(updateData).length === 0) {
@@ -296,7 +389,7 @@ export default function Profile() {
       const { data, error } = await supabase
         .from('users')
         .update(updateData)
-        .eq('wallet_address', address.toLowerCase())
+        .eq('wallet_address', walletAddress)
         .select();
 
       if (error) {

@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import { supabase } from '../lib/supabase';
+import { isValidEthereumAddress } from '../utils/walletSecurity';
+import { checkRateLimit } from '../utils/rateLimit';
 import './Wordle.css';
 
 // Official Wordle word lists - fetched from public source
@@ -236,16 +238,46 @@ export default function Wordle() {
   const saveGameResult = async (totalGuesses, won) => {
     if (!address || !supabase || gameSaved) return;
     
+    // Validate wallet address
+    if (!isValidEthereumAddress(address)) {
+      console.error('Invalid wallet address, cannot save game result');
+      return;
+    }
+
+    // Validate guesses range
+    if (totalGuesses < 1 || totalGuesses > 6) {
+      console.error('Invalid guesses count');
+      return;
+    }
+
+    // Validate word
+    if (!word || word.length !== 5) {
+      console.error('Invalid word');
+      return;
+    }
+
+    // Rate limiting: max 10 game saves per minute per wallet
+    const rateLimitKey = `wordle_save_${address.toLowerCase()}`;
+    if (!checkRateLimit(rateLimitKey, 10, 60000)) {
+      console.error('Rate limit exceeded for game saves');
+      return;
+    }
+    
     try {
       const today = new Date();
       const gameDate = today.toISOString().split('T')[0]; // YYYY-MM-DD format
       
+      const walletAddress = address.toLowerCase();
+      if (!isValidEthereumAddress(walletAddress)) {
+        throw new Error('Invalid wallet address format');
+      }
+      
       const { error } = await supabase
         .from('wordle_games')
         .upsert({
-          wallet_address: address.toLowerCase(),
+          wallet_address: walletAddress,
           game_date: gameDate,
-          word: word,
+          word: word.toUpperCase(),
           guesses: totalGuesses,
           won: won
         }, {

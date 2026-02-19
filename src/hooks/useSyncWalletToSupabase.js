@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useAccount } from 'wagmi';
 import { supabase } from '../lib/supabase';
+import { isValidEthereumAddress } from '../utils/walletSecurity';
 
 /**
  * Hook to automatically sync connected wallet address to Supabase users table
@@ -20,6 +21,12 @@ export function useSyncWalletToSupabase() {
       // Skip if Supabase client is not initialized (missing env var)
       if (!supabase) {
         console.error('❌ Supabase client not initialized. Set VITE_SUPABASE_ANON_KEY in environment variables.');
+        return;
+      }
+
+      // Validate wallet address before inserting
+      if (!isValidEthereumAddress(address)) {
+        console.error('❌ Invalid wallet address format:', address);
         return;
       }
 
