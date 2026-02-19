@@ -326,11 +326,14 @@ export default function Profile() {
         </div>
         <div className="profile-nft-section">
           <div className="profile-search-bar">
-            {viewedUser && (
+            {viewUsernameParam && (
               <button
                 type="button"
                 className="profile-search-back-btn"
-                onClick={() => setSearchParams({})}
+                onClick={() => {
+                  setSearchParams({});
+                  setProfileSearchInput('');
+                }}
               >
                 Back to profile
               </button>
