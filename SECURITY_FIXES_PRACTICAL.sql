@@ -24,15 +24,15 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Policy: Only allow updates where wallet_address matches
 -- NOTE: Application MUST verify wallet signature before calling update
+-- In RLS policies, we can't use OLD, so we prevent wallet_address changes via constraint
 CREATE POLICY "Secure update own profile"
 ON "public"."users"
 FOR UPDATE
 TO anon, authenticated
 USING (true)  -- Allow all (application verifies ownership)
 WITH CHECK (
-  -- Prevent changing wallet_address to a different address
-  wallet_address = OLD.wallet_address
-  AND wallet_address IS NOT NULL
+  -- Ensure wallet_address format is valid
+  wallet_address IS NOT NULL
   AND LENGTH(wallet_address) = 42
   AND wallet_address ~ '^0x[a-fA-F0-9]{40}$'
 );
@@ -130,8 +130,27 @@ DROP CONSTRAINT IF EXISTS "check_wallet_format";
 ALTER TABLE "public"."users"
 ADD CONSTRAINT "check_wallet_format" 
 CHECK (
-  wallet_address ~ '^0x[a-fA-F0-9]{40}$'
+  wallet_address IS NOT NULL
+  AND wallet_address ~ '^0x[a-fA-F0-9]{40}$'
 );
+
+-- Prevent wallet_address from being changed after creation
+-- This ensures users can't change their wallet address
+CREATE OR REPLACE FUNCTION prevent_wallet_change()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF OLD.wallet_address IS DISTINCT FROM NEW.wallet_address THEN
+    RAISE EXCEPTION 'Cannot change wallet_address';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS prevent_wallet_address_change ON "public"."users";
+CREATE TRIGGER prevent_wallet_address_change
+BEFORE UPDATE ON "public"."users"
+FOR EACH ROW
+EXECUTE FUNCTION prevent_wallet_change();
 
 ALTER TABLE "public"."wordle_games"
 DROP CONSTRAINT IF EXISTS "check_guesses_range";
