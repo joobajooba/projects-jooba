@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAccount } from 'wagmi';
+import { supabase } from '../lib/supabase';
 import './Wordle.css';
 
 // Official Wordle word lists - fetched from public source
@@ -48,6 +50,7 @@ const getTodaysWord = () => {
 
 export default function Wordle() {
   const navigate = useNavigate();
+  const { address } = useAccount();
   const [word, setWord] = useState('');
   const [guesses, setGuesses] = useState([]);
   const [currentGuess, setCurrentGuess] = useState('');
@@ -55,6 +58,7 @@ export default function Wordle() {
   const [message, setMessage] = useState('');
   const [wordListsLoaded, setWordListsLoaded] = useState(false);
   const [letterStates, setLetterStates] = useState({}); // Track letter states for keyboard
+  const [gameSaved, setGameSaved] = useState(false); // Track if game result has been saved
 
   useEffect(() => {
     // Load word lists, then initialize game
@@ -180,12 +184,20 @@ export default function Wordle() {
       });
       setLetterStates(newLetterStates);
 
-      if (upperGuess === word) {
+      const won = upperGuess === word;
+      const lost = newGuesses.length >= 6;
+      
+      if (won) {
         setGameStatus('won');
         setMessage('Congratulations! You won!');
-      } else if (newGuesses.length >= 6) {
+      } else if (lost) {
         setGameStatus('lost');
         setMessage(`Game Over! The word was ${word}`);
+      }
+      
+      // Save game result when game ends
+      if (won || lost) {
+        saveGameResult(newGuesses.length, won);
       }
     } else if (key === 'Backspace') {
       setCurrentGuess(prev => prev.slice(0, -1));
@@ -209,12 +221,44 @@ export default function Wordle() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentGuess, gameStatus, word]);
 
+  const saveGameResult = async (totalGuesses, won) => {
+    if (!address || !supabase || gameSaved) return;
+    
+    try {
+      const today = new Date();
+      const gameDate = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+      
+      const { error } = await supabase
+        .from('wordle_games')
+        .upsert({
+          wallet_address: address.toLowerCase(),
+          game_date: gameDate,
+          word: word,
+          guesses: totalGuesses,
+          won: won
+        }, {
+          onConflict: 'wallet_address,game_date'
+        });
+
+      if (error) {
+        console.error('Error saving Wordle game result:', error);
+        // Don't show error to user - silent fail
+      } else {
+        console.log('Wordle game result saved successfully');
+        setGameSaved(true);
+      }
+    } catch (err) {
+      console.error('Error saving Wordle game result:', err);
+    }
+  };
+
   const resetGame = () => {
     setGuesses([]);
     setCurrentGuess('');
     setGameStatus('playing');
     setMessage('');
     setLetterStates({});
+    setGameSaved(false);
     setWord(getTodaysWord());
     localStorage.removeItem('wordle-game');
   };
