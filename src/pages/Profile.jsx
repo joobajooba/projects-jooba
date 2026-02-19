@@ -378,17 +378,6 @@ export default function Profile() {
           </div>
         </div>
       </div>
-      {viewedUser && (
-        <div className="profile-view-back">
-          <button
-            type="button"
-            className="profile-button profile-button-secondary"
-            onClick={() => setSearchParams({})}
-          >
-            Back to my profile
-          </button>
-        </div>
-      )}
       {(showNFTSelector || nftSelectorSlot !== null) && (
         <NFTSelector
           onSelect={handleNFTSelect}

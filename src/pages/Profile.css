@@ -200,6 +200,7 @@
   white-space: nowrap;
   height: fit-content;
   align-self: flex-end;
+  flex-shrink: 0;
   margin-left: auto;
 }
 
