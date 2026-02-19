@@ -94,13 +94,75 @@
   justify-content: space-between;
 }
 
-/* Row of 5 NFT slots next to username panel — half height of username panel, fills remaining space */
+/* Section to the right of username panel: search bar + NFT row (bottoms aligned with username panel) */
+.profile-nft-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 360px;
+}
+
+.profile-search-bar {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.profile-search-bar input {
+  flex: 1;
+  padding: 0.6rem 0.75rem;
+  background: #1a1a1a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #e0e0e0;
+  font-family: 'TT Octosquares', system-ui, sans-serif;
+  font-size: 0.95rem;
+}
+
+.profile-search-bar input::placeholder {
+  color: #888;
+}
+
+.profile-search-bar input:focus {
+  outline: none;
+  border-color: #666;
+}
+
+.profile-search-bar button {
+  padding: 0.6rem 1rem;
+  background: #4a9eff;
+  border: 1px solid #4a9eff;
+  border-radius: 4px;
+  color: white;
+  font-family: 'TT Octosquares', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.profile-search-bar button:hover {
+  background: #5aaeff;
+}
+
+.profile-search-not-found {
+  color: #b55;
+  font-size: 0.9rem;
+  margin: 0 0 0.5rem 0;
+}
+
+.profile-view-back {
+  margin-top: 1rem;
+}
+
+/* Row of 5 NFT slots — pushed to bottom so bottom aligns with username panel */
 .profile-nft-slots-row {
   flex: 1;
   display: flex;
   gap: 0.75rem;
   min-width: 0;
-  align-items: flex-start;
+  align-items: flex-end;
 }
 
 .profile-nft-slot {
@@ -205,6 +267,12 @@
   .profile-right-panel {
     width: 100%;
     max-width: 260px;
+  }
+
+  .profile-nft-section {
+    width: 100%;
+    height: auto;
+    min-height: 320px;
   }
 
   .profile-nft-slots-row {

@@ -11,6 +11,9 @@ export default function Profile() {
   const { user, loading, refetch } = useUser();
   const [searchParams, setSearchParams] = useSearchParams();
   const editMode = searchParams.get('edit') === 'true';
+  const viewUsernameParam = searchParams.get('username') || '';
+  const [viewedUser, setViewedUser] = useState(null);
+  const [profileSearchInput, setProfileSearchInput] = useState('');
   const [isEditing, setIsEditing] = useState(editMode);
   const [username, setUsername] = useState('');
   const [otherisde, setOtherisde] = useState('');
@@ -20,26 +23,58 @@ export default function Profile() {
   const [showNFTSelector, setShowNFTSelector] = useState(false);
   const [nftSelectorSlot, setNftSelectorSlot] = useState(null);
   const [slotUrls, setSlotUrls] = useState(['', '', '', '', '']);
+  const [profileSearchNotFound, setProfileSearchNotFound] = useState(false);
+
+  const displayedUser = viewedUser ?? user;
+  const isOwnProfile = !viewedUser;
 
   useEffect(() => {
-    if (user) {
-      setUsername(user.username || '');
-      setOtherisde(user.otherisde || '');
-      setX(user.x || '');
-      setProfilePictureUrl(user.profile_picture_url || '');
+    if (viewUsernameParam && supabase) {
+      setProfileSearchNotFound(false);
+      let cancelled = false;
+      (async () => {
+        const { data, error } = await supabase
+          .from('users')
+          .select('*')
+          .ilike('username', viewUsernameParam)
+          .limit(1)
+          .maybeSingle();
+        if (!cancelled) {
+          if (error) {
+            console.error('Error fetching profile by username:', error);
+            setViewedUser(null);
+            return;
+          }
+          setViewedUser(data);
+          if (!data) setProfileSearchNotFound(true);
+        }
+      })();
+      return () => { cancelled = true; };
+    } else {
+      setViewedUser(null);
+      setProfileSearchNotFound(false);
+    }
+  }, [viewUsernameParam]);
+
+  useEffect(() => {
+    if (displayedUser) {
+      setUsername(displayedUser.username || '');
+      setOtherisde(displayedUser.otherisde || '');
+      setX(displayedUser.x || '');
+      setProfilePictureUrl(displayedUser.profile_picture_url || '');
       setSlotUrls([
-        user.nft_slot_1_url || '',
-        user.nft_slot_2_url || '',
-        user.nft_slot_3_url || '',
-        user.nft_slot_4_url || '',
-        user.nft_slot_5_url || ''
+        displayedUser.nft_slot_1_url || '',
+        displayedUser.nft_slot_2_url || '',
+        displayedUser.nft_slot_3_url || '',
+        displayedUser.nft_slot_4_url || '',
+        displayedUser.nft_slot_5_url || ''
       ]);
     }
-  }, [user]);
+  }, [displayedUser]);
 
   useEffect(() => {
-    setIsEditing(editMode);
-  }, [editMode]);
+    setIsEditing(editMode && isOwnProfile);
+  }, [editMode, isOwnProfile]);
 
   const handleNFTSelect = async (imageUrl) => {
     if (!address || !supabase) {
@@ -205,7 +240,7 @@ export default function Profile() {
                 <span>No Picture</span>
               </div>
             )}
-            {isEditing && (
+            {isOwnProfile && isEditing && (
               <div className="profile-picture-actions">
                 <button
                   className="profile-picture-nft-btn"
@@ -216,32 +251,34 @@ export default function Profile() {
                 </button>
               </div>
             )}
-            <div className="profile-actions profile-actions-left">
-              {isEditing ? (
-                <>
-                  <button onClick={handleSave} className="profile-button">Save</button>
+            {isOwnProfile && (
+              <div className="profile-actions profile-actions-left">
+                {isEditing ? (
+                  <>
+                    <button onClick={handleSave} className="profile-button">Save</button>
+                    <button 
+                      onClick={() => {
+                        setIsEditing(false);
+                        setSearchParams({});
+                      }} 
+                      className="profile-button profile-button-secondary"
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
                   <button 
                     onClick={() => {
-                      setIsEditing(false);
-                      setSearchParams({});
+                      setIsEditing(true);
+                      setSearchParams({ edit: 'true' });
                     }} 
-                    className="profile-button profile-button-secondary"
+                    className="profile-button"
                   >
-                    Cancel
+                    Edit Profile
                   </button>
-                </>
-              ) : (
-                <button 
-                  onClick={() => {
-                    setIsEditing(true);
-                    setSearchParams({ edit: 'true' });
-                  }} 
-                  className="profile-button"
-                >
-                  Edit Profile
-                </button>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
         <div className="profile-right-panel">
@@ -287,27 +324,58 @@ export default function Profile() {
             </div>
           </div>
         </div>
-        <div className="profile-nft-slots-row">
-          {[0, 1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              className={`profile-nft-slot ${isEditing ? 'profile-nft-slot-editable' : ''}`}
-              onClick={() => isEditing && setNftSelectorSlot(i)}
-              role={isEditing ? 'button' : undefined}
-              tabIndex={isEditing ? 0 : undefined}
-              onKeyDown={(e) => isEditing && (e.key === 'Enter' || e.key === ' ') && setNftSelectorSlot(i)}
+        <div className="profile-nft-section">
+          <div className="profile-search-bar">
+            <input
+              type="text"
+              placeholder="Search profile by username..."
+              value={profileSearchInput}
+              onChange={(e) => setProfileSearchInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && setSearchParams({ username: profileSearchInput.trim() })}
+            />
+            <button
+              type="button"
+              onClick={() => setSearchParams({ username: profileSearchInput.trim() })}
             >
-              {slotUrls[i] ? (
-                <img src={slotUrls[i]} alt={`Slot ${i + 1}`} />
-              ) : (
-                <span className="profile-nft-slot-placeholder">
-                  {isEditing ? 'Choose NFT' : ''}
-                </span>
-              )}
-            </div>
-          ))}
+              Search
+            </button>
+          </div>
+          {profileSearchNotFound && (
+            <p className="profile-search-not-found">No profile found for &quot;{viewUsernameParam}&quot;</p>
+          )}
+          <div className="profile-nft-slots-row">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className={`profile-nft-slot ${isEditing ? 'profile-nft-slot-editable' : ''}`}
+                onClick={() => isEditing && setNftSelectorSlot(i)}
+                role={isEditing ? 'button' : undefined}
+                tabIndex={isEditing ? 0 : undefined}
+                onKeyDown={(e) => isEditing && (e.key === 'Enter' || e.key === ' ') && setNftSelectorSlot(i)}
+              >
+                {slotUrls[i] ? (
+                  <img src={slotUrls[i]} alt={`Slot ${i + 1}`} />
+                ) : (
+                  <span className="profile-nft-slot-placeholder">
+                    {isEditing ? 'Choose NFT' : ''}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
+      {viewedUser && (
+        <div className="profile-view-back">
+          <button
+            type="button"
+            className="profile-button profile-button-secondary"
+            onClick={() => setSearchParams({})}
+          >
+            Back to my profile
+          </button>
+        </div>
+      )}
       {(showNFTSelector || nftSelectorSlot !== null) && (
         <NFTSelector
           onSelect={handleNFTSelect}
