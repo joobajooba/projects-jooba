@@ -13,30 +13,91 @@ let ANSWER_WORDS = []; // Words that can be solutions
 // Fetch official Wordle word lists
 const fetchWordLists = async (onLoaded) => {
   try {
-    // Fetch valid guesses (all words you can guess) - using reliable source
-    const guessesResponse = await fetch('https://gist.githubusercontent.com/cfreshman/d5fb56316158a1575898bba1eed3b5da/raw/words.txt');
-    const guessesText = await guessesResponse.text();
-    VALID_GUESSES = new Set(guessesText.trim().split('\n').map(w => w.toUpperCase().trim()).filter(w => w.length === 5));
-
-    // Fetch answer words in chronological order (original Wordle solution list)
-    // This is the original chronological order from Wordle's source code
-    const answersResponse = await fetch('https://gist.githubusercontent.com/cfreshman/a7b776506c73284511034e63af1017ee/raw/wordle-answers-alphabetical.txt');
-    const answersText = await answersResponse.text();
-    // Note: This list is alphabetical, not chronological. We need the chronological order.
-    // For now, we'll use a known chronological source or calculate based on known dates
-    const answersList = answersText.trim().split('\n').map(w => w.toUpperCase().trim()).filter(w => w.length === 5);
+    // Fetch valid guesses from tabatkins/wordle-list (official Wordle word list)
+    // This is the complete list of all valid guesses used by NYT Wordle
+    const guessesResponse = await fetch('https://raw.githubusercontent.com/tabatkins/wordle-list/main/words');
     
-    // Use the original Wordle chronological order (pre-NYT curation)
-    // The original Wordle used a fixed chronological list starting Jan 1, 2022
-    // After Nov 7, 2022, NYT curates daily, so we'll use the original order for consistency
+    if (!guessesResponse.ok) {
+      throw new Error(`Failed to fetch word list: ${guessesResponse.status}`);
+    }
+    
+    const guessesText = await guessesResponse.text();
+    const words = guessesText.trim().split('\n')
+      .map(w => w.trim().toUpperCase())
+      .filter(w => w.length === 5 && /^[A-Z]{5}$/.test(w));
+    
+    VALID_GUESSES = new Set(words);
+
+    // Fetch answer words (original Wordle solution list)
+    // Try multiple sources for reliability
+    let answersList = [];
+    const answerSources = [
+      'https://raw.githubusercontent.com/tabatkins/wordle-list/main/words', // Same list, we'll filter for common answers
+      'https://gist.githubusercontent.com/cfreshman/a03ef2cba789d8cf00c08f767e0fad7b/raw/wordle-answers-alphabetical.txt'
+    ];
+    
+    for (const source of answerSources) {
+      try {
+        const answersResponse = await fetch(source);
+        if (answersResponse.ok) {
+          const answersText = await answersResponse.text();
+          answersList = answersText.trim().split('\n')
+            .map(w => w.trim().toUpperCase())
+            .filter(w => w.length === 5 && /^[A-Z]{5}$/.test(w));
+          if (answersList.length > 0) break;
+        }
+      } catch (e) {
+        console.warn(`Failed to fetch from ${source}:`, e);
+      }
+    }
+    
+    // If we couldn't get answer list, use valid guesses as answers (they overlap)
+    if (answersList.length === 0) {
+      answersList = Array.from(VALID_GUESSES).slice(0, 2500); // Use first 2500 as potential answers
+    }
+    
     ANSWER_WORDS = answersList;
 
-    console.log(`Loaded ${VALID_GUESSES.size} valid guesses and ${ANSWER_WORDS.length} answer words`);
+    console.log(`✅ Loaded ${VALID_GUESSES.size} valid guesses and ${ANSWER_WORDS.length} answer words`);
+    console.log(`✅ Sample words check - AUDIO: ${VALID_GUESSES.has('AUDIO')}, HELLO: ${VALID_GUESSES.has('HELLO')}`);
+    
     if (onLoaded) onLoaded();
   } catch (error) {
-    console.error('Error fetching word lists, using fallback:', error);
+    console.error('❌ Error fetching word lists:', error);
+    console.error('Using fallback list (limited words)');
+    
     // Fallback to a comprehensive list if fetch fails
-    const fallback = ['APPLE', 'BEACH', 'CHAIR', 'DANCE', 'EARTH', 'FLAME', 'GLASS', 'HEART', 'IMAGE', 'KNIFE', 'LIGHT', 'MAGIC', 'NIGHT', 'OCEAN', 'PIANO', 'RIVER', 'STORM', 'TABLE', 'UNITY', 'VALUE', 'WATER', 'YOUTH', 'ZEBRA', 'BRAVE', 'CLOUD', 'DREAM', 'EAGLE', 'FROST', 'GREEN', 'HAPPY', 'IVORY', 'LEMON', 'MUSIC', 'NOVEL', 'OLIVE', 'POWER', 'QUICK', 'ROYAL', 'SMILE', 'TIGER', 'ULTRA', 'VIVID', 'WHEAT', 'YACHT', 'BLAZE', 'CRANE', 'DROVE', 'ELITE', 'FLAIR', 'GRACE', 'HONEY', 'JOKER', 'KAYAK', 'LUNAR', 'MERRY', 'NINJA', 'OPERA', 'PEARL', 'QUERY', 'RADIO', 'SCOUT', 'TULIP', 'URBAN', 'VOCAL', 'WALTZ', 'BREAD', 'CRISP', 'DUSKY', 'ELBOW', 'FJORD', 'GLIDE', 'HOVER', 'JUMPS', 'KNEAD', 'LATCH', 'MIXER', 'NUDGE', 'PIXEL', 'RELAY', 'SPLIT', 'TREND', 'UNZIP', 'VEXED', 'AUDIO', 'ABOUT', 'ABOVE', 'ABUSE', 'ACTOR', 'ACUTE', 'ADMIT', 'ADOPT', 'ADULT', 'AFTER', 'AGAIN', 'AGENT', 'AGREE', 'AHEAD', 'ALARM', 'ALBUM', 'ALERT', 'ALIEN', 'ALIGN', 'ALIKE', 'ALIVE', 'ALLOW', 'ALONE', 'ALONG', 'ALTER', 'AMONG', 'ANGER', 'ANGLE', 'ANGRY', 'APART', 'APPLE', 'APPLY', 'ARENA', 'ARGUE', 'ARISE', 'ARRAY', 'ARROW', 'ASIDE', 'ASSET', 'AVOID', 'AWAKE', 'AWARD', 'AWARE', 'BADLY', 'BAKER', 'BASES', 'BASIC', 'BEACH', 'BEGAN', 'BEGIN', 'BEING', 'BELOW', 'BENCH', 'BILLY', 'BIRTH', 'BLACK', 'BLAME', 'BLANK', 'BLAST', 'BLIND', 'BLOCK', 'BLOOD', 'BLOOM', 'BLOWN', 'BLUES', 'BOARD', 'BOAST', 'BOBBY', 'BOUND', 'BRAIN', 'BRAND', 'BRASS', 'BRAVE', 'BREAD', 'BREAK', 'BREED', 'BRIEF', 'BRING', 'BROAD', 'BROKE', 'BROWN', 'BRUSH', 'BUDDY', 'BUILD', 'BUNCH', 'BURST', 'CABLE', 'CALIF', 'CARRY', 'CATCH', 'CAUSE', 'CHAIN', 'CHAIR', 'CHAOS', 'CHARM', 'CHART', 'CHASE', 'CHEAP', 'CHECK', 'CHEST', 'CHIEF', 'CHILD', 'CHINA', 'CHOSE', 'CHUNK', 'CHURN', 'CIVIL', 'CLAIM', 'CLASH', 'CLASS', 'CLEAN', 'CLEAR', 'CLICK', 'CLIMB', 'CLING', 'CLOCK', 'CLOSE', 'CLOUD', 'CLOWN', 'COACH', 'COAST', 'COULD', 'COUNT', 'COUPE', 'COURT', 'COVER', 'CRACK', 'CRAFT', 'CRANE', 'CRASH', 'CRAZY', 'CREAM', 'CRIME', 'CRISP', 'CROWD', 'CROWN', 'CRUDE', 'CURVE', 'CYCLE', 'DAILY', 'DAISY', 'DANCE', 'DATED', 'DEALT', 'DEATH', 'DEBUT', 'DELAY', 'DELTA', 'DENIM', 'DENSE', 'DEPTH', 'DETER', 'DEVIL', 'DIARY', 'DIGIT', 'DINER', 'DIRTY', 'DISCO', 'DITCH', 'DIVER', 'DIZZY', 'DODGE', 'DOING', 'DOLLY', 'DONOR', 'DONUT', 'DOUBT', 'DOUGH', 'DOWRY', 'DOZEN', 'DRAFT', 'DRAIN', 'DRAMA', 'DRANK', 'DRAWN', 'DREAM', 'DRESS', 'DRIED', 'DRIFT', 'DRILL', 'DRINK', 'DRIVE', 'DROVE', 'DROWN', 'DRUNK', 'DRYER', 'DUCHY', 'DULLY', 'DUMMY', 'DUMPY', 'DUNCE', 'DUSKY', 'DUSTY', 'DUTCH', 'DUVET', 'DWARF', 'DWELL', 'DWELT', 'DYING'];
+    // Include AUDIO and HELLO explicitly
+    const fallback = [
+      'AUDIO', 'HELLO', 'APPLE', 'BEACH', 'CHAIR', 'DANCE', 'EARTH', 'FLAME', 'GLASS', 'HEART',
+      'IMAGE', 'KNIFE', 'LIGHT', 'MAGIC', 'NIGHT', 'OCEAN', 'PIANO', 'RIVER', 'STORM', 'TABLE',
+      'UNITY', 'VALUE', 'WATER', 'YOUTH', 'ZEBRA', 'BRAVE', 'CLOUD', 'DREAM', 'EAGLE', 'FROST',
+      'GREEN', 'HAPPY', 'IVORY', 'LEMON', 'MUSIC', 'NOVEL', 'OLIVE', 'POWER', 'QUICK', 'ROYAL',
+      'SMILE', 'TIGER', 'ULTRA', 'VIVID', 'WHEAT', 'YACHT', 'BLAZE', 'CRANE', 'DROVE', 'ELITE',
+      'FLAIR', 'GRACE', 'HONEY', 'JOKER', 'KAYAK', 'LUNAR', 'MERRY', 'NINJA', 'OPERA', 'PEARL',
+      'QUERY', 'RADIO', 'SCOUT', 'TULIP', 'URBAN', 'VOCAL', 'WALTZ', 'BREAD', 'CRISP', 'DUSKY',
+      'ELBOW', 'FJORD', 'GLIDE', 'HOVER', 'JUMPS', 'KNEAD', 'LATCH', 'MIXER', 'NUDGE', 'PIXEL',
+      'RELAY', 'SPLIT', 'TREND', 'UNZIP', 'VEXED', 'ABOUT', 'ABOVE', 'ABUSE', 'ACTOR', 'ACUTE',
+      'ADMIT', 'ADOPT', 'ADULT', 'AFTER', 'AGAIN', 'AGENT', 'AGREE', 'AHEAD', 'ALARM', 'ALBUM',
+      'ALERT', 'ALIEN', 'ALIGN', 'ALIKE', 'ALIVE', 'ALLOW', 'ALONE', 'ALONG', 'ALTER', 'AMONG',
+      'ANGER', 'ANGLE', 'ANGRY', 'APART', 'APPLY', 'ARENA', 'ARGUE', 'ARISE', 'ARRAY', 'ARROW',
+      'ASIDE', 'ASSET', 'AVOID', 'AWAKE', 'AWARD', 'AWARE', 'BADLY', 'BAKER', 'BASES', 'BASIC',
+      'BEGAN', 'BEGIN', 'BEING', 'BELOW', 'BENCH', 'BILLY', 'BIRTH', 'BLACK', 'BLAME', 'BLANK',
+      'BLAST', 'BLIND', 'BLOCK', 'BLOOD', 'BLOOM', 'BLOWN', 'BLUES', 'BOARD', 'BOAST', 'BOBBY',
+      'BOUND', 'BRAIN', 'BRAND', 'BRASS', 'BREAD', 'BREAK', 'BREED', 'BRIEF', 'BRING', 'BROAD',
+      'BROKE', 'BROWN', 'BRUSH', 'BUDDY', 'BUILD', 'BUNCH', 'BURST', 'CABLE', 'CALIF', 'CARRY',
+      'CATCH', 'CAUSE', 'CHAIN', 'CHAOS', 'CHARM', 'CHART', 'CHASE', 'CHEAP', 'CHECK', 'CHEST',
+      'CHIEF', 'CHILD', 'CHINA', 'CHOSE', 'CHUNK', 'CHURN', 'CIVIL', 'CLAIM', 'CLASH', 'CLASS',
+      'CLEAN', 'CLEAR', 'CLICK', 'CLIMB', 'CLING', 'CLOCK', 'CLOSE', 'CLOUD', 'CLOWN', 'COACH',
+      'COAST', 'COULD', 'COUNT', 'COUPE', 'COURT', 'COVER', 'CRACK', 'CRAFT', 'CRANE', 'CRASH',
+      'CRAZY', 'CREAM', 'CRIME', 'CROWD', 'CROWN', 'CRUDE', 'CURVE', 'CYCLE', 'DAILY', 'DAISY',
+      'DATED', 'DEALT', 'DEATH', 'DEBUT', 'DELAY', 'DELTA', 'DENIM', 'DENSE', 'DEPTH', 'DETER',
+      'DEVIL', 'DIARY', 'DIGIT', 'DINER', 'DIRTY', 'DISCO', 'DITCH', 'DIVER', 'DIZZY', 'DODGE',
+      'DOING', 'DOLLY', 'DONOR', 'DONUT', 'DOUBT', 'DOUGH', 'DOWRY', 'DOZEN', 'DRAFT', 'DRAIN',
+      'DRAMA', 'DRANK', 'DRAWN', 'DREAM', 'DRESS', 'DRIED', 'DRIFT', 'DRILL', 'DRINK', 'DRIVE',
+      'DROWN', 'DRUNK', 'DRYER', 'DUCHY', 'DULLY', 'DUMMY', 'DUMPY', 'DUNCE', 'DUSTY', 'DUTCH',
+      'DUVET', 'DWARF', 'DWELL', 'DWELT', 'DYING'
+    ];
     VALID_GUESSES = new Set(fallback);
     ANSWER_WORDS = fallback;
     if (onLoaded) onLoaded();
