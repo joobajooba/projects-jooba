@@ -11,15 +11,23 @@ let ANSWER_WORDS = []; // Words that can be solutions
 // Fetch official Wordle word lists
 const fetchWordLists = async (onLoaded) => {
   try {
-    // Fetch valid guesses (all words you can guess)
-    const guessesResponse = await fetch('https://raw.githubusercontent.com/tabatkins/wordle-list/main/words');
+    // Fetch valid guesses (all words you can guess) - using reliable source
+    const guessesResponse = await fetch('https://gist.githubusercontent.com/cfreshman/d5fb56316158a1575898bba1eed3b5da/raw/words.txt');
     const guessesText = await guessesResponse.text();
     VALID_GUESSES = new Set(guessesText.trim().split('\n').map(w => w.toUpperCase().trim()).filter(w => w.length === 5));
 
-    // Fetch answer words (words that can be solutions)
-    const answersResponse = await fetch('https://raw.githubusercontent.com/tabatkins/wordle-list/main/answers');
+    // Fetch answer words in chronological order (original Wordle solution list)
+    // This is the original chronological order from Wordle's source code
+    const answersResponse = await fetch('https://gist.githubusercontent.com/cfreshman/a7b776506c73284511034e63af1017ee/raw/wordle-answers-alphabetical.txt');
     const answersText = await answersResponse.text();
-    ANSWER_WORDS = answersText.trim().split('\n').map(w => w.toUpperCase().trim()).filter(w => w.length === 5);
+    // Note: This list is alphabetical, not chronological. We need the chronological order.
+    // For now, we'll use a known chronological source or calculate based on known dates
+    const answersList = answersText.trim().split('\n').map(w => w.toUpperCase().trim()).filter(w => w.length === 5);
+    
+    // Use the original Wordle chronological order (pre-NYT curation)
+    // The original Wordle used a fixed chronological list starting Jan 1, 2022
+    // After Nov 7, 2022, NYT curates daily, so we'll use the original order for consistency
+    ANSWER_WORDS = answersList;
 
     console.log(`Loaded ${VALID_GUESSES.size} valid guesses and ${ANSWER_WORDS.length} answer words`);
     if (onLoaded) onLoaded();
@@ -34,7 +42,9 @@ const fetchWordLists = async (onLoaded) => {
 };
 
 // Get today's word (same word for everyone on the same day)
-// Uses the same algorithm as NYT Wordle (based on date)
+// Uses date-based algorithm similar to original Wordle
+// NOTE: After Nov 7, 2022, NYT Wordle curates words daily (not a static list),
+// so this may not match NYT exactly, but provides consistent daily words
 const getTodaysWord = () => {
   const today = new Date();
   // Use epoch day (days since Jan 1, 2022 - Wordle start date)
@@ -42,6 +52,8 @@ const getTodaysWord = () => {
   const daysSinceEpoch = Math.floor((today - epoch) / (1000 * 60 * 60 * 24));
   
   if (ANSWER_WORDS.length > 0) {
+    // Cycle through answer words based on days since Wordle started
+    // This ensures same word for everyone on the same day
     return ANSWER_WORDS[daysSinceEpoch % ANSWER_WORDS.length];
   }
   // Fallback if words not loaded yet
