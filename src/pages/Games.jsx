@@ -1,9 +1,13 @@
+import { useNavigate } from 'react-router-dom';
+
 export default function Games() {
+  const navigate = useNavigate();
+
   return (
     <main className="games-main">
       <div className="games-container">
         <div className="games-box-outer">
-          <div className="games-box">
+          <div className="games-box" onClick={() => navigate('/games/wordle')} style={{ cursor: 'pointer' }}>
             <span className="games-box-title">Wordle</span>
             <div className="games-box-image-wrap">
               <img src="/wordle.png" alt="Wordle" className="games-box-image" />

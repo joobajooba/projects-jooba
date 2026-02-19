@@ -5,6 +5,7 @@ import { useSyncWalletToSupabase } from './hooks/useSyncWalletToSupabase';
 import ProfileDropdown from './components/ProfileDropdown';
 import Home from './pages/Home';
 import Games from './pages/Games';
+import Wordle from './pages/Wordle';
 import Profile from './pages/Profile';
 import './index.css';
 
@@ -30,6 +31,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/games/" element={<Games />} />
+        <Route path="/games/wordle" element={<Wordle />} />
         <Route path="/ape-projects/" element={<main className="games-main"><p>APE-Projects</p></main>} />
         <Route path="/profile/" element={<Profile />} />
       </Routes>
