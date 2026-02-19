@@ -18,8 +18,8 @@
 }
 
 .wordle-header {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   width: 100%;
   margin-bottom: 1rem;
@@ -32,6 +32,18 @@
   letter-spacing: 0.2em;
   color: #e0e0e0;
   margin: 0;
+  text-align: center;
+  grid-column: 2;
+}
+
+.wordle-back-btn {
+  justify-self: start;
+  grid-column: 1;
+}
+
+.wordle-reset-btn {
+  justify-self: end;
+  grid-column: 3;
 }
 
 .wordle-back-btn,

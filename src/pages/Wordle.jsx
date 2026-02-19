@@ -2,28 +2,49 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Wordle.css';
 
-// Word list - 5-letter words (you can expand this or fetch from an API)
-const WORDS = [
-  'APPLE', 'BEACH', 'CHAIR', 'DANCE', 'EARTH', 'FLAME', 'GLASS', 'HEART',
-  'IMAGE', 'JAZZY', 'KNIFE', 'LIGHT', 'MAGIC', 'NIGHT', 'OCEAN', 'PIANO',
-  'QUART', 'RIVER', 'STORM', 'TABLE', 'UNITY', 'VALUE', 'WATER', 'YOUTH',
-  'ZEBRA', 'BRAVE', 'CLOUD', 'DREAM', 'EAGLE', 'FROST', 'GREEN', 'HAPPY',
-  'IVORY', 'JUMBO', 'KNEEL', 'LEMON', 'MUSIC', 'NOVEL', 'OLIVE', 'POWER',
-  'QUICK', 'ROYAL', 'SMILE', 'TIGER', 'ULTRA', 'VIVID', 'WHEAT', 'XENON',
-  'YACHT', 'ZONAL', 'BLAZE', 'CRANE', 'DROVE', 'ELITE', 'FLAIR', 'GRACE',
-  'HONEY', 'INBOX', 'JOKER', 'KAYAK', 'LUNAR', 'MERRY', 'NINJA', 'OPERA',
-  'PEARL', 'QUERY', 'RADIO', 'SCOUT', 'TULIP', 'URBAN', 'VOCAL', 'WALTZ',
-  'XENIA', 'YOGIC', 'ZONED', 'BREAD', 'CRISP', 'DUSKY', 'ELBOW', 'FJORD',
-  'GLIDE', 'HOVER', 'INLAY', 'JUMPS', 'KNEAD', 'LATCH', 'MIXER', 'NUDGE',
-  'OCTAL', 'PIXEL', 'QUART', 'RELAY', 'SPLIT', 'TREND', 'UNZIP', 'VEXED',
-  'WHELP', 'XYLOL', 'YODEL', 'ZONAL'
-];
+// Official Wordle word lists - fetched from public source
+let VALID_GUESSES = new Set(); // All valid guess words
+let ANSWER_WORDS = []; // Words that can be solutions
+
+// Fetch official Wordle word lists
+const fetchWordLists = async () => {
+  try {
+    // Fetch valid guesses (all words you can guess)
+    const guessesResponse = await fetch('https://raw.githubusercontent.com/tabatkins/wordle-list/main/words');
+    const guessesText = await guessesResponse.text();
+    VALID_GUESSES = new Set(guessesText.trim().split('\n').map(w => w.toUpperCase()));
+
+    // Fetch answer words (words that can be solutions)
+    const answersResponse = await fetch('https://raw.githubusercontent.com/tabatkins/wordle-list/main/answers');
+    const answersText = await answersResponse.text();
+    ANSWER_WORDS = answersText.trim().split('\n').map(w => w.toUpperCase());
+
+    console.log(`Loaded ${VALID_GUESSES.size} valid guesses and ${ANSWER_WORDS.length} answer words`);
+  } catch (error) {
+    console.error('Error fetching word lists, using fallback:', error);
+    // Fallback to a basic list if fetch fails
+    const fallback = ['APPLE', 'BEACH', 'CHAIR', 'DANCE', 'EARTH', 'FLAME', 'GLASS', 'HEART', 'IMAGE', 'KNIFE', 'LIGHT', 'MAGIC', 'NIGHT', 'OCEAN', 'PIANO', 'RIVER', 'STORM', 'TABLE', 'UNITY', 'VALUE', 'WATER', 'YOUTH', 'ZEBRA', 'BRAVE', 'CLOUD', 'DREAM', 'EAGLE', 'FROST', 'GREEN', 'HAPPY', 'IVORY', 'LEMON', 'MUSIC', 'NOVEL', 'OLIVE', 'POWER', 'QUICK', 'ROYAL', 'SMILE', 'TIGER', 'ULTRA', 'VIVID', 'WHEAT', 'YACHT', 'BLAZE', 'CRANE', 'DROVE', 'ELITE', 'FLAIR', 'GRACE', 'HONEY', 'JOKER', 'KAYAK', 'LUNAR', 'MERRY', 'NINJA', 'OPERA', 'PEARL', 'QUERY', 'RADIO', 'SCOUT', 'TULIP', 'URBAN', 'VOCAL', 'WALTZ', 'BREAD', 'CRISP', 'DUSKY', 'ELBOW', 'FJORD', 'GLIDE', 'HOVER', 'JUMPS', 'KNEAD', 'LATCH', 'MIXER', 'NUDGE', 'PIXEL', 'RELAY', 'SPLIT', 'TREND', 'UNZIP', 'VEXED'];
+    VALID_GUESSES = new Set(fallback);
+    ANSWER_WORDS = fallback;
+  }
+};
+
+// Initialize word lists on load
+fetchWordLists();
 
 // Get today's word (same word for everyone on the same day)
+// Uses the same algorithm as NYT Wordle (based on date)
 const getTodaysWord = () => {
   const today = new Date();
-  const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
-  return WORDS[dayOfYear % WORDS.length].toUpperCase();
+  // Use epoch day (days since Jan 1, 2022 - Wordle start date)
+  const epoch = new Date(2022, 0, 1);
+  const daysSinceEpoch = Math.floor((today - epoch) / (1000 * 60 * 60 * 24));
+  
+  if (ANSWER_WORDS.length > 0) {
+    return ANSWER_WORDS[daysSinceEpoch % ANSWER_WORDS.length];
+  }
+  // Fallback if words not loaded yet
+  return 'APPLE';
 };
 
 export default function Wordle() {
@@ -35,20 +56,30 @@ export default function Wordle() {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    // Initialize with today's word
-    setWord(getTodaysWord());
-    // Load saved game state from localStorage
-    const saved = localStorage.getItem('wordle-game');
-    if (saved) {
-      const savedData = JSON.parse(saved);
-      const savedDate = new Date(savedData.date);
-      const today = new Date();
-      // Only restore if it's the same day
-      if (savedDate.toDateString() === today.toDateString()) {
-        setGuesses(savedData.guesses || []);
-        setGameStatus(savedData.gameStatus || 'playing');
+    // Wait for word lists to load, then initialize
+    const initializeGame = async () => {
+      // Give a moment for word lists to fetch
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Initialize with today's word
+      const todaysWord = getTodaysWord();
+      setWord(todaysWord);
+      
+      // Load saved game state from localStorage
+      const saved = localStorage.getItem('wordle-game');
+      if (saved) {
+        const savedData = JSON.parse(saved);
+        const savedDate = new Date(savedData.date);
+        const today = new Date();
+        // Only restore if it's the same day and word matches
+        if (savedDate.toDateString() === today.toDateString() && savedData.word === todaysWord) {
+          setGuesses(savedData.guesses || []);
+          setGameStatus(savedData.gameStatus || 'playing');
+        }
       }
-    }
+    };
+    
+    initializeGame();
   }, []);
 
   // Save game state
@@ -64,9 +95,10 @@ export default function Wordle() {
   }, [guesses, gameStatus, word]);
 
   const checkWord = useCallback((guess) => {
-    // Check if word is valid (5 letters, in word list)
+    // Check if word is valid (5 letters, in valid guesses list)
     if (guess.length !== 5) return false;
-    return WORDS.includes(guess.toUpperCase());
+    const upperGuess = guess.toUpperCase();
+    return VALID_GUESSES.has(upperGuess);
   }, []);
 
   const evaluateGuess = (guess, target) => {
