@@ -312,6 +312,41 @@
   padding-top: 1rem;
 }
 
+.profile-wordle-stats {
+  margin-top: auto;
+  width: 100%;
+  padding-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.profile-stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.profile-stat-item:last-child {
+  border-bottom: none;
+}
+
+.profile-stat-label {
+  font-family: 'TT Octosquares', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #e0e0e0;
+}
+
+.profile-stat-value {
+  font-family: 'TT Octosquares', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #4a9eff;
+}
+
 @media (max-width: 900px) {
   .profile-container {
     flex-direction: column;

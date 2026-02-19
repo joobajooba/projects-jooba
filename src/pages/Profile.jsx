@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import { useUser } from '../hooks/useUser';
+import { useWordleStats } from '../hooks/useWordleStats';
 import { supabase } from '../lib/supabase';
 import NFTSelector from '../components/NFTSelector';
 import './Profile.css';
@@ -9,6 +10,7 @@ import './Profile.css';
 export default function Profile() {
   const { address, isConnected } = useAccount();
   const { user, loading, refetch } = useUser();
+  const { stats: wordleStats } = useWordleStats();
   const [searchParams, setSearchParams] = useSearchParams();
   const editMode = searchParams.get('edit') === 'true';
   const viewUsernameParam = searchParams.get('username') || '';
@@ -26,6 +28,7 @@ export default function Profile() {
   const [slotMetadata, setSlotMetadata] = useState([null, null, null, null, null]);
   const [profilePictureMetadata, setProfilePictureMetadata] = useState(null);
   const [profileSearchNotFound, setProfileSearchNotFound] = useState(false);
+  const [leaderboardRank, setLeaderboardRank] = useState(null);
 
   const displayedUser = viewedUser ?? user;
   const isOwnProfile = !viewedUser;
@@ -85,6 +88,77 @@ export default function Profile() {
   useEffect(() => {
     setIsEditing(editMode && isOwnProfile);
   }, [editMode, isOwnProfile]);
+
+  // Fetch leaderboard ranking
+  useEffect(() => {
+    if (!address || !supabase || !isOwnProfile) {
+      setLeaderboardRank(null);
+      return;
+    }
+
+    const fetchLeaderboardRank = async () => {
+      try {
+        // Get all users with their win counts and average guesses
+        const { data: allGames, error } = await supabase
+          .from('wordle_games')
+          .select('wallet_address, won, guesses')
+          .eq('won', true);
+
+        if (error) {
+          console.error('Error fetching leaderboard:', error);
+          return;
+        }
+
+        // Calculate stats per user
+        const userStats = {};
+        allGames?.forEach(game => {
+          if (!userStats[game.wallet_address]) {
+            userStats[game.wallet_address] = {
+              wins: 0,
+              totalGuesses: 0,
+              games: 0
+            };
+          }
+          userStats[game.wallet_address].wins++;
+          userStats[game.wallet_address].totalGuesses += game.guesses;
+          userStats[game.wallet_address].games++;
+        });
+
+        // Calculate averages and create leaderboard
+        const leaderboard = Object.entries(userStats)
+          .map(([wallet, stats]) => ({
+            wallet,
+            wins: stats.wins,
+            avgGuesses: stats.totalGuesses / stats.wins
+          }))
+          .sort((a, b) => {
+            // Sort by wins first, then by average guesses (lower is better)
+            if (b.wins !== a.wins) return b.wins - a.wins;
+            return a.avgGuesses - b.avgGuesses;
+          });
+
+        // Find current user's rank
+        const walletAddress = address.toLowerCase();
+        const rank = leaderboard.findIndex(player => player.wallet === walletAddress) + 1;
+        
+        if (rank > 0) {
+          setLeaderboardRank({
+            rank,
+            total: leaderboard.length
+          });
+        } else {
+          setLeaderboardRank({
+            rank: leaderboard.length + 1,
+            total: leaderboard.length + 1
+          });
+        }
+      } catch (err) {
+        console.error('Error calculating leaderboard rank:', err);
+      }
+    };
+
+    fetchLeaderboardRank();
+  }, [address, isOwnProfile]);
 
   const handleNFTSelect = async (imageUrl, nftData = null) => {
     if (!address || !supabase) {
@@ -307,32 +381,36 @@ export default function Profile() {
                 </button>
               </div>
             )}
-            {isOwnProfile && (
+            {isOwnProfile && isEditing && (
               <div className="profile-actions profile-actions-left">
-                {isEditing ? (
-                  <>
-                    <button onClick={handleSave} className="profile-button">Save</button>
-                    <button 
-                      onClick={() => {
-                        setIsEditing(false);
-                        setSearchParams({});
-                      }} 
-                      className="profile-button profile-button-secondary"
-                    >
-                      Cancel
-                    </button>
-                  </>
-                ) : (
-                  <button 
-                    onClick={() => {
-                      setIsEditing(true);
-                      setSearchParams({ edit: 'true' });
-                    }} 
-                    className="profile-button"
-                  >
-                    Edit Profile
-                  </button>
-                )}
+                <button onClick={handleSave} className="profile-button">Save</button>
+                <button 
+                  onClick={() => {
+                    setIsEditing(false);
+                    setSearchParams({});
+                  }} 
+                  className="profile-button profile-button-secondary"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+            {isOwnProfile && !isEditing && (
+              <div className="profile-wordle-stats">
+                <div className="profile-stat-item">
+                  <span className="profile-stat-label">Wordle Streak:</span>
+                  <span className="profile-stat-value">{wordleStats?.currentStreak || 0}</span>
+                </div>
+                <div className="profile-stat-item">
+                  <span className="profile-stat-label">Average Guesses:</span>
+                  <span className="profile-stat-value">{wordleStats?.averageGuesses || 0}</span>
+                </div>
+                <div className="profile-stat-item">
+                  <span className="profile-stat-label">Leaderboard Ranking:</span>
+                  <span className="profile-stat-value">
+                    {leaderboardRank ? `${leaderboardRank.rank}/${leaderboardRank.total}` : '—'}
+                  </span>
+                </div>
               </div>
             )}
           </div>
