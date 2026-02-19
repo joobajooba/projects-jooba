@@ -598,13 +598,28 @@ export default function Profile() {
               type="text"
               placeholder="Search profile by username..."
               value={profileSearchInput}
-              onChange={(e) => setProfileSearchInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && setSearchParams({ username: profileSearchInput.trim() })}
+              onChange={(e) => {
+                const sanitized = sanitizeInput(e.target.value, 50);
+                setProfileSearchInput(sanitized);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  const sanitized = sanitizeInput(profileSearchInput, 50);
+                  if (sanitized) {
+                    setSearchParams({ username: sanitized });
+                  }
+                }
+              }}
               className="profile-search-input-short"
             />
             <button
               type="button"
-              onClick={() => setSearchParams({ username: profileSearchInput.trim() })}
+              onClick={() => {
+                const sanitized = sanitizeInput(profileSearchInput, 50);
+                if (sanitized) {
+                  setSearchParams({ username: sanitized });
+                }
+              }}
             >
               Search
             </button>
