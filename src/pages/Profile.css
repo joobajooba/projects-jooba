@@ -94,6 +94,51 @@
   justify-content: space-between;
 }
 
+/* Row of 5 NFT slots next to username panel — half height of username panel, fills remaining space */
+.profile-nft-slots-row {
+  flex: 1;
+  display: flex;
+  gap: 0.75rem;
+  min-width: 0;
+  align-items: flex-start;
+}
+
+.profile-nft-slot {
+  flex: 1;
+  min-width: 0;
+  height: 180px;
+  background: rgba(26, 26, 26, 0.8);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.profile-nft-slot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-nft-slot-placeholder {
+  color: #888;
+  font-size: 0.85rem;
+  font-family: 'TT Octosquares', system-ui, sans-serif;
+}
+
+.profile-nft-slot-editable {
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.profile-nft-slot-editable:hover {
+  border-color: #4a9eff;
+  background: rgba(26, 26, 26, 0.95);
+}
+
 .profile-info {
   display: flex;
   flex-direction: column;
@@ -160,6 +205,16 @@
   .profile-right-panel {
     width: 100%;
     max-width: 260px;
+  }
+
+  .profile-nft-slots-row {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .profile-nft-slot {
+    min-width: 80px;
+    flex: 1 1 80px;
   }
 }
 

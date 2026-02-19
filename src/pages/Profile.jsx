@@ -18,6 +18,8 @@ export default function Profile() {
   const [profilePictureUrl, setProfilePictureUrl] = useState('');
   const [uploading, setUploading] = useState(false);
   const [showNFTSelector, setShowNFTSelector] = useState(false);
+  const [nftSelectorSlot, setNftSelectorSlot] = useState(null);
+  const [slotUrls, setSlotUrls] = useState(['', '', '', '', '']);
 
   useEffect(() => {
     if (user) {
@@ -25,6 +27,13 @@ export default function Profile() {
       setOtherisde(user.otherisde || '');
       setX(user.x || '');
       setProfilePictureUrl(user.profile_picture_url || '');
+      setSlotUrls([
+        user.nft_slot_1_url || '',
+        user.nft_slot_2_url || '',
+        user.nft_slot_3_url || '',
+        user.nft_slot_4_url || '',
+        user.nft_slot_5_url || ''
+      ]);
     }
   }, [user]);
 
@@ -38,9 +47,14 @@ export default function Profile() {
       return;
     }
 
+    if (nftSelectorSlot !== null) {
+      await handleSlotNFTSelect(imageUrl, nftSelectorSlot);
+      setNftSelectorSlot(null);
+      return;
+    }
+
     setUploading(true);
     try {
-      // Save the NFT image URL directly to the profile
       const { error } = await supabase
         .from('users')
         .update({ profile_picture_url: imageUrl })
@@ -59,6 +73,37 @@ export default function Profile() {
       alert('Failed to save NFT as profile picture. Please check console for details.');
     } finally {
       setUploading(false);
+      setShowNFTSelector(false);
+    }
+  };
+
+  const handleSlotNFTSelect = async (imageUrl, slotIndex) => {
+    if (!address || !supabase) return;
+    const col = `nft_slot_${slotIndex + 1}_url`;
+    setUploading(true);
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({ [col]: imageUrl })
+        .eq('wallet_address', address.toLowerCase());
+
+      if (error) {
+        console.error('Error saving slot NFT:', error);
+        alert(`Failed to save: ${error.message}`);
+        return;
+      }
+      setSlotUrls(prev => {
+        const next = [...prev];
+        next[slotIndex] = imageUrl;
+        return next;
+      });
+      await refetch();
+    } catch (err) {
+      console.error('Error saving slot NFT:', err);
+      alert('Failed to save. Please check console for details.');
+    } finally {
+      setUploading(false);
+      setNftSelectorSlot(null);
     }
   };
 
@@ -242,11 +287,34 @@ export default function Profile() {
             </div>
           </div>
         </div>
+        <div className="profile-nft-slots-row">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className={`profile-nft-slot ${isEditing ? 'profile-nft-slot-editable' : ''}`}
+              onClick={() => isEditing && setNftSelectorSlot(i)}
+              role={isEditing ? 'button' : undefined}
+              tabIndex={isEditing ? 0 : undefined}
+              onKeyDown={(e) => isEditing && (e.key === 'Enter' || e.key === ' ') && setNftSelectorSlot(i)}
+            >
+              {slotUrls[i] ? (
+                <img src={slotUrls[i]} alt={`Slot ${i + 1}`} />
+              ) : (
+                <span className="profile-nft-slot-placeholder">
+                  {isEditing ? 'Choose NFT' : ''}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
-      {showNFTSelector && (
+      {(showNFTSelector || nftSelectorSlot !== null) && (
         <NFTSelector
           onSelect={handleNFTSelect}
-          onClose={() => setShowNFTSelector(false)}
+          onClose={() => {
+            setShowNFTSelector(false);
+            setNftSelectorSlot(null);
+          }}
         />
       )}
     </main>
