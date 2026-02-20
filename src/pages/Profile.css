@@ -31,26 +31,42 @@
   box-sizing: border-box;
 }
 
-/* Picture and username/otherside/X on same row, same top margin */
-.profile-picture-and-info-row {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: 1.25rem;
-  width: 100%;
-}
-
-.profile-info-beside-picture {
+/* Username, otherside, X under the profile picture — value after semicolon on same line */
+.profile-info-under-picture {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  flex: 1;
-  min-width: 0;
-  justify-content: center;
+  width: 100%;
+  margin-top: 1rem;
+  align-self: stretch;
 }
 
-.profile-info-beside-picture .profile-field-inline {
-  display: block;
+.profile-field-same-line {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: nowrap;
+}
+
+.profile-field-same-line .profile-field-label {
+  flex-shrink: 0;
+  font-weight: 700;
+  font-family: 'TT Octosquares', system-ui, sans-serif;
+  color: #e0e0e0;
+  font-size: 1rem;
+}
+
+.profile-field-same-line .profile-field-value {
+  color: #ccc;
+  font-size: 1rem;
+}
+
+.profile-field-same-line .profile-input-inline {
+  flex: 1;
+  min-width: 0;
+  padding: 0.35rem 0.5rem;
+  font-size: 1rem;
 }
 
 .profile-picture-wrapper {
@@ -453,11 +469,6 @@
   .profile-left-panel {
     width: 100%;
     max-width: 360px;
-  }
-
-  .profile-picture-and-info-row {
-    flex-direction: column;
-    align-items: center;
   }
 
   .profile-picture-container,

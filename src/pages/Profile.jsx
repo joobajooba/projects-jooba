@@ -454,67 +454,41 @@ export default function Profile() {
       <div className="profile-container">
         <div className="profile-left-panel">
           <div className="profile-picture-container">
-            <div className="profile-picture-and-info-row">
-              <div className="profile-picture-wrapper">
-                {profilePictureUrl ? (
-                  <img src={profilePictureUrl} alt="Profile" className="profile-picture" />
+            <div className="profile-picture-wrapper">
+              {profilePictureUrl ? (
+                <img src={profilePictureUrl} alt="Profile" className="profile-picture" />
+              ) : (
+                <div className="profile-picture-placeholder">
+                  <span>No Picture</span>
+                </div>
+              )}
+            </div>
+            {/* Username, otherside, X under the profile picture — value after semicolon on same line */}
+            <div className="profile-info profile-info-under-picture">
+              <div className="profile-field profile-field-same-line">
+                <span className="profile-field-label">Username:</span>
+                {isOwnProfile && isEditing ? (
+                  <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="profile-input profile-input-inline" />
                 ) : (
-                  <div className="profile-picture-placeholder">
-                    <span>No Picture</span>
-                  </div>
+                  <span className="profile-field-value">{username || 'Not set'}</span>
                 )}
               </div>
-              {/* Username, otherside, X in line with the image (same margin) */}
-              <div className="profile-info profile-info-beside-picture">
-              <div className="profile-field profile-field-inline">
-                <span className="profile-field-line">
-                  <span className="profile-field-label">Username:</span>
-                  {' '}
-                  {isOwnProfile && isEditing ? (
-                    <input
-                      type="text"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      className="profile-input profile-input-inline"
-                    />
-                  ) : (
-                    <span className="profile-field-value">{username || 'Not set'}</span>
-                  )}
-                </span>
+              <div className="profile-field profile-field-same-line">
+                <span className="profile-field-label">otherisde:</span>
+                {isOwnProfile && isEditing ? (
+                  <input type="text" value={otherisde} onChange={(e) => setOtherisde(e.target.value)} className="profile-input profile-input-inline" />
+                ) : (
+                  <span className="profile-field-value">{otherisde || 'Not set'}</span>
+                )}
               </div>
-              <div className="profile-field profile-field-inline">
-                <span className="profile-field-line">
-                  <span className="profile-field-label">otherisde:</span>
-                  {' '}
-                  {isOwnProfile && isEditing ? (
-                    <input
-                      type="text"
-                      value={otherisde}
-                      onChange={(e) => setOtherisde(e.target.value)}
-                      className="profile-input profile-input-inline"
-                    />
-                  ) : (
-                    <span className="profile-field-value">{otherisde || 'Not set'}</span>
-                  )}
-                </span>
+              <div className="profile-field profile-field-same-line">
+                <span className="profile-field-label">X:</span>
+                {isOwnProfile && isEditing ? (
+                  <input type="text" value={x} onChange={(e) => setX(e.target.value)} className="profile-input profile-input-inline" />
+                ) : (
+                  <span className="profile-field-value">{x || 'Not set'}</span>
+                )}
               </div>
-              <div className="profile-field profile-field-inline">
-                <span className="profile-field-line">
-                  <span className="profile-field-label">X:</span>
-                  {' '}
-                  {isOwnProfile && isEditing ? (
-                    <input
-                      type="text"
-                      value={x}
-                      onChange={(e) => setX(e.target.value)}
-                      className="profile-input profile-input-inline"
-                    />
-                  ) : (
-                    <span className="profile-field-value">{x || 'Not set'}</span>
-                  )}
-                </span>
-              </div>
-            </div>
             </div>
             {isOwnProfile && isEditing && (
               <div className="profile-picture-actions">
