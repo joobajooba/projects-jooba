@@ -156,12 +156,28 @@
   text-align: center;
 }
 
+.connections-found-group-wrapper {
+  padding: 3px;
+  background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
+  border-radius: 10px;
+  margin-bottom: 0.75rem;
+}
+
 .connections-found-group {
   padding: 1rem;
   border-radius: 8px;
-  margin-bottom: 0.75rem;
   color: #fff;
   text-align: left;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+}
+
+.connections-found-group-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .connections-found-level {

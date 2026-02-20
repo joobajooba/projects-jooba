@@ -357,18 +357,21 @@ export default function Connections() {
               });
               
               return (
-                <div
-                  key={index}
-                  className="connections-found-group"
-                  style={{ 
-                    backgroundColor: getLevelColor(group.level),
-                    opacity: isFound ? 1 : 0.7
-                  }}
-                >
-                  <span className="connections-found-level">{getLevelName(group.level)}</span>
-                  <span className="connections-found-name">{group.groupName}</span>
-                  <div className="connections-found-members">
-                    {group.members.join(' • ')}
+                <div key={index} className="connections-found-group-wrapper">
+                  <div
+                    className="connections-found-group"
+                    style={{ 
+                      backgroundColor: getLevelColor(group.level),
+                      opacity: isFound ? 1 : 0.7
+                    }}
+                  >
+                    <div className="connections-found-group-content">
+                      <span className="connections-found-level">{getLevelName(group.level)}</span>
+                      <span className="connections-found-name">{group.groupName}</span>
+                      <div className="connections-found-members">
+                        {group.members.join(' • ')}
+                      </div>
+                    </div>
                   </div>
                 </div>
               );
