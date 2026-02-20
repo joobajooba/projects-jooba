@@ -158,11 +158,10 @@
 
 .connections-found-group-wrapper {
   padding: 3px;
-  background: transparent;
+  background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
   border-radius: 10px;
   margin-bottom: 0.75rem;
   position: relative;
-  /* Rainbow border created via box-shadow on inner element */
 }
 
 .connections-found-group {
@@ -177,17 +176,11 @@
   z-index: 1;
   width: 100%;
   box-sizing: border-box;
-  /* Rainbow border using box-shadow */
-  box-shadow: 
-    0 0 0 3px #ff0000,
-    0 0 0 4px #ff7f00,
-    0 0 0 5px #ffff00,
-    0 0 0 6px #00ff00,
-    0 0 0 7px #0000ff,
-    0 0 0 8px #4b0082,
-    0 0 0 9px #9400d3;
-  /* Background color set via inline style - solid rgba color with 50% opacity */
-  background-color: var(--bg-color, transparent);
+  /* Background color set via inline style - rgba with 50% opacity */
+  /* The background must be solid (not gradient) to cover wrapper gradient */
+  background-color: var(--bg-color, rgba(0, 0, 0, 0.3));
+  /* Ensure no gradient backgrounds */
+  background-image: none !important;
 }
 
 .connections-found-group-content {
