@@ -317,10 +317,10 @@ export default function Connections() {
 
   const getLevelColor = (level) => {
     const colors = {
-      0: '#f7da21', // Yellow
-      1: '#6cbd45', // Green
-      2: '#3a9eea', // Blue
-      3: '#9d5fb0'  // Purple
+      0: '#3a9eea', // Blue
+      1: '#e91e63', // Pink
+      2: '#ff9800', // Orange
+      3: '#4caf50'   // Green
     };
     return colors[level] || '#666';
   };
