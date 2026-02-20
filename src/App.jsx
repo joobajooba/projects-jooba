@@ -6,6 +6,7 @@ import ProfileDropdown from './components/ProfileDropdown';
 import Home from './pages/Home';
 import Games from './pages/Games';
 import Wordle from './pages/Wordle';
+import Connections from './pages/Connections';
 import Profile from './pages/Profile';
 import './index.css';
 
@@ -32,6 +33,7 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/games/" element={<Games />} />
         <Route path="/games/wordle" element={<Wordle />} />
+        <Route path="/games/connections" element={<Connections />} />
         <Route path="/ape-projects/" element={<main className="games-main"><p>APE-Projects</p></main>} />
         <Route path="/profile/" element={<Profile />} />
       </Routes>

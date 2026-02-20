@@ -1,0 +1,236 @@
+.connections-main {
+  min-height: calc(100vh - 60px);
+  padding: 2rem;
+  box-sizing: border-box;
+  background: #121212;
+  color: #e0e0e0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.connections-container {
+  max-width: 800px;
+  width: 100%;
+}
+
+.connections-header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.connections-back-btn,
+.connections-reset-btn {
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  color: #e0e0e0;
+  cursor: pointer;
+  font-family: 'TT Octosquares', system-ui, sans-serif;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.connections-back-btn:hover,
+.connections-reset-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.connections-title {
+  font-family: 'TT Octosquares', system-ui, sans-serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.1em;
+  color: #e0e0e0;
+  margin: 0;
+}
+
+.connections-subtitle {
+  text-align: center;
+  font-size: 0.95rem;
+  color: #aaa;
+  margin-bottom: 1.5rem;
+}
+
+.connections-mistakes {
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #f7da21;
+  margin-bottom: 1.5rem;
+}
+
+.connections-message {
+  text-align: center;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.connections-message.won {
+  background: #6cbd45;
+  color: #fff;
+}
+
+.connections-message.lost {
+  background: #d32f2f;
+  color: #fff;
+}
+
+.connections-board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.connections-word {
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #e0e0e0;
+  font-family: 'TT Octosquares', system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  word-break: break-word;
+}
+
+.connections-word:hover:not(:disabled):not(.found) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+.connections-word.selected {
+  background: rgba(247, 218, 33, 0.2);
+  border-color: #f7da21;
+  color: #f7da21;
+}
+
+.connections-word.found {
+  cursor: default;
+  border-color: transparent;
+  font-weight: 700;
+}
+
+.connections-word:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.connections-selection-hint {
+  text-align: center;
+  color: #aaa;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.connections-found-groups {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.connections-found-groups h3 {
+  font-family: 'TT Octosquares', system-ui, sans-serif;
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: #e0e0e0;
+}
+
+.connections-found-group {
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  color: #fff;
+}
+
+.connections-found-level {
+  display: inline-block;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  margin-right: 0.5rem;
+  opacity: 0.9;
+}
+
+.connections-found-name {
+  font-weight: 700;
+  font-size: 1rem;
+  display: block;
+  margin-top: 0.25rem;
+}
+
+.connections-found-members {
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  opacity: 0.95;
+}
+
+.connections-win-message,
+.connections-lose-message {
+  text-align: center;
+  padding: 2rem;
+  margin-top: 2rem;
+  border-radius: 8px;
+}
+
+.connections-win-message {
+  background: rgba(108, 189, 69, 0.2);
+  border: 2px solid #6cbd45;
+  color: #6cbd45;
+}
+
+.connections-lose-message {
+  background: rgba(211, 47, 47, 0.2);
+  border: 2px solid #d32f2f;
+  color: #d32f2f;
+}
+
+.connections-win-message h2,
+.connections-lose-message h2 {
+  font-family: 'TT Octosquares', system-ui, sans-serif;
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.connections-loading,
+.connections-error {
+  text-align: center;
+  padding: 3rem;
+  font-size: 1.2rem;
+  color: #aaa;
+}
+
+.connections-error {
+  color: #d32f2f;
+}
+
+@media (max-width: 768px) {
+  .connections-board {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .connections-title {
+    font-size: 2rem;
+  }
+
+  .connections-header {
+    grid-template-columns: auto 1fr auto;
+  }
+}
