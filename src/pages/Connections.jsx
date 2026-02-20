@@ -426,8 +426,9 @@ export default function Connections() {
                   key={index}
                   className="connections-found-group-box"
                   style={{
-                    backgroundColor: bgColor,
-                    background: bgColor,
+                    backgroundColor: bgColor + ' !important',
+                    background: bgColor + ' !important',
+                    backgroundImage: 'none !important',
                     color: '#fff'
                   }}
                 >
