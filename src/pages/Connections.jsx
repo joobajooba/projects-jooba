@@ -135,12 +135,17 @@ export default function Connections() {
     const equalizeHeights = () => {
       if (!foundGroupsContainerRef.current) return;
       
+      const groupWrappers = foundGroupsContainerRef.current.querySelectorAll('.connections-found-group-wrapper');
       const groupPanels = foundGroupsContainerRef.current.querySelectorAll('.connections-found-group');
+      
       if (groupPanels.length === 0) return;
 
       // Reset heights to auto to get natural heights
       groupPanels.forEach(panel => {
         panel.style.height = 'auto';
+      });
+      groupWrappers.forEach(wrapper => {
+        wrapper.style.height = 'auto';
       });
 
       // Force a reflow to ensure heights are calculated
@@ -155,10 +160,13 @@ export default function Connections() {
         }
       });
 
-      // Set all panels to the maximum height
+      // Set all panels and wrappers to the maximum height
       if (maxHeight > 0) {
         groupPanels.forEach(panel => {
           panel.style.height = `${maxHeight}px`;
+        });
+        groupWrappers.forEach(wrapper => {
+          wrapper.style.height = `${maxHeight + 6}px`; // Add padding for border
         });
       }
     };
@@ -166,9 +174,10 @@ export default function Connections() {
     // Use requestAnimationFrame to ensure DOM is fully rendered
     const rafId = requestAnimationFrame(() => {
       equalizeHeights();
-      // Also run after a delay to catch any async updates
+      // Also run after delays to catch any async updates
       setTimeout(equalizeHeights, 50);
       setTimeout(equalizeHeights, 200);
+      setTimeout(equalizeHeights, 500);
     });
 
     // Run on window resize
