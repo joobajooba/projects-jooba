@@ -170,9 +170,10 @@
 }
 
 .connections-found-group-wrapper {
-  padding: 3px;
-  background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
-  border-radius: 10px;
+  padding: 0;
+  background: transparent;
+  border: 2px solid;
+  border-radius: 8px;
   position: relative;
   flex: 1 1 0;
   min-width: 0;
@@ -183,8 +184,7 @@
 
 .connections-found-group {
   padding: 1rem;
-  border-radius: 8px;
-  color: #fff;
+  border-radius: 6px;
   text-align: center;
   min-height: 280px;
   display: flex;
@@ -194,11 +194,10 @@
   z-index: 1;
   width: 100%;
   box-sizing: border-box;
-  /* Background color set via inline style - solid dark colors */
-  background-color: var(--bg-color, #1e3a8a);
-  /* Ensure no gradient backgrounds */
+  /* Background color set via inline style - transparent rgba */
+  background-color: var(--bg-color, rgba(30, 58, 138, 0.2));
   background-image: none !important;
-  background: var(--bg-color, #1e3a8a) !important;
+  background: var(--bg-color, rgba(30, 58, 138, 0.2)) !important;
   transition: height 0.2s ease;
   overflow: hidden;
 }

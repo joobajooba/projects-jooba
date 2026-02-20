@@ -326,7 +326,18 @@ export default function Connections() {
   };
 
   const getFoundGroupBackgroundColor = (index) => {
-    // Dark solid colors - no opacity, completely opaque to cover wrapper gradient
+    // Colors matching the Perfect box style - returns rgba for transparent fill
+    const colors = [
+      'rgba(30, 58, 138, 0.2)',   // Dark blue - transparent
+      'rgba(190, 24, 93, 0.2)',   // Dark pink - transparent
+      'rgba(194, 65, 12, 0.2)',   // Dark orange - transparent
+      'rgba(22, 101, 52, 0.2)'    // Dark green - transparent
+    ];
+    return colors[index % colors.length];
+  };
+
+  const getFoundGroupBorderColor = (index) => {
+    // Solid border colors matching the background
     const colors = [
       '#1e3a8a',   // Dark blue
       '#be185d',   // Dark pink
@@ -455,7 +466,13 @@ export default function Connections() {
               });
               
               return (
-                <div key={index} className="connections-found-group-wrapper">
+                <div 
+                  key={index} 
+                  className="connections-found-group-wrapper"
+                  style={{
+                    borderColor: getFoundGroupBorderColor(index)
+                  }}
+                >
                   <div
                     className="connections-found-group"
                     style={{ 
@@ -463,7 +480,7 @@ export default function Connections() {
                       backgroundColor: getFoundGroupBackgroundColor(index),
                       backgroundImage: 'none',
                       background: getFoundGroupBackgroundColor(index),
-                      opacity: 1
+                      color: getFoundGroupBorderColor(index)
                     }}
                   >
                     <div className="connections-found-group-content">
