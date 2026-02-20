@@ -241,10 +241,10 @@ export default function Connections() {
 
   const getFoundGroupBackgroundColor = (index) => {
     const colors = [
-      'rgba(108, 189, 69, 0.5)',   // Green - 50% opacity
-      'rgba(58, 158, 234, 0.5)',   // Blue - 50% opacity
-      'rgba(255, 165, 0, 0.5)',    // Orange - 50% opacity
-      'rgba(255, 192, 203, 0.5)'   // Pink - 50% opacity
+      '#1e3a8a',   // Dark blue
+      '#ec4899',   // Pink
+      '#f97316',   // Orange
+      '#22c55e'    // Green
     ];
     return colors[index % colors.length];
   };
@@ -371,8 +371,9 @@ export default function Connections() {
                   <div
                     className="connections-found-group"
                     style={{ 
-                      backgroundColor: getFoundGroupBackgroundColor(index),
-                      backgroundImage: 'none'
+                      backgroundColor: getFoundGroupBackgroundColor(index) + ' !important',
+                      backgroundImage: 'none !important',
+                      background: getFoundGroupBackgroundColor(index) + ' !important'
                     }}
                   >
                     <div className="connections-found-group-content">
