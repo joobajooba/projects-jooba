@@ -62,8 +62,19 @@
   text-align: center;
   font-size: 1rem;
   font-weight: 600;
-  color: #f7da21;
-  margin-bottom: 1.5rem;
+  color: #333;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.connections-mistake-dot {
+  color: #333;
+  font-size: 1.2rem;
+  line-height: 1;
 }
 
 .connections-message {
@@ -118,9 +129,9 @@
 }
 
 .connections-word.selected {
-  background: rgba(247, 218, 33, 0.2);
+  background: rgba(247, 218, 33, 0.3);
   border-color: #f7da21;
-  color: #f7da21;
+  color: #333;
 }
 
 .connections-word.found {
