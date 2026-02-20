@@ -169,10 +169,10 @@
   border-radius: 8px;
   text-align: center;
   font-family: 'TT Octosquares', system-ui, sans-serif;
-  /* Remove any gradient backgrounds and set default to blue - inline styles will override */
+  /* Remove any gradient backgrounds - use CSS variable or inline style */
   background-image: none !important;
-  background: #3a9eea !important;
-  background-color: #3a9eea !important;
+  background: var(--group-bg-color, #3a9eea) !important;
+  background-color: var(--group-bg-color, #3a9eea) !important;
 }
 
 .connections-found-group-title {
