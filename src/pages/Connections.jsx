@@ -359,6 +359,7 @@ export default function Connections() {
         {((foundGroups.length > 0) || (gameStatus !== 'playing')) && (
           <div className="connections-found-groups">
             <h3>{gameStatus === 'playing' ? 'Found Groups:' : 'All Groups:'}</h3>
+            <div className="connections-found-groups-container">
             {(gameStatus !== 'playing' ? puzzle.groups : foundGroups).map((group, index) => {
               const isFound = foundGroups.some(g => {
                 const gMembers = g.members.map(m => m.toUpperCase().trim()).sort();
@@ -383,13 +384,18 @@ export default function Connections() {
                       <span className="connections-found-level">{getLevelName(group.level)}</span>
                       <span className="connections-found-name">{group.groupName}</span>
                       <div className="connections-found-members">
-                        {group.members.join('   |   ')}
+                        {group.members.map((member, memberIndex) => (
+                          <div key={memberIndex} className="connections-found-member-item">
+                            {member}
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
                 </div>
               );
             })}
+            </div>
           </div>
         )}
 
