@@ -405,7 +405,7 @@ export default function Connections() {
         </div>
 
         <div className="connections-subtitle">
-          Find groups of four items that share something in common
+          Create four groups of four!
         </div>
 
         {message && (
@@ -414,37 +414,62 @@ export default function Connections() {
           </div>
         )}
 
-        <div className="connections-mistakes">
-          Mistakes remaining: {4 - mistakes}
-        </div>
-
-        <div className="connections-board">
-          {puzzle.words.map((wordObj, index) => {
-            const isSelected = selectedWords.find(w => w.word === wordObj.word);
-            const foundGroup = foundGroups.find(g => g.members.includes(wordObj.word));
-            // If game ended, show all words in their groups
-            const allGroupsRevealed = gameStatus !== 'playing';
-            const revealedGroup = allGroupsRevealed 
-              ? puzzle.groups.find(g => g.members.includes(wordObj.word))
-              : foundGroup;
-            const isDisabled = foundGroup || allGroupsRevealed || gameStatus !== 'playing';
-
-            return (
-              <button
-                key={`${wordObj.word}-${index}`}
-                className={`connections-word ${isSelected ? 'selected' : ''} ${foundGroup || revealedGroup ? 'found' : ''}`}
+        {/* Found groups displayed at the top */}
+        {foundGroups.length > 0 && (
+          <div className="connections-found-groups-top">
+            {foundGroups.map((group, index) => (
+              <div
+                key={index}
+                className="connections-found-group-box"
                 style={{
-                  backgroundColor: revealedGroup ? getLevelColor(revealedGroup.level) : '',
-                  color: revealedGroup ? '#fff' : '',
-                  cursor: isDisabled ? 'default' : 'pointer'
+                  backgroundColor: getLevelColor(group.level),
+                  color: '#fff'
                 }}
-                onClick={() => handleWordClick(wordObj)}
-                disabled={isDisabled}
               >
-                {wordObj.word}
-              </button>
-            );
-          })}
+                <div className="connections-found-group-title">{group.groupName}</div>
+                <div className="connections-found-group-words">
+                  {group.members.join(', ')}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Word grid - filter out found words */}
+        <div className="connections-board">
+          {puzzle.words
+            .filter(wordObj => {
+              // Filter out words that are in found groups (unless game ended)
+              if (gameStatus === 'playing') {
+                return !foundGroups.some(g => g.members.includes(wordObj.word));
+              }
+              return true; // Show all words when game ended
+            })
+            .map((wordObj, index) => {
+              const isSelected = selectedWords.find(w => w.word === wordObj.word);
+              // If game ended, show words in their groups
+              const allGroupsRevealed = gameStatus !== 'playing';
+              const revealedGroup = allGroupsRevealed 
+                ? puzzle.groups.find(g => g.members.includes(wordObj.word))
+                : null;
+              const isDisabled = allGroupsRevealed || gameStatus !== 'playing';
+
+              return (
+                <button
+                  key={`${wordObj.word}-${index}`}
+                  className={`connections-word ${isSelected ? 'selected' : ''} ${revealedGroup ? 'found' : ''}`}
+                  style={{
+                    backgroundColor: revealedGroup ? getLevelColor(revealedGroup.level) : '',
+                    color: revealedGroup ? '#fff' : '',
+                    cursor: isDisabled ? 'default' : 'pointer'
+                  }}
+                  onClick={() => handleWordClick(wordObj)}
+                  disabled={isDisabled}
+                >
+                  {wordObj.word}
+                </button>
+              );
+            })}
         </div>
 
         {selectedWords.length > 0 && selectedWords.length < 4 && (
@@ -453,54 +478,11 @@ export default function Connections() {
           </div>
         )}
 
-        {((foundGroups.length > 0) || (gameStatus !== 'playing')) && (
-          <div className="connections-found-groups">
-            <h3>{gameStatus === 'playing' ? 'Found Groups:' : 'All Groups:'}</h3>
-            <div className="connections-found-groups-container" ref={foundGroupsContainerRef}>
-            {(gameStatus !== 'playing' ? puzzle.groups : foundGroups).map((group, index) => {
-              const isFound = foundGroups.some(g => {
-                const gMembers = g.members.map(m => m.toUpperCase().trim()).sort();
-                const groupMembers = group.members.map(m => m.toUpperCase().trim()).sort();
-                return gMembers.length === groupMembers.length &&
-                       gMembers.every((m, i) => m === groupMembers[i]);
-              });
-              
-              return (
-                <div 
-                  key={index} 
-                  className="connections-found-group-wrapper"
-                  style={{
-                    borderColor: getFoundGroupBorderColor(index)
-                  }}
-                >
-                  <div
-                    className="connections-found-group"
-                    style={{ 
-                      '--bg-color': getFoundGroupBackgroundColor(index),
-                      backgroundColor: getFoundGroupBackgroundColor(index),
-                      backgroundImage: 'none',
-                      background: getFoundGroupBackgroundColor(index),
-                      color: getFoundGroupBorderColor(index)
-                    }}
-                  >
-                    <div className="connections-found-group-content">
-                      <span className="connections-found-level">{getLevelName(group.level)}</span>
-                      <span className="connections-found-name">{group.groupName}</span>
-                      <div className="connections-found-members">
-                        {group.members.map((member, memberIndex) => (
-                          <div key={memberIndex} className="connections-found-member-item">
-                            {member}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-            </div>
-          </div>
-        )}
+        <div className="connections-mistakes">
+          Mistakes Remaining: {Array(4 - mistakes).fill(0).map((_, i) => (
+            <span key={i} className="connections-mistake-dot">●</span>
+          ))}
+        </div>
 
         {gameStatus === 'won' && (
           <div className="connections-win-message">

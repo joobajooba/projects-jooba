@@ -141,6 +141,38 @@
   margin-bottom: 1rem;
 }
 
+/* Found groups displayed at the top (NYT style) */
+.connections-found-groups-top {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  width: 100%;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.connections-found-group-box {
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  text-align: left;
+  font-family: 'TT Octosquares', system-ui, sans-serif;
+}
+
+.connections-found-group-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  color: #fff;
+}
+
+.connections-found-group-words {
+  font-size: 0.95rem;
+  color: #fff;
+  opacity: 0.95;
+}
+
 .connections-found-groups {
   margin-top: 1.5rem;
   padding-top: 1.5rem;
