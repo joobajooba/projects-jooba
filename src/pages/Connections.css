@@ -157,11 +157,26 @@
 }
 
 .connections-found-group-wrapper {
+  padding: 0;
+  margin-bottom: 0.75rem;
+  position: relative;
+  border-radius: 10px;
+}
+
+.connections-found-group-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: 0;
   padding: 3px;
   background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
   border-radius: 10px;
-  margin-bottom: 0.75rem;
-  position: relative;
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .connections-found-group {
@@ -177,7 +192,7 @@
   width: 100%;
   box-sizing: border-box;
   /* Background color set via inline style - solid rgba color with 50% opacity */
-  /* This will completely cover the wrapper gradient */
+  /* Wrapper has no background, only border via pseudo-element */
   background-color: var(--bg-color, transparent);
 }
 
