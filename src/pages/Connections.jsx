@@ -417,21 +417,25 @@ export default function Connections() {
         {/* Found groups displayed at the top */}
         {foundGroups.length > 0 && (
           <div className="connections-found-groups-top">
-            {foundGroups.map((group, index) => (
-              <div
-                key={index}
-                className="connections-found-group-box"
-                style={{
-                  backgroundColor: getLevelColor(group.level),
-                  color: '#fff'
-                }}
-              >
-                <div className="connections-found-group-title">{group.groupName}</div>
-                <div className="connections-found-group-words">
-                  {group.members.join(', ')}
+            {foundGroups.map((group, index) => {
+              // Use level from group, or assign based on order (0-3)
+              const groupLevel = group.level !== undefined ? group.level : (index % 4);
+              return (
+                <div
+                  key={index}
+                  className="connections-found-group-box"
+                  style={{
+                    backgroundColor: getLevelColor(groupLevel),
+                    color: '#fff'
+                  }}
+                >
+                  <div className="connections-found-group-title">{group.groupName}</div>
+                  <div className="connections-found-group-words">
+                    {group.members.join(', ')}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
