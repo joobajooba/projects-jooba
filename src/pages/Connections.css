@@ -161,6 +161,7 @@
   background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
   border-radius: 10px;
   margin-bottom: 0.75rem;
+  position: relative;
 }
 
 .connections-found-group {
@@ -171,7 +172,11 @@
   min-height: 80px;
   display: flex;
   align-items: center;
-  /* Background will be set via inline style - no default gradient */
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  box-sizing: border-box;
+  /* Background will be set via inline style - solid color, no gradient */
 }
 
 .connections-found-group-content {
