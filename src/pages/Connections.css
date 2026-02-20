@@ -167,7 +167,7 @@
 .connections-found-group-box {
   padding: 1rem 1.25rem;
   border-radius: 8px;
-  text-align: left;
+  text-align: center;
   font-family: 'TT Octosquares', system-ui, sans-serif;
 }
 
@@ -176,12 +176,15 @@
   font-size: 1.1rem;
   margin-bottom: 0.5rem;
   color: #fff;
+  text-align: center;
 }
 
 .connections-found-group-words {
-  font-size: 0.95rem;
+  font-size: 1.2rem;
   color: #fff;
   opacity: 0.95;
+  text-align: center;
+  font-weight: 600;
 }
 
 .connections-found-groups {
