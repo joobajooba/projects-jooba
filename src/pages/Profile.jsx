@@ -454,17 +454,18 @@ export default function Profile() {
       <div className="profile-container">
         <div className="profile-left-panel">
           <div className="profile-picture-container">
-            <div className="profile-picture-wrapper">
-              {profilePictureUrl ? (
-                <img src={profilePictureUrl} alt="Profile" className="profile-picture" />
-              ) : (
-                <div className="profile-picture-placeholder">
-                  <span>No Picture</span>
-                </div>
-              )}
-            </div>
-            {/* Username, otherside, X directly under the profile picture */}
-            <div className="profile-info profile-info-under-picture">
+            <div className="profile-picture-and-info-row">
+              <div className="profile-picture-wrapper">
+                {profilePictureUrl ? (
+                  <img src={profilePictureUrl} alt="Profile" className="profile-picture" />
+                ) : (
+                  <div className="profile-picture-placeholder">
+                    <span>No Picture</span>
+                  </div>
+                )}
+              </div>
+              {/* Username, otherside, X in line with the image (same margin) */}
+              <div className="profile-info profile-info-beside-picture">
               <div className="profile-field profile-field-inline">
                 <span className="profile-field-line">
                   <span className="profile-field-label">Username:</span>
@@ -513,6 +514,7 @@ export default function Profile() {
                   )}
                 </span>
               </div>
+            </div>
             </div>
             {isOwnProfile && isEditing && (
               <div className="profile-picture-actions">
