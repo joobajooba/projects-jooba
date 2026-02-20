@@ -240,12 +240,12 @@ export default function Connections() {
   };
 
   const getFoundGroupBackgroundColor = (index) => {
-    // Using higher opacity (0.8) so wrapper gradient doesn't show through, but still semi-transparent
+    // 50% opacity - now wrapper has no background, only border, so gradient won't show through
     const colors = [
-      'rgba(30, 58, 138, 0.8)',   // Dark blue - semi-transparent
-      'rgba(236, 72, 153, 0.8)',  // Pink - semi-transparent
-      'rgba(249, 115, 22, 0.8)',   // Orange - semi-transparent
-      'rgba(34, 197, 94, 0.8)'     // Green - semi-transparent
+      'rgba(30, 58, 138, 0.5)',   // Dark blue - 50% opacity
+      'rgba(236, 72, 153, 0.5)',  // Pink - 50% opacity
+      'rgba(249, 115, 22, 0.5)',   // Orange - 50% opacity
+      'rgba(34, 197, 94, 0.5)'     // Green - 50% opacity
     ];
     return colors[index % colors.length];
   };

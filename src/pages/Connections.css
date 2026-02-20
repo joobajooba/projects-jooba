@@ -157,11 +157,13 @@
 }
 
 .connections-found-group-wrapper {
-  padding: 3px;
-  background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
+  padding: 0;
+  border: 3px solid;
+  border-image: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3) 1;
   border-radius: 10px;
   margin-bottom: 0.75rem;
   position: relative;
+  background: transparent;
 }
 
 .connections-found-group {
