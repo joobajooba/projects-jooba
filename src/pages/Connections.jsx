@@ -314,15 +314,20 @@ export default function Connections() {
           {puzzle.words.map((wordObj, index) => {
             const isSelected = selectedWords.find(w => w.word === wordObj.word);
             const foundGroup = foundGroups.find(g => g.members.includes(wordObj.word));
-            const isDisabled = foundGroup || gameStatus !== 'playing';
+            // If game ended, show all words in their groups
+            const allGroupsRevealed = gameStatus !== 'playing';
+            const revealedGroup = allGroupsRevealed 
+              ? puzzle.groups.find(g => g.members.includes(wordObj.word))
+              : foundGroup;
+            const isDisabled = foundGroup || allGroupsRevealed || gameStatus !== 'playing';
 
             return (
               <button
                 key={`${wordObj.word}-${index}`}
-                className={`connections-word ${isSelected ? 'selected' : ''} ${foundGroup ? 'found' : ''}`}
+                className={`connections-word ${isSelected ? 'selected' : ''} ${foundGroup || revealedGroup ? 'found' : ''}`}
                 style={{
-                  backgroundColor: foundGroup ? getLevelColor(foundGroup.level) : '',
-                  color: foundGroup ? '#fff' : '',
+                  backgroundColor: revealedGroup ? getLevelColor(revealedGroup.level) : '',
+                  color: revealedGroup ? '#fff' : '',
                   cursor: isDisabled ? 'default' : 'pointer'
                 }}
                 onClick={() => handleWordClick(wordObj)}
@@ -340,22 +345,34 @@ export default function Connections() {
           </div>
         )}
 
-        {foundGroups.length > 0 && (
+        {((foundGroups.length > 0) || (gameStatus !== 'playing')) && (
           <div className="connections-found-groups">
-            <h3>Found Groups:</h3>
-            {foundGroups.map((group, index) => (
-              <div
-                key={index}
-                className="connections-found-group"
-                style={{ backgroundColor: getLevelColor(group.level) }}
-              >
-                <span className="connections-found-level">{getLevelName(group.level)}</span>
-                <span className="connections-found-name">{group.groupName}</span>
-                <div className="connections-found-members">
-                  {group.members.join(' • ')}
+            <h3>{gameStatus === 'playing' ? 'Found Groups:' : 'All Groups:'}</h3>
+            {(gameStatus !== 'playing' ? puzzle.groups : foundGroups).map((group, index) => {
+              const isFound = foundGroups.some(g => {
+                const gMembers = g.members.map(m => m.toUpperCase().trim()).sort();
+                const groupMembers = group.members.map(m => m.toUpperCase().trim()).sort();
+                return gMembers.length === groupMembers.length &&
+                       gMembers.every((m, i) => m === groupMembers[i]);
+              });
+              
+              return (
+                <div
+                  key={index}
+                  className="connections-found-group"
+                  style={{ 
+                    backgroundColor: getLevelColor(group.level),
+                    opacity: isFound ? 1 : 0.7
+                  }}
+                >
+                  <span className="connections-found-level">{getLevelName(group.level)}</span>
+                  <span className="connections-found-name">{group.groupName}</span>
+                  <div className="connections-found-members">
+                    {group.members.join(' • ')}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
@@ -369,7 +386,7 @@ export default function Connections() {
         {gameStatus === 'lost' && (
           <div className="connections-lose-message">
             <h2>Game Over</h2>
-            <p>You've made 4 mistakes. Try again tomorrow!</p>
+            <p>You've made 4 mistakes. Here are all the answers:</p>
           </div>
         )}
       </div>
