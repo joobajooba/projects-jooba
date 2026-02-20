@@ -240,13 +240,12 @@ export default function Connections() {
   };
 
   const getFoundGroupBackgroundColor = (index) => {
-    // Solid colors that will appear semi-transparent against dark background
-    // Using rgba with 0.5 opacity - wrapper gradient should only show as border
+    // Dark solid colors - no opacity, completely opaque to cover wrapper gradient
     const colors = [
-      'rgba(30, 58, 138, 0.5)',   // Dark blue - 50% opacity
-      'rgba(236, 72, 153, 0.5)',  // Pink - 50% opacity
-      'rgba(249, 115, 22, 0.5)',   // Orange - 50% opacity
-      'rgba(34, 197, 94, 0.5)'     // Green - 50% opacity
+      '#1e3a8a',   // Dark blue
+      '#be185d',   // Dark pink
+      '#c2410c',   // Dark orange
+      '#166534'    // Dark green
     ];
     return colors[index % colors.length];
   };
@@ -376,7 +375,8 @@ export default function Connections() {
                       '--bg-color': getFoundGroupBackgroundColor(index),
                       backgroundColor: getFoundGroupBackgroundColor(index),
                       backgroundImage: 'none',
-                      background: getFoundGroupBackgroundColor(index)
+                      background: getFoundGroupBackgroundColor(index),
+                      opacity: 1
                     }}
                   >
                     <div className="connections-found-group-content">

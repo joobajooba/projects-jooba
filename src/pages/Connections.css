@@ -176,11 +176,11 @@
   z-index: 1;
   width: 100%;
   box-sizing: border-box;
-  /* Background color set via inline style - rgba with 50% opacity */
-  /* The background must be solid (not gradient) to cover wrapper gradient */
-  background-color: var(--bg-color, rgba(0, 0, 0, 0.3));
+  /* Background color set via inline style - solid dark colors */
+  background-color: var(--bg-color, #1e3a8a);
   /* Ensure no gradient backgrounds */
   background-image: none !important;
+  background: var(--bg-color, #1e3a8a) !important;
 }
 
 .connections-found-group-content {
