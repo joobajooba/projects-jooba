@@ -142,42 +142,68 @@ export default function Connections() {
 
       // Reset heights to auto to get natural heights
       groupPanels.forEach(panel => {
-        panel.style.height = 'auto';
+        panel.style.height = '';
+        panel.style.minHeight = '';
       });
       groupWrappers.forEach(wrapper => {
-        wrapper.style.height = 'auto';
+        wrapper.style.height = '';
+        wrapper.style.minHeight = '';
       });
 
-      // Force a reflow to ensure heights are calculated
+      // Force multiple reflows to ensure heights are calculated
       void foundGroupsContainerRef.current.offsetHeight;
+      void foundGroupsContainerRef.current.scrollHeight;
+      
+      // Wait a frame for browser to recalculate
+      requestAnimationFrame(() => {
+        // Find the maximum height using multiple measurement methods
+        let maxPanelHeight = 0;
+        let maxWrapperHeight = 0;
+        
+        groupPanels.forEach(panel => {
+          const rect = panel.getBoundingClientRect();
+          const scrollHeight = panel.scrollHeight;
+          const offsetHeight = panel.offsetHeight;
+          const height = Math.max(rect.height, scrollHeight, offsetHeight);
+          if (height > maxPanelHeight) {
+            maxPanelHeight = height;
+          }
+        });
+        
+        groupWrappers.forEach(wrapper => {
+          const rect = wrapper.getBoundingClientRect();
+          const scrollHeight = wrapper.scrollHeight;
+          const offsetHeight = wrapper.offsetHeight;
+          const height = Math.max(rect.height, scrollHeight, offsetHeight);
+          if (height > maxWrapperHeight) {
+            maxWrapperHeight = height;
+          }
+        });
 
-      // Find the maximum height using scrollHeight for more accurate measurement
-      let maxHeight = 0;
-      groupPanels.forEach(panel => {
-        const height = Math.max(panel.scrollHeight, panel.offsetHeight);
-        if (height > maxHeight) {
-          maxHeight = height;
+        // Set all panels and wrappers to the maximum height
+        if (maxPanelHeight > 0) {
+          groupPanels.forEach(panel => {
+            panel.style.height = `${maxPanelHeight}px`;
+            panel.style.minHeight = `${maxPanelHeight}px`;
+          });
+        }
+        
+        if (maxWrapperHeight > 0) {
+          groupWrappers.forEach(wrapper => {
+            wrapper.style.height = `${maxWrapperHeight}px`;
+            wrapper.style.minHeight = `${maxWrapperHeight}px`;
+          });
         }
       });
-
-      // Set all panels and wrappers to the maximum height
-      if (maxHeight > 0) {
-        groupPanels.forEach(panel => {
-          panel.style.height = `${maxHeight}px`;
-        });
-        groupWrappers.forEach(wrapper => {
-          wrapper.style.height = `${maxHeight + 6}px`; // Add padding for border
-        });
-      }
     };
 
     // Use requestAnimationFrame to ensure DOM is fully rendered
     const rafId = requestAnimationFrame(() => {
       equalizeHeights();
       // Also run after delays to catch any async updates
-      setTimeout(equalizeHeights, 50);
-      setTimeout(equalizeHeights, 200);
-      setTimeout(equalizeHeights, 500);
+      setTimeout(equalizeHeights, 100);
+      setTimeout(equalizeHeights, 300);
+      setTimeout(equalizeHeights, 600);
     });
 
     // Run on window resize
