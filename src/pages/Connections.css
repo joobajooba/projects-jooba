@@ -157,26 +157,12 @@
 }
 
 .connections-found-group-wrapper {
-  padding: 0;
+  padding: 3px;
+  background: transparent;
+  border-radius: 10px;
   margin-bottom: 0.75rem;
   position: relative;
-  border-radius: 10px;
-}
-
-.connections-found-group-wrapper::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  padding: 3px;
-  background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
-  border-radius: 10px;
-  -webkit-mask: 
-    linear-gradient(#fff 0 0) content-box, 
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-  z-index: 0;
+  /* Rainbow border created via box-shadow on inner element */
 }
 
 .connections-found-group {
@@ -191,8 +177,16 @@
   z-index: 1;
   width: 100%;
   box-sizing: border-box;
+  /* Rainbow border using box-shadow */
+  box-shadow: 
+    0 0 0 3px #ff0000,
+    0 0 0 4px #ff7f00,
+    0 0 0 5px #ffff00,
+    0 0 0 6px #00ff00,
+    0 0 0 7px #0000ff,
+    0 0 0 8px #4b0082,
+    0 0 0 9px #9400d3;
   /* Background color set via inline style - solid rgba color with 50% opacity */
-  /* Wrapper has no background, only border via pseudo-element */
   background-color: var(--bg-color, transparent);
 }
 
