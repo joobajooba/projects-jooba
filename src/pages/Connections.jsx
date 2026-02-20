@@ -151,22 +151,53 @@ export default function Connections() {
   const checkSelection = useCallback(() => {
     if (selectedWords.length !== 4 || !puzzle) return;
 
-    // Check if all selected words belong to the same group
-    const firstGroupIndex = selectedWords[0].groupIndex;
-    const allSameGroup = selectedWords.every(w => w.groupIndex === firstGroupIndex);
+    // Get the actual word strings from selected words (normalized and sorted)
+    const selectedWordStrings = selectedWords.map(w => w.word.toUpperCase().trim()).sort();
+    
+    // Check if these words match any group's members exactly
+    let matchedGroup = null;
+    for (const group of puzzle.groups) {
+      const groupMembers = group.members.map(m => m.toUpperCase().trim()).sort();
+      // Check if selected words match this group's members exactly
+      if (selectedWordStrings.length === groupMembers.length &&
+          selectedWordStrings.every((word, idx) => word === groupMembers[idx])) {
+        matchedGroup = group;
+        break;
+      }
+    }
 
-    if (allSameGroup) {
-      // Correct group found!
-      const group = puzzle.groups.find(g => g.level === firstGroupIndex);
-      if (group) {
+    if (matchedGroup) {
+      // Check if this group was already found by comparing members
+      const matchedMembers = matchedGroup.members.map(m => m.toUpperCase().trim()).sort();
+      const isAlreadyFound = foundGroups.some(g => {
+        const gMembers = g.members.map(m => m.toUpperCase().trim()).sort();
+        return gMembers.length === matchedMembers.length &&
+               gMembers.every((m, i) => m === matchedMembers[i]);
+      });
+
+      if (isAlreadyFound) {
+        // Already found - treat as mistake
+        const newMistakes = mistakes + 1;
+        setMistakes(newMistakes);
+        setSelectedWords([]);
+        
+        if (newMistakes >= 4) {
+          setGameStatus('lost');
+          setMessage('Game Over!');
+        } else {
+          setMessage(`Already found!`);
+          setTimeout(() => setMessage(''), 2000);
+        }
+      } else {
+        // New group found!
         setFoundGroups(prev => {
-          const newFoundGroups = [...prev, group];
+          const newFoundGroups = [...prev, matchedGroup];
           // Check if game is won
           if (newFoundGroups.length === 4) {
             setGameStatus('won');
             setMessage('Perfect!');
           } else {
-            setMessage(`Correct! ${group.groupName}`);
+            setMessage(`Correct! ${matchedGroup.groupName}`);
             setTimeout(() => setMessage(''), 2000);
           }
           return newFoundGroups;
@@ -187,16 +218,16 @@ export default function Connections() {
         setTimeout(() => setMessage(''), 2000);
       }
     }
-  }, [selectedWords, puzzle, mistakes]);
+  }, [selectedWords, puzzle, foundGroups, mistakes]);
 
   useEffect(() => {
     if (selectedWords.length === 4) {
       const timer = setTimeout(() => {
         checkSelection();
-      }, 500); // Small delay to show selection
+      }, 300); // Small delay to show selection
       return () => clearTimeout(timer);
     }
-  }, [selectedWords, checkSelection]);
+  }, [selectedWords.length, checkSelection]);
 
   const getLevelColor = (level) => {
     const colors = {
