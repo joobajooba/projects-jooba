@@ -164,23 +164,6 @@
   position: relative;
 }
 
-.connections-found-group-wrapper::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border-radius: 10px;
-  padding: 3px;
-  background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-  z-index: 0;
-}
-
 .connections-found-group {
   padding: 1rem;
   border-radius: 8px;
@@ -190,10 +173,10 @@
   display: flex;
   align-items: center;
   position: relative;
-  z-index: 2;
+  z-index: 1;
   width: 100%;
   box-sizing: border-box;
-  /* Background will be set via inline style - solid color with 50% opacity, no gradient */
+  /* Background set via inline style - must completely cover wrapper gradient */
 }
 
 .connections-found-group-content {
