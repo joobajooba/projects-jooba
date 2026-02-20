@@ -240,7 +240,8 @@ export default function Connections() {
   };
 
   const getFoundGroupBackgroundColor = (index) => {
-    // 50% opacity - now wrapper has no background, only border, so gradient won't show through
+    // Solid colors that will appear semi-transparent against dark background
+    // Using rgba with 0.5 opacity - wrapper gradient should only show as border
     const colors = [
       'rgba(30, 58, 138, 0.5)',   // Dark blue - 50% opacity
       'rgba(236, 72, 153, 0.5)',  // Pink - 50% opacity
