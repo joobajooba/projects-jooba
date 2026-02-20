@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Connections.css';
 
@@ -118,6 +118,7 @@ export default function Connections() {
   const [gameStatus, setGameStatus] = useState('playing'); // 'playing', 'won', 'lost'
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
+  const foundGroupsContainerRef = useRef(null);
 
   useEffect(() => {
     const loadPuzzle = async () => {
@@ -128,6 +129,49 @@ export default function Connections() {
     };
     loadPuzzle();
   }, []);
+
+  // Equalize heights of all found group panels
+  useEffect(() => {
+    const equalizeHeights = () => {
+      if (!foundGroupsContainerRef.current) return;
+      
+      const groupPanels = foundGroupsContainerRef.current.querySelectorAll('.connections-found-group');
+      if (groupPanels.length === 0) return;
+
+      // Reset heights to auto to get natural heights
+      groupPanels.forEach(panel => {
+        panel.style.height = 'auto';
+      });
+
+      // Find the maximum height
+      let maxHeight = 0;
+      groupPanels.forEach(panel => {
+        const height = panel.offsetHeight;
+        if (height > maxHeight) {
+          maxHeight = height;
+        }
+      });
+
+      // Set all panels to the maximum height
+      groupPanels.forEach(panel => {
+        panel.style.height = `${maxHeight}px`;
+      });
+    };
+
+    // Run on mount and when foundGroups or gameStatus changes
+    equalizeHeights();
+
+    // Also run after a short delay to ensure DOM has updated
+    const timeoutId = setTimeout(equalizeHeights, 100);
+
+    // Run on window resize
+    window.addEventListener('resize', equalizeHeights);
+
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('resize', equalizeHeights);
+    };
+  }, [foundGroups, gameStatus, puzzle]);
 
   const handleWordClick = (word) => {
     if (gameStatus !== 'playing' || foundGroups.some(g => g.members.includes(word.word))) {
@@ -359,7 +403,7 @@ export default function Connections() {
         {((foundGroups.length > 0) || (gameStatus !== 'playing')) && (
           <div className="connections-found-groups">
             <h3>{gameStatus === 'playing' ? 'Found Groups:' : 'All Groups:'}</h3>
-            <div className="connections-found-groups-container">
+            <div className="connections-found-groups-container" ref={foundGroupsContainerRef}>
             {(gameStatus !== 'playing' ? puzzle.groups : foundGroups).map((group, index) => {
               const isFound = foundGroups.some(g => {
                 const gMembers = g.members.map(m => m.toUpperCase().trim()).sort();

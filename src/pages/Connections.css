@@ -191,13 +191,13 @@
   position: relative;
   z-index: 1;
   width: 100%;
-  height: 100%;
   box-sizing: border-box;
   /* Background color set via inline style - solid dark colors */
   background-color: var(--bg-color, #1e3a8a);
   /* Ensure no gradient backgrounds */
   background-image: none !important;
   background: var(--bg-color, #1e3a8a) !important;
+  transition: height 0.2s ease;
 }
 
 .connections-found-group-content {
@@ -220,9 +220,12 @@
 
 .connections-found-name {
   font-weight: 700;
-  font-size: 1.2rem;
+  font-size: 0.95rem;
   display: block;
   margin-top: 0.25rem;
+  line-height: 1.2;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .connections-found-members {
