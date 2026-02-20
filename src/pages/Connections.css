@@ -171,8 +171,7 @@
   min-height: 80px;
   display: flex;
   align-items: center;
-  background-color: transparent !important; /* Ensure no gradient background */
-  background-image: none !important; /* Remove any gradient */
+  /* Background will be set via inline style - no default gradient */
 }
 
 .connections-found-group-content {
