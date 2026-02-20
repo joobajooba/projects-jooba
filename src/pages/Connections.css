@@ -157,13 +157,28 @@
 }
 
 .connections-found-group-wrapper {
-  padding: 0;
-  border: 3px solid;
-  border-image: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3) 1;
+  padding: 3px;
+  background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
   border-radius: 10px;
   margin-bottom: 0.75rem;
   position: relative;
-  background: transparent;
+}
+
+.connections-found-group-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 10px;
+  padding: 3px;
+  background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .connections-found-group {
@@ -175,10 +190,10 @@
   display: flex;
   align-items: center;
   position: relative;
-  z-index: 1;
+  z-index: 2;
   width: 100%;
   box-sizing: border-box;
-  /* Background will be set via inline style - solid color, no gradient */
+  /* Background will be set via inline style - solid color with 50% opacity, no gradient */
 }
 
 .connections-found-group-content {
