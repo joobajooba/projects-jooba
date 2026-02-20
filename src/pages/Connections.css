@@ -169,9 +169,7 @@
   border-radius: 8px;
   text-align: center;
   font-family: 'TT Octosquares', system-ui, sans-serif;
-  /* Background color set via inline style - ensure no default background */
-  background-color: transparent !important;
-  background: transparent !important;
+  /* Background color set via inline style - inline styles will override */
 }
 
 .connections-found-group-title {
