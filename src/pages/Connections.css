@@ -186,7 +186,7 @@
   text-align: center;
   min-height: 280px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   position: relative;
   z-index: 1;
@@ -198,6 +198,7 @@
   background-image: none !important;
   background: var(--bg-color, #1e3a8a) !important;
   transition: height 0.2s ease;
+  overflow: hidden;
 }
 
 .connections-found-group-content {

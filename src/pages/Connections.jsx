@@ -143,32 +143,39 @@ export default function Connections() {
         panel.style.height = 'auto';
       });
 
-      // Find the maximum height
+      // Force a reflow to ensure heights are calculated
+      void foundGroupsContainerRef.current.offsetHeight;
+
+      // Find the maximum height using scrollHeight for more accurate measurement
       let maxHeight = 0;
       groupPanels.forEach(panel => {
-        const height = panel.offsetHeight;
+        const height = Math.max(panel.scrollHeight, panel.offsetHeight);
         if (height > maxHeight) {
           maxHeight = height;
         }
       });
 
       // Set all panels to the maximum height
-      groupPanels.forEach(panel => {
-        panel.style.height = `${maxHeight}px`;
-      });
+      if (maxHeight > 0) {
+        groupPanels.forEach(panel => {
+          panel.style.height = `${maxHeight}px`;
+        });
+      }
     };
 
-    // Run on mount and when foundGroups or gameStatus changes
-    equalizeHeights();
-
-    // Also run after a short delay to ensure DOM has updated
-    const timeoutId = setTimeout(equalizeHeights, 100);
+    // Use requestAnimationFrame to ensure DOM is fully rendered
+    const rafId = requestAnimationFrame(() => {
+      equalizeHeights();
+      // Also run after a delay to catch any async updates
+      setTimeout(equalizeHeights, 50);
+      setTimeout(equalizeHeights, 200);
+    });
 
     // Run on window resize
     window.addEventListener('resize', equalizeHeights);
 
     return () => {
-      clearTimeout(timeoutId);
+      cancelAnimationFrame(rafId);
       window.removeEventListener('resize', equalizeHeights);
     };
   }, [foundGroups, gameStatus, puzzle]);
