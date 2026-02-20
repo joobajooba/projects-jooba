@@ -176,7 +176,9 @@
   z-index: 1;
   width: 100%;
   box-sizing: border-box;
-  /* Background set via inline style - must completely cover wrapper gradient */
+  /* Background color set via inline style - solid rgba color with 50% opacity */
+  /* This will completely cover the wrapper gradient */
+  background-color: var(--bg-color, transparent);
 }
 
 .connections-found-group-content {

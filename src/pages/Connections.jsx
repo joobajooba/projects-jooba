@@ -373,11 +373,10 @@ export default function Connections() {
                   <div
                     className="connections-found-group"
                     style={{ 
+                      '--bg-color': getFoundGroupBackgroundColor(index),
                       backgroundColor: getFoundGroupBackgroundColor(index),
                       backgroundImage: 'none',
-                      background: getFoundGroupBackgroundColor(index),
-                      width: '100%',
-                      height: '100%'
+                      background: getFoundGroupBackgroundColor(index) + ' !important'
                     }}
                   >
                     <div className="connections-found-group-content">
