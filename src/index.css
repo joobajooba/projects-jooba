@@ -189,13 +189,17 @@ html, body {
   min-height: calc(100vh - 60px);
   padding: 2rem;
   box-sizing: border-box;
+  width: 100%;
 }
 
 .games-container {
   display: flex;
   gap: 2rem;
-  align-items: flex-start;
-  flex-wrap: wrap;
+  align-items: stretch;
+  flex-wrap: nowrap;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .games-box-outer {
@@ -203,12 +207,14 @@ html, body {
   background: linear-gradient(90deg,
     #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8f00ff);
   border-radius: 10px;
-  width: fit-content;
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .games-box {
-  width: 400px;
+  width: 100%;
   height: 800px;
+  min-height: 600px;
   background: #1a1a1a;
   border-radius: 8px;
   display: flex;
@@ -244,7 +250,7 @@ html, body {
 .games-box-image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
   display: block;
 }

@@ -27,7 +27,7 @@
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-  height: 360px;
+  min-height: 360px;
   box-sizing: border-box;
 }
 
@@ -267,10 +267,79 @@
   margin-bottom: 1rem;
 }
 
-.profile-field {
+/* Username, otherside, X directly under the profile picture */
+.profile-info-under-picture {
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  margin-top: 1rem;
+  align-self: stretch;
+  text-align: left;
   gap: 0.5rem;
+}
+
+.profile-info-under-picture .profile-field {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: nowrap;
+  width: 100%;
+}
+
+.profile-info-under-picture .profile-field label {
+  font-weight: 700;
+  font-family: 'TT Octosquares', system-ui, sans-serif;
+  color: #e0e0e0;
+  font-size: 1rem;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.profile-info-under-picture .profile-field span,
+.profile-info-under-picture .profile-field .profile-input {
+  color: #ccc;
+  font-size: 1rem;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-field-inline {
+  display: block;
+}
+
+.profile-field-line {
+  display: inline;
+  font-size: 1rem;
+}
+
+.profile-field-label {
+  font-weight: 700;
+  font-family: 'TT Octosquares', system-ui, sans-serif;
+  color: #e0e0e0;
+}
+
+.profile-field-value {
+  color: #ccc;
+}
+
+.profile-input-inline {
+  display: inline-block;
+  min-width: 120px;
+  padding: 0.35rem 0.5rem;
+  font-size: 1rem;
+}
+
+.profile-field {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .profile-field label {
@@ -278,11 +347,17 @@
   font-family: 'TT Octosquares', system-ui, sans-serif;
   color: #e0e0e0;
   font-size: 1.1rem;
+  flex-shrink: 0;
 }
 
 .profile-field span {
   color: #ccc;
   font-size: 1rem;
+}
+
+.profile-field .profile-input {
+  flex: 1;
+  min-width: 0;
 }
 
 .profile-input {

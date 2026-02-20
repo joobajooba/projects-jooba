@@ -463,6 +463,57 @@ export default function Profile() {
                 </div>
               )}
             </div>
+            {/* Username, otherside, X directly under the profile picture */}
+            <div className="profile-info profile-info-under-picture">
+              <div className="profile-field profile-field-inline">
+                <span className="profile-field-line">
+                  <span className="profile-field-label">Username:</span>
+                  {' '}
+                  {isOwnProfile && isEditing ? (
+                    <input
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className="profile-input profile-input-inline"
+                    />
+                  ) : (
+                    <span className="profile-field-value">{username || 'Not set'}</span>
+                  )}
+                </span>
+              </div>
+              <div className="profile-field profile-field-inline">
+                <span className="profile-field-line">
+                  <span className="profile-field-label">otherisde:</span>
+                  {' '}
+                  {isOwnProfile && isEditing ? (
+                    <input
+                      type="text"
+                      value={otherisde}
+                      onChange={(e) => setOtherisde(e.target.value)}
+                      className="profile-input profile-input-inline"
+                    />
+                  ) : (
+                    <span className="profile-field-value">{otherisde || 'Not set'}</span>
+                  )}
+                </span>
+              </div>
+              <div className="profile-field profile-field-inline">
+                <span className="profile-field-line">
+                  <span className="profile-field-label">X:</span>
+                  {' '}
+                  {isOwnProfile && isEditing ? (
+                    <input
+                      type="text"
+                      value={x}
+                      onChange={(e) => setX(e.target.value)}
+                      className="profile-input profile-input-inline"
+                    />
+                  ) : (
+                    <span className="profile-field-value">{x || 'Not set'}</span>
+                  )}
+                </span>
+              </div>
+            </div>
             {isOwnProfile && isEditing && (
               <div className="profile-picture-actions">
                 <button
@@ -488,68 +539,27 @@ export default function Profile() {
                 </button>
               </div>
             )}
-            {isOwnProfile && !isEditing && (
-              <div className="profile-wordle-stats">
-                <div className="profile-stat-item">
-                  <span className="profile-stat-label">Wordle Streak:</span>
-                  <span className="profile-stat-value">{wordleStats?.currentStreak || 0}</span>
-                </div>
-                <div className="profile-stat-item">
-                  <span className="profile-stat-label">Average Guesses:</span>
-                  <span className="profile-stat-value">{wordleStats?.averageGuesses || 0}</span>
-                </div>
-                <div className="profile-stat-item">
-                  <span className="profile-stat-label">Leaderboard Ranking:</span>
-                  <span className="profile-stat-value">
-                    {leaderboardRank ? `${leaderboardRank.rank}/${leaderboardRank.total}` : '—'}
-                  </span>
-                </div>
-              </div>
-            )}
           </div>
         </div>
         <div className="profile-right-panel">
-          <div className="profile-info">
-            <div className="profile-field">
-              <label>Username:</label>
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="profile-input"
-                />
-              ) : (
-                <span>{username || 'Not set'}</span>
-              )}
+          {isOwnProfile && !isEditing && (
+            <div className="profile-wordle-stats">
+              <div className="profile-stat-item">
+                <span className="profile-stat-label">Wordle Streak:</span>
+                <span className="profile-stat-value">{wordleStats?.currentStreak || 0}</span>
+              </div>
+              <div className="profile-stat-item">
+                <span className="profile-stat-label">Average Guesses:</span>
+                <span className="profile-stat-value">{wordleStats?.averageGuesses || 0}</span>
+              </div>
+              <div className="profile-stat-item">
+                <span className="profile-stat-label">Leaderboard Ranking:</span>
+                <span className="profile-stat-value">
+                  {leaderboardRank ? `${leaderboardRank.rank}/${leaderboardRank.total}` : '—'}
+                </span>
+              </div>
             </div>
-            <div className="profile-field">
-              <label>otherisde:</label>
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={otherisde}
-                  onChange={(e) => setOtherisde(e.target.value)}
-                  className="profile-input"
-                />
-              ) : (
-                <span>{otherisde || 'Not set'}</span>
-              )}
-            </div>
-            <div className="profile-field">
-              <label>X:</label>
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={x}
-                  onChange={(e) => setX(e.target.value)}
-                  className="profile-input"
-                />
-              ) : (
-                <span>{x || 'Not set'}</span>
-              )}
-            </div>
-          </div>
+          )}
         </div>
         <div className="profile-nft-section">
           {profileSearchNotFound && (
