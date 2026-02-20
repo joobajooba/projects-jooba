@@ -171,6 +171,7 @@
   min-height: 80px;
   display: flex;
   align-items: center;
+  background: transparent !important; /* Ensure no gradient background */
 }
 
 .connections-found-group-content {
@@ -183,7 +184,7 @@
 .connections-found-level {
   display: inline-block;
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 1rem;
   text-transform: uppercase;
   margin-right: 0.5rem;
   opacity: 0.9;
@@ -191,13 +192,13 @@
 
 .connections-found-name {
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 1.2rem;
   display: block;
   margin-top: 0.25rem;
 }
 
 .connections-found-members {
-  font-size: 0.9rem;
+  font-size: 1.1rem;
   margin-top: 0.5rem;
   opacity: 0.95;
 }
