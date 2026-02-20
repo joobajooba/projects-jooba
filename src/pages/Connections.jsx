@@ -239,6 +239,16 @@ export default function Connections() {
     return colors[level] || '#666';
   };
 
+  const getFoundGroupBackgroundColor = (index) => {
+    const colors = [
+      'rgba(108, 189, 69, 0.5)',   // Green - 50% opacity
+      'rgba(58, 158, 234, 0.5)',   // Blue - 50% opacity
+      'rgba(255, 165, 0, 0.5)',    // Orange - 50% opacity
+      'rgba(255, 192, 203, 0.5)'   // Pink - 50% opacity
+    ];
+    return colors[index % colors.length];
+  };
+
   const getLevelName = (level) => {
     const names = {
       0: 'Yellow',
@@ -361,7 +371,7 @@ export default function Connections() {
                   <div
                     className="connections-found-group"
                     style={{ 
-                      backgroundColor: getLevelColor(group.level),
+                      backgroundColor: getFoundGroupBackgroundColor(index),
                       opacity: isFound ? 1 : 0.7
                     }}
                   >
