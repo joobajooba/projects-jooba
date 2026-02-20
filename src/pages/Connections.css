@@ -123,9 +123,9 @@
 }
 
 .connections-word:hover:not(:disabled):not(.found) {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.3);
-  transform: translateY(-2px);
+  background: #E8E8E0;
+  border-color: #B0B0B0;
+  transform: translateY(-1px);
 }
 
 .connections-word.selected {
