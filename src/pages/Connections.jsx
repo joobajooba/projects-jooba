@@ -420,12 +420,14 @@ export default function Connections() {
             {foundGroups.map((group, index) => {
               // Use level from group, or assign based on order (0-3)
               const groupLevel = group.level !== undefined ? group.level : (index % 4);
+              const bgColor = getLevelColor(groupLevel);
               return (
                 <div
                   key={index}
                   className="connections-found-group-box"
                   style={{
-                    backgroundColor: getLevelColor(groupLevel),
+                    backgroundColor: bgColor,
+                    background: bgColor,
                     color: '#fff'
                   }}
                 >
