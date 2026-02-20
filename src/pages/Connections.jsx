@@ -241,10 +241,10 @@ export default function Connections() {
 
   const getFoundGroupBackgroundColor = (index) => {
     const colors = [
-      '#1e3a8a',   // Dark blue
-      '#ec4899',   // Pink
-      '#f97316',   // Orange
-      '#22c55e'    // Green
+      'rgba(30, 58, 138, 0.5)',   // Dark blue - 50% opacity
+      'rgba(236, 72, 153, 0.5)',  // Pink - 50% opacity
+      'rgba(249, 115, 22, 0.5)',   // Orange - 50% opacity
+      'rgba(34, 197, 94, 0.5)'     // Green - 50% opacity
     ];
     return colors[index % colors.length];
   };
