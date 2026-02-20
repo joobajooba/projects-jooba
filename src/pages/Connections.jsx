@@ -371,15 +371,14 @@ export default function Connections() {
                   <div
                     className="connections-found-group"
                     style={{ 
-                      backgroundColor: getFoundGroupBackgroundColor(index),
-                      opacity: isFound ? 1 : 0.7
+                      backgroundColor: getFoundGroupBackgroundColor(index)
                     }}
                   >
                     <div className="connections-found-group-content">
                       <span className="connections-found-level">{getLevelName(group.level)}</span>
                       <span className="connections-found-name">{group.groupName}</span>
                       <div className="connections-found-members">
-                        {group.members.join(' • ')}
+                        {group.members.join('   |   ')}
                       </div>
                     </div>
                   </div>
