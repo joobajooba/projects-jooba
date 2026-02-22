@@ -20,7 +20,7 @@
 }
 
 .profile-picture-container {
-  background: #000;
+  background: #1a1a1a;
   border-radius: 8px;
   padding: 2rem;
   display: flex;
@@ -152,7 +152,7 @@
   flex: 0 0 260px;
   width: 260px;
   max-width: 260px;
-  background: #000;
+  background: #1a1a1a;
   border-radius: 8px;
   padding: 2rem;
   min-height: 360px;
@@ -276,7 +276,7 @@
 .profile-nft-slot {
   width: 100%;
   height: 280px;
-  background: #000;
+  background: #1a1a1a;
   border-radius: 8px;
   overflow: hidden;
   display: flex;
@@ -306,7 +306,7 @@
 
 .profile-nft-slot-editable:hover {
   border-color: #4a9eff;
-  background: #000;
+  background: rgba(26, 26, 26, 0.95);
 }
 
 .profile-info {
