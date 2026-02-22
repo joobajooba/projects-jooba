@@ -183,13 +183,14 @@
   justify-content: flex-start;
 }
 
-/* Section to the right of username panel: NFT row (bottoms aligned with username panel) */
+/* Section to the right of username panel: NFT row (stretches to same height as profile/stats panels) */
 .profile-nft-section {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-width: 0;
-  height: 360px;
+  min-height: 360px;
+  align-self: stretch;
 }
 
 /* Search bar positioned on the right side of the screen */
@@ -275,19 +276,23 @@
   margin-top: 1rem;
 }
 
-/* Row of 5 NFT slots — pushed to bottom so bottom aligns with username panel */
+/* Row of 5 NFT slots — stretches to same height as profile/stats panels */
 .profile-nft-slots-row {
   flex: 1;
   display: flex;
   gap: 0.75rem;
   min-width: 0;
-  align-items: flex-end;
+  align-items: stretch;
+  min-height: 0;
 }
-
 
 .profile-nft-slot-wrapper {
   flex: 1;
   min-width: 0;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   padding: 3px;
   background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
   border-radius: 11px;
@@ -295,7 +300,8 @@
 
 .profile-nft-slot {
   width: 100%;
-  height: 280px;
+  flex: 1;
+  min-height: 200px;
   background: #1a1a1a;
   border-radius: 8px;
   overflow: hidden;
