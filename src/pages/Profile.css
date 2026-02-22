@@ -456,44 +456,62 @@
   padding-top: 1rem;
 }
 
-.profile-wordle-stats {
+.profile-stats {
   margin-top: auto;
   width: 100%;
   padding-top: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
+}
+
+.profile-stat-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.profile-stat-section-title {
+  display: block;
+  font-family: 'TT Octosquares', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #fff;
+  margin: 0 0 0.5rem 0;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .profile-stat-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 0.5rem 0;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.profile-stat-item:last-child {
+.profile-stat-section .profile-stat-item:last-child {
   border-bottom: none;
-}
-
-.profile-stat-item.profile-stat-divider {
-  margin-top: 0.5rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .profile-stat-label {
   font-family: 'TT Octosquares', system-ui, sans-serif;
-  font-weight: 700;
+  font-weight: 400;
   font-size: 0.9rem;
   color: #e0e0e0;
 }
 
+.profile-stat-sep {
+  font-family: 'TT Octosquares', system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
 .profile-stat-value {
   font-family: 'TT Octosquares', system-ui, sans-serif;
-  font-weight: 700;
-  font-size: 1rem;
+  font-weight: 400;
+  font-size: 0.9rem;
   color: #4a9eff;
 }
 

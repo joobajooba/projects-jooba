@@ -523,33 +523,19 @@ export default function Profile() {
         </div>
         <div className="profile-right-panel">
           {isOwnProfile && !isEditing && (
-            <div className="profile-wordle-stats">
-              <div className="profile-stat-item">
-                <span className="profile-stat-label">Wordle Streak:</span>
-                <span className="profile-stat-value">{wordleStats?.currentStreak || 0}</span>
-              </div>
-              <div className="profile-stat-item">
-                <span className="profile-stat-label">Average Guesses:</span>
-                <span className="profile-stat-value">{wordleStats?.averageGuesses || 0}</span>
-              </div>
-              <div className="profile-stat-item">
-                <span className="profile-stat-label">Leaderboard Ranking:</span>
-                <span className="profile-stat-value">
-                  {leaderboardRank ? `${leaderboardRank.rank}/${leaderboardRank.total}` : '—'}
-                </span>
-              </div>
-              <div className="profile-stat-item profile-stat-divider">
-                <span className="profile-stat-label">Connections Wins:</span>
-                <span className="profile-stat-value">{connectionsStats?.totalWins ?? 0}</span>
-              </div>
-              <div className="profile-stat-item">
-                <span className="profile-stat-label">Connections Avg. Mistakes:</span>
-                <span className="profile-stat-value">{connectionsStats?.averageMistakesUsed ?? '—'}</span>
-              </div>
-              <div className="profile-stat-item">
-                <span className="profile-stat-label">Connections Streak:</span>
-                <span className="profile-stat-value">{connectionsStats?.dailyStreak ?? 0}</span>
-              </div>
+            <div className="profile-stats">
+              <section className="profile-stat-section">
+                <div className="profile-stat-section-title" style={{ fontWeight: 700, fontSize: '1.05rem', color: '#fff', marginBottom: '0.5rem', paddingBottom: '0.25rem', borderBottom: '1px solid rgba(255,255,255,0.2)' }}>Wordle</div>
+                <div className="profile-stat-item"><span className="profile-stat-label">Wordle Streak</span> <span className="profile-stat-sep">|</span> <span className="profile-stat-value">{wordleStats?.currentStreak ?? 0}</span></div>
+                <div className="profile-stat-item"><span className="profile-stat-label">Average Guesses</span> <span className="profile-stat-sep">|</span> <span className="profile-stat-value">{wordleStats?.averageGuesses ?? 0}</span></div>
+                <div className="profile-stat-item"><span className="profile-stat-label">Leaderboard Ranking</span> <span className="profile-stat-sep">|</span> <span className="profile-stat-value">{leaderboardRank ? `${leaderboardRank.rank}/${leaderboardRank.total}` : '—'}</span></div>
+              </section>
+              <section className="profile-stat-section">
+                <div className="profile-stat-section-title" style={{ fontWeight: 700, fontSize: '1.05rem', color: '#fff', marginBottom: '0.5rem', paddingBottom: '0.25rem', borderBottom: '1px solid rgba(255,255,255,0.2)' }}>Connections</div>
+                <div className="profile-stat-item"><span className="profile-stat-label">Connections Wins</span> <span className="profile-stat-sep">|</span> <span className="profile-stat-value">{connectionsStats?.totalWins ?? 0}</span></div>
+                <div className="profile-stat-item"><span className="profile-stat-label">Connections Avg Mistakes</span> <span className="profile-stat-sep">|</span> <span className="profile-stat-value">{connectionsStats?.averageMistakesUsed ?? '—'}</span></div>
+                <div className="profile-stat-item"><span className="profile-stat-label">Connections Streak</span> <span className="profile-stat-sep">|</span> <span className="profile-stat-value">{connectionsStats?.dailyStreak ?? 0}</span></div>
+              </section>
             </div>
           )}
         </div>
