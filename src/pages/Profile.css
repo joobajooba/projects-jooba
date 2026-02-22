@@ -20,7 +20,7 @@
 }
 
 .profile-picture-container {
-  background: rgba(26, 26, 26, 0.8);
+  background: #1a1a1a;
   border-radius: 8px;
   padding: 2rem;
   display: flex;
@@ -72,18 +72,25 @@
 .profile-picture-wrapper {
   padding: 3px;
   background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
-  background-size: 200% 200%;
   border-radius: 11px;
-  animation: rainbow-border 3s linear infinite;
 }
 
-@keyframes rainbow-border {
-  0% {
-    background-position: 0% 50%;
-  }
-  100% {
-    background-position: 200% 50%;
-  }
+.profile-picture-frame {
+  width: 200px;
+  height: 200px;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1a1a1a;
+}
+
+.profile-picture-frame .profile-picture {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
 }
 
 .profile-picture,
@@ -92,6 +99,7 @@
   height: 200px;
   border-radius: 8px;
   object-fit: cover;
+  object-position: center;
   display: block;
 }
 
@@ -141,7 +149,7 @@
   flex: 0 0 260px;
   width: 260px;
   max-width: 260px;
-  background: rgba(26, 26, 26, 0.8);
+  background: #1a1a1a;
   border-radius: 8px;
   padding: 2rem;
   min-height: 360px;
@@ -259,15 +267,13 @@
   min-width: 0;
   padding: 3px;
   background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
-  background-size: 200% 200%;
   border-radius: 11px;
-  animation: rainbow-border 3s linear infinite;
 }
 
 .profile-nft-slot {
   width: 100%;
   height: 280px;
-  background: rgba(26, 26, 26, 0.8);
+  background: #1a1a1a;
   border-radius: 8px;
   overflow: hidden;
   display: flex;
@@ -280,6 +286,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
 }
 
 .profile-nft-slot-placeholder {

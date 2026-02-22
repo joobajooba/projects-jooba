@@ -456,7 +456,9 @@ export default function Profile() {
           <div className="profile-picture-container">
             <div className="profile-picture-wrapper">
               {profilePictureUrl ? (
-                <img src={profilePictureUrl} alt="Profile" className="profile-picture" />
+                <div className="profile-picture-frame">
+                  <img src={profilePictureUrl} alt="Profile" className="profile-picture" />
+                </div>
               ) : (
                 <div className="profile-picture-placeholder">
                   <span>No Picture</span>
