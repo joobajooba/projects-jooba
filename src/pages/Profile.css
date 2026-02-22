@@ -477,6 +477,12 @@
   border-bottom: none;
 }
 
+.profile-stat-item.profile-stat-divider {
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
 .profile-stat-label {
   font-family: 'TT Octosquares', system-ui, sans-serif;
   font-weight: 700;

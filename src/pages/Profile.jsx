@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import { useUser } from '../hooks/useUser';
 import { useWordleStats } from '../hooks/useWordleStats';
+import { useConnectionsStats } from '../hooks/useConnectionsStats';
 import { supabase } from '../lib/supabase';
 import { isValidEthereumAddress, sanitizeInput, isValidUrl } from '../utils/walletSecurity';
 import { checkRateLimit } from '../utils/rateLimit';
@@ -13,6 +14,7 @@ export default function Profile() {
   const { address, isConnected } = useAccount();
   const { user, loading, refetch } = useUser();
   const { stats: wordleStats } = useWordleStats();
+  const { stats: connectionsStats } = useConnectionsStats();
   const [searchParams, setSearchParams] = useSearchParams();
   const editMode = searchParams.get('edit') === 'true';
   const viewUsernameParam = searchParams.get('username') || '';
@@ -535,6 +537,18 @@ export default function Profile() {
                 <span className="profile-stat-value">
                   {leaderboardRank ? `${leaderboardRank.rank}/${leaderboardRank.total}` : '—'}
                 </span>
+              </div>
+              <div className="profile-stat-item profile-stat-divider">
+                <span className="profile-stat-label">Connections Wins:</span>
+                <span className="profile-stat-value">{connectionsStats?.totalWins ?? 0}</span>
+              </div>
+              <div className="profile-stat-item">
+                <span className="profile-stat-label">Connections Avg. Mistakes:</span>
+                <span className="profile-stat-value">{connectionsStats?.averageMistakesUsed ?? '—'}</span>
+              </div>
+              <div className="profile-stat-item">
+                <span className="profile-stat-label">Connections Streak:</span>
+                <span className="profile-stat-value">{connectionsStats?.dailyStreak ?? 0}</span>
               </div>
             </div>
           )}
