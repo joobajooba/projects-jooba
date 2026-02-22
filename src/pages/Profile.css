@@ -17,6 +17,7 @@
 .profile-left-panel {
   flex-shrink: 0;
   width: 300px;
+  height: 420px;
 }
 
 .profile-picture-container {
@@ -27,6 +28,7 @@
   flex-direction: column;
   align-items: stretch;
   gap: 1rem;
+  height: 100%;
   min-height: 360px;
   box-sizing: border-box;
 }
@@ -172,27 +174,27 @@
   flex: 0 0 260px;
   width: 260px;
   max-width: 260px;
+  height: 420px;
   background: #1a1a1a;
   border-radius: 8px;
   padding: 2rem;
-  min-height: 360px;
-  align-self: stretch;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
 }
 
-/* Section to the right of username panel: NFT row (stretches to same height as profile/stats panels) */
+/* Section to the right of username panel: same height as profile/stats; NFT row pinned to bottom */
 .profile-nft-section {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-width: 0;
-  min-height: 360px;
+  height: 420px;
   align-self: stretch;
   padding-top: 3.5rem; /* Reserve space so NFT row does not overlap search bar */
   box-sizing: border-box;
+  justify-content: flex-end; /* Align NFT row to bottom so bottom lines match */
 }
 
 /* Search bar positioned on the right side of the screen */
@@ -278,20 +280,19 @@
   margin-top: 1rem;
 }
 
-/* Row of 5 NFT slots — stretches to same height as profile/stats panels */
+/* Row of 5 NFT slots — fixed height so images fit; row at bottom so bottom aligns with panels */
 .profile-nft-slots-row {
-  flex: 1;
+  flex: 0 0 auto;
+  height: 200px;
   display: flex;
   gap: 0.75rem;
   min-width: 0;
   align-items: stretch;
-  min-height: 0;
 }
 
 .profile-nft-slot-wrapper {
   flex: 1;
   min-width: 0;
-  min-height: 0;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -302,9 +303,7 @@
 
 .profile-nft-slot {
   width: 100%;
-  flex: 1;
-  min-height: 120px;
-  max-height: 280px;
+  height: 100%;
   background: #1a1a1a;
   border-radius: 0;
   overflow: hidden;
@@ -532,6 +531,7 @@
   .profile-left-panel {
     width: 100%;
     max-width: 360px;
+    height: auto;
   }
 
   .profile-picture-container,
@@ -540,15 +540,22 @@
     max-width: 260px;
   }
 
+  .profile-right-panel {
+    height: auto;
+    min-height: 360px;
+  }
+
   .profile-nft-section {
     width: 100%;
     height: auto;
     min-height: 320px;
+    justify-content: flex-start;
   }
 
   .profile-nft-slots-row {
     width: 100%;
     flex-wrap: wrap;
+    height: 200px;
   }
 
   .profile-nft-slot {
