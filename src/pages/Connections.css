@@ -87,7 +87,7 @@
 }
 
 .connections-message.won {
-  background: #6cbd45;
+  background: #166534;
   color: #fff;
 }
 
@@ -170,26 +170,26 @@
   text-align: center;
   font-family: 'TT Octosquares', system-ui, sans-serif;
   background-image: none !important;
-  /* Default fill so panels are never transparent */
-  background: #3a9eea !important;
-  background-color: #3a9eea !important;
+  /* Default fill so panels are never transparent (darker for white text contrast) */
+  background: #1d4ed8 !important;
+  background-color: #1d4ed8 !important;
 }
 
 .connections-found-group-box--blue {
-  background: #3a9eea !important;
-  background-color: #3a9eea !important;
+  background: #1d4ed8 !important;
+  background-color: #1d4ed8 !important;
 }
 .connections-found-group-box--pink {
-  background: #e91e63 !important;
-  background-color: #e91e63 !important;
+  background: #be185d !important;
+  background-color: #be185d !important;
 }
 .connections-found-group-box--orange {
-  background: #ff9800 !important;
-  background-color: #ff9800 !important;
+  background: #c2410c !important;
+  background-color: #c2410c !important;
 }
 .connections-found-group-box--green {
-  background: #4caf50 !important;
-  background-color: #4caf50 !important;
+  background: #166534 !important;
+  background-color: #166534 !important;
 }
 
 .connections-found-group-title {
@@ -323,9 +323,9 @@
 }
 
 .connections-win-message {
-  background: rgba(108, 189, 69, 0.2);
-  border: 2px solid #6cbd45;
-  color: #6cbd45;
+  background: rgba(22, 101, 52, 0.25);
+  border: 2px solid #166534;
+  color: #166534;
 }
 
 .connections-lose-message {
