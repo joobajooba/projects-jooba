@@ -74,6 +74,8 @@
   padding: 3px;
   border-radius: 11px;
   background: #000;
+  width: fit-content;
+  align-self: center;
 }
 
 .profile-picture-wrapper::before {
