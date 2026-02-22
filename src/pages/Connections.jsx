@@ -418,10 +418,11 @@ export default function Connections() {
         {foundGroups.length > 0 && (
           <div className="connections-found-groups-top">
             {foundGroups.map((group, index) => {
-              const groupLevel = group.level !== undefined ? group.level : (index % 4);
+              /* Use index so each panel gets a different color: 0=blue, 1=pink, 2=orange, 3=green */
+              const colorIndex = index % 4;
               const colorNames = ['blue', 'pink', 'orange', 'green'];
-              const colorClass = colorNames[groupLevel % 4] || 'blue';
-              const bgColor = getLevelColor(groupLevel);
+              const colorClass = colorNames[colorIndex];
+              const bgColor = getLevelColor(colorIndex);
               return (
                 <div
                   key={index}
