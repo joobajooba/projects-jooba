@@ -170,21 +170,24 @@
   text-align: center;
   font-family: 'TT Octosquares', system-ui, sans-serif;
   background-image: none !important;
-}
-
-.connections-found-group-box.connections-found-group-box--blue {
+  /* Default fill so panels are never transparent */
   background: #3a9eea !important;
   background-color: #3a9eea !important;
 }
-.connections-found-group-box.connections-found-group-box--pink {
+
+.connections-found-group-box--blue {
+  background: #3a9eea !important;
+  background-color: #3a9eea !important;
+}
+.connections-found-group-box--pink {
   background: #e91e63 !important;
   background-color: #e91e63 !important;
 }
-.connections-found-group-box.connections-found-group-box--orange {
+.connections-found-group-box--orange {
   background: #ff9800 !important;
   background-color: #ff9800 !important;
 }
-.connections-found-group-box.connections-found-group-box--green {
+.connections-found-group-box--green {
   background: #4caf50 !important;
   background-color: #4caf50 !important;
 }

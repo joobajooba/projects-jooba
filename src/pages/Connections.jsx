@@ -419,12 +419,14 @@ export default function Connections() {
           <div className="connections-found-groups-top">
             {foundGroups.map((group, index) => {
               const groupLevel = group.level !== undefined ? group.level : (index % 4);
-              const colorClass = ['blue', 'pink', 'orange', 'green'][groupLevel % 4];
+              const colorNames = ['blue', 'pink', 'orange', 'green'];
+              const colorClass = colorNames[groupLevel % 4] || 'blue';
+              const bgColor = getLevelColor(groupLevel);
               return (
                 <div
                   key={index}
                   className={`connections-found-group-box connections-found-group-box--${colorClass}`}
-                  style={{ color: '#fff' }}
+                  style={{ color: '#fff', backgroundColor: bgColor, background: bgColor }}
                 >
                   <div className="connections-found-group-title">{group.groupName}</div>
                   <div className="connections-found-group-words">
