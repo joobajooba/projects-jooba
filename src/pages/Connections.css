@@ -169,10 +169,24 @@
   border-radius: 8px;
   text-align: center;
   font-family: 'TT Octosquares', system-ui, sans-serif;
-  /* Remove any gradient backgrounds - use CSS variable or inline style */
   background-image: none !important;
-  background: var(--group-bg-color, #3a9eea) !important;
-  background-color: var(--group-bg-color, #3a9eea) !important;
+}
+
+.connections-found-group-box.connections-found-group-box--blue {
+  background: #3a9eea !important;
+  background-color: #3a9eea !important;
+}
+.connections-found-group-box.connections-found-group-box--pink {
+  background: #e91e63 !important;
+  background-color: #e91e63 !important;
+}
+.connections-found-group-box.connections-found-group-box--orange {
+  background: #ff9800 !important;
+  background-color: #ff9800 !important;
+}
+.connections-found-group-box.connections-found-group-box--green {
+  background: #4caf50 !important;
+  background-color: #4caf50 !important;
 }
 
 .connections-found-group-title {
@@ -188,7 +202,7 @@
   color: #fff;
   opacity: 0.95;
   text-align: center;
-  font-weight: 600;
+  font-weight: 400;
 }
 
 .connections-found-groups {
