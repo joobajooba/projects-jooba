@@ -1,5 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAccount } from 'wagmi';
+import { supabase } from '../lib/supabase';
+import { isValidEthereumAddress } from '../utils/walletSecurity';
+import { checkRateLimit } from '../utils/rateLimit';
 import './Connections.css';
 
 // Fetch today's Connections puzzle
@@ -111,6 +115,7 @@ const shuffleArray = (array) => {
 
 export default function Connections() {
   const navigate = useNavigate();
+  const { address } = useAccount();
   const [puzzle, setPuzzle] = useState(null);
   const [selectedWords, setSelectedWords] = useState([]);
   const [foundGroups, setFoundGroups] = useState([]);
@@ -118,7 +123,10 @@ export default function Connections() {
   const [gameStatus, setGameStatus] = useState('playing'); // 'playing', 'won', 'lost'
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
+  const [saveStatus, setSaveStatus] = useState(null); // 'saved' | 'no_wallet' | 'error'
+  const [saveErrorDetail, setSaveErrorDetail] = useState(null);
   const foundGroupsContainerRef = useRef(null);
+  const gameSavedRef = useRef(false);
 
   useEffect(() => {
     const loadPuzzle = async () => {
@@ -315,6 +323,100 @@ export default function Connections() {
     }
   }, [selectedWords.length, checkSelection]);
 
+  const saveGameResult = useCallback(async (won, mistakesUsed) => {
+    setSaveStatus(null);
+    setSaveErrorDetail(null);
+
+    if (!address) {
+      console.warn('Connections: save skipped — no wallet address (connect wallet before finishing the game)');
+      setSaveStatus('no_wallet');
+      return;
+    }
+    if (!supabase) {
+      console.error('Connections save: Supabase client not initialized (check VITE_SUPABASE_ANON_KEY)');
+      setSaveStatus('error');
+      setSaveErrorDetail('App not configured to save.');
+      return;
+    }
+    if (gameSavedRef.current) return;
+    if (!isValidEthereumAddress(address)) {
+      setSaveStatus('error');
+      setSaveErrorDetail('Invalid wallet address.');
+      return;
+    }
+    const rateLimitKey = `connections_save_${address.toLowerCase()}`;
+    if (!checkRateLimit(rateLimitKey, 10, 60000)) {
+      setSaveStatus('error');
+      setSaveErrorDetail('Too many saves; try again in a moment.');
+      return;
+    }
+
+    const gameDate = new Date().toISOString().split('T')[0];
+    const walletAddress = address.toLowerCase();
+    const mistakesUsedClamped = Math.min(4, Math.max(0, mistakesUsed));
+    gameSavedRef.current = true;
+
+    setSaveStatus('saving');
+
+    const payload = {
+      wallet_address: walletAddress,
+      game_date: gameDate,
+      won,
+      mistakes_used: mistakesUsedClamped,
+    };
+    console.log('Connections: saving game to Supabase', { game_date: payload.game_date, won: payload.won, mistakes_used: payload.mistakes_used });
+
+    try {
+      const { data: insertData, error: insertError } = await supabase
+        .from('connections_games')
+        .insert(payload)
+        .select('id')
+        .maybeSingle();
+
+      if (insertError) {
+        if (insertError.code === '23505') {
+          if (import.meta.env.DEV) console.log('Connections: row exists, updating');
+          const { error: updateError } = await supabase
+            .from('connections_games')
+            .update({ won, mistakes_used: mistakesUsedClamped })
+            .eq('wallet_address', walletAddress)
+            .eq('game_date', gameDate);
+
+          if (updateError) {
+            console.error('Connections save (update) error:', updateError.message, updateError.details);
+            gameSavedRef.current = false;
+            setSaveStatus('error');
+            setSaveErrorDetail(updateError.message || 'Update failed.');
+            return;
+          }
+          if (import.meta.env.DEV) console.log('Connections: game updated (same day)');
+          setSaveStatus('saved');
+          return;
+        }
+        console.error('Connections save error:', insertError.message, 'code:', insertError.code, insertError.details);
+        gameSavedRef.current = false;
+        setSaveStatus('error');
+        setSaveErrorDetail(insertError.message || `Save failed (${insertError.code || 'unknown'}).`);
+        return;
+      }
+
+      if (import.meta.env.DEV && insertData) console.log('Connections: game saved', insertData);
+      setSaveStatus('saved');
+    } catch (err) {
+      console.error('Connections save exception:', err);
+      gameSavedRef.current = false;
+      setSaveStatus('error');
+      setSaveErrorDetail(err?.message || 'Save failed.');
+    }
+  }, [address]);
+
+  useEffect(() => {
+    if (gameStatus === 'won' || gameStatus === 'lost') {
+      console.log('[Connections] Game ended — attempting save', { won: gameStatus === 'won', mistakes, hasAddress: !!address });
+      saveGameResult(gameStatus === 'won', mistakes);
+    }
+  }, [gameStatus, mistakes, saveGameResult, address]);
+
   const getLevelColor = (level) => {
     const colors = {
       0: '#1d4ed8', // Darker blue
@@ -358,6 +460,9 @@ export default function Connections() {
   };
 
   const resetGame = () => {
+    gameSavedRef.current = false;
+    setSaveStatus(null);
+    setSaveErrorDetail(null);
     setSelectedWords([]);
     setFoundGroups([]);
     setMistakes(0);
@@ -499,6 +604,15 @@ export default function Connections() {
           <div className="connections-lose-message">
             <h2>Game Over</h2>
             <p>You've made 4 mistakes. Here are all the answers:</p>
+          </div>
+        )}
+
+        {(gameStatus === 'won' || gameStatus === 'lost') && (
+          <div className="connections-save-status" role="status" style={{ marginTop: '1rem' }}>
+            {saveStatus === 'saving' && <p className="connections-save-pending">Saving…</p>}
+            {saveStatus === 'saved' && <p className="connections-save-saved">Progress saved.</p>}
+            {saveStatus === 'no_wallet' && <p className="connections-save-no-wallet">Connect your wallet to save your progress.</p>}
+            {saveStatus === 'error' && <p className="connections-save-error">Couldn&apos;t save: {saveErrorDetail}</p>}
           </div>
         )}
       </div>

@@ -33,26 +33,25 @@ export function useSyncWalletToSupabase() {
       try {
         const walletAddress = address.toLowerCase();
 
-        // Insert wallet address (or ignore if already exists)
+        // Upsert: insert if new, do nothing on conflict so we never get 409
         const result = await supabase
           .from('users')
-          .insert({
-            wallet_address: walletAddress,
-          });
+          .upsert(
+            { wallet_address: walletAddress },
+            { onConflict: 'wallet_address', ignoreDuplicates: true }
+          );
 
         if (result.error) {
-          // If it's a unique constraint violation (23505) or conflict (409), user already exists - that's okay
-          if (result.error.code === '23505' || result.status === 409) {
+          // 409 / 23505 = already exists, treat as success
+          const isConflict = result.error.code === '23505' || result.error.message?.includes('409') || result.error.message?.toLowerCase().includes('duplicate');
+          if (isConflict) {
             syncedRef.current = address;
             return;
           }
-
-          // Log other errors for debugging
           console.error('Error syncing wallet to Supabase:', result.error.message);
           return;
         }
 
-        // Success - wallet synced
         syncedRef.current = address;
       } catch (err) {
         console.error('Unexpected error syncing wallet:', err);
