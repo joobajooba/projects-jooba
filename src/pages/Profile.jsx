@@ -605,9 +605,6 @@ export default function Profile() {
             {mosaic?.cells?.length > 0 && (
               <div
                 className={`profile-mosaic profile-mosaic-${mosaic.gridSize || '2x2'}`}
-                style={{
-                  gridTemplateColumns: `repeat(${mosaic.gridSize === '4x4' ? 4 : 2}, 1fr)`,
-                }}
               >
                 {mosaic.cells.map((cell, i) => (
                   <div key={i} className="profile-mosaic-cell">
