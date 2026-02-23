@@ -107,6 +107,30 @@
   gap: 0.65rem;
 }
 
+.profile2-input {
+  width: 100%;
+  min-width: 0;
+  padding: 0.45rem 0.6rem;
+  background: rgba(26, 26, 26, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.85);
+  font-family: 'TT Octosquares', system-ui, sans-serif;
+  font-weight: 300;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.profile2-input:focus {
+  border-color: rgba(74, 158, 255, 0.7);
+}
+
+.profile2-userActions {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+}
+
 .profile2-field {
   display: grid;
   grid-template-columns: 90px 1fr;
@@ -177,6 +201,20 @@
   overflow: hidden;
   display: grid;
   place-items: center;
+}
+
+.profile2-nftSlotEditable {
+  cursor: pointer;
+  transition: transform 0.04s, filter 0.2s, box-shadow 0.2s;
+}
+
+.profile2-nftSlotEditable:hover {
+  filter: brightness(1.05);
+  box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.55);
+}
+
+.profile2-nftSlotEditable:active {
+  transform: translateY(1px);
 }
 
 .profile2-nftSlot img {
@@ -306,6 +344,21 @@
 .profile2-actionBtnSecondary:hover {
   background: rgba(255, 255, 255, 0.06);
   border-color: rgba(255, 255, 255, 0.35);
+}
+
+.profile2-actionBtnSmall {
+  padding: 0.55rem 0.85rem;
+  font-size: 0.9rem;
+}
+
+.profile2-editActions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.profile2-mosaicActions {
+  margin-top: 0.9rem;
 }
 
 @media (max-width: 1200px) {

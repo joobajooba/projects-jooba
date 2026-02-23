@@ -51,7 +51,7 @@ export default function ProfileDropdown() {
           <button
             className="profile-dropdown-item"
             onClick={() => {
-              navigate('/profile/');
+              navigate('/profile2/');
               setIsOpen(false);
             }}
           >
@@ -60,7 +60,7 @@ export default function ProfileDropdown() {
           <button
             className="profile-dropdown-item"
             onClick={() => {
-              navigate('/profile/?edit=true');
+              navigate('/profile2/?edit=true');
               setIsOpen(false);
             }}
           >
