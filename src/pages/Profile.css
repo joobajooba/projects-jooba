@@ -283,7 +283,7 @@
 /* Row of 5 NFT slots — fixed height so images fit; row at bottom so bottom aligns with panels */
 .profile-nft-slots-row {
   flex: 0 0 auto;
-  height: 200px;
+  height: 240px;
   display: flex;
   gap: 0.75rem;
   min-width: 0;
@@ -555,7 +555,7 @@
   .profile-nft-slots-row {
     width: 100%;
     flex-wrap: wrap;
-    height: 200px;
+    height: 240px;
   }
 
   .profile-nft-slot {
