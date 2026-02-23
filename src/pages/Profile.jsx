@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabase';
 import { isValidEthereumAddress, sanitizeInput, isValidUrl } from '../utils/walletSecurity';
 import { checkRateLimit } from '../utils/rateLimit';
 import NFTSelector from '../components/NFTSelector';
+import MosaicBuilder from '../components/MosaicBuilder';
 import './Profile.css';
 
 export default function Profile() {
@@ -33,6 +34,8 @@ export default function Profile() {
   const [profilePictureMetadata, setProfilePictureMetadata] = useState(null);
   const [profileSearchNotFound, setProfileSearchNotFound] = useState(false);
   const [leaderboardRank, setLeaderboardRank] = useState(null);
+  const [mosaic, setMosaic] = useState(null);
+  const [showMosaicBuilder, setShowMosaicBuilder] = useState(false);
 
   const displayedUser = viewedUser ?? user;
   const isOwnProfile = !viewedUser;
@@ -94,6 +97,7 @@ export default function Profile() {
         displayedUser.nft_slot_5_metadata || null
       ]);
       setProfilePictureMetadata(displayedUser.profile_picture_metadata || null);
+      setMosaic(displayedUser.mosaic || null);
     }
   }, [displayedUser]);
 
@@ -327,6 +331,36 @@ export default function Profile() {
     } finally {
       setUploading(false);
       setNftSelectorSlot(null);
+    }
+  };
+
+  const handleMosaicSave = async (newMosaic) => {
+    if (!address || !supabase) return;
+    if (!isValidEthereumAddress(address)) return;
+    const rateLimitKey = `mosaic_update_${address.toLowerCase()}`;
+    if (!checkRateLimit(rateLimitKey, 10, 60000)) {
+      alert('Too many mosaic updates. Please wait a moment and try again.');
+      return;
+    }
+    setUploading(true);
+    try {
+      const walletAddress = address.toLowerCase();
+      const { error } = await supabase
+        .from('users')
+        .update({ mosaic: newMosaic })
+        .eq('wallet_address', walletAddress);
+      if (error) {
+        console.error('Error saving mosaic:', error);
+        alert(`Failed to save mosaic: ${error.message}`);
+        return;
+      }
+      setMosaic(newMosaic);
+      await refetch();
+    } catch (err) {
+      console.error('Error saving mosaic:', err);
+      alert('Failed to save mosaic. Check console for details.');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -567,6 +601,35 @@ export default function Profile() {
               </div>
             ))}
           </div>
+          <div className="profile-mosaic-wrap">
+            {mosaic?.cells?.length > 0 && (
+              <div
+                className={`profile-mosaic profile-mosaic-${mosaic.gridSize || '2x2'}`}
+                style={{
+                  gridTemplateColumns: `repeat(${mosaic.gridSize === '4x4' ? 4 : 2}, 1fr)`,
+                }}
+              >
+                {mosaic.cells.map((cell, i) => (
+                  <div key={i} className="profile-mosaic-cell">
+                    {cell?.imageUrl ? (
+                      <img src={cell.imageUrl} alt="" />
+                    ) : (
+                      <span className="profile-mosaic-placeholder" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            {isOwnProfile && isEditing && (
+              <button
+                type="button"
+                className="profile-mosaic-edit-btn"
+                onClick={() => setShowMosaicBuilder(true)}
+              >
+                {mosaic?.cells?.length > 0 ? 'Edit Mosaic' : 'Add Mosaic'}
+              </button>
+            )}
+          </div>
         </div>
         <div className="profile-search-section-right">
           <div className="profile-search-bar">
@@ -621,6 +684,13 @@ export default function Profile() {
             setShowNFTSelector(false);
             setNftSelectorSlot(null);
           }}
+        />
+      )}
+      {showMosaicBuilder && (
+        <MosaicBuilder
+          initialMosaic={mosaic}
+          onSave={handleMosaicSave}
+          onClose={() => setShowMosaicBuilder(false)}
         />
       )}
     </main>

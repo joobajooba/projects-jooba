@@ -337,6 +337,73 @@
   background: rgba(26, 26, 26, 0.95);
 }
 
+/* Mosaic: same width as NFT row (first to last slot), same margin */
+.profile-mosaic-wrap {
+  flex: 0 0 auto;
+  width: 100%;
+  min-width: 0;
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.profile-mosaic {
+  width: 100%;
+  display: grid;
+  gap: 0.5rem;
+  border-radius: 8px;
+  overflow: hidden;
+  aspect-ratio: 1;
+  max-height: 200px;
+}
+
+.profile-mosaic-cell {
+  background: #1a1a1a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+
+.profile-mosaic-cell img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.profile-mosaic-placeholder {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 40px;
+  background: #2a2a2a;
+}
+
+.profile-mosaic-edit-btn {
+  padding: 0.5rem 1rem;
+  background: #333;
+  border: 1px solid #555;
+  border-radius: 6px;
+  color: #e0e0e0;
+  font-family: 'TT Octosquares', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.profile-mosaic-edit-btn:hover {
+  background: #444;
+  border-color: #4a9eff;
+  color: #fff;
+}
+
 .profile-info {
   display: flex;
   flex-direction: column;
@@ -561,6 +628,14 @@
   .profile-nft-slot {
     min-width: 80px;
     flex: 1 1 80px;
+  }
+
+  .profile-mosaic-wrap {
+    width: 100%;
+  }
+
+  .profile-mosaic {
+    max-height: 180px;
   }
 }
 
