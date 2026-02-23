@@ -8,6 +8,7 @@ import Games from './pages/Games';
 import Wordle from './pages/Wordle';
 import Connections from './pages/Connections';
 import Profile from './pages/Profile';
+import Profile2 from './pages/Profile2';
 import './index.css';
 
 export default function App() {
@@ -23,6 +24,7 @@ export default function App() {
           <NavLink to="/ape-projects/">APE-Projects</NavLink>
           <NavLink to="/games/">Games</NavLink>
           <NavLink to="/profile/">Profile</NavLink>
+          <NavLink to="/profile2/">Profile2</NavLink>
         </div>
         <div className="navbar-right">
           <ConnectButton />
@@ -36,6 +38,7 @@ export default function App() {
         <Route path="/games/connections" element={<Connections />} />
         <Route path="/ape-projects/" element={<main className="games-main"><p>APE-Projects</p></main>} />
         <Route path="/profile/" element={<Profile />} />
+        <Route path="/profile2/" element={<Profile2 />} />
       </Routes>
     </>
   );
