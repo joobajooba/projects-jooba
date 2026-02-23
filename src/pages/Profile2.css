@@ -138,11 +138,6 @@
   justify-content: space-between;
   gap: 0.75rem;
   padding: 0.35rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.profile2-statRow:last-child {
-  border-bottom: none;
 }
 
 .profile2-statKey {
@@ -154,12 +149,6 @@
   color: #4a9eff;
   font-weight: 700;
   font-size: 0.9rem;
-}
-
-.profile2-divider {
-  height: 1px;
-  background: rgba(255, 255, 255, 0.14);
-  margin: 0.6rem 0;
 }
 
 .profile2-nftCol {

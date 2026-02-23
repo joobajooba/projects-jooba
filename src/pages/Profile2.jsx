@@ -97,7 +97,6 @@ export default function Profile2() {
               <span className="profile2-statKey">Avg Guesses</span>
               <span className="profile2-statVal">{wordleStats?.averageGuesses ?? 0}</span>
             </div>
-            <div className="profile2-divider" />
             <div className="profile2-statRow">
               <span className="profile2-statKey">Connections Wins</span>
               <span className="profile2-statVal">{connectionsStats?.totalWins ?? 0}</span>
