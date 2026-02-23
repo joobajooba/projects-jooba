@@ -132,6 +132,17 @@
   margin-bottom: 0.9rem;
 }
 
+.profile2-statSectionTitle {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #fff;
+  margin: 0.75rem 0 0.35rem 0;
+}
+
+.profile2-statSectionTitle:first-of-type {
+  margin-top: 0;
+}
+
 .profile2-statRow {
   display: flex;
   align-items: center;

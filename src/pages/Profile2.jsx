@@ -89,6 +89,7 @@ export default function Profile2() {
 
           <section className="profile2-card profile2-statsCard">
             <div className="profile2-cardTitle">Profile Statistics</div>
+            <div className="profile2-statSectionTitle">Wordle</div>
             <div className="profile2-statRow">
               <span className="profile2-statKey">Wordle Streak</span>
               <span className="profile2-statVal">{wordleStats?.currentStreak ?? 0}</span>
@@ -97,6 +98,7 @@ export default function Profile2() {
               <span className="profile2-statKey">Avg Guesses</span>
               <span className="profile2-statVal">{wordleStats?.averageGuesses ?? 0}</span>
             </div>
+            <div className="profile2-statSectionTitle">Connections</div>
             <div className="profile2-statRow">
               <span className="profile2-statKey">Connections Wins</span>
               <span className="profile2-statVal">{connectionsStats?.totalWins ?? 0}</span>
