@@ -44,9 +44,36 @@ export default function Profile2() {
   const mosaicDim = getMosaicDims(mosaic?.gridSize);
   const mosaicCells = mosaic?.cells || [];
 
+  // Profile age in days (from first wallet connection / created_at)
+  const profileAgeDays = useMemo(() => {
+    const createdAt = user?.created_at;
+    if (!createdAt) return null;
+    const created = new Date(createdAt);
+    const now = new Date();
+    const days = Math.floor((now - created) / (24 * 60 * 60 * 1000));
+    return days;
+  }, [user?.created_at]);
+
   useEffect(() => {
     setIsEditing(editMode);
   }, [editMode]);
+
+  // Record a profile view when a logged-in wallet views this profile (rate-limited: 1 per viewer per profile per 24h)
+  useEffect(() => {
+    if (!address || !user?.wallet_address || !supabase) return;
+    const viewer = address.toLowerCase();
+    const viewed = user.wallet_address.toLowerCase();
+    const rateLimitKey = `profile_view_${viewer}_${viewed}`;
+    if (!checkRateLimit(rateLimitKey, 1, 24 * 60 * 60 * 1000)) return;
+
+    (async () => {
+      const { error } = await supabase.from('profile_views').insert({
+        viewer_wallet_address: viewer,
+        viewed_wallet_address: viewed,
+      });
+      if (!error) refetch();
+    })();
+  }, [address, user?.wallet_address]);
 
   useEffect(() => {
     if (!user) return;
@@ -341,6 +368,20 @@ export default function Profile2() {
 
           <section className="profile2-card profile2-statsCard">
             <div className="profile2-cardTitle">Profile Statistics</div>
+            <div className="profile2-statRow">
+              <span className="profile2-statKey">Profile Views</span>
+              <span className="profile2-statVal">{user?.profile_view_count ?? 0}</span>
+            </div>
+            <div className="profile2-statRow">
+              <span className="profile2-statKey">Profile Age</span>
+              <span className="profile2-statVal">
+                {profileAgeDays !== null ? `${profileAgeDays} Days` : '—'}
+              </span>
+            </div>
+            <div className="profile2-statRow">
+              <span className="profile2-statKey">Total Bops</span>
+              <span className="profile2-statVal">{user?.total_bops ?? 0}</span>
+            </div>
             <div className="profile2-statSectionTitle">Wordle</div>
             <div className="profile2-statRow">
               <span className="profile2-statKey">Wordle Streak</span>
