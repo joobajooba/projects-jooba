@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../hooks/useUser';
+import { useEditProfile } from '../context/EditProfileContext';
 import './ProfileDropdown.css';
 
 export default function ProfileDropdown() {
   const { user } = useUser();
   const navigate = useNavigate();
+  const { openEditPanel } = useEditProfile();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -60,7 +62,7 @@ export default function ProfileDropdown() {
           <button
             className="profile-dropdown-item"
             onClick={() => {
-              navigate('/profile2/?edit=true');
+              openEditPanel();
               setIsOpen(false);
             }}
           >

@@ -2,7 +2,9 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import { useSyncWalletToSupabase } from './hooks/useSyncWalletToSupabase';
+import { EditProfileProvider } from './context/EditProfileContext';
 import ProfileDropdown from './components/ProfileDropdown';
+import EditProfilePanel from './components/EditProfilePanel';
 import Home from './pages/Home';
 import Games from './pages/Games';
 import Wordle from './pages/Wordle';
@@ -16,7 +18,7 @@ export default function App() {
   const { isConnected } = useAccount();
 
   return (
-    <>
+    <EditProfileProvider>
       <nav className="navbar">
         <div className="navbar-links">
           <NavLink to="/" end>Home</NavLink>
@@ -38,6 +40,7 @@ export default function App() {
         <Route path="/profile/" element={<Navigate to="/profile2/" replace />} />
         <Route path="/profile2/" element={<Profile2 />} />
       </Routes>
-    </>
+      <EditProfilePanel />
+    </EditProfileProvider>
   );
 }

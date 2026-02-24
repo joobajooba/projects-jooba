@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import { useUser } from '../hooks/useUser';
 import { useWordleStats } from '../hooks/useWordleStats';
 import { useConnectionsStats } from '../hooks/useConnectionsStats';
+import { useEditProfile } from '../context/EditProfileContext';
 import { supabase } from '../lib/supabase';
-import { isValidEthereumAddress, sanitizeInput, isValidUrl } from '../utils/walletSecurity';
+import { isValidEthereumAddress, isValidUrl } from '../utils/walletSecurity';
 import { checkRateLimit } from '../utils/rateLimit';
 import NFTSelector from '../components/NFTSelector';
 import MosaicBuilder from '../components/MosaicBuilder';
@@ -17,18 +17,13 @@ function getMosaicDims(gridSize) {
 }
 
 export default function Profile2() {
-  const navigate = useNavigate();
   const { address, isConnected } = useAccount();
   const { user, loading, refetch } = useUser();
+  const { openEditPanel } = useEditProfile();
   const { stats: wordleStats } = useWordleStats();
   const { stats: connectionsStats } = useConnectionsStats();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const editMode = searchParams.get('edit') === 'true';
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [username, setUsername] = useState('');
-  const [otherisde, setOtherisde] = useState('');
-  const [x, setX] = useState('');
+  const [isEditingLayout, setIsEditingLayout] = useState(false);
   const [profilePictureUrl, setProfilePictureUrl] = useState('');
   const [uploading, setUploading] = useState(false);
   const [showNFTSelector, setShowNFTSelector] = useState(false);
@@ -54,10 +49,6 @@ export default function Profile2() {
     return days;
   }, [user?.created_at]);
 
-  useEffect(() => {
-    setIsEditing(editMode);
-  }, [editMode]);
-
   // Record a profile view when a logged-in wallet views this profile (rate-limited: 1 per viewer per profile per 24h)
   useEffect(() => {
     if (!address || !user?.wallet_address || !supabase) return;
@@ -77,9 +68,6 @@ export default function Profile2() {
 
   useEffect(() => {
     if (!user) return;
-    setUsername(user.username || '');
-    setOtherisde(user.otherisde || '');
-    setX(user.x || '');
     setProfilePictureUrl(user.profile_picture_url || '');
     setSlotUrls([
       user.nft_slot_1_url || '',
@@ -91,96 +79,11 @@ export default function Profile2() {
     setMosaic(user.mosaic || null);
   }, [user]);
 
-  const handleSave = async () => {
-    if (!address || !supabase) return;
-    if (!isValidEthereumAddress(address)) return;
-
-    const rateLimitKey = `profile2_update_${address.toLowerCase()}`;
-    if (!checkRateLimit(rateLimitKey, 10, 60000)) {
-      alert('Too many update attempts. Please wait a moment and try again.');
-      return;
-    }
-
-    try {
-      const updateData = {};
-
-      const sanitizedUsername = sanitizeInput(username, 50);
-      const sanitizedOtherisde = sanitizeInput(otherisde, 50);
-      const sanitizedX = sanitizeInput(x, 50);
-
-      updateData.username = sanitizedUsername || null;
-      updateData.otherisde = sanitizedOtherisde || null;
-      updateData.x = sanitizedX || null;
-
-      if (profilePictureUrl && !isValidUrl(profilePictureUrl)) {
-        alert('Invalid profile picture URL');
-        return;
-      }
-      updateData.profile_picture_url = profilePictureUrl || null;
-
-      const walletAddress = address.toLowerCase();
-      const { error } = await supabase
-        .from('users')
-        .update(updateData)
-        .eq('wallet_address', walletAddress);
-
-      if (error) {
-        console.error('Error saving profile:', error);
-        alert(`Failed to save profile: ${error.message}`);
-        return;
-      }
-
-      await refetch();
-      setIsEditing(false);
-      setSearchParams({});
-    } catch (err) {
-      console.error('Unexpected error saving profile:', err);
-      alert(`Failed to save profile: ${err.message}`);
-    }
-  };
-
-  const handleNFTSelect = async (imageUrl, nftData = null) => {
-    if (!address || !supabase) return;
-    if (!isValidEthereumAddress(address)) {
-      alert('Invalid wallet address');
-      return;
-    }
-    if (imageUrl && !isValidUrl(imageUrl)) {
-      alert('Invalid image URL');
-      return;
-    }
-
-    if (nftSelectorSlot !== null) {
-      await handleSlotNFTSelect(imageUrl, nftSelectorSlot, nftData);
-      setNftSelectorSlot(null);
-      return;
-    }
-
-    setUploading(true);
-    try {
-      const updateData = { profile_picture_url: imageUrl };
-
-      const walletAddress = address.toLowerCase();
-      const { error } = await supabase
-        .from('users')
-        .update(updateData)
-        .eq('wallet_address', walletAddress);
-
-      if (error) {
-        console.error('Error saving NFT profile picture:', error);
-        alert(`Failed to save NFT as profile picture: ${error.message}`);
-        return;
-      }
-
-      setProfilePictureUrl(imageUrl);
-      await refetch();
-    } catch (err) {
-      console.error('Error saving NFT profile picture:', err);
-      alert('Failed to save NFT as profile picture. Please check console for details.');
-    } finally {
-      setUploading(false);
-      setShowNFTSelector(false);
-    }
+  const handleNFTSelect = async (imageUrl) => {
+    if (nftSelectorSlot === null) return;
+    await handleSlotNFTSelect(imageUrl, nftSelectorSlot);
+    setNftSelectorSlot(null);
+    setShowNFTSelector(false);
   };
 
   const handleSlotNFTSelect = async (imageUrl, slotIndex) => {
@@ -313,57 +216,17 @@ export default function Profile2() {
             <div className="profile2-fields">
               <div className="profile2-field">
                 <span className="profile2-fieldLabel">Username</span>
-                {isEditing ? (
-                  <input
-                    className="profile2-input"
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                  />
-                ) : (
-                  <span className="profile2-fieldValue">{username || 'Not set'}</span>
-                )}
+                <span className="profile2-fieldValue">{user?.username || 'Not set'}</span>
               </div>
               <div className="profile2-field">
                 <span className="profile2-fieldLabel">Otherside</span>
-                {isEditing ? (
-                  <input
-                    className="profile2-input"
-                    type="text"
-                    value={otherisde}
-                    onChange={(e) => setOtherisde(e.target.value)}
-                  />
-                ) : (
-                  <span className="profile2-fieldValue">{otherisde || 'Not set'}</span>
-                )}
+                <span className="profile2-fieldValue">{user?.otherisde || 'Not set'}</span>
               </div>
               <div className="profile2-field">
                 <span className="profile2-fieldLabel">X</span>
-                {isEditing ? (
-                  <input
-                    className="profile2-input"
-                    type="text"
-                    value={x}
-                    onChange={(e) => setX(e.target.value)}
-                  />
-                ) : (
-                  <span className="profile2-fieldValue">{x || 'Not set'}</span>
-                )}
+                <span className="profile2-fieldValue">{user?.x || 'Not set'}</span>
               </div>
             </div>
-
-            {isEditing && (
-              <div className="profile2-userActions">
-                <button
-                  type="button"
-                  className="profile2-actionBtn profile2-actionBtnSmall"
-                  onClick={() => setShowNFTSelector(true)}
-                  disabled={uploading}
-                >
-                  {uploading ? 'Saving...' : 'Choose Profile NFT'}
-                </button>
-              </div>
-            )}
           </section>
 
           <section className="profile2-card profile2-statsCard">
@@ -411,12 +274,12 @@ export default function Profile2() {
           {nftSlots.map((slot, idx) => (
             <div
               key={idx}
-              className={`profile2-nftSlot ${isEditing ? 'profile2-nftSlotEditable' : ''}`}
-              role={isEditing ? 'button' : undefined}
-              tabIndex={isEditing ? 0 : undefined}
-              onClick={() => isEditing && setNftSelectorSlot(idx)}
+              className={`profile2-nftSlot ${isEditingLayout ? 'profile2-nftSlotEditable' : ''}`}
+              role={isEditingLayout ? 'button' : undefined}
+              tabIndex={isEditingLayout ? 0 : undefined}
+              onClick={() => isEditingLayout && setNftSelectorSlot(idx)}
               onKeyDown={(e) => {
-                if (!isEditing) return;
+                if (!isEditingLayout) return;
                 if (e.key === 'Enter' || e.key === ' ') setNftSelectorSlot(idx);
               }}
             >
@@ -433,44 +296,37 @@ export default function Profile2() {
           <div className="profile2-block profile2-uploader">
             <div className="profile2-blockTitle">Image Uploader</div>
             <div className="profile2-uploaderBody">
-              {isEditing ? (
+              {isEditingLayout ? (
                 <>
                   <p className="profile2-muted">
-                    Select NFTs by clicking the slots, then save when you’re ready.
+                    Click NFT slots to change them. Use the mosaic section to edit your mosaic.
                   </p>
-                  <div className="profile2-editActions">
-                    <button
-                      type="button"
-                      className="profile2-actionBtn"
-                      onClick={handleSave}
-                      disabled={uploading}
-                    >
-                      {uploading ? 'Saving...' : 'Save'}
-                    </button>
-                    <button
-                      type="button"
-                      className="profile2-actionBtn profile2-actionBtnSecondary"
-                      onClick={() => {
-                        setIsEditing(false);
-                        setSearchParams({});
-                      }}
-                      disabled={uploading}
-                    >
-                      Cancel
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    className="profile2-actionBtn profile2-actionBtnSecondary"
+                    onClick={() => setIsEditingLayout(false)}
+                  >
+                    Done
+                  </button>
                 </>
               ) : (
                 <>
                   <p className="profile2-muted">
-                    Edit your profile picture, NFTs, and mosaic from here.
+                    Edit your profile info, NFTs, and mosaic from here.
                   </p>
                   <button
                     type="button"
                     className="profile2-actionBtn"
-                    onClick={() => setSearchParams({ edit: 'true' })}
+                    onClick={openEditPanel}
                   >
                     Edit Profile
+                  </button>
+                  <button
+                    type="button"
+                    className="profile2-actionBtn profile2-actionBtnSecondary"
+                    onClick={() => setIsEditingLayout(true)}
+                  >
+                    Edit NFTs & Mosaic
                   </button>
                 </>
               )}
@@ -515,14 +371,14 @@ export default function Profile2() {
                 <button
                   type="button"
                   className="profile2-actionBtn profile2-actionBtnSecondary"
-                  onClick={() => setSearchParams({ edit: 'true' })}
+                  onClick={() => setIsEditingLayout(true)}
                 >
                   Add Mosaic
                 </button>
               </div>
             )}
 
-            {isEditing && (
+            {isEditingLayout && (
               <div className="profile2-mosaicActions">
                 <button
                   type="button"
