@@ -7,14 +7,49 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import NFTSelector from '../../components/NFTSelector';
 import './TestPage.css';
 
+/**
+ * Picks the best available image URL for profile picture quality.
+ * Prefers highest-resolution sources from the NFT (originalUrl, cachedUrl, etc.)
+ * and upgrades common thumbnail query params to request larger size when possible.
+ */
+function getBestProfilePictureUrl(imageUrl, selectedNft) {
+  const urlFromNft = selectedNft?.image?.originalUrl
+    || selectedNft?.image?.cachedUrl
+    || selectedNft?.image?.pngUrl
+    || selectedNft?.image?.thumbnailUrl
+    || selectedNft?.media?.[0]?.raw
+    || selectedNft?.media?.[0]?.gateway
+    || selectedNft?.rawMetadata?.image
+    || selectedNft?.image_original_url
+    || selectedNft?.image_url;
+  const base = urlFromNft || imageUrl || '';
+  if (!base) return '';
+  try {
+    const u = new URL(base);
+    const params = u.searchParams;
+    if (params.has('w') && parseInt(params.get('w'), 10) < 800) {
+      params.set('w', '1200');
+      return u.toString();
+    }
+    if (params.has('width') && parseInt(params.get('width'), 10) < 800) {
+      params.set('width', '1200');
+      return u.toString();
+    }
+    return base;
+  } catch {
+    return base;
+  }
+}
+
 export default function TestPage() {
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [username, setUsername] = useState('');
   const [profilePictureUrl, setProfilePictureUrl] = useState('');
   const [showNFTSelector, setShowNFTSelector] = useState(false);
 
-  const handleNFTSelect = (imageUrl) => {
-    setProfilePictureUrl(imageUrl || '');
+  const handleNFTSelect = (imageUrl, selectedNft) => {
+    const bestUrl = getBestProfilePictureUrl(imageUrl, selectedNft);
+    setProfilePictureUrl(bestUrl || imageUrl || '');
     setShowNFTSelector(false);
   };
 
