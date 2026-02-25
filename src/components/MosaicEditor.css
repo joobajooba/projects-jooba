@@ -219,6 +219,8 @@
   object-fit: cover;
   display: block;
   flex-shrink: 0;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
 }
 
 .mosaic-editor-nft-noimg {

@@ -4,6 +4,7 @@ import { useAccount } from 'wagmi';
 /**
  * Normalize NFT from Alchemy-style response to { imageUrl, name, network, raw }.
  */
+/** Prefer highest-resolution image URL to avoid blur when displayed at thumbnail size. */
 function getImageUrl(nft) {
   return (
     nft.image?.originalUrl ||
@@ -11,11 +12,11 @@ function getImageUrl(nft) {
     nft.image?.pngUrl ||
     nft.image?.thumbnailUrl ||
     nft.image ||
-    nft.media?.[0]?.gateway ||
     nft.media?.[0]?.raw ||
+    nft.media?.[0]?.gateway ||
     nft.rawMetadata?.image ||
-    nft.image_url ||
-    nft.image_original_url
+    nft.image_original_url ||
+    nft.image_url
   );
 }
 
@@ -87,11 +88,11 @@ async function fetchOpenSea(ownerAddress) {
   const assets = data.assets || [];
   return assets
     .filter((a) => {
-      const img = a.image_url || a.image_original_url || a.image_preview_url;
+      const img = a.image_original_url || a.image_url || a.image_preview_url;
       return img && img !== 'null';
     })
     .map((a) => ({
-      imageUrl: a.image_url || a.image_original_url || a.image_preview_url,
+      imageUrl: a.image_original_url || a.image_url || a.image_preview_url,
       name: a.name || `${a.collection?.name || 'NFT'} #${a.token_id}`,
       network: 'Ethereum',
       collection: (a.collection?.name || '').trim() || null,
