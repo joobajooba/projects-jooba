@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 export default function Home() {
   return (
     <main className="home-main">
@@ -26,6 +28,7 @@ export default function Home() {
       <div className="home-image-wrap">
         <img src="/9419_Home.png" alt="9419 Home" className="home-image" />
       </div>
+      <Link to="/test" className="home-test-btn">Go to Test page</Link>
     </main>
   );
 }
