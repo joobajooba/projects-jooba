@@ -104,7 +104,7 @@
 /* Sidebar profile picture (below separator) – 5% side spacing; border wraps image only */
 .test-page-sidebar-profile {
   flex-shrink: 0;
-  padding: 0 5% 5% 5%;
+  padding: 5% 5% 5% 5%;
   width: 100%;
   box-sizing: border-box;
   border-bottom: 1px solid rgba(0, 0, 0, 0.4);
@@ -118,6 +118,7 @@
   display: block;
   box-sizing: border-box;
   vertical-align: top;
+  border-radius: 12px;
 }
 
 .test-page-sidebar-profile-placeholder {
@@ -128,6 +129,7 @@
   justify-content: center;
   background: #1e1e1e;
   box-sizing: border-box;
+  border-radius: 12px;
 }
 
 .test-page-sidebar-profile-silhouette {
