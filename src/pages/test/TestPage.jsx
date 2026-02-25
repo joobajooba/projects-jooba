@@ -262,12 +262,12 @@ export default function TestPage() {
               src={profilePictureUrl}
               alt="Profile"
               className="test-page-sidebar-profile-img"
-              style={{ border: `3px solid ${profileBorderColor}` }}
+              style={{ border: `1.5px solid ${profileBorderColor}` }}
             />
           ) : (
             <div
               className="test-page-sidebar-profile-placeholder"
-              style={{ border: `3px solid ${profileBorderColor}` }}
+              style={{ border: `1.5px solid ${profileBorderColor}` }}
               aria-hidden
             >
               <svg
