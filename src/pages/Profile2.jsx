@@ -8,13 +8,12 @@ import { supabase } from '../lib/supabase';
 import { isValidEthereumAddress, isValidUrl } from '../utils/walletSecurity';
 import { checkRateLimit } from '../utils/rateLimit';
 import NFTSelector from '../components/NFTSelector';
-import MosaicBuilder from '../components/MosaicBuilder';
 import './Profile2.css';
 
 export default function Profile2() {
   const { address, isConnected } = useAccount();
   const { user, loading, refetch } = useUser();
-  const { requestNFTsMosaicEdit, setRequestNFTsMosaicEdit } = useEditProfile();
+  const { openEditPanelWithMosaic } = useEditProfile();
   const { stats: wordleStats } = useWordleStats();
   const { stats: connectionsStats } = useConnectionsStats();
 
@@ -25,7 +24,6 @@ export default function Profile2() {
   const [nftSelectorSlot, setNftSelectorSlot] = useState(null);
   const [slotUrls, setSlotUrls] = useState(['', '', '', '', '']);
   const [mosaic, setMosaic] = useState(null);
-  const [showMosaicBuilder, setShowMosaicBuilder] = useState(false);
 
   const nftSlots = useMemo(() => {
     return slotUrls.map((url) => ({ url }));
@@ -33,7 +31,10 @@ export default function Profile2() {
 
   const mosaicCells = mosaic?.cells || [];
   const mosaicDim = useMemo(() => {
-    if (mosaic?.gridSize === '4x4' || mosaicCells.length >= 16) return 4;
+    const g = mosaic?.gridSize;
+    if (g === '12x12' || mosaicCells.length >= 144) return 12;
+    if (g === '8x8' || mosaicCells.length >= 64) return 8;
+    if (g === '4x4' || mosaicCells.length >= 16) return 4;
     return 2;
   }, [mosaic?.gridSize, mosaicCells.length]);
 
@@ -63,13 +64,6 @@ export default function Profile2() {
       if (!error) refetch();
     })();
   }, [address, user?.wallet_address]);
-
-  useEffect(() => {
-    if (requestNFTsMosaicEdit) {
-      setIsEditingLayout(true);
-      setRequestNFTsMosaicEdit(false);
-    }
-  }, [requestNFTsMosaicEdit, setRequestNFTsMosaicEdit]);
 
   useEffect(() => {
     if (!user) return;
@@ -141,41 +135,6 @@ export default function Profile2() {
       alert('Failed to save. Please check console for details.');
     } finally {
       setUploading(false);
-    }
-  };
-
-  const handleMosaicSave = async (newMosaic) => {
-    if (!address || !supabase) return;
-    if (!isValidEthereumAddress(address)) return;
-
-    const rateLimitKey = `profile2_mosaic_update_${address.toLowerCase()}`;
-    if (!checkRateLimit(rateLimitKey, 10, 60000)) {
-      alert('Too many mosaic updates. Please wait a moment and try again.');
-      return;
-    }
-
-    setUploading(true);
-    try {
-      const walletAddress = address.toLowerCase();
-      const { error } = await supabase
-        .from('users')
-        .update({ mosaic: newMosaic })
-        .eq('wallet_address', walletAddress);
-
-      if (error) {
-        console.error('Error saving mosaic:', error);
-        alert(`Failed to save mosaic: ${error.message}`);
-        return;
-      }
-
-      setMosaic(newMosaic);
-      await refetch();
-    } catch (err) {
-      console.error('Error saving mosaic:', err);
-      alert('Failed to save mosaic. Check console for details.');
-    } finally {
-      setUploading(false);
-      setShowMosaicBuilder(false);
     }
   };
 
@@ -336,7 +295,7 @@ export default function Profile2() {
 
             {mosaicCells?.length ? (
               <div
-                className={`profile2-mosaic ${mosaicDim === 4 ? 'profile2-mosaic-4x4' : ''}`}
+                className={`profile2-mosaic ${mosaicDim === 4 ? 'profile2-mosaic-4x4' : ''} ${mosaicDim === 8 ? 'profile2-mosaic-8x8' : ''} ${mosaicDim === 12 ? 'profile2-mosaic-12x12' : ''}`}
                 style={{
                   '--profile2-cols': mosaicDim,
                   '--profile2-rows': mosaicDim,
@@ -357,22 +316,21 @@ export default function Profile2() {
                 <button
                   type="button"
                   className="profile2-actionBtn profile2-actionBtnSecondary"
-                  onClick={() => setIsEditingLayout(true)}
+                  onClick={openEditPanelWithMosaic}
                 >
                   Add Mosaic
                 </button>
               </div>
             )}
 
-            {isEditingLayout && (
+            {mosaicCells?.length > 0 && (
               <div className="profile2-mosaicActions">
                 <button
                   type="button"
                   className="profile2-actionBtn profile2-actionBtnSecondary"
-                  onClick={() => setShowMosaicBuilder(true)}
-                  disabled={uploading}
+                  onClick={openEditPanelWithMosaic}
                 >
-                  {mosaicCells?.length ? 'Edit Mosaic' : 'Add Mosaic'}
+                  Edit Mosaic
                 </button>
               </div>
             )}
@@ -391,13 +349,6 @@ export default function Profile2() {
         />
       )}
 
-      {showMosaicBuilder && (
-        <MosaicBuilder
-          initialMosaic={mosaic}
-          onSave={handleMosaicSave}
-          onClose={() => setShowMosaicBuilder(false)}
-        />
-      )}
     </main>
   );
 }

@@ -6,12 +6,14 @@ import { supabase } from '../lib/supabase';
 import { isValidEthereumAddress, sanitizeInput, isValidUrl } from '../utils/walletSecurity';
 import { checkRateLimit } from '../utils/rateLimit';
 import NFTSelector from './NFTSelector';
+import MosaicEditor from './MosaicEditor';
 import './EditProfilePanel.css';
 
 export default function EditProfilePanel() {
-  const { isOpen, closeEditPanel, openEditPanelAndRequestNFTsMosaic } = useEditProfile();
+  const { isOpen, closeEditPanel, openEditPanelAndRequestNFTsMosaic, requestNFTsMosaicEdit, setRequestNFTsMosaicEdit } = useEditProfile();
   const { address } = useAccount();
   const { user, refetch } = useUser();
+  const [showMosaicEditor, setShowMosaicEditor] = useState(false);
 
   const [username, setUsername] = useState('');
   const [otherisde, setOtherisde] = useState('');
@@ -31,6 +33,13 @@ export default function EditProfilePanel() {
       setProfileDescription(user.profile_description || '');
     }
   }, [isOpen, user]);
+
+  useEffect(() => {
+    if (isOpen && requestNFTsMosaicEdit) {
+      setShowMosaicEditor(true);
+      setRequestNFTsMosaicEdit(false);
+    }
+  }, [isOpen, requestNFTsMosaicEdit, setRequestNFTsMosaicEdit]);
 
   const handleSave = async () => {
     if (!address || !supabase) return;
@@ -113,6 +122,35 @@ export default function EditProfilePanel() {
   };
 
   // Upload image for the Image Uploader panel (panel above Profile Description on profile page)
+  const handleMosaicSave = async (newMosaic) => {
+    if (!address || !supabase || !isValidEthereumAddress(address)) return;
+    const rateLimitKey = `edit_panel_mosaic_${address.toLowerCase()}`;
+    if (!checkRateLimit(rateLimitKey, 10, 60000)) {
+      alert('Too many mosaic updates. Please wait a moment and try again.');
+      return;
+    }
+    setUploading(true);
+    try {
+      const walletAddress = address.toLowerCase();
+      const { error } = await supabase
+        .from('users')
+        .update({ mosaic: newMosaic })
+        .eq('wallet_address', walletAddress);
+      if (error) {
+        console.error('Error saving mosaic:', error);
+        alert(`Failed to save mosaic: ${error.message}`);
+        return;
+      }
+      await refetch();
+      setShowMosaicEditor(false);
+    } catch (err) {
+      console.error('Error saving mosaic:', err);
+      alert('Failed to save mosaic. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleImageUploaderUpload = async (e) => {
     const file = e?.target?.files?.[0];
     if (!file || !address || !supabase) return;
@@ -180,7 +218,7 @@ export default function EditProfilePanel() {
       <div
         className="edit-profile-overlay"
         onClick={closeEditPanel}
-        onKeyDown={(e) => e.key === 'Escape' && closeEditPanel()}
+        onKeyDown={(e) => e.key === 'Escape' && (showMosaicEditor ? setShowMosaicEditor(false) : closeEditPanel())}
         role="button"
         tabIndex={0}
         aria-label="Close panel"
@@ -188,12 +226,12 @@ export default function EditProfilePanel() {
       <div className="edit-profile-panel" role="dialog" aria-labelledby="edit-profile-title">
         <div className="edit-profile-panel-header">
           <h2 id="edit-profile-title" className="edit-profile-panel-title">
-            Edit Profile
+            {showMosaicEditor ? 'Mosaic' : 'Edit Profile'}
           </h2>
           <button
             type="button"
             className="edit-profile-panel-close"
-            onClick={closeEditPanel}
+            onClick={() => (showMosaicEditor ? setShowMosaicEditor(false) : closeEditPanel())}
             aria-label="Close"
           >
             ×
@@ -201,6 +239,14 @@ export default function EditProfilePanel() {
         </div>
 
         <div className="edit-profile-panel-body">
+        {showMosaicEditor ? (
+          <MosaicEditor
+            initialMosaic={user?.mosaic || null}
+            onSave={handleMosaicSave}
+            onBack={() => setShowMosaicEditor(false)}
+          />
+        ) : (
+        <>
           <div className="edit-profile-avatar-wrap">
             {profilePictureUrl ? (
               <img src={profilePictureUrl} alt="Profile" className="edit-profile-avatar-img" />
@@ -281,7 +327,7 @@ export default function EditProfilePanel() {
             <button
               type="button"
               className="edit-profile-panel-btn edit-profile-panel-btn-secondary"
-              onClick={openEditPanelAndRequestNFTsMosaic}
+              onClick={() => setShowMosaicEditor(true)}
               disabled={uploading}
             >
               Edit NFTs & Mosaic
@@ -306,6 +352,8 @@ export default function EditProfilePanel() {
               Cancel
             </button>
           </div>
+        </>
+        )}
         </div>
       </div>
 

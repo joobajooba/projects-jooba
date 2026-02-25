@@ -16,7 +16,12 @@ export function EditProfileProvider({ children }) {
 
   const openEditPanelAndRequestNFTsMosaic = useCallback(() => {
     setRequestNFTsMosaicEdit(true);
-    setIsOpen(false);
+    setIsOpen(true);
+  }, []);
+
+  const openEditPanelWithMosaic = useCallback(() => {
+    setRequestNFTsMosaicEdit(true);
+    setIsOpen(true);
   }, []);
 
   return (
@@ -28,6 +33,7 @@ export function EditProfileProvider({ children }) {
         requestNFTsMosaicEdit,
         setRequestNFTsMosaicEdit,
         openEditPanelAndRequestNFTsMosaic,
+        openEditPanelWithMosaic,
       }}
     >
       {children}
