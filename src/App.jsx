@@ -3,6 +3,7 @@ import { Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import { useSyncWalletToSupabase } from './hooks/useSyncWalletToSupabase';
 import { EditProfileProvider } from './context/EditProfileContext';
+import { UserProvider } from './context/UserContext';
 import ProfileDropdown from './components/ProfileDropdown';
 import EditProfilePanel from './components/EditProfilePanel';
 import Home from './pages/Home';
@@ -18,29 +19,31 @@ export default function App() {
   const { isConnected } = useAccount();
 
   return (
-    <EditProfileProvider>
-      <nav className="navbar">
-        <div className="navbar-links">
-          <NavLink to="/" end>Home</NavLink>
-          <NavLink to="/ape-projects/">APE-Projects</NavLink>
-          <NavLink to="/games/">Games</NavLink>
-          <NavLink to="/profile2/">Profile</NavLink>
-        </div>
-        <div className="navbar-right">
-          <ConnectButton />
-          {isConnected && <ProfileDropdown />}
-        </div>
-      </nav>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/games/" element={<Games />} />
-        <Route path="/games/wordle" element={<Wordle />} />
-        <Route path="/games/connections" element={<Connections />} />
-        <Route path="/ape-projects/" element={<main className="games-main"><p>APE-Projects</p></main>} />
-        <Route path="/profile/" element={<Navigate to="/profile2/" replace />} />
-        <Route path="/profile2/" element={<Profile2 />} />
-      </Routes>
-      <EditProfilePanel />
-    </EditProfileProvider>
+    <UserProvider>
+      <EditProfileProvider>
+        <nav className="navbar">
+          <div className="navbar-links">
+            <NavLink to="/" end>Home</NavLink>
+            <NavLink to="/ape-projects/">APE-Projects</NavLink>
+            <NavLink to="/games/">Games</NavLink>
+            <NavLink to="/profile2/">Profile</NavLink>
+          </div>
+          <div className="navbar-right">
+            <ConnectButton />
+            {isConnected && <ProfileDropdown />}
+          </div>
+        </nav>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/games/" element={<Games />} />
+          <Route path="/games/wordle" element={<Wordle />} />
+          <Route path="/games/connections" element={<Connections />} />
+          <Route path="/ape-projects/" element={<main className="games-main"><p>APE-Projects</p></main>} />
+          <Route path="/profile/" element={<Navigate to="/profile2/" replace />} />
+          <Route path="/profile2/" element={<Profile2 />} />
+        </Routes>
+        <EditProfilePanel />
+      </EditProfileProvider>
+    </UserProvider>
   );
 }
