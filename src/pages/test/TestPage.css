@@ -138,6 +138,32 @@
   color: #0a0a0a;
 }
 
+/* User info below profile (5% gap from line above, separating line below with 5% gap) */
+.test-page-sidebar-user {
+  flex-shrink: 0;
+  padding: 5% 5% 5% 5%;
+  margin-bottom: 5%;
+  width: 100%;
+  box-sizing: border-box;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.4);
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.test-page-sidebar-username {
+  font-weight: 600;
+  margin-bottom: 4px;
+  word-break: break-word;
+}
+
+.test-page-sidebar-address {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+  font-variant-numeric: tabular-nums;
+  word-break: break-all;
+}
+
 /* Profile modal */
 .test-page-modal-overlay {
   position: fixed;

@@ -3,9 +3,15 @@
  * Uses only this folder's CSS. Route: j00ba.xyz/test
  */
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import NFTSelector from '../../components/NFTSelector';
 import './TestPage.css';
+
+function formatAddress(addr) {
+  if (!addr || addr.length < 10) return addr || '';
+  return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
+}
 
 /** Convert hex to HSV (h 0-360, s 0-100, v 0-100). Top of grid = full value = vivid colour. */
 function hexToHsv(hex) {
@@ -197,6 +203,7 @@ function getBestProfilePictureUrl(imageUrl, selectedNft) {
 }
 
 export default function TestPage() {
+  const { address } = useAccount();
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [username, setUsername] = useState('');
   const [profilePictureUrl, setProfilePictureUrl] = useState('');
@@ -280,6 +287,15 @@ export default function TestPage() {
               </svg>
             </div>
           )}
+        </div>
+
+        <div className="test-page-sidebar-user">
+          <div className="test-page-sidebar-username">
+            {username || 'No username set'}
+          </div>
+          <div className="test-page-sidebar-address" title={address || ''}>
+            {address ? formatAddress(address) : 'Not connected'}
+          </div>
         </div>
       </aside>
 
