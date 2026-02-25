@@ -5,5 +5,9 @@
 import './TestPage.css';
 
 export default function TestPage() {
-  return <div className="test-page" data-page="test" />;
+  return (
+    <div className="test-page" data-page="test">
+      <aside className="test-page-left-panel" />
+    </div>
+  );
 }
