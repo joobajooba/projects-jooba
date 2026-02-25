@@ -360,6 +360,17 @@
   background: rgba(26, 26, 26, 0.65);
 }
 
+/* 4x4: fixed 250x250px cells, flexible gap so panel size stays the same */
+.profile2-mosaic-4x4 {
+  grid-template-columns: repeat(4, 250px);
+  grid-template-rows: repeat(4, 250px);
+  column-gap: max(0px, calc((100% - 1000px) / 3));
+  row-gap: max(0px, calc((100% - 1000px) / 3));
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+}
+
 .profile2-mosaicCell {
   position: relative;
   background: rgba(0, 0, 0, 0.35);

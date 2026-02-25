@@ -338,7 +338,7 @@ export default function Profile2() {
 
             {mosaicCells?.length ? (
               <div
-                className="profile2-mosaic"
+                className={`profile2-mosaic ${mosaicDim === 4 ? 'profile2-mosaic-4x4' : ''}`}
                 style={{
                   '--profile2-cols': mosaicDim,
                   '--profile2-rows': mosaicDim,
