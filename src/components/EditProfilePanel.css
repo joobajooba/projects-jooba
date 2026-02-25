@@ -78,6 +78,14 @@
   gap: 0.75rem;
 }
 
+.edit-profile-file-input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .edit-profile-avatar-img,
 .edit-profile-avatar-placeholder {
   width: 120px;
@@ -124,6 +132,17 @@
 
 .edit-profile-input:focus {
   border-color: rgba(74, 158, 255, 0.7);
+}
+
+.edit-profile-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.edit-profile-char-count {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 0.25rem;
 }
 
 .edit-profile-panel-actions {

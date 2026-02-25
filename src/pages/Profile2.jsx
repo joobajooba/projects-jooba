@@ -336,10 +336,11 @@ export default function Profile2() {
           <div className="profile2-block profile2-description">
             <div className="profile2-blockTitle">Profile Description</div>
             <div className="profile2-descriptionBody">
-              <p className="profile2-muted">
-                Description support isn’t wired up yet — this panel matches the new layout and is ready
-                to connect to a future bio/description field.
-              </p>
+              {user?.profile_description ? (
+                <p className="profile2-descriptionText">{user.profile_description}</p>
+              ) : (
+                <p className="profile2-muted">No description set. Use Edit Profile to add one.</p>
+              )}
             </div>
           </div>
         </section>

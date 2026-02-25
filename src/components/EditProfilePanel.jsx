@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useAccount } from 'wagmi';
 import { useUser } from '../hooks/useUser';
 import { useEditProfile } from '../context/EditProfileContext';
@@ -17,8 +17,10 @@ export default function EditProfilePanel() {
   const [otherisde, setOtherisde] = useState('');
   const [x, setX] = useState('');
   const [profilePictureUrl, setProfilePictureUrl] = useState('');
+  const [profileDescription, setProfileDescription] = useState('');
   const [uploading, setUploading] = useState(false);
   const [showNFTSelector, setShowNFTSelector] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (isOpen && user) {
@@ -26,6 +28,7 @@ export default function EditProfilePanel() {
       setOtherisde(user.otherisde || '');
       setX(user.x || '');
       setProfilePictureUrl(user.profile_picture_url || '');
+      setProfileDescription(user.profile_description || '');
     }
   }, [isOpen, user]);
 
@@ -45,6 +48,7 @@ export default function EditProfilePanel() {
         username: sanitizeInput(username, 50) || null,
         otherisde: sanitizeInput(otherisde, 50) || null,
         x: sanitizeInput(x, 50) || null,
+        profile_description: sanitizeInput(profileDescription, 500) || null,
       };
 
       if (profilePictureUrl && !isValidUrl(profilePictureUrl)) {
@@ -108,6 +112,67 @@ export default function EditProfilePanel() {
     }
   };
 
+  const handleImageUpload = async (e) => {
+    const file = e?.target?.files?.[0];
+    if (!file || !address || !supabase) return;
+
+    const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowed.includes(file.type)) {
+      alert('Please choose a JPEG, PNG, GIF, or WebP image.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image must be 5 MB or smaller.');
+      return;
+    }
+
+    const rateLimitKey = `edit_panel_upload_${address.toLowerCase()}`;
+    if (!checkRateLimit(rateLimitKey, 10, 60000)) {
+      alert('Too many uploads. Please wait a moment and try again.');
+      return;
+    }
+
+    setUploading(true);
+    const walletAddress = address.toLowerCase();
+    const ext = file.name.split('.').pop()?.toLowerCase() || 'png';
+    const path = `${walletAddress}/avatar.${ext}`;
+
+    try {
+      const { error: uploadError } = await supabase.storage
+        .from('profile-pictures')
+        .upload(path, file, { upsert: true });
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        alert(`Upload failed: ${uploadError.message}`);
+        return;
+      }
+
+      const { data: urlData } = supabase.storage.from('profile-pictures').getPublicUrl(path);
+      const publicUrl = urlData?.publicUrl || '';
+
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ profile_picture_url: publicUrl })
+        .eq('wallet_address', walletAddress);
+
+      if (updateError) {
+        console.error('Error saving profile picture:', updateError);
+        alert(`Save failed: ${updateError.message}`);
+        return;
+      }
+
+      setProfilePictureUrl(publicUrl);
+      await refetch();
+    } catch (err) {
+      console.error('Image upload error:', err);
+      alert('Upload failed. Please try again.');
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -142,13 +207,29 @@ export default function EditProfilePanel() {
             ) : (
               <div className="edit-profile-avatar-placeholder">No Pic</div>
             )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              className="edit-profile-file-input"
+              onChange={handleImageUpload}
+              aria-label="Upload profile image"
+            />
+            <button
+              type="button"
+              className="edit-profile-panel-btn edit-profile-panel-btn-secondary"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+            >
+              {uploading ? 'Saving...' : 'Upload image'}
+            </button>
             <button
               type="button"
               className="edit-profile-panel-btn edit-profile-panel-btn-secondary"
               onClick={() => setShowNFTSelector(true)}
               disabled={uploading}
             >
-              {uploading ? 'Saving...' : 'Choose Profile NFT'}
+              Choose Profile NFT
             </button>
           </div>
 
@@ -178,6 +259,18 @@ export default function EditProfilePanel() {
               value={x}
               onChange={(e) => setX(e.target.value)}
             />
+          </div>
+          <div className="edit-profile-field">
+            <label className="edit-profile-label">Profile description</label>
+            <textarea
+              className="edit-profile-input edit-profile-textarea"
+              value={profileDescription}
+              onChange={(e) => setProfileDescription(e.target.value)}
+              placeholder="Tell others about yourself..."
+              rows={4}
+              maxLength={500}
+            />
+            <span className="edit-profile-char-count">{profileDescription.length}/500</span>
           </div>
 
           <div className="edit-profile-panel-actions">
