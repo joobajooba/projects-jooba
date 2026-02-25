@@ -178,10 +178,21 @@ export function useMosaicNFTs() {
         apeNfts = await fetchApeScan(owner);
       }
 
-      const combined = [
-        ...ethNfts.map((n) => ({ ...n, id: `eth-${n.raw?.tokenId ?? n.raw?.token_id ?? Math.random()}` })),
-        ...apeNfts.map((n) => ({ ...n, id: `ape-${n.raw?.tokenId ?? n.raw?.token_id ?? Math.random()}` })),
-      ];
+      // Dedupe by imageUrl so the same NFT (e.g. bridged on two chains) appears once with one contract
+      const combined = [];
+      const seenImageUrl = new Set();
+      for (const n of ethNfts) {
+        const key = (n.imageUrl || '').trim();
+        if (key && seenImageUrl.has(key)) continue;
+        if (key) seenImageUrl.add(key);
+        combined.push({ ...n, id: `eth-${n.contractAddress ?? ''}-${n.raw?.tokenId ?? n.raw?.token_id ?? Math.random()}` });
+      }
+      for (const n of apeNfts) {
+        const key = (n.imageUrl || '').trim();
+        if (key && seenImageUrl.has(key)) continue;
+        if (key) seenImageUrl.add(key);
+        combined.push({ ...n, id: `ape-${n.contractAddress ?? ''}-${n.raw?.tokenId ?? n.raw?.token_id ?? Math.random()}` });
+      }
       setNfts(combined);
       if (combined.length === 0 && ethNfts.length === 0 && apeNfts.length === 0) {
         setError('No NFTs found on Ethereum or ApeChain. Add VITE_ALCHEMY_API_KEY_ETH and/or VITE_ALCHEMY_API_KEY_APECHAIN for best results.');

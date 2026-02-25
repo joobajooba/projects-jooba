@@ -35,7 +35,9 @@ export default function MosaicEditor({ initialMosaic, onSave, onBack }) {
 
   const nftsFiltered = useMemo(() => {
     if (!collectionFilter) return nfts;
-    return nfts.filter((nft) => nft.contractAddress === collectionFilter);
+    return nfts.filter(
+      (nft) => nft.contractAddress && nft.contractAddress === collectionFilter
+    );
   }, [nfts, collectionFilter]);
 
   const dim = GRID_OPTIONS.find((o) => o.value === gridSize)?.dim ?? 2;
