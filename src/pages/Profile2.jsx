@@ -296,6 +296,11 @@ export default function Profile2() {
           <div className="profile2-block profile2-uploader">
             <div className="profile2-blockTitle">Image Uploader</div>
             <div className="profile2-uploaderBody">
+              {user?.image_uploader_url && (
+                <div className="profile2-uploaderImageWrap">
+                  <img src={user.image_uploader_url} alt="Uploaded" className="profile2-uploaderImage" />
+                </div>
+              )}
               {isEditingLayout ? (
                 <>
                   <p className="profile2-muted">

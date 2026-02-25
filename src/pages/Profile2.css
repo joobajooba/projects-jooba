@@ -248,6 +248,20 @@
   gap: 0.9rem;
 }
 
+.profile2-uploaderImageWrap {
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.profile2-uploaderImage {
+  width: 100%;
+  max-height: 280px;
+  object-fit: contain;
+  display: block;
+}
+
 .profile2-description {
   min-height: 280px;
   padding: 1.15rem;
