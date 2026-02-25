@@ -4,7 +4,7 @@
 
 1. **Run the SQL migration:**
    ```sql
-   -- Execute: create-wordle-games-table.sql in Supabase SQL Editor
+   -- Execute: supabase/migrations/create-wordle-games-table.sql in Supabase SQL Editor
    ```
 
    This creates the `wordle_games` table with:

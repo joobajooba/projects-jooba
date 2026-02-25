@@ -45,7 +45,7 @@
 - ✅ Reject invalid addresses immediately
 
 ### 5. ✅ Database Security (SQL Script)
-**File:** `SECURITY_FIXES_PRACTICAL.sql`
+**File:** `supabase/migrations/SECURITY_FIXES_PRACTICAL.sql`
 
 **Still Needs to be Run:**
 - ⚠️ **IMPORTANT:** You must run this SQL script in Supabase to secure the database
@@ -60,7 +60,7 @@
 - Wallet validation ✅
 
 ### ⚠️ Database Layer: NEEDS ACTION
-- **Run `SECURITY_FIXES_PRACTICAL.sql` in Supabase SQL Editor**
+- **Run `supabase/migrations/SECURITY_FIXES_PRACTICAL.sql` in Supabase SQL Editor**
 - This will secure RLS policies
 - Without this, database is still vulnerable
 
@@ -68,7 +68,7 @@
 
 1. **Run Database Fixes (15 minutes):**
    - Open Supabase Dashboard → SQL Editor
-   - Run `SECURITY_FIXES_PRACTICAL.sql`
+   - Run `supabase/migrations/SECURITY_FIXES_PRACTICAL.sql`
    - Verify policies were created
 
 2. **Test Security:**

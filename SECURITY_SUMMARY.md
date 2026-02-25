@@ -7,17 +7,17 @@
 1. **❌ CRITICAL: Anyone can modify any user's profile**
    - Current: UPDATE policy allows `USING (true) WITH CHECK (true)`
    - Risk: Attackers can change usernames, profile pictures, NFT slots
-   - Fix: Run `SECURITY_FIXES_PRACTICAL.sql`
+   - Fix: Run `supabase/migrations/SECURITY_FIXES_PRACTICAL.sql`
 
 2. **❌ CRITICAL: Anyone can insert Wordle games for any wallet**
    - Current: INSERT policy has no wallet verification
    - Risk: Fake leaderboard entries, manipulated stats
-   - Fix: Run `SECURITY_FIXES_PRACTICAL.sql`
+   - Fix: Run `supabase/migrations/SECURITY_FIXES_PRACTICAL.sql`
 
 3. **❌ CRITICAL: Public can upload/delete files**
    - Current: Storage allows anonymous uploads/deletes
    - Risk: Storage abuse, malicious files, DoS attacks
-   - Fix: Run `SECURITY_FIXES_PRACTICAL.sql`
+   - Fix: Run `supabase/migrations/SECURITY_FIXES_PRACTICAL.sql`
 
 4. **⚠️ HIGH: No wallet signature verification**
    - Current: Code trusts wallet address from client
@@ -33,7 +33,7 @@
 
 ### Step 1: Fix Database Policies (15 minutes)
 1. Open Supabase Dashboard → SQL Editor
-2. Copy and run `SECURITY_FIXES_PRACTICAL.sql`
+2. Copy and run `supabase/migrations/SECURITY_FIXES_PRACTICAL.sql`
 3. Verify policies were created correctly
 
 ### Step 2: Add Application-Level Security (2-3 hours)
@@ -87,7 +87,7 @@
 ## Files Created:
 
 - `SECURITY_AUDIT.md` - Detailed vulnerability analysis
-- `SECURITY_FIXES_PRACTICAL.sql` - Database security fixes
+- `supabase/migrations/SECURITY_FIXES_PRACTICAL.sql` - Database security fixes
 - `SECURITY_RECOMMENDATIONS.md` - Comprehensive security guide
 - `IMPLEMENT_SECURITY_FIXES.md` - Step-by-step implementation
 - `src/utils/walletSecurity.js` - Wallet verification utilities

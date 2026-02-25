@@ -3,19 +3,19 @@
 ## 🚨 CRITICAL VULNERABILITIES FOUND
 
 ### 1. **CRITICAL: Users Table UPDATE Policy Allows Anyone to Modify Any Profile**
-**Location:** `add-profile-columns.sql` line 17-22
+**Location:** `supabase/migrations/add-profile-columns.sql` line 17-22
 **Issue:** Policy uses `USING (true) WITH CHECK (true)` - allows ANY user to update ANY other user's profile
 **Risk:** Attackers can modify usernames, profile pictures, NFT slots of any user
 **Fix Required:** Must restrict updates to only the wallet owner
 
 ### 2. **CRITICAL: Wordle Games Can Be Inserted for Any Wallet**
-**Location:** `create-wordle-games-table.sql` line 23-27
+**Location:** `supabase/migrations/create-wordle-games-table.sql` line 23-27
 **Issue:** INSERT policy allows `WITH CHECK (true)` - no wallet verification
 **Risk:** Attackers can insert fake game results for any wallet, manipulate leaderboards
 **Fix Required:** Verify wallet address matches authenticated user
 
 ### 3. **CRITICAL: Storage Bucket Allows Public Uploads/Deletes**
-**Location:** `setup-storage-bucket.sql`
+**Location:** `supabase/migrations/setup-storage-bucket.sql`
 **Issue:** Public can upload/delete files without restrictions
 **Risk:** Storage abuse, malicious file uploads, DoS attacks
 **Fix Required:** Restrict uploads to authenticated users, verify file ownership

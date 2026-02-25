@@ -8,7 +8,7 @@ Based on the audit, here are the immediate actions needed:
 
 ### Step 1: Fix RLS Policies
 1. Open Supabase Dashboard → SQL Editor
-2. Run `SECURITY_FIXES.sql` 
+2. Run `supabase/migrations/SECURITY_FIXES.sql` 
 3. **VERIFY** policies are correct:
    ```sql
    SELECT tablename, policyname, cmd, roles 

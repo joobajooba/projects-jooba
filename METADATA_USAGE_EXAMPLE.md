@@ -8,7 +8,7 @@ Metadata is now automatically saved when you select an NFT. Here's how to use it
 
 First, run the SQL file to add metadata columns:
 ```sql
--- Run: add-nft-metadata-columns.sql in Supabase SQL Editor
+-- Run: supabase/migrations/add-nft-metadata-columns.sql in Supabase SQL Editor
 ```
 
 ## 2. Access Metadata in Your Code

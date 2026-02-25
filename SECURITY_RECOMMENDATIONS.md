@@ -4,7 +4,7 @@
 
 ### 1. **Fix Database RLS Policies** ⚠️ URGENT
 **Status:** CRITICAL VULNERABILITY
-**Action:** Run `SECURITY_FIXES.sql` immediately
+**Action:** Run `supabase/migrations/SECURITY_FIXES.sql` immediately
 
 **Current Issues:**
 - Users table UPDATE policy allows anyone to modify any profile
@@ -139,7 +139,7 @@ const isValidUrl = (url) => {
 ## Implementation Priority
 
 1. **IMMEDIATE (Today):**
-   - Fix RLS policies (`SECURITY_FIXES.sql`)
+   - Fix RLS policies (`supabase/migrations/SECURITY_FIXES.sql`)
    - Add wallet signature verification
    - Restrict storage policies
 
