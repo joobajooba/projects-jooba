@@ -299,6 +299,7 @@ export default function Profile2() {
           ))}
         </section>
 
+        <div className="profile2-centerRightWrap">
         <section className="profile2-center">
           <div className="profile2-block profile2-uploader">
             <div className="profile2-blockTitle">Image Uploader</div>
@@ -342,7 +343,7 @@ export default function Profile2() {
         </section>
 
         <section className="profile2-right">
-          <div className="profile2-block profile2-mosaicBlock">
+          <div className="profile2-block profile2-mosaicBlock profile2-mosaicBlock-aligned">
             <div className="profile2-blockTitle">Profile Mosaic</div>
 
             {mosaicCells?.length ? (
@@ -389,6 +390,7 @@ export default function Profile2() {
             )}
           </div>
         </section>
+        </div>
       </div>
 
       {(showNFTSelector || nftSelectorSlot !== null) && (
