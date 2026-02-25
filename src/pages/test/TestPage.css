@@ -101,11 +101,12 @@
   line-height: 1;
 }
 
-/* Sidebar profile picture (below separator) – full width, increased height */
+/* Sidebar profile picture (below separator) – 1% side spacing inside panel */
 .test-page-sidebar-profile {
   flex-shrink: 0;
-  padding: 0;
+  padding: 0 1%;
   width: 100%;
+  box-sizing: border-box;
   border-bottom: 1px solid rgba(0, 0, 0, 0.4);
   overflow: hidden;
 }
@@ -116,8 +117,8 @@
   object-fit: contain;
   object-position: center top;
   display: block;
-  background: rgba(0, 0, 0, 0.2);
-  /* contain = show full image, no cropping; 250×280 box */
+  background: #1e1e1e;
+  box-sizing: border-box;
 }
 
 /* Profile modal */
@@ -236,6 +237,84 @@
 .test-page-modal-close:hover {
   background: rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.9);
+}
+
+/* Colour picker (drag on grid) */
+.test-page-color-picker {
+  margin: 12px 0;
+}
+
+.test-page-color-picker-box {
+  width: 100%;
+  max-width: 220px;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  cursor: crosshair;
+  touch-action: none;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+}
+
+.test-page-color-picker-marker {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+.test-page-color-picker-hue-wrap {
+  margin-top: 10px;
+}
+
+.test-page-color-picker-label {
+  display: block;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 4px;
+}
+
+.test-page-color-picker-hue {
+  width: 100%;
+  max-width: 220px;
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+  appearance: none;
+  cursor: pointer;
+}
+
+.test-page-color-picker-hue::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+
+.test-page-color-picker-hue::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+
+.test-page-color-picker-preview {
+  margin-top: 8px;
+  width: 100%;
+  max-width: 220px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 /* ========== Reusable classes (tp- = test page) – use throughout the test page ========== */
