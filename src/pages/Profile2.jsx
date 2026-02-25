@@ -302,7 +302,6 @@ export default function Profile2() {
         <div className="profile2-centerRightWrap">
         <section className="profile2-center">
           <div className="profile2-block profile2-uploader">
-            <div className="profile2-blockTitle">Image Uploader</div>
             <div className="profile2-uploaderBody">
               {user?.image_uploader_url && (
                 <div className="profile2-uploaderImageWrap">
