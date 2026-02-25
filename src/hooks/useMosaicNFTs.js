@@ -30,14 +30,24 @@ function getCollectionName(nft) {
   ).trim() || null;
 }
 
+function getContractAddress(nft) {
+  const addr =
+    nft.contract?.address ||
+    nft.asset_contract?.address ||
+    nft.contract_address ||
+    nft.tokenAddress;
+  return addr ? String(addr).toLowerCase() : null;
+}
+
 function normalizeNft(nft, network) {
   const imageUrl = getImageUrl(nft);
   const collection = getCollectionName(nft);
+  const contractAddress = getContractAddress(nft);
   const name =
     nft.name ||
     nft.title ||
     `${nft.contract?.name || nft.collection?.name || 'NFT'} #${nft.tokenId || nft.id?.tokenId || nft.token_id || ''}`;
-  return { imageUrl, name, network, collection, raw: nft };
+  return { imageUrl, name, network, collection, contractAddress, raw: nft };
 }
 
 /**
@@ -85,6 +95,7 @@ async function fetchOpenSea(ownerAddress) {
       name: a.name || `${a.collection?.name || 'NFT'} #${a.token_id}`,
       network: 'Ethereum',
       collection: (a.collection?.name || '').trim() || null,
+      contractAddress: a.asset_contract?.address ? String(a.asset_contract.address).toLowerCase() : null,
       raw: a,
     }));
 }
@@ -112,12 +123,14 @@ async function fetchApeScan(ownerAddress) {
         const meta = await metaRes.json();
         const imageUrl = meta.result?.image || meta.image;
         const collection = (meta.result?.collection || meta.collection || item.collection_name || '').trim() || null;
+        const contractAddress = contract ? String(contract).toLowerCase() : null;
         return {
           imageUrl,
           name: meta.result?.name || meta.name || `NFT #${tokenId}`,
           network: 'ApeChain',
           collection: collection || null,
-          raw: meta,
+          contractAddress,
+          raw: { ...meta, contract_address: contract, token_id: tokenId },
         };
       } catch (e) {
         return { name: `NFT #${tokenId}`, imageUrl: null, network: 'ApeChain', raw: {} };

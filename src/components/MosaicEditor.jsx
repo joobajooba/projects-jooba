@@ -18,18 +18,24 @@ export default function MosaicEditor({ initialMosaic, onSave, onBack }) {
   const [gridSize, setGridSize] = useState(initialMosaic?.gridSize || '2x2');
   const [collectionFilter, setCollectionFilter] = useState('');
 
+  // One entry per contract (by address) so filtering is exact; display name for label
   const collections = useMemo(() => {
-    const set = new Set();
+    const byContract = new Map();
     nfts.forEach((nft) => {
-      const c = nft.collection || 'Unknown collection';
-      if (c) set.add(c);
+      const addr = nft.contractAddress;
+      if (!addr) return;
+      if (!byContract.has(addr)) {
+        byContract.set(addr, nft.collection || 'Unknown collection');
+      }
     });
-    return ['', ...Array.from(set).sort((a, b) => a.localeCompare(b))];
+    return Array.from(byContract.entries())
+      .map(([address, name]) => ({ address, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
   }, [nfts]);
 
   const nftsFiltered = useMemo(() => {
     if (!collectionFilter) return nfts;
-    return nfts.filter((nft) => (nft.collection || 'Unknown collection') === collectionFilter);
+    return nfts.filter((nft) => nft.contractAddress === collectionFilter);
   }, [nfts, collectionFilter]);
 
   const dim = GRID_OPTIONS.find((o) => o.value === gridSize)?.dim ?? 2;
@@ -168,8 +174,8 @@ export default function MosaicEditor({ initialMosaic, onSave, onBack }) {
               aria-label="Filter by collection"
             >
               <option value="">All collections</option>
-              {collections.filter(Boolean).map((name) => (
-                <option key={name} value={name}>
+              {collections.map(({ address, name }) => (
+                <option key={address} value={address}>
                   {name}
                 </option>
               ))}
