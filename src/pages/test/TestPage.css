@@ -164,6 +164,120 @@
   word-break: break-all;
 }
 
+/* Sidebar nav: Home & Community (orange when active) */
+.test-page-sidebar-nav {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 10%;
+  margin-top: auto;
+}
+
+.test-page-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.9);
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.test-page-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.test-page-nav-btn-active {
+  background: #e85d04;
+  border-color: #e85d04;
+  color: #fff;
+}
+
+.test-page-nav-btn-active:hover {
+  background: #f07020;
+  border-color: #f07020;
+}
+
+.test-page-nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: inherit;
+}
+
+.test-page-nav-icon svg {
+  display: block;
+}
+
+/* Main content area */
+.test-page-main {
+  flex: 1;
+  min-width: 0;
+  background: #252525;
+  overflow: auto;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.test-page-content {
+  padding: 24px 32px;
+  max-width: 900px;
+}
+
+.test-page-content-title {
+  margin: 0 0 20px;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.test-page-search-wrap {
+  position: relative;
+  max-width: 360px;
+}
+
+.test-page-search-input {
+  width: 100%;
+  padding: 12px 44px 12px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 15px;
+  box-sizing: border-box;
+}
+
+.test-page-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.test-page-search-input:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.test-page-search-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+}
+
 /* Profile modal */
 .test-page-modal-overlay {
   position: fixed;

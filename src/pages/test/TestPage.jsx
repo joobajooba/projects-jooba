@@ -209,6 +209,7 @@ export default function TestPage() {
   const [profilePictureUrl, setProfilePictureUrl] = useState('');
   const [profileBorderColor, setProfileBorderColor] = useState('#888888');
   const [showNFTSelector, setShowNFTSelector] = useState(false);
+  const [sidebarView, setSidebarView] = useState('home');
 
   const handleNFTSelect = (imageUrl, selectedNft) => {
     const bestUrl = getBestProfilePictureUrl(imageUrl, selectedNft);
@@ -297,7 +298,54 @@ export default function TestPage() {
             {address ? formatAddress(address) : 'Not connected'}
           </div>
         </div>
+
+        <nav className="test-page-sidebar-nav" aria-label="Main">
+          <button
+            type="button"
+            className={`test-page-nav-btn ${sidebarView === 'home' ? 'test-page-nav-btn-active' : ''}`}
+            onClick={() => setSidebarView('home')}
+          >
+            <span className="test-page-nav-icon" aria-hidden>
+              <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" /></svg>
+            </span>
+            Home
+          </button>
+          <button
+            type="button"
+            className={`test-page-nav-btn ${sidebarView === 'community' ? 'test-page-nav-btn-active' : ''}`}
+            onClick={() => setSidebarView('community')}
+          >
+            <span className="test-page-nav-icon" aria-hidden>
+              <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" /></svg>
+            </span>
+            Community
+          </button>
+        </nav>
       </aside>
+
+      <main className="test-page-main">
+        {sidebarView === 'home' && (
+          <div className="test-page-content">
+            <h1 className="test-page-content-title">Home</h1>
+          </div>
+        )}
+        {sidebarView === 'community' && (
+          <div className="test-page-content">
+            <h1 className="test-page-content-title">COMMUNITIES</h1>
+            <div className="test-page-search-wrap">
+              <input
+                type="search"
+                className="test-page-search-input"
+                placeholder="Search Community Name"
+                aria-label="Search Community Name"
+              />
+              <span className="test-page-search-icon" aria-hidden>
+                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" /></svg>
+              </span>
+            </div>
+          </div>
+        )}
+      </main>
 
       {profileModalOpen && (
         <div
