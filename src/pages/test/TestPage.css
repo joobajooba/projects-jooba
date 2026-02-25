@@ -170,7 +170,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 5% 10% 12px 10%;
+  padding: 5% 5% 12px 5%;
 }
 
 .test-page-nav-btn {
@@ -180,7 +180,7 @@
   gap: 10px;
   width: 100%;
   padding: 10px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid transparent;
   border-radius: 10px;
   background: #1e1e1e;
   color: rgba(255, 255, 255, 0.9);
@@ -189,7 +189,6 @@
   font-weight: 500;
   cursor: pointer;
   text-align: left;
-  transition: border-color 0.2s;
 }
 
 /* Hover: gradient outline (::before = ring, ::after = inner fill so ring is visible) */
@@ -199,8 +198,8 @@
 .test-page-nav-btn:hover::before {
   content: '';
   position: absolute;
-  inset: -2px;
-  border-radius: 12px;
+  inset: -1px;
+  border-radius: 11px;
   background: linear-gradient(
     to right,
     rgb(255, 0, 0),
@@ -216,8 +215,8 @@
 .test-page-nav-btn:hover::after {
   content: '';
   position: absolute;
-  inset: 2px;
-  border-radius: 8px;
+  inset: 1px;
+  border-radius: 9px;
   background: #1e1e1e;
   z-index: 1;
   pointer-events: none;
@@ -228,15 +227,11 @@
   z-index: 2;
 }
 
-/* Selected: same as sidebar, subtle border to show selection */
+/* Selected: same as sidebar, no extra border */
 .test-page-nav-btn-active {
-  border: 1px solid rgba(255, 251, 10, 0);
+  border: 1px solid transparent;
   background: #1e1e1e;
   color: rgba(255, 255, 255, 0.95);
-}
-
-.test-page-nav-btn-active:hover {
-  border-color: rgba(255, 255, 255, 0.4);
 }
 
 .test-page-nav-icon {
