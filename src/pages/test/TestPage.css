@@ -34,10 +34,11 @@
 .test-page-sidebar-header {
   display: flex;
   flex-direction: row;
+  justify-content: center;
   gap: 6px;
   padding: 10px;
   flex-shrink: 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.4);
 }
 
 .test-page-icon-btn {
