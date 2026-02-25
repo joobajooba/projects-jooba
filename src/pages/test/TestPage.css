@@ -195,55 +195,15 @@
   border-color: rgba(255, 255, 255, 0.22);
 }
 
-/* Selected: sidebar-style fill (#1e1e1e), only the outline has animated rainbow gradient */
+/* Selected: same as sidebar, subtle border to show selection */
 .test-page-nav-btn-active {
-  border: none;
-  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: #1e1e1e;
   color: rgba(255, 255, 255, 0.95);
-  position: relative;
-  z-index: 0;
 }
 
-/* Rotating rainbow gradient – sits behind, 2px larger than button */
-.test-page-nav-btn-active::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: 12px;
-  background: conic-gradient(
-    from 0deg,
-    #ff0000,
-    #ff7f00,
-    #ffff00,
-    #00ff00,
-    #0000ff,
-    #4b0082,
-    #8f00ff,
-    #ff0000
-  );
-  z-index: -2;
-  animation: test-page-nav-rainbow-spin 4s linear infinite;
-}
-
-/* Inner fill: same as sidebar, covers center so only 2px ring of gradient shows */
-.test-page-nav-btn-active::after {
-  content: '';
-  position: absolute;
-  inset: 2px;
-  border-radius: 8px;
-  background: #1e1e1e;
-  z-index: -1;
-  pointer-events: none;
-}
-
-.test-page-nav-btn-active:hover::after {
-  background: #1e1e1e;
-}
-
-@keyframes test-page-nav-rainbow-spin {
-  to {
-    transform: rotate(360deg);
-  }
+.test-page-nav-btn-active:hover {
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 .test-page-nav-icon {
