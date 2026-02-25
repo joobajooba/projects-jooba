@@ -19,7 +19,7 @@ function getMosaicDims(gridSize) {
 export default function Profile2() {
   const { address, isConnected } = useAccount();
   const { user, loading, refetch } = useUser();
-  const { openEditPanel } = useEditProfile();
+  const { requestNFTsMosaicEdit, setRequestNFTsMosaicEdit } = useEditProfile();
   const { stats: wordleStats } = useWordleStats();
   const { stats: connectionsStats } = useConnectionsStats();
 
@@ -65,6 +65,13 @@ export default function Profile2() {
       if (!error) refetch();
     })();
   }, [address, user?.wallet_address]);
+
+  useEffect(() => {
+    if (requestNFTsMosaicEdit) {
+      setIsEditingLayout(true);
+      setRequestNFTsMosaicEdit(false);
+    }
+  }, [requestNFTsMosaicEdit, setRequestNFTsMosaicEdit]);
 
   useEffect(() => {
     if (!user) return;
@@ -315,25 +322,9 @@ export default function Profile2() {
                   </button>
                 </>
               ) : (
-                <>
-                  <p className="profile2-muted">
-                    Edit your profile info, NFTs, and mosaic from here.
-                  </p>
-                  <button
-                    type="button"
-                    className="profile2-actionBtn"
-                    onClick={openEditPanel}
-                  >
-                    Edit Profile
-                  </button>
-                  <button
-                    type="button"
-                    className="profile2-actionBtn profile2-actionBtnSecondary"
-                    onClick={() => setIsEditingLayout(true)}
-                  >
-                    Edit NFTs & Mosaic
-                  </button>
-                </>
+                <p className="profile2-muted">
+                  Edit your profile info, NFTs, and mosaic from the Profile menu (top right).
+                </p>
               )}
             </div>
           </div>

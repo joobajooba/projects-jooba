@@ -9,7 +9,7 @@ import NFTSelector from './NFTSelector';
 import './EditProfilePanel.css';
 
 export default function EditProfilePanel() {
-  const { isOpen, closeEditPanel } = useEditProfile();
+  const { isOpen, closeEditPanel, openEditPanelAndRequestNFTsMosaic } = useEditProfile();
   const { address } = useAccount();
   const { user, refetch } = useUser();
 
@@ -275,6 +275,17 @@ export default function EditProfilePanel() {
               maxLength={500}
             />
             <span className="edit-profile-char-count">{profileDescription.length}/500</span>
+          </div>
+
+          <div className="edit-profile-field">
+            <button
+              type="button"
+              className="edit-profile-panel-btn edit-profile-panel-btn-secondary"
+              onClick={openEditPanelAndRequestNFTsMosaic}
+              disabled={uploading}
+            >
+              Edit NFTs & Mosaic
+            </button>
           </div>
 
           <div className="edit-profile-panel-actions">

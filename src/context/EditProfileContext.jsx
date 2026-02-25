@@ -4,6 +4,7 @@ const EditProfileContext = createContext(null);
 
 export function EditProfileProvider({ children }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [requestNFTsMosaicEdit, setRequestNFTsMosaicEdit] = useState(false);
 
   const openEditPanel = useCallback(() => {
     setIsOpen(true);
@@ -13,8 +14,22 @@ export function EditProfileProvider({ children }) {
     setIsOpen(false);
   }, []);
 
+  const openEditPanelAndRequestNFTsMosaic = useCallback(() => {
+    setRequestNFTsMosaicEdit(true);
+    setIsOpen(false);
+  }, []);
+
   return (
-    <EditProfileContext.Provider value={{ isOpen, openEditPanel, closeEditPanel }}>
+    <EditProfileContext.Provider
+      value={{
+        isOpen,
+        openEditPanel,
+        closeEditPanel,
+        requestNFTsMosaicEdit,
+        setRequestNFTsMosaicEdit,
+        openEditPanelAndRequestNFTsMosaic,
+      }}
+    >
       {children}
     </EditProfileContext.Provider>
   );
