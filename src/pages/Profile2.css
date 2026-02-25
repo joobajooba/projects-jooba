@@ -243,7 +243,7 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .profile2-center {
@@ -319,12 +319,13 @@
   position: absolute;
   right: 0;
   top: 0;
-  bottom: 0;
+  bottom: auto;
   left: auto;
   width: max(360px, 57%);
   min-width: 360px;
-  height: 100%;
-  overflow: auto;
+  height: auto;
+  min-height: 100%;
+  overflow: visible;
 }
 
 .profile2-mosaicBlock {
@@ -334,17 +335,17 @@
 
 .profile2-mosaicBlock-aligned {
   min-height: 0;
-  height: 100%;
+  height: auto;
   display: flex;
   flex-direction: column;
-  overflow: auto;
+  overflow: visible;
 }
 
 .profile2-mosaicBlock-aligned .profile2-mosaic {
-  flex: 1;
+  flex: none;
   min-height: 0;
   aspect-ratio: auto;
-  overflow: auto;
+  overflow: visible;
 }
 
 .profile2-mosaicBlock-aligned .profile2-mosaic-4x4,
