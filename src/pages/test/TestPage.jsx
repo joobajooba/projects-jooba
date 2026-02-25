@@ -100,7 +100,7 @@ function ColorPickerGrid({ value, onChange }) {
       <div
         ref={boxRef}
         className="test-page-color-picker-box"
-        style={{ background: `linear-gradient(to bottom, hsl(${hue}, 100%, 50%), #000), linear-gradient(to right, #fff, transparent)` }}
+        style={{ background: `linear-gradient(to right, #fff, transparent), linear-gradient(to bottom, hsl(${hue}, 100%, 50%), #000)` }}
         onPointerDown={handleBoxPointerDown}
         onClick={handleBoxPointer}
         role="application"
