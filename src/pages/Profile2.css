@@ -324,7 +324,7 @@
   width: max(360px, 57%);
   min-width: 360px;
   height: 100%;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .profile2-mosaicBlock {

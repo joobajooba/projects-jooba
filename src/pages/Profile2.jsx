@@ -11,11 +11,6 @@ import NFTSelector from '../components/NFTSelector';
 import MosaicBuilder from '../components/MosaicBuilder';
 import './Profile2.css';
 
-function getMosaicDims(gridSize) {
-  if (gridSize === '4x4') return 4;
-  return 2;
-}
-
 export default function Profile2() {
   const { address, isConnected } = useAccount();
   const { user, loading, refetch } = useUser();
@@ -36,8 +31,11 @@ export default function Profile2() {
     return slotUrls.map((url) => ({ url }));
   }, [slotUrls]);
 
-  const mosaicDim = getMosaicDims(mosaic?.gridSize);
   const mosaicCells = mosaic?.cells || [];
+  const mosaicDim = useMemo(() => {
+    if (mosaic?.gridSize === '4x4' || mosaicCells.length >= 16) return 4;
+    return 2;
+  }, [mosaic?.gridSize, mosaicCells.length]);
 
   // Profile age in days (from first wallet connection / created_at)
   const profileAgeDays = useMemo(() => {
