@@ -101,10 +101,10 @@
   line-height: 1;
 }
 
-/* Sidebar profile picture (below separator) – 1% side spacing inside panel */
+/* Sidebar profile picture (below separator) – 5% side spacing; border wraps image only */
 .test-page-sidebar-profile {
   flex-shrink: 0;
-  padding: 0 1%;
+  padding: 0 5%;
   width: 100%;
   box-sizing: border-box;
   border-bottom: 1px solid rgba(0, 0, 0, 0.4);
@@ -113,12 +113,11 @@
 
 .test-page-sidebar-profile-img {
   width: 100%;
-  height: 280px;
-  object-fit: contain;
-  object-position: center top;
+  height: auto;
+  max-height: 280px;
   display: block;
-  background: #1e1e1e;
   box-sizing: border-box;
+  vertical-align: top;
 }
 
 /* Profile modal */
