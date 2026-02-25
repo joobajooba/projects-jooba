@@ -3,7 +3,6 @@ import { useAccount } from 'wagmi';
 import { useUser } from '../hooks/useUser';
 import { useWordleStats } from '../hooks/useWordleStats';
 import { useConnectionsStats } from '../hooks/useConnectionsStats';
-import { useEditProfile } from '../context/EditProfileContext';
 import { supabase } from '../lib/supabase';
 import { isValidEthereumAddress, isValidUrl } from '../utils/walletSecurity';
 import { checkRateLimit } from '../utils/rateLimit';
@@ -13,7 +12,6 @@ import './Profile2.css';
 export default function Profile2() {
   const { address, isConnected } = useAccount();
   const { user, loading, refetch } = useUser();
-  const { openEditPanelWithMosaic } = useEditProfile();
   const { stats: wordleStats } = useWordleStats();
   const { stats: connectionsStats } = useConnectionsStats();
 
@@ -291,8 +289,6 @@ export default function Profile2() {
 
         <section className="profile2-right">
           <div className="profile2-block profile2-mosaicBlock profile2-mosaicBlock-aligned">
-            <div className="profile2-blockTitle">Profile Mosaic</div>
-
             {mosaicCells?.length ? (
               <div
                 className={`profile2-mosaic ${mosaicDim === 4 ? 'profile2-mosaic-4x4' : ''} ${mosaicDim === 8 ? 'profile2-mosaic-8x8' : ''} ${mosaicDim === 12 ? 'profile2-mosaic-12x12' : ''}`}
@@ -312,26 +308,7 @@ export default function Profile2() {
               </div>
             ) : (
               <div className="profile2-mosaicEmpty">
-                <p className="profile2-muted">No mosaic set yet.</p>
-                <button
-                  type="button"
-                  className="profile2-actionBtn profile2-actionBtnSecondary"
-                  onClick={openEditPanelWithMosaic}
-                >
-                  Add Mosaic
-                </button>
-              </div>
-            )}
-
-            {mosaicCells?.length > 0 && (
-              <div className="profile2-mosaicActions">
-                <button
-                  type="button"
-                  className="profile2-actionBtn profile2-actionBtnSecondary"
-                  onClick={openEditPanelWithMosaic}
-                >
-                  Edit Mosaic
-                </button>
+                <p className="profile2-muted">No mosaic set yet. Use Edit Profile to add one.</p>
               </div>
             )}
           </div>
