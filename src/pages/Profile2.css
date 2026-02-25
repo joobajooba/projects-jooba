@@ -17,7 +17,7 @@
   display: grid;
   grid-template-columns: 320px 110px minmax(380px, 1fr) minmax(360px, 1.35fr);
   gap: 1.25rem;
-  align-items: start;
+  align-items: stretch;
 }
 
 .profile2-left {
@@ -25,6 +25,11 @@
   flex-direction: column;
   gap: 1.25rem;
   min-width: 0;
+}
+
+.profile2-statsCard {
+  flex: 1;
+  min-height: 0;
 }
 
 .profile2-card,
@@ -234,6 +239,9 @@
   grid-column: 3 / -1;
   position: relative;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .profile2-center {
@@ -241,7 +249,21 @@
   flex-direction: column;
   gap: 1.25rem;
   min-width: 0;
+  min-height: 0;
+  flex: 1;
   margin-right: calc(1.25rem + max(360px, 57%));
+}
+
+.profile2-center .profile2-description {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.profile2-center .profile2-descriptionBody {
+  flex: 1;
+  min-height: 0;
 }
 
 .profile2-uploader {
