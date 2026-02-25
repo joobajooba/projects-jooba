@@ -11,7 +11,7 @@ import Games from './pages/Games';
 import Wordle from './pages/Wordle';
 import Connections from './pages/Connections';
 import Profile2 from './pages/Profile2';
-import Test from './pages/Test';
+import TestPage from './pages/test/TestPage';
 import './index.css';
 
 export default function App() {
@@ -47,7 +47,7 @@ export default function App() {
           <Route path="/ape-projects/" element={<main className="games-main"><p>APE-Projects</p></main>} />
           <Route path="/profile/" element={<Navigate to="/profile2/" replace />} />
           <Route path="/profile2/" element={<Profile2 />} />
-          <Route path="/test" element={<Test />} />
+          <Route path="/test" element={<TestPage />} />
         </Routes>
         {!isTestPage && <EditProfilePanel />}
       </EditProfileProvider>

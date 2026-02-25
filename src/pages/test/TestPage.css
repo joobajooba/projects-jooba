@@ -1,0 +1,17 @@
+/**
+ * Standalone styles for /test page only.
+ * Does not depend on the main site's CSS.
+ */
+.test-page {
+  all: initial;
+  display: block;
+  width: 100%;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.test-page *,
+.test-page *::before,
+.test-page *::after {
+  box-sizing: border-box;
+}
