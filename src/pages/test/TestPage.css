@@ -120,6 +120,22 @@
   vertical-align: top;
 }
 
+.test-page-sidebar-profile-placeholder {
+  width: 100%;
+  min-height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1e1e1e;
+  box-sizing: border-box;
+}
+
+.test-page-sidebar-profile-silhouette {
+  width: 48%;
+  max-width: 120px;
+  color: #0a0a0a;
+}
+
 /* Profile modal */
 .test-page-modal-overlay {
   position: fixed;
