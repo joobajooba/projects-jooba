@@ -187,9 +187,9 @@
 
 .mosaic-editor-nft-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 100px));
+  grid-template-columns: repeat(auto-fill, minmax(150px, 150px));
   gap: 0.6rem;
-  max-height: 320px;
+  max-height: 420px;
   overflow-y: auto;
 }
 
@@ -203,6 +203,7 @@
   overflow: hidden;
   cursor: pointer;
   padding: 0;
+  min-height: 150px;
   transition: border-color 0.2s, transform 0.15s;
 }
 
@@ -213,14 +214,17 @@
 
 .mosaic-editor-nft-item img {
   width: 100%;
-  aspect-ratio: 1;
+  height: 150px;
+  min-height: 150px;
   object-fit: cover;
   display: block;
+  flex-shrink: 0;
 }
 
 .mosaic-editor-nft-noimg {
   width: 100%;
-  aspect-ratio: 1;
+  height: 150px;
+  min-height: 150px;
   display: flex;
   align-items: center;
   justify-content: center;
