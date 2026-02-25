@@ -7,17 +7,17 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import NFTSelector from '../../components/NFTSelector';
 import './TestPage.css';
 
-/** Convert hex to HSL (h 0-360, s 0-100, l 0-100) */
-function hexToHsl(hex) {
+/** Convert hex to HSV (h 0-360, s 0-100, v 0-100). Top of grid = full value = vivid colour. */
+function hexToHsv(hex) {
   const m = hex.match(/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
-  if (!m) return { h: 0, s: 50, l: 50 };
-  let r = parseInt(m[1], 16) / 255, g = parseInt(m[2], 16) / 255, b = parseInt(m[3], 16) / 255;
+  if (!m) return { h: 0, s: 80, v: 100 };
+  const r = parseInt(m[1], 16) / 255, g = parseInt(m[2], 16) / 255, b = parseInt(m[3], 16) / 255;
   const max = Math.max(r, g, b), min = Math.min(r, g, b);
-  let h, s, l = (max + min) / 2;
-  if (max === min) h = s = 0;
-  else {
-    const d = max - min;
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  const d = max - min;
+  const v = max;
+  const s = max === 0 ? 0 : d / max;
+  let h = 0;
+  if (d !== 0) {
     switch (max) {
       case r: h = (g - b) / d + (g < b ? 6 : 0); break;
       case g: h = (b - r) / d + 2; break;
@@ -25,47 +25,47 @@ function hexToHsl(hex) {
     }
     h /= 6;
   }
-  return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+  return { h: Math.round(h * 360), s: Math.round(s * 100), v: Math.round(v * 100) };
 }
 
-/** Convert HSL to hex */
-function hslToHex(h, s, l) {
-  s /= 100; l /= 100;
-  const a = s * Math.min(l, 1 - l);
-  const f = (n) => {
-    const k = (n + h / 30) % 12;
-    return l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
-  };
-  const r = Math.round(f(0) * 255), g = Math.round(f(8) * 255), b = Math.round(f(4) * 255);
+/** Convert HSV to hex */
+function hsvToHex(h, s, v) {
+  s /= 100; v /= 100;
+  const c = v * s;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = v - c;
+  let r = 0, g = 0, b = 0;
+  if (h < 60) { r = c; g = x; b = 0; } else if (h < 120) { r = x; g = c; b = 0; } else if (h < 180) { r = 0; g = c; b = x; } else if (h < 240) { r = 0; g = x; b = c; } else if (h < 300) { r = x; g = 0; b = c; } else { r = c; g = 0; b = x; }
+  r = Math.round((r + m) * 255); g = Math.round((g + m) * 255); b = Math.round((b + m) * 255);
   return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
 }
 
 /**
- * Drag-on-grid colour picker. Uses a saturation/value box and hue slider.
+ * Drag-on-grid colour picker. Grid = saturation (x) × value (y). Top = vivid, bottom = black.
  */
 function ColorPickerGrid({ value, onChange }) {
   const boxRef = useRef(null);
   const [hue, setHue] = useState(0);
-  const [s, setS] = useState(50);
-  const [l, setL] = useState(50);
+  const [s, setS] = useState(80);
+  const [v, setV] = useState(100);
 
   useEffect(() => {
-    const hsl = hexToHsl(value);
-    setHue(hsl.h);
-    setS(hsl.s);
-    setL(hsl.l);
+    const hsv = hexToHsv(value);
+    setHue(hsv.h);
+    setS(hsv.s);
+    setV(hsv.v);
   }, [value]);
 
-  const updateFromSl = useCallback((sVal, lVal) => {
+  const updateFromSv = useCallback((sVal, vVal) => {
     setS(sVal);
-    setL(lVal);
-    onChange(hslToHex(hue, sVal, lVal));
+    setV(vVal);
+    onChange(hsvToHex(hue, sVal, vVal));
   }, [hue, onChange]);
 
   const updateHue = useCallback((h) => {
     setHue(h);
-    onChange(hslToHex(h, s, l));
-  }, [s, l, onChange]);
+    onChange(hsvToHex(h, s, v));
+  }, [s, v, onChange]);
 
   const handleBoxPointer = useCallback((e) => {
     const box = boxRef.current;
@@ -74,9 +74,9 @@ function ColorPickerGrid({ value, onChange }) {
     const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
     const y = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
     const sVal = Math.round(x * 100);
-    const lVal = Math.round((1 - y) * 100);
-    updateFromSl(sVal, lVal);
-  }, [updateFromSl]);
+    const vVal = Math.round((1 - y) * 100);
+    updateFromSv(sVal, vVal);
+  }, [updateFromSv]);
 
   const handleBoxPointerDown = useCallback((e) => {
     e.preventDefault();
@@ -100,17 +100,17 @@ function ColorPickerGrid({ value, onChange }) {
       <div
         ref={boxRef}
         className="test-page-color-picker-box"
-        style={{ background: `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, hsl(${hue}, 100%, 50%))` }}
+        style={{ background: `linear-gradient(to bottom, hsl(${hue}, 100%, 50%), #000), linear-gradient(to right, #fff, transparent)` }}
         onPointerDown={handleBoxPointerDown}
         onClick={handleBoxPointer}
         role="application"
-        aria-label="Pick saturation and lightness by dragging on grid"
+        aria-label="Pick saturation and value by dragging on grid"
       >
         <span
           className="test-page-color-picker-marker"
           style={{
             left: `${s}%`,
-            top: `${100 - l}%`,
+            top: `${100 - v}%`,
             transform: 'translate(-50%, -50%)',
             backgroundColor: value
           }}
@@ -129,6 +129,35 @@ function ColorPickerGrid({ value, onChange }) {
         />
       </div>
       <div className="test-page-color-picker-preview" style={{ backgroundColor: value }} />
+    </div>
+  );
+}
+
+/**
+ * Dropdown that toggles the colour picker open/closed.
+ */
+function BorderColorDropdown({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="test-page-border-color-dropdown">
+      <button
+        type="button"
+        className="test-page-border-color-trigger"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-haspopup="true"
+        aria-label={open ? 'Close border colour picker' : 'Open border colour picker'}
+      >
+        <span className="test-page-border-color-swatch" style={{ backgroundColor: value }} />
+        <span className="test-page-border-color-label">Profile picture border colour</span>
+        <span className="test-page-border-color-chevron" aria-hidden>{open ? '▼' : '▶'}</span>
+      </button>
+      {open && (
+        <div className="test-page-border-color-panel">
+          <ColorPickerGrid value={value} onChange={onChange} />
+        </div>
+      )}
     </div>
   );
 }
@@ -263,10 +292,9 @@ export default function TestPage() {
                 autoComplete="username"
               />
             </label>
-            <div className="test-page-modal-label" style={{ marginTop: 16 }}>
-              Profile picture border colour
+            <div className="test-page-border-color-wrap" style={{ marginTop: 16 }}>
+              <BorderColorDropdown value={profileBorderColor} onChange={setProfileBorderColor} />
             </div>
-            <ColorPickerGrid value={profileBorderColor} onChange={setProfileBorderColor} />
             <div className="test-page-modal-actions">
               <button
                 type="button"
