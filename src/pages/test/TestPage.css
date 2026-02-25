@@ -179,51 +179,42 @@
   gap: 10px;
   width: 100%;
   padding: 10px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.06);
+  background: #1e1e1e;
   color: rgba(255, 255, 255, 0.9);
   font-family: system-ui, -apple-system, sans-serif;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   text-align: left;
-  transition: background 0.2s, border-color 0.2s;
+  transition: border-color 0.2s;
 }
 
 .test-page-nav-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.22);
 }
 
+/* Selected: rainbow gradient outline (padding-box + border-box trick) */
 .test-page-nav-btn-active {
-  background: #1e1e1e;
-  border-color: transparent;
+  border: 2px solid transparent;
+  background: linear-gradient(#1e1e1e, #1e1e1e) padding-box,
+    linear-gradient(
+      to bottom,
+      #ff0000,
+      #ff7f00,
+      #ffff00,
+      #00ff00,
+      #0000ff,
+      #4b0082,
+      #8f00ff,
+      #ff0000
+    ) border-box;
   color: rgba(255, 255, 255, 0.95);
-  position: relative;
-}
-
-.test-page-nav-btn-active::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: 12px;
-  background: linear-gradient(
-    to bottom,
-    #ff0000,
-    #ff7f00,
-    #ffff00,
-    #00ff00,
-    #0000ff,
-    #4b0082,
-    #8f00ff,
-    #ff0000
-  );
-  z-index: -1;
 }
 
 .test-page-nav-btn-active:hover {
-  background: #252525;
+  border-color: transparent;
 }
 
 .test-page-nav-icon {
