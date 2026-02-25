@@ -19,13 +19,25 @@ function getImageUrl(nft) {
   );
 }
 
+function getCollectionName(nft) {
+  return (
+    nft.contract?.name ||
+    nft.contractMetadata?.name ||
+    nft.collection?.name ||
+    nft.collection_name ||
+    nft.rawMetadata?.name ||
+    ''
+  ).trim() || null;
+}
+
 function normalizeNft(nft, network) {
   const imageUrl = getImageUrl(nft);
+  const collection = getCollectionName(nft);
   const name =
     nft.name ||
     nft.title ||
     `${nft.contract?.name || nft.collection?.name || 'NFT'} #${nft.tokenId || nft.id?.tokenId || nft.token_id || ''}`;
-  return { imageUrl, name, network, raw: nft };
+  return { imageUrl, name, network, collection, raw: nft };
 }
 
 /**
@@ -72,6 +84,7 @@ async function fetchOpenSea(ownerAddress) {
       imageUrl: a.image_url || a.image_original_url || a.image_preview_url,
       name: a.name || `${a.collection?.name || 'NFT'} #${a.token_id}`,
       network: 'Ethereum',
+      collection: (a.collection?.name || '').trim() || null,
       raw: a,
     }));
 }
@@ -98,10 +111,12 @@ async function fetchApeScan(ownerAddress) {
         if (!metaRes.ok) return { name: `NFT #${tokenId}`, imageUrl: null, network: 'ApeChain', raw: {} };
         const meta = await metaRes.json();
         const imageUrl = meta.result?.image || meta.image;
+        const collection = (meta.result?.collection || meta.collection || item.collection_name || '').trim() || null;
         return {
           imageUrl,
           name: meta.result?.name || meta.name || `NFT #${tokenId}`,
           network: 'ApeChain',
+          collection: collection || null,
           raw: meta,
         };
       } catch (e) {

@@ -16,6 +16,22 @@ const GRID_OPTIONS = [
 export default function MosaicEditor({ initialMosaic, onSave, onBack }) {
   const { nfts, loading, error, refetch } = useMosaicNFTs();
   const [gridSize, setGridSize] = useState(initialMosaic?.gridSize || '2x2');
+  const [collectionFilter, setCollectionFilter] = useState('');
+
+  const collections = useMemo(() => {
+    const set = new Set();
+    nfts.forEach((nft) => {
+      const c = nft.collection || 'Unknown collection';
+      if (c) set.add(c);
+    });
+    return ['', ...Array.from(set).sort((a, b) => a.localeCompare(b))];
+  }, [nfts]);
+
+  const nftsFiltered = useMemo(() => {
+    if (!collectionFilter) return nfts;
+    return nfts.filter((nft) => (nft.collection || 'Unknown collection') === collectionFilter);
+  }, [nfts, collectionFilter]);
+
   const dim = GRID_OPTIONS.find((o) => o.value === gridSize)?.dim ?? 2;
   const cellCount = dim * dim;
 
@@ -141,6 +157,25 @@ export default function MosaicEditor({ initialMosaic, onSave, onBack }) {
 
       <div className="mosaic-editor-nfts">
         <p className="mosaic-editor-nfts-title">Your NFTs (Ethereum & ApeChain)</p>
+        {!loading && !error && nfts.length > 0 && (
+          <div className="mosaic-editor-setting">
+            <label className="mosaic-editor-label" htmlFor="mosaic-collection-filter">Collection</label>
+            <select
+              id="mosaic-collection-filter"
+              className="mosaic-editor-select"
+              value={collectionFilter}
+              onChange={(e) => setCollectionFilter(e.target.value)}
+              aria-label="Filter by collection"
+            >
+              <option value="">All collections</option>
+              {collections.filter(Boolean).map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         {loading && <p className="mosaic-editor-loading">Loading NFTs…</p>}
         {error && (
           <div className="mosaic-editor-error">
@@ -155,9 +190,14 @@ export default function MosaicEditor({ initialMosaic, onSave, onBack }) {
             No NFTs found. Connect a wallet with NFTs on Ethereum or ApeChain.
           </p>
         )}
-        {!loading && !error && nfts.length > 0 && (
+        {!loading && !error && nfts.length > 0 && nftsFiltered.length === 0 && (
+          <p className="mosaic-editor-empty">
+            No NFTs in this collection. Try another.
+          </p>
+        )}
+        {!loading && !error && nftsFiltered.length > 0 && (
           <div className="mosaic-editor-nft-grid">
-            {nfts.map((nft, idx) => (
+            {nftsFiltered.map((nft, idx) => (
               <button
                 key={nft.id ?? idx}
                 type="button"
