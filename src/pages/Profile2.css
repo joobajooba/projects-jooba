@@ -25,6 +25,7 @@
   flex-direction: column;
   gap: 1.25rem;
   min-width: 0;
+  min-height: 0;
 }
 
 .profile2-statsCard {
@@ -239,9 +240,10 @@
   grid-column: 3 / -1;
   position: relative;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  min-height: 0;
+  overflow: hidden;
 }
 
 .profile2-center {
@@ -318,8 +320,11 @@
   right: 0;
   top: 0;
   bottom: 0;
+  left: auto;
   width: max(360px, 57%);
   min-width: 360px;
+  height: 100%;
+  overflow: hidden;
 }
 
 .profile2-mosaicBlock {
