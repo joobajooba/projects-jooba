@@ -309,23 +309,14 @@ export default function Profile2() {
                   <img src={user.image_uploader_url} alt="Uploaded" className="profile2-uploaderImage" />
                 </div>
               )}
-              {isEditingLayout ? (
-                <>
-                  <p className="profile2-muted">
-                    Click NFT slots to change them. Use the mosaic section to edit your mosaic.
-                  </p>
-                  <button
-                    type="button"
-                    className="profile2-actionBtn profile2-actionBtnSecondary"
-                    onClick={() => setIsEditingLayout(false)}
-                  >
-                    Done
-                  </button>
-                </>
-              ) : (
-                <p className="profile2-muted">
-                  Edit your profile info, NFTs, and mosaic from the Profile menu (top right).
-                </p>
+              {isEditingLayout && (
+                <button
+                  type="button"
+                  className="profile2-actionBtn profile2-actionBtnSecondary"
+                  onClick={() => setIsEditingLayout(false)}
+                >
+                  Done
+                </button>
               )}
             </div>
           </div>
