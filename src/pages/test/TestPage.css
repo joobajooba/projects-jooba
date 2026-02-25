@@ -112,11 +112,12 @@
 
 .test-page-sidebar-profile-img {
   width: 100%;
-  height: 140px;
-  object-fit: cover;
-  object-position: center;
+  height: 280px;
+  object-fit: contain;
+  object-position: center top;
   display: block;
-  /* Best quality: use high-res URL (getBestProfilePictureUrl) and let browser scale smoothly */
+  background: rgba(0, 0, 0, 0.2);
+  /* contain = show full image, no cropping; 250×280 box */
 }
 
 /* Profile modal */
