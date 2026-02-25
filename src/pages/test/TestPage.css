@@ -197,7 +197,7 @@
 
 /* Selected: same as sidebar, subtle border to show selection */
 .test-page-nav-btn-active {
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgb(255, 251, 10);
   background: #1e1e1e;
   color: rgba(255, 255, 255, 0.95);
 }
