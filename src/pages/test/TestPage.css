@@ -192,22 +192,36 @@
   transition: border-color 0.2s;
 }
 
-/* Hover outline: edit the gradient colours below (left → right) */
+/* Hover: gradient outline (::before = ring, ::after = inner fill so ring is visible) */
 .test-page-nav-btn:hover {
   border-color: transparent;
 }
 .test-page-nav-btn:hover::before {
   content: '';
   position: absolute;
-  inset: -1px;
-  border-radius: 11px;
+  inset: -2px;
+  border-radius: 12px;
   background: linear-gradient(
     to right,
     rgb(255, 0, 0),
     rgb(4, 255, 171),
     rgb(68, 87, 255)
   );
-  z-index: -1;
+  z-index: 0;
+}
+.test-page-nav-btn:hover::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 8px;
+  background: #1e1e1e;
+  z-index: 1;
+  pointer-events: none;
+}
+.test-page-nav-btn .test-page-nav-icon,
+.test-page-nav-btn .test-page-nav-label {
+  position: relative;
+  z-index: 2;
 }
 
 /* Selected: same as sidebar, subtle border to show selection */
