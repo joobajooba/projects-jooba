@@ -101,6 +101,142 @@
   line-height: 1;
 }
 
+/* Sidebar profile picture (below separator) */
+.test-page-sidebar-profile {
+  flex-shrink: 0;
+  padding: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.4);
+}
+
+.test-page-sidebar-profile-img {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Profile modal */
+.test-page-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.test-page-modal {
+  background: #1e1e1e;
+  border-radius: 12px;
+  padding: 24px;
+  width: 90%;
+  max-width: 360px;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.test-page-modal-title {
+  margin: 0 0 16px;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.test-page-modal-label {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.test-page-modal-input {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: inherit;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.test-page-modal-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.test-page-modal-input:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.test-page-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.test-page-modal-btn {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.test-page-modal-btn-primary {
+  background: rgba(255, 255, 255, 0.2);
+  color: inherit;
+}
+
+.test-page-modal-btn-primary:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.test-page-modal-btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+}
+
+.test-page-modal-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.test-page-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.test-page-modal-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+}
+
 /* ========== Reusable classes (tp- = test page) – use throughout the test page ========== */
 
 /* Layout – flex */

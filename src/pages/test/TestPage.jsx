@@ -2,10 +2,22 @@
  * Blank page at /test – no navbar, no main site code or styles.
  * Uses only this folder's CSS. Route: j00ba.xyz/test
  */
+import { useState } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import NFTSelector from '../../components/NFTSelector';
 import './TestPage.css';
 
 export default function TestPage() {
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [username, setUsername] = useState('');
+  const [profilePictureUrl, setProfilePictureUrl] = useState('');
+  const [showNFTSelector, setShowNFTSelector] = useState(false);
+
+  const handleNFTSelect = (imageUrl) => {
+    setProfilePictureUrl(imageUrl || '');
+    setShowNFTSelector(false);
+  };
+
   return (
     <div className="test-page" data-page="test">
       <aside className="test-page-sidebar">
@@ -31,6 +43,7 @@ export default function TestPage() {
             className="test-page-icon-btn"
             title="Profile"
             aria-label="Profile"
+            onClick={() => setProfileModalOpen(true)}
           >
             <span className="test-page-icon" aria-hidden>👤</span>
           </button>
@@ -51,7 +64,76 @@ export default function TestPage() {
             <span className="test-page-icon" aria-hidden>⚙️</span>
           </button>
         </div>
+
+        {profilePictureUrl && (
+          <div className="test-page-sidebar-profile">
+            <img
+              src={profilePictureUrl}
+              alt="Profile"
+              className="test-page-sidebar-profile-img"
+            />
+          </div>
+        )}
       </aside>
+
+      {profileModalOpen && (
+        <div
+          className="test-page-modal-overlay"
+          onClick={() => setProfileModalOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="test-page-profile-modal-title"
+        >
+          <div
+            className="test-page-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="test-page-profile-modal-title" className="test-page-modal-title">Profile</h2>
+            <label className="test-page-modal-label">
+              Username
+              <input
+                type="text"
+                className="test-page-modal-input"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter username"
+                autoComplete="username"
+              />
+            </label>
+            <div className="test-page-modal-actions">
+              <button
+                type="button"
+                className="test-page-modal-btn test-page-modal-btn-secondary"
+                onClick={() => setShowNFTSelector(true)}
+              >
+                Choose NFT as profile picture
+              </button>
+              <button
+                type="button"
+                className="test-page-modal-btn test-page-modal-btn-primary"
+                onClick={() => setProfileModalOpen(false)}
+              >
+                Done
+              </button>
+            </div>
+            <button
+              type="button"
+              className="test-page-modal-close"
+              onClick={() => setProfileModalOpen(false)}
+              aria-label="Close"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showNFTSelector && (
+        <NFTSelector
+          onSelect={handleNFTSelect}
+          onClose={() => setShowNFTSelector(false)}
+        />
+      )}
     </div>
   );
 }
