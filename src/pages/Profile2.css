@@ -366,6 +366,8 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
   overflow: hidden;
+  padding: 4px;
+  box-sizing: border-box;
 }
 
 .profile2-mosaicCell img {
