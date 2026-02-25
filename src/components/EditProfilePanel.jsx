@@ -223,7 +223,7 @@ export default function EditProfilePanel() {
         tabIndex={0}
         aria-label="Close panel"
       />
-      <div className="edit-profile-panel" role="dialog" aria-labelledby="edit-profile-title">
+      <div className={`edit-profile-panel ${showMosaicEditor ? 'edit-profile-panel-mosaic' : ''}`} role="dialog" aria-labelledby="edit-profile-title">
         <div className="edit-profile-panel-header">
           <h2 id="edit-profile-title" className="edit-profile-panel-title">
             {showMosaicEditor ? 'Mosaic' : 'Edit Profile'}

@@ -187,9 +187,9 @@
 
 .mosaic-editor-nft-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(64px, 64px));
-  gap: 0.5rem;
-  max-height: 180px;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 100px));
+  gap: 0.6rem;
+  max-height: 320px;
   overflow-y: auto;
 }
 
@@ -229,9 +229,9 @@
 }
 
 .mosaic-editor-nft-network {
-  font-size: 0.6rem;
-  color: rgba(255, 255, 255, 0.45);
-  padding: 2px 0;
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 3px 0;
 }
 
 .mosaic-editor-actions {

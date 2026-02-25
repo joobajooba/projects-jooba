@@ -22,6 +22,10 @@
   overflow: hidden;
 }
 
+.edit-profile-panel-mosaic {
+  max-width: 640px;
+}
+
 .edit-profile-panel-header {
   flex-shrink: 0;
   display: flex;
