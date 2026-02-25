@@ -26,9 +26,36 @@
   min-height: 100vh;
   flex-shrink: 0;
   background: #1e1e1e;
-  border-right: 1px solid rgba(255, 255, 255, 0.12);
   display: flex;
   flex-direction: column;
+  position: relative;
+}
+
+.test-page-sidebar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 3px;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    #ff0000 0%,
+    #ff7f00 14%,
+    #ffff00 28%,
+    #00ff00 42%,
+    #0000ff 57%,
+    #4b0082 71%,
+    #8f00ff 85%,
+    #ff0000 100%
+  );
+  background-size: 100% 200%;
+  animation: test-page-rainbow-border 4s linear infinite;
+}
+
+@keyframes test-page-rainbow-border {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 100%; }
 }
 
 .test-page-sidebar-header {
