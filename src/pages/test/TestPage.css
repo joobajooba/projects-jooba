@@ -36,17 +36,25 @@
   position: absolute;
   top: 0;
   right: 0;
-  width: 3px;
+  width: 1.5px;
   height: 100%;
+  /* Repeating gradient so one scroll cycle (0→100%) shows identical start/end = seamless loop */
   background: linear-gradient(
     to bottom,
     #ff0000 0%,
-    #ff7f00 14%,
-    #ffff00 28%,
-    #00ff00 42%,
-    #0000ff 57%,
-    #4b0082 71%,
-    #8f00ff 85%,
+    #ff7f00 7%,
+    #ffff00 14%,
+    #00ff00 21%,
+    #0000ff 28%,
+    #4b0082 35%,
+    #8f00ff 42%,
+    #ff0000 50%,
+    #ff7f00 57%,
+    #ffff00 64%,
+    #00ff00 71%,
+    #0000ff 78%,
+    #4b0082 85%,
+    #8f00ff 92%,
     #ff0000 100%
   );
   background-size: 100% 200%;
