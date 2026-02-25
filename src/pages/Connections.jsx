@@ -459,21 +459,12 @@ export default function Connections() {
     return names[level] || '';
   };
 
-  const resetGame = () => {
-    gameSavedRef.current = false;
-    setSaveStatus(null);
-    setSaveErrorDetail(null);
-    setSelectedWords([]);
-    setFoundGroups([]);
-    setMistakes(0);
-    setGameStatus('playing');
-    setMessage('');
-    if (puzzle) {
-      setPuzzle({
-        ...puzzle,
-        words: shuffleArray([...puzzle.words])
-      });
-    }
+  const shuffleBoard = () => {
+    if (!puzzle) return;
+    setPuzzle({
+      ...puzzle,
+      words: shuffleArray([...puzzle.words])
+    });
   };
 
   if (loading) {
@@ -504,8 +495,13 @@ export default function Connections() {
             ← Back to Games
           </button>
           <h1 className="connections-title">CONNECTIONS</h1>
-          <button className="connections-reset-btn" onClick={resetGame}>
-            Reset
+          <button
+            className="connections-shuffle-btn"
+            onClick={shuffleBoard}
+            disabled={gameStatus !== 'playing'}
+            title="Shuffle the words"
+          >
+            Shuffle
           </button>
         </div>
 

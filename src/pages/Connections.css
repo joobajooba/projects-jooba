@@ -24,7 +24,7 @@
 }
 
 .connections-back-btn,
-.connections-reset-btn {
+.connections-shuffle-btn {
   padding: 0.5rem 1rem;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -37,8 +37,13 @@
 }
 
 .connections-back-btn:hover,
-.connections-reset-btn:hover {
+.connections-shuffle-btn:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.15);
+}
+
+.connections-shuffle-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .connections-title {
