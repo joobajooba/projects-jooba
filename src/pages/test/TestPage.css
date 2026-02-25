@@ -104,7 +104,7 @@
 /* Sidebar profile picture (below separator) – 5% side spacing; border wraps image only */
 .test-page-sidebar-profile {
   flex-shrink: 0;
-  padding: 0 5%;
+  padding: 0 5% 5% 5%;
   width: 100%;
   box-sizing: border-box;
   border-bottom: 1px solid rgba(0, 0, 0, 0.4);
