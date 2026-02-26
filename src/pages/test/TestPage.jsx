@@ -340,6 +340,17 @@ export default function TestPage() {
             </span>
             <span className="test-page-nav-label">Games</span>
           </button>
+          <button
+            type="button"
+            className={`test-page-nav-btn ${sidebarView === 'mint' ? 'test-page-nav-btn-active' : ''}`}
+            onClick={() => setSidebarView('mint')}
+          >
+            <span className="test-page-nav-icon" aria-hidden>
+              <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z" /></svg>
+            </span>
+            <span className="test-page-nav-label">Mint</span>
+          </button>
+          <div className="test-page-sidebar-nav-sep" aria-hidden />
         </nav>
       </aside>
 
@@ -373,6 +384,11 @@ export default function TestPage() {
         {sidebarView === 'games' && (
           <div className="test-page-content">
             <h1 className="test-page-content-title">Games</h1>
+          </div>
+        )}
+        {sidebarView === 'mint' && (
+          <div className="test-page-content">
+            <h1 className="test-page-content-title">Mint</h1>
           </div>
         )}
       </main>

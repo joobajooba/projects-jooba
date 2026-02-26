@@ -232,6 +232,14 @@
   display: block;
 }
 
+/* Separating line under Mint with 5% gap */
+.test-page-sidebar-nav-sep {
+  margin-top: 5%;
+  padding-top: 5%;
+  border-top: 1px solid rgba(0, 0, 0, 0.4);
+  flex-shrink: 0;
+}
+
 /* Main content area */
 .test-page-main {
   flex: 1;
