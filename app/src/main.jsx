@@ -1,14 +1,35 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { WagmiProvider } from 'wagmi';
+import { WagmiProvider, http } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
+import { mainnet } from 'wagmi/chains';
+import { defineChain } from 'viem/chains/utils';
 import App from './App';
 import '@rainbow-me/rainbowkit/styles.css';
 import './index.css';
 
 const queryClient = new QueryClient();
+
+const apechain = defineChain({
+  id: 33139,
+  name: 'ApeChain',
+  network: 'apechain',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'Ether',
+    symbol: 'ETH',
+  },
+  rpcUrls: {
+    default: {
+      http: ['https://rpc.apechain.com'],
+    },
+  },
+  blockExplorers: {
+    default: { name: 'Explorer', url: 'https://explorer.apechain.com' },
+  },
+});
 
 /** Same layout as App but without RainbowKit – used when wallet config fails (e.g. missing env on Vercel) */
 function FallbackApp() {
@@ -49,6 +70,15 @@ try {
   config = getDefaultConfig({
     appName: 'J00BA',
     projectId,
+    chains: [mainnet, apechain],
+    transports: {
+      [mainnet.id]: import.meta.env.VITE_ALCHEMY_API_KEY_ETH
+        ? http(`https://eth-mainnet.g.alchemy.com/v2/${import.meta.env.VITE_ALCHEMY_API_KEY_ETH}`)
+        : http(),
+      [apechain.id]: import.meta.env.VITE_ALCHEMY_API_KEY_APECHAIN
+        ? http(`https://apechain-mainnet.g.alchemy.com/v2/${import.meta.env.VITE_ALCHEMY_API_KEY_APECHAIN}`)
+        : http('https://rpc.apechain.com'),
+    },
     ssr: false,
   });
 } catch (e) {
@@ -60,7 +90,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     {config ? (
       <WagmiProvider config={config}>
         <QueryClientProvider client={queryClient}>
-          <RainbowKitProvider>
+          <RainbowKitProvider modalSize="wide">
             <App />
           </RainbowKitProvider>
         </QueryClientProvider>
