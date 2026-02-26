@@ -191,15 +191,15 @@
   text-align: left;
 }
 
-/* Hover: gradient outline (::before = ring, ::after = inner fill so ring is visible) */
-.test-page-nav-btn:hover {
-  border-color: transparent;
-}
-.test-page-nav-btn:hover::before {
+/* Hover: rainbow underline */
+.test-page-nav-btn:hover::after {
   content: '';
   position: absolute;
-  inset: -1px;
-  border-radius: 11px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  border-radius: 0 0 10px 10px;
   background: linear-gradient(
     to right,
     rgb(255, 0, 0),
@@ -210,21 +210,7 @@
     rgb(153, 0, 255),
     rgb(255, 0, 179)
   );
-  z-index: 0;
-}
-.test-page-nav-btn:hover::after {
-  content: '';
-  position: absolute;
-  inset: 1px;
-  border-radius: 9px;
-  background: #1e1e1e;
-  z-index: 1;
   pointer-events: none;
-}
-.test-page-nav-btn .test-page-nav-icon,
-.test-page-nav-btn .test-page-nav-label {
-  position: relative;
-  z-index: 2;
 }
 
 /* Selected: same as sidebar, no extra border */
