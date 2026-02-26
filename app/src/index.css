@@ -79,7 +79,8 @@ body {
   flex-direction: row;
   flex-wrap: wrap;
   gap: 8px;
-  padding: 16px;
+  padding: 16px 16px 0 16px;
+  padding-bottom: 5%;
   flex-shrink: 0;
   justify-content: center;
 }
@@ -120,7 +121,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 8px;
+  gap: 0;
 }
 
 .app-sidebar-profile-pic-wrap {
@@ -148,6 +149,17 @@ body {
 .app-sidebar-profile-emoji {
   font-size: 2.5rem;
   line-height: 1;
+}
+
+/* Username and address block: separating line above with 5% gaps */
+.app-sidebar-profile-user {
+  margin-top: 5%;
+  padding-top: 5%;
+  border-top: 1px solid rgba(0, 0, 0, 0.3);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .app-sidebar-username {

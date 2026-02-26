@@ -92,9 +92,11 @@ export default function App() {
               </div>
             )}
           </div>
-          <div className="app-sidebar-username">{username || 'No username set'}</div>
-          <div className="app-sidebar-address" title={address || ''}>
-            {address ? formatAddress(address) : 'Not connected'}
+          <div className="app-sidebar-profile-user">
+            <div className="app-sidebar-username">{username || 'No username set'}</div>
+            <div className="app-sidebar-address" title={address || ''}>
+              {address ? formatAddress(address) : 'Not connected'}
+            </div>
           </div>
         </div>
       </aside>
