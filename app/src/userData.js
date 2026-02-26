@@ -38,7 +38,7 @@ export async function fetchUserProfile(walletAddress) {
   const normalized = walletAddress.toLowerCase();
   const { data, error } = await supabase
     .from(TABLE)
-    .select('username, profile_picture_url, first_logged_in_at')
+    .select('username, profile_picture_url, first_logged_in_at, profile_bio')
     .eq('wallet_address', normalized)
     .maybeSingle();
   if (error) {
@@ -50,21 +50,19 @@ export async function fetchUserProfile(walletAddress) {
     username: data.username ?? '',
     profilePictureUrl: data.profile_picture_url ?? '',
     firstLoggedInAt: data.first_logged_in_at ?? null,
+    profileBio: data.profile_bio ?? '',
   };
 }
 
-export async function updateUserProfile(walletAddress, { username, profilePictureUrl }) {
+export async function updateUserProfile(walletAddress, { username, profilePictureUrl, profileBio }) {
   if (!supabase || !walletAddress) return;
   const normalized = walletAddress.toLowerCase();
-  const { error } = await supabase
-    .from(TABLE)
-    .upsert(
-      {
-        wallet_address: normalized,
-        username: username ?? null,
-        profile_picture_url: profilePictureUrl ?? null,
-      },
-      { onConflict: 'wallet_address' }
-    );
+  const payload = {
+    wallet_address: normalized,
+    username: username ?? null,
+    profile_picture_url: profilePictureUrl ?? null,
+  };
+  if (profileBio !== undefined) payload.profile_bio = profileBio || null;
+  const { error } = await supabase.from(TABLE).upsert(payload, { onConflict: 'wallet_address' });
   if (error) console.warn('[userData] updateUserProfile failed', error);
 }

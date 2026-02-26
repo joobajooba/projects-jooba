@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
 import { WagmiProvider, http } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
@@ -11,6 +12,41 @@ import '@rainbow-me/rainbowkit/styles.css';
 import './index.css';
 
 const queryClient = new QueryClient();
+
+/** Catches render errors so we see a message instead of a blank screen (e.g. on Vercel) */
+class AppErrorBoundary extends React.Component {
+  state = { hasError: false, error: null };
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, info) {
+    console.error('App failed to render:', error, info);
+  }
+  render() {
+    if (this.state.hasError && this.state.error) {
+      return (
+        <div
+          style={{
+            minHeight: '100vh',
+            padding: 24,
+            background: '#1a1a1a',
+            color: '#e5e5e5',
+            fontFamily: 'system-ui, sans-serif',
+          }}
+        >
+          <h1 style={{ margin: '0 0 12px', fontSize: '1.25rem' }}>Something went wrong</h1>
+          <p style={{ margin: 0, color: '#a3a3a3', fontSize: 14 }}>
+            {this.state.error.message}
+          </p>
+          <p style={{ margin: '16px 0 0', fontSize: 12, color: '#737373' }}>
+            Check the browser console for details.
+          </p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const apechain = defineChain({
   id: 33139,
@@ -96,18 +132,27 @@ try {
   console.warn('Wallet config unavailable, showing layout without connect:', e?.message || e);
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    {config ? (
-      <WagmiProvider config={config}>
-        <QueryClientProvider client={queryClient}>
-          <RainbowKitProvider modalSize="wide">
-            <App />
-          </RainbowKitProvider>
-        </QueryClientProvider>
-      </WagmiProvider>
-    ) : (
-      <FallbackApp />
-    )}
-  </React.StrictMode>
-);
+const rootEl = document.getElementById('root');
+if (!rootEl) {
+  console.error('Root element #root not found');
+} else {
+  ReactDOM.createRoot(rootEl).render(
+    <React.StrictMode>
+      <AppErrorBoundary>
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          {config ? (
+            <WagmiProvider config={config}>
+              <QueryClientProvider client={queryClient}>
+                <RainbowKitProvider modalSize="wide">
+                  <App />
+                </RainbowKitProvider>
+              </QueryClientProvider>
+            </WagmiProvider>
+          ) : (
+            <FallbackApp />
+          )}
+        </BrowserRouter>
+      </AppErrorBoundary>
+    </React.StrictMode>
+  );
+}
