@@ -19,9 +19,6 @@ export default function App() {
                   <span className="app-sidebar-btn-icon" aria-hidden>
                     {connected ? '💳' : '🔗'}
                   </span>
-                  <span className="app-sidebar-btn-label">
-                    {connected ? 'Wallet' : 'Connect wallet'}
-                  </span>
                 </button>
               );
             }}
@@ -33,7 +30,6 @@ export default function App() {
             aria-label="Profile sign in"
           >
             <span className="app-sidebar-btn-icon" aria-hidden>👤</span>
-            <span className="app-sidebar-btn-label">Profile</span>
           </button>
           <button
             type="button"
@@ -42,7 +38,6 @@ export default function App() {
             aria-label="Info"
           >
             <span className="app-sidebar-btn-icon" aria-hidden>ℹ️</span>
-            <span className="app-sidebar-btn-label">Info</span>
           </button>
           <button
             type="button"
@@ -51,7 +46,6 @@ export default function App() {
             aria-label="Settings"
           >
             <span className="app-sidebar-btn-icon" aria-hidden>⚙️</span>
-            <span className="app-sidebar-btn-label">Settings</span>
           </button>
         </div>
       </aside>

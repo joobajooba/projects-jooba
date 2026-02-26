@@ -76,26 +76,27 @@ body {
 
 .app-sidebar-header {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 8px;
   padding: 16px;
   flex-shrink: 0;
+  justify-content: center;
 }
 
 .app-sidebar-btn {
   display: flex;
   align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 12px 14px;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
   border: none;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.08);
   color: rgba(255, 255, 255, 0.9);
   font-size: 14px;
-  font-weight: 500;
   cursor: pointer;
-  text-align: left;
   transition: background 0.2s;
 }
 
@@ -106,10 +107,6 @@ body {
 .app-sidebar-btn-icon {
   font-size: 1.25rem;
   line-height: 1;
-}
-
-.app-sidebar-btn-label {
-  flex: 1;
 }
 
 /* Main: dark grey gradient */

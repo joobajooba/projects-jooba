@@ -18,19 +18,15 @@ function FallbackApp() {
         <div className="app-sidebar-header">
           <button type="button" className="app-sidebar-btn" title="Connect wallet" aria-label="Connect wallet">
             <span className="app-sidebar-btn-icon" aria-hidden>🔗</span>
-            <span className="app-sidebar-btn-label">Connect wallet</span>
           </button>
           <button type="button" className="app-sidebar-btn" title="Profile" aria-label="Profile sign in">
             <span className="app-sidebar-btn-icon" aria-hidden>👤</span>
-            <span className="app-sidebar-btn-label">Profile</span>
           </button>
           <button type="button" className="app-sidebar-btn" title="Information" aria-label="Info">
             <span className="app-sidebar-btn-icon" aria-hidden>ℹ️</span>
-            <span className="app-sidebar-btn-label">Info</span>
           </button>
           <button type="button" className="app-sidebar-btn" title="Settings" aria-label="Settings">
             <span className="app-sidebar-btn-icon" aria-hidden>⚙️</span>
-            <span className="app-sidebar-btn-label">Settings</span>
           </button>
         </div>
       </aside>
