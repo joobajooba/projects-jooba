@@ -220,6 +220,21 @@ body {
   color: #fff;
 }
 
+.app-sidebar-nav-icon {
+  display: inline-block;
+  margin-right: 8px;
+  font-size: 1.1em;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+/* Separating line 5% below nav (below Mint) */
+.app-sidebar-nav-sep {
+  margin-top: 5%;
+  width: 100%;
+  border-top: 1px solid rgba(0, 0, 0, 0.3);
+}
+
 /* Profile modal */
 .app-modal-overlay {
   position: fixed;

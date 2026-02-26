@@ -150,12 +150,23 @@ export default function App() {
           </div>
         </div>
         <nav className="app-sidebar-nav" aria-label="Main">
-          <NavLink to="/" className={({ isActive }) => `app-sidebar-nav-link${isActive ? ' active' : ''}`} end>Home</NavLink>
-          <NavLink to="/games" className={({ isActive }) => `app-sidebar-nav-link${isActive ? ' active' : ''}`}>Games</NavLink>
-          <NavLink to="/community" className={({ isActive }) => `app-sidebar-nav-link${isActive ? ' active' : ''}`}>Community</NavLink>
-          <NavLink to="/projects" className={({ isActive }) => `app-sidebar-nav-link${isActive ? ' active' : ''}`}>Projects</NavLink>
-          <NavLink to="/mint" className={({ isActive }) => `app-sidebar-nav-link${isActive ? ' active' : ''}`}>Mint</NavLink>
+          <NavLink to="/" className={({ isActive }) => `app-sidebar-nav-link${isActive ? ' active' : ''}`} end>
+            <span className="app-sidebar-nav-icon" aria-hidden>🏠</span> Home
+          </NavLink>
+          <NavLink to="/games" className={({ isActive }) => `app-sidebar-nav-link${isActive ? ' active' : ''}`}>
+            <span className="app-sidebar-nav-icon" aria-hidden>🎮</span> Games
+          </NavLink>
+          <NavLink to="/community" className={({ isActive }) => `app-sidebar-nav-link${isActive ? ' active' : ''}`}>
+            <span className="app-sidebar-nav-icon" aria-hidden>👥</span> Community
+          </NavLink>
+          <NavLink to="/projects" className={({ isActive }) => `app-sidebar-nav-link${isActive ? ' active' : ''}`}>
+            <span className="app-sidebar-nav-icon" aria-hidden>📁</span> Projects
+          </NavLink>
+          <NavLink to="/mint" className={({ isActive }) => `app-sidebar-nav-link${isActive ? ' active' : ''}`}>
+            <span className="app-sidebar-nav-icon" aria-hidden>🪙</span> Mint
+          </NavLink>
         </nav>
+        <div className="app-sidebar-nav-sep" aria-hidden />
       </aside>
 
       <main className="app-main">
