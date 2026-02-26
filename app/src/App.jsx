@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { loadProfile, saveProfile } from './profileStorage';
+import { ensureUserRow, fetchUserProfile, updateUserProfile } from './userData';
 import NFTSelector from './NFTSelector';
 
 function formatAddress(addr) {
@@ -18,11 +19,20 @@ export default function App() {
 
   useEffect(() => {
     if (!address) return;
-    const p = loadProfile(address);
-    if (p) {
-      setUsername(p.username);
-      setProfilePictureUrl(p.profilePictureUrl);
-    }
+    let cancelled = false;
+    (async () => {
+      await ensureUserRow(address);
+      if (cancelled) return;
+      const fromDb = await fetchUserProfile(address);
+      if (cancelled) return;
+      const fromLocal = loadProfile(address);
+      const username = fromDb?.username ?? fromLocal?.username ?? '';
+      const profilePictureUrl = fromDb?.profilePictureUrl ?? fromLocal?.profilePictureUrl ?? '';
+      setUsername(username);
+      setProfilePictureUrl(profilePictureUrl);
+      saveProfile(address, { username, profilePictureUrl });
+    })();
+    return () => { cancelled = true; };
   }, [address]);
 
   useEffect(() => {
@@ -36,6 +46,10 @@ export default function App() {
   };
 
   const handleProfileSave = () => {
+    if (address) {
+      updateUserProfile(address, { username, profilePictureUrl });
+      saveProfile(address, { username, profilePictureUrl });
+    }
     setProfileOpen(false);
   };
 
