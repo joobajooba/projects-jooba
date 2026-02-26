@@ -320,6 +320,26 @@ export default function TestPage() {
             </span>
             <span className="test-page-nav-label">Community</span>
           </button>
+          <button
+            type="button"
+            className={`test-page-nav-btn ${sidebarView === 'projects' ? 'test-page-nav-btn-active' : ''}`}
+            onClick={() => setSidebarView('projects')}
+          >
+            <span className="test-page-nav-icon" aria-hidden>
+              <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" /></svg>
+            </span>
+            <span className="test-page-nav-label">Projects</span>
+          </button>
+          <button
+            type="button"
+            className={`test-page-nav-btn ${sidebarView === 'games' ? 'test-page-nav-btn-active' : ''}`}
+            onClick={() => setSidebarView('games')}
+          >
+            <span className="test-page-nav-icon" aria-hidden>
+              <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M21.58 16.09l-1.09-7.66A3.996 3.996 0 0 0 16.53 5H7.47C5.48 5 3.79 6.46 3.51 8.43l-1.09 7.66C2.2 17.63 3.39 19 4.94 19c.68 0 1.32-.27 1.8-.75L9 15h6l2.25 3.25c.49.49 1.13.75 1.8.75 1.56 0 2.75-1.37 2.44-2.91zM11 11H9v2H8v-2H6v-1h2V8h1v2h2v1zm4-1c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm2 3c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z" /></svg>
+            </span>
+            <span className="test-page-nav-label">Games</span>
+          </button>
         </nav>
       </aside>
 
@@ -343,6 +363,16 @@ export default function TestPage() {
                 <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" /></svg>
               </span>
             </div>
+          </div>
+        )}
+        {sidebarView === 'projects' && (
+          <div className="test-page-content">
+            <h1 className="test-page-content-title">Projects</h1>
+          </div>
+        )}
+        {sidebarView === 'games' && (
+          <div className="test-page-content">
+            <h1 className="test-page-content-title">Games</h1>
           </div>
         )}
       </main>
