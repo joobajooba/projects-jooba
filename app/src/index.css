@@ -4,10 +4,17 @@
   box-sizing: border-box;
 }
 
+html,
 body {
   margin: 0;
+  min-height: 100vh;
   font-family: system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+  /* Fallback so page is never white (e.g. before React mounts or on error) */
+  background: linear-gradient(180deg, #252525 0%, #1a1a1a 50%, #0f0f0f 100%);
+}
+
+#root {
   min-height: 100vh;
 }
 
@@ -19,6 +26,7 @@ body {
 
 /* Sidebar: 250px wide, 100% height, dark grey gradient */
 .app-sidebar {
+  position: relative;
   width: 250px;
   min-width: 250px;
   height: 100vh;
@@ -31,6 +39,39 @@ body {
   );
   display: flex;
   flex-direction: column;
+}
+
+/* Rainbow gradient right border – animates vertically in a loop */
+.app-sidebar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 3px;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    #ff0000 0%,
+    #ff7f00 14%,
+    #ffff00 28%,
+    #00ff00 42%,
+    #0000ff 57%,
+    #4b0082 71%,
+    #8f00ff 85%,
+    #ff0000 100%
+  );
+  background-size: 100% 200%;
+  animation: app-sidebar-rainbow 3s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes app-sidebar-rainbow {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 100%;
+  }
 }
 
 .app-sidebar-header {
