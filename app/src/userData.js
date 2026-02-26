@@ -36,9 +36,10 @@ export async function ensureUserRow(walletAddress) {
 export async function fetchUserProfile(walletAddress) {
   if (!supabase || !walletAddress) return null;
   const normalized = walletAddress.toLowerCase();
+  // Select only columns that exist in user_data (profile_bio is optional – add via add_user_data_profile_page.sql)
   const { data, error } = await supabase
     .from(TABLE)
-    .select('username, profile_picture_url, first_logged_in_at, profile_bio')
+    .select('username, profile_picture_url, first_logged_in_at')
     .eq('wallet_address', normalized)
     .maybeSingle();
   if (error) {
@@ -62,7 +63,17 @@ export async function updateUserProfile(walletAddress, { username, profilePictur
     username: username ?? null,
     profile_picture_url: profilePictureUrl ?? null,
   };
+  // Only send profile_bio if your table has it (run supabase/migrations/add_user_data_profile_page.sql)
   if (profileBio !== undefined) payload.profile_bio = profileBio || null;
   const { error } = await supabase.from(TABLE).upsert(payload, { onConflict: 'wallet_address' });
-  if (error) console.warn('[userData] updateUserProfile failed', error);
+  if (error) {
+    if (error.code === '42703') {
+      // Column profile_bio does not exist – retry without it
+      delete payload.profile_bio;
+      const { error: err2 } = await supabase.from(TABLE).upsert(payload, { onConflict: 'wallet_address' });
+      if (err2) console.warn('[userData] updateUserProfile failed', err2);
+    } else {
+      console.warn('[userData] updateUserProfile failed', error);
+    }
+  }
 }
