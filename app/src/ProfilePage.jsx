@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAccount } from 'wagmi';
-import { fetchUserProfile, updateUserProfile } from './userData';
+import { fetchUserProfile } from './userData';
 
 function formatAddress(addr) {
   if (!addr || addr.length < 10) return addr || '';
@@ -16,8 +16,6 @@ export default function ProfilePage() {
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [editingBio, setEditingBio] = useState(false);
-  const [bioDraft, setBioDraft] = useState('');
 
   useEffect(() => {
     if (!walletAddress) {
@@ -31,18 +29,10 @@ export default function ProfilePage() {
       const data = await fetchUserProfile(walletAddress);
       if (cancelled) return;
       setProfile(data);
-      setBioDraft(data?.profileBio ?? '');
       setLoading(false);
     })();
     return () => { cancelled = true; };
   }, [walletAddress]);
-
-  const handleSaveBio = async () => {
-    if (!connectedAddress || !isOwnProfile) return;
-    await updateUserProfile(connectedAddress, { profileBio: bioDraft });
-    setProfile((p) => (p ? { ...p, profileBio: bioDraft } : null));
-    setEditingBio(false);
-  };
 
   if (!walletAddress) {
     return (
@@ -76,7 +66,7 @@ export default function ProfilePage() {
     <div className="app-main-inner app-profile-page">
       <Link to="/" className="app-profile-back">← Back</Link>
       <div className="app-profile-card">
-        <div className="app-profile-card-pic-wrap">
+        <div className={`app-profile-card-pic-wrap${profile.profilePictureBorder ? ` profile-pic-border profile-pic-border-${profile.profilePictureBorder}` : ''}`}>
           {profile.profilePictureUrl ? (
             <img
               src={profile.profilePictureUrl}
@@ -100,59 +90,12 @@ export default function ProfilePage() {
             Member since {new Date(profile.firstLoggedInAt).toLocaleDateString()}
           </p>
         )}
-        {isOwnProfile ? (
-          <div className="app-profile-bio-block">
-            {editingBio ? (
-              <>
-                <label className="app-modal-label">Bio</label>
-                <textarea
-                  className="app-profile-bio-input"
-                  value={bioDraft}
-                  onChange={(e) => setBioDraft(e.target.value)}
-                  placeholder="Tell others about yourself…"
-                  rows={3}
-                />
-                <div className="app-profile-bio-actions">
-                  <button
-                    type="button"
-                    className="app-modal-btn app-modal-btn-primary"
-                    onClick={handleSaveBio}
-                  >
-                    Save
-                  </button>
-                  <button
-                    type="button"
-                    className="app-modal-btn app-modal-btn-secondary"
-                    onClick={() => { setEditingBio(false); setBioDraft(profile.profileBio ?? ''); }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <p className="app-profile-bio-label">Bio</p>
-                <p className="app-profile-bio-text">
-                  {profile.profileBio || 'No bio set.'}
-                </p>
-                <button
-                  type="button"
-                  className="app-modal-btn app-modal-btn-secondary app-profile-edit-bio"
-                  onClick={() => setEditingBio(true)}
-                >
-                  {profile.profileBio ? 'Edit bio' : 'Add bio'}
-                </button>
-              </>
-            )}
-          </div>
-        ) : (
-          <div className="app-profile-bio-block">
-            <p className="app-profile-bio-label">Bio</p>
-            <p className="app-profile-bio-text">
-              {profile.profileBio || 'No bio set.'}
-            </p>
-          </div>
-        )}
+        <div className="app-profile-bio-block">
+          <p className="app-profile-bio-label">Bio</p>
+          <p className="app-profile-bio-text">
+            {profile.profileBio || 'No bio set.'}
+          </p>
+        </div>
       </div>
     </div>
   );

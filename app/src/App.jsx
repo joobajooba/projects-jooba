@@ -29,6 +29,8 @@ export default function App() {
   const [nftSelectorOpen, setNftSelectorOpen] = useState(false);
   const [username, setUsername] = useState('');
   const [profilePictureUrl, setProfilePictureUrl] = useState('');
+  const [profileBio, setProfileBio] = useState('');
+  const [profilePictureBorder, setProfilePictureBorder] = useState('');
 
   useEffect(() => {
     if (!address) return;
@@ -41,8 +43,12 @@ export default function App() {
       const fromLocal = loadProfile(address);
       const username = fromDb?.username ?? fromLocal?.username ?? '';
       const profilePictureUrl = fromDb?.profilePictureUrl ?? fromLocal?.profilePictureUrl ?? '';
+      const profileBio = fromDb?.profileBio ?? '';
+      const profilePictureBorder = fromDb?.profilePictureBorder ?? '';
       setUsername(username);
       setProfilePictureUrl(profilePictureUrl);
+      setProfileBio(profileBio);
+      setProfilePictureBorder(profilePictureBorder);
       saveProfile(address, { username, profilePictureUrl });
     })();
     return () => { cancelled = true; };
@@ -60,7 +66,7 @@ export default function App() {
 
   const handleProfileSave = () => {
     if (address) {
-      updateUserProfile(address, { username, profilePictureUrl });
+      updateUserProfile(address, { username, profilePictureUrl, profileBio, profilePictureBorder });
       saveProfile(address, { username, profilePictureUrl });
     }
     setProfileOpen(false);
@@ -106,7 +112,7 @@ export default function App() {
         </div>
 
         <div className="app-sidebar-profile">
-          <div className="app-sidebar-profile-pic-wrap">
+          <div className={`app-sidebar-profile-pic-wrap${profilePictureBorder ? ` profile-pic-border profile-pic-border-${profilePictureBorder}` : ''}`}>
             {address ? (
               <Link
                 to="/profile"
@@ -209,6 +215,16 @@ export default function App() {
                 autoComplete="username"
               />
             </label>
+            <label className="app-modal-label">
+              Bio
+              <textarea
+                className="app-modal-input app-profile-bio-input"
+                value={profileBio}
+                onChange={(e) => setProfileBio(e.target.value)}
+                placeholder="Tell others about yourself…"
+                rows={3}
+              />
+            </label>
             <p className="app-modal-section-title">Set profile picture</p>
             <div className="app-modal-actions">
               <button
@@ -218,6 +234,38 @@ export default function App() {
               >
                 Choose NFT from wallet
               </button>
+            </div>
+            <p className="app-modal-section-title">Profile picture border</p>
+            <div className="app-modal-border-options">
+              <button
+                type="button"
+                className={`app-modal-border-btn ${profilePictureBorder === 'red' ? 'active' : ''}`}
+                onClick={() => setProfilePictureBorder(profilePictureBorder === 'red' ? '' : 'red')}
+                title="Red gradient"
+              >
+                <span className="app-modal-border-swatch app-modal-border-red" aria-hidden />
+                Red
+              </button>
+              <button
+                type="button"
+                className={`app-modal-border-btn ${profilePictureBorder === 'blue' ? 'active' : ''}`}
+                onClick={() => setProfilePictureBorder(profilePictureBorder === 'blue' ? '' : 'blue')}
+                title="Blue gradient"
+              >
+                <span className="app-modal-border-swatch app-modal-border-blue" aria-hidden />
+                Blue
+              </button>
+              <button
+                type="button"
+                className={`app-modal-border-btn ${profilePictureBorder === 'green' ? 'active' : ''}`}
+                onClick={() => setProfilePictureBorder(profilePictureBorder === 'green' ? '' : 'green')}
+                title="Green gradient"
+              >
+                <span className="app-modal-border-swatch app-modal-border-green" aria-hidden />
+                Green
+              </button>
+            </div>
+            <div className="app-modal-actions" style={{ marginTop: 16 }}>
               <button type="button" className="app-modal-btn app-modal-btn-primary" onClick={handleProfileSave}>
                 Done
               </button>
