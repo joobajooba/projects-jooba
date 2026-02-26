@@ -226,8 +226,8 @@ export default function App() {
       {nftSelectorOpen && address && (
         <NFTSelector
           ownerAddress={address}
-          apiKeyEth={getAlchemyApiKey(import.meta.env.VITE_ALCHEMY_API_KEY_ETH)}
-          apiKeyApechain={getAlchemyApiKey(import.meta.env.VITE_ALCHEMY_API_KEY_APECHAIN)}
+          apiKeyEth={getAlchemyApiKey(import.meta.env.VITE_ALCHEMY_API_KEY_ETH || import.meta.env.VITE_ALCHEMY_API_KEY)}
+          apiKeyApechain={getAlchemyApiKey(import.meta.env.VITE_ALCHEMY_API_KEY_APECHAIN || import.meta.env.VITE_ALCHEMY_API_KEY)}
           onSelect={handleNftSelect}
           onClose={() => setNftSelectorOpen(false)}
         />

@@ -120,8 +120,8 @@ try {
     projectId,
     chains: [mainnet, apechain],
     transports: (() => {
-      const ethKey = getAlchemyApiKey(import.meta.env.VITE_ALCHEMY_API_KEY_ETH);
-      const apeKey = getAlchemyApiKey(import.meta.env.VITE_ALCHEMY_API_KEY_APECHAIN);
+      const ethKey = getAlchemyApiKey(import.meta.env.VITE_ALCHEMY_API_KEY_ETH || import.meta.env.VITE_ALCHEMY_API_KEY);
+      const apeKey = getAlchemyApiKey(import.meta.env.VITE_ALCHEMY_API_KEY_APECHAIN || import.meta.env.VITE_ALCHEMY_API_KEY);
       return {
         [mainnet.id]: ethKey ? http(`https://eth-mainnet.g.alchemy.com/v2/${ethKey}`) : http(),
         [apechain.id]: apeKey ? http(`https://apechain-mainnet.g.alchemy.com/v2/${apeKey}`) : http('https://rpc.apechain.com'),
