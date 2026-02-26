@@ -50,6 +50,15 @@ function FallbackApp() {
             <span className="app-sidebar-btn-icon" aria-hidden>⚙️</span>
           </button>
         </div>
+        <div className="app-sidebar-profile">
+          <div className="app-sidebar-profile-pic-wrap">
+            <div className="app-sidebar-profile-pic app-sidebar-profile-pic-placeholder" aria-hidden>
+              <span className="app-sidebar-profile-emoji">☺</span>
+            </div>
+          </div>
+          <div className="app-sidebar-username">No username set</div>
+          <div className="app-sidebar-address">Not connected</div>
+        </div>
       </aside>
       <main className="app-main">
         <div className="app-main-inner">
