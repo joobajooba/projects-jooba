@@ -8,6 +8,7 @@ import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 import { mainnet } from 'wagmi/chains';
 import { defineChain } from 'viem/chains/utils';
 import App from './App';
+import { getAlchemyApiKey } from './lib/alchemy';
 import '@rainbow-me/rainbowkit/styles.css';
 import './index.css';
 
@@ -118,14 +119,14 @@ try {
     appName: 'J00BA',
     projectId,
     chains: [mainnet, apechain],
-    transports: {
-      [mainnet.id]: import.meta.env.VITE_ALCHEMY_API_KEY_ETH
-        ? http(`https://eth-mainnet.g.alchemy.com/v2/${import.meta.env.VITE_ALCHEMY_API_KEY_ETH}`)
-        : http(),
-      [apechain.id]: import.meta.env.VITE_ALCHEMY_API_KEY_APECHAIN
-        ? http(`https://apechain-mainnet.g.alchemy.com/v2/${import.meta.env.VITE_ALCHEMY_API_KEY_APECHAIN}`)
-        : http('https://rpc.apechain.com'),
-    },
+    transports: (() => {
+      const ethKey = getAlchemyApiKey(import.meta.env.VITE_ALCHEMY_API_KEY_ETH);
+      const apeKey = getAlchemyApiKey(import.meta.env.VITE_ALCHEMY_API_KEY_APECHAIN);
+      return {
+        [mainnet.id]: ethKey ? http(`https://eth-mainnet.g.alchemy.com/v2/${ethKey}`) : http(),
+        [apechain.id]: apeKey ? http(`https://apechain-mainnet.g.alchemy.com/v2/${apeKey}`) : http('https://rpc.apechain.com'),
+      };
+    })(),
     ssr: false,
   });
 } catch (e) {

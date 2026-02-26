@@ -16,6 +16,8 @@ function PlaceholderPage({ title }) {
   );
 }
 
+import { getAlchemyApiKey } from './lib/alchemy';
+
 function formatAddress(addr) {
   if (!addr || addr.length < 10) return addr || '';
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
@@ -224,8 +226,8 @@ export default function App() {
       {nftSelectorOpen && address && (
         <NFTSelector
           ownerAddress={address}
-          apiKeyEth={import.meta.env.VITE_ALCHEMY_API_KEY_ETH}
-          apiKeyApechain={import.meta.env.VITE_ALCHEMY_API_KEY_APECHAIN}
+          apiKeyEth={getAlchemyApiKey(import.meta.env.VITE_ALCHEMY_API_KEY_ETH)}
+          apiKeyApechain={getAlchemyApiKey(import.meta.env.VITE_ALCHEMY_API_KEY_APECHAIN)}
           onSelect={handleNftSelect}
           onClose={() => setNftSelectorOpen(false)}
         />
