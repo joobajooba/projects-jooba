@@ -128,6 +128,19 @@ body {
   display: block;
 }
 
+.app-sidebar-profile-pic-link {
+  display: block;
+  width: 100%;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 4px;
+  transition: opacity 0.2s, background 0.2s;
+}
+.app-sidebar-profile-pic-link:hover {
+  opacity: 0.9;
+  background: rgba(255, 255, 255, 0.04);
+}
+
 .app-sidebar-profile-pic {
   width: 100%;
   aspect-ratio: 1;
@@ -175,6 +188,36 @@ body {
   color: rgba(255, 255, 255, 0.55);
   font-family: ui-monospace, monospace;
   text-align: left;
+}
+
+/* Sidebar nav: 5% gap from profile separating line */
+.app-sidebar-nav {
+  margin-top: 5%;
+  padding: 0 5%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.app-sidebar-nav-link {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+}
+
+.app-sidebar-nav-link:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.app-sidebar-nav-link.active {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
 }
 
 /* Profile modal */
@@ -229,6 +272,13 @@ body {
 
 .app-modal-input::placeholder {
   color: rgba(255, 255, 255, 0.4);
+}
+
+.app-modal-section-title {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .app-modal-actions {
@@ -336,6 +386,48 @@ body {
   background: rgba(255, 255, 255, 0.14);
 }
 
+.app-nft-selector-network {
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.app-nft-selector-network-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.app-nft-selector-network-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.app-nft-selector-network-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.8);
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.app-nft-selector-network-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.app-nft-selector-network-btn.active {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #fff;
+}
+
 .app-nft-selector-message,
 .app-nft-selector-error {
   margin: 0 0 12px;
@@ -411,4 +503,117 @@ body {
 .app-main-inner p {
   margin: 0;
   color: rgba(255, 255, 255, 0.7);
+}
+
+/* Profile page */
+.app-profile-back {
+  display: inline-block;
+  margin-bottom: 20px;
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.2s;
+}
+.app-profile-back:hover {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.app-profile-page {
+  max-width: 480px;
+}
+
+.app-profile-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.app-profile-card-pic-wrap {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 16px;
+}
+
+.app-profile-card-pic {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+.app-profile-card-pic-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-profile-card-username {
+  margin: 0 0 4px;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.app-profile-card-address {
+  text-align: center;
+  font-size: 13px;
+  font-family: ui-monospace, monospace;
+  color: rgba(255, 255, 255, 0.55);
+  margin-bottom: 8px;
+}
+
+.app-profile-card-meta {
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 20px;
+}
+
+.app-profile-bio-block {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.app-profile-bio-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0 0 6px;
+}
+
+.app-profile-bio-text {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0 0 10px;
+  white-space: pre-wrap;
+}
+
+.app-profile-bio-input {
+  display: block;
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.app-profile-bio-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.app-profile-edit-bio {
+  margin-top: 4px;
 }

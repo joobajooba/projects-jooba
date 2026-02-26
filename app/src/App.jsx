@@ -1,9 +1,20 @@
 import { useState, useEffect } from 'react';
+import { Routes, Route, Link, NavLink } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { loadProfile, saveProfile } from './profileStorage';
 import { ensureUserRow, fetchUserProfile, updateUserProfile } from './userData';
 import NFTSelector from './NFTSelector';
+import ProfilePage from './ProfilePage';
+
+function PlaceholderPage({ title }) {
+  return (
+    <div className="app-main-inner">
+      <h1>{title}</h1>
+      <p>Coming soon.</p>
+    </div>
+  );
+}
 
 function formatAddress(addr) {
   if (!addr || addr.length < 10) return addr || '';
@@ -94,16 +105,39 @@ export default function App() {
 
         <div className="app-sidebar-profile">
           <div className="app-sidebar-profile-pic-wrap">
-            {profilePictureUrl ? (
-              <img
-                src={profilePictureUrl}
-                alt="Profile"
-                className="app-sidebar-profile-pic"
-              />
+            {address ? (
+              <Link
+                to="/profile"
+                className="app-sidebar-profile-pic-link"
+                title="View your profile"
+                aria-label="View your profile"
+              >
+                {profilePictureUrl ? (
+                  <img
+                    src={profilePictureUrl}
+                    alt="Profile"
+                    className="app-sidebar-profile-pic"
+                  />
+                ) : (
+                  <div className="app-sidebar-profile-pic app-sidebar-profile-pic-placeholder" aria-hidden>
+                    <span className="app-sidebar-profile-emoji">☺</span>
+                  </div>
+                )}
+              </Link>
             ) : (
-              <div className="app-sidebar-profile-pic app-sidebar-profile-pic-placeholder" aria-hidden>
-                <span className="app-sidebar-profile-emoji">☺</span>
-              </div>
+              <>
+                {profilePictureUrl ? (
+                  <img
+                    src={profilePictureUrl}
+                    alt="Profile"
+                    className="app-sidebar-profile-pic"
+                  />
+                ) : (
+                  <div className="app-sidebar-profile-pic app-sidebar-profile-pic-placeholder" aria-hidden>
+                    <span className="app-sidebar-profile-emoji">☺</span>
+                  </div>
+                )}
+              </>
             )}
           </div>
           <div className="app-sidebar-profile-user">
@@ -113,13 +147,30 @@ export default function App() {
             </div>
           </div>
         </div>
+        <nav className="app-sidebar-nav" aria-label="Main">
+          <NavLink to="/" className={({ isActive }) => `app-sidebar-nav-link${isActive ? ' active' : ''}`} end>Home</NavLink>
+          <NavLink to="/games" className={({ isActive }) => `app-sidebar-nav-link${isActive ? ' active' : ''}`}>Games</NavLink>
+          <NavLink to="/community" className={({ isActive }) => `app-sidebar-nav-link${isActive ? ' active' : ''}`}>Community</NavLink>
+          <NavLink to="/projects" className={({ isActive }) => `app-sidebar-nav-link${isActive ? ' active' : ''}`}>Projects</NavLink>
+          <NavLink to="/mint" className={({ isActive }) => `app-sidebar-nav-link${isActive ? ' active' : ''}`}>Mint</NavLink>
+        </nav>
       </aside>
 
       <main className="app-main">
-        <div className="app-main-inner">
-          <h1>J00BA</h1>
-          <p>Start from here.</p>
-        </div>
+        <Routes>
+          <Route path="/" element={
+            <div className="app-main-inner">
+              <h1>J00BA</h1>
+              <p>Start from here.</p>
+            </div>
+          } />
+          <Route path="/games" element={<PlaceholderPage title="Games" />} />
+          <Route path="/community" element={<PlaceholderPage title="Community" />} />
+          <Route path="/projects" element={<PlaceholderPage title="Projects" />} />
+          <Route path="/mint" element={<PlaceholderPage title="Mint" />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/profile/:walletAddress" element={<ProfilePage />} />
+        </Routes>
       </main>
 
       {profileOpen && (
@@ -145,6 +196,7 @@ export default function App() {
                 autoComplete="username"
               />
             </label>
+            <p className="app-modal-section-title">Set profile picture</p>
             <div className="app-modal-actions">
               <button
                 type="button"
@@ -172,7 +224,8 @@ export default function App() {
       {nftSelectorOpen && address && (
         <NFTSelector
           ownerAddress={address}
-          apiKey={import.meta.env.VITE_ALCHEMY_API_KEY_ETH}
+          apiKeyEth={import.meta.env.VITE_ALCHEMY_API_KEY_ETH}
+          apiKeyApechain={import.meta.env.VITE_ALCHEMY_API_KEY_APECHAIN}
           onSelect={handleNftSelect}
           onClose={() => setNftSelectorOpen(false)}
         />

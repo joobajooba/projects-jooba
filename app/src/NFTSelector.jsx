@@ -1,22 +1,49 @@
 import { useState, useEffect } from 'react';
 
-const ALCHEMY_NFT_API = 'https://eth-mainnet.g.alchemy.com/nft/v3';
+const NETWORKS = {
+  ethereum: {
+    label: 'Ethereum',
+    baseUrl: 'https://eth-mainnet.g.alchemy.com/nft/v3',
+  },
+  apechain: {
+    label: 'Apechain',
+    baseUrl: 'https://apechain-mainnet.g.alchemy.com/nft/v3',
+  },
+};
 
 /**
  * Fetches NFTs owned by address via Alchemy NFT API and lets user pick one for profile picture.
+ * Supports switching between Ethereum and Apechain.
  */
-export default function NFTSelector({ ownerAddress, apiKey, onSelect, onClose }) {
+export default function NFTSelector({
+  ownerAddress,
+  apiKeyEth,
+  apiKeyApechain,
+  onSelect,
+  onClose,
+}) {
+  const [network, setNetwork] = useState('ethereum');
   const [nfts, setNfts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const config = NETWORKS[network];
+  const apiKey = network === 'ethereum' ? apiKeyEth : apiKeyApechain;
+
   useEffect(() => {
-    if (!ownerAddress || !apiKey) {
+    if (!ownerAddress) {
       setLoading(false);
-      setError('Missing wallet or API key');
+      setError('Missing wallet');
       return;
     }
-    const url = `${ALCHEMY_NFT_API}/${apiKey}/getNFTsForOwner?owner=${ownerAddress}&pageSize=50&withMetadata=true`;
+    if (!apiKey) {
+      setLoading(false);
+      setError(`Missing API key for ${config?.label ?? network}`);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    const url = `${config.baseUrl}/${apiKey}/getNFTsForOwner?owner=${ownerAddress}&pageSize=50&withMetadata=true`;
     fetch(url)
       .then((res) => res.json())
       .then((data) => {
@@ -29,7 +56,7 @@ export default function NFTSelector({ ownerAddress, apiKey, onSelect, onClose })
         setNfts([]);
       })
       .finally(() => setLoading(false));
-  }, [ownerAddress, apiKey]);
+  }, [ownerAddress, network, apiKey, config?.baseUrl]);
 
   function getImageUrl(nft) {
     return (
@@ -51,10 +78,29 @@ export default function NFTSelector({ ownerAddress, apiKey, onSelect, onClose })
             ×
           </button>
         </div>
+        <div className="app-nft-selector-network">
+          <span className="app-nft-selector-network-label">Network</span>
+          <div className="app-nft-selector-network-btns">
+            <button
+              type="button"
+              className={`app-nft-selector-network-btn ${network === 'ethereum' ? 'active' : ''}`}
+              onClick={() => setNetwork('ethereum')}
+            >
+              Ethereum
+            </button>
+            <button
+              type="button"
+              className={`app-nft-selector-network-btn ${network === 'apechain' ? 'active' : ''}`}
+              onClick={() => setNetwork('apechain')}
+            >
+              Apechain
+            </button>
+          </div>
+        </div>
         {loading && <p className="app-nft-selector-message">Loading your NFTs…</p>}
         {error && <p className="app-nft-selector-error">{error}</p>}
         {!loading && !error && nfts.length === 0 && (
-          <p className="app-nft-selector-message">No NFTs with images found in this wallet.</p>
+          <p className="app-nft-selector-message">No NFTs with images found on {config?.label ?? network}.</p>
         )}
         <div className="app-nft-selector-grid">
           {nfts.map((nft) => {
