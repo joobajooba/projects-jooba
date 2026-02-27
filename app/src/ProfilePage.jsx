@@ -97,7 +97,6 @@ export default function ProfilePage() {
 
   return (
     <div className="app-main-inner app-profile-page">
-      <Link to="/" className="app-profile-back">← Back</Link>
       <div className="app-profile-card">
         <div className={`app-profile-card-pic-wrap${profile.profilePictureBorder ? ` profile-pic-border profile-pic-border-${profile.profilePictureBorder}` : ''}`}>
           {profile.profilePictureUrl ? (
@@ -129,6 +128,9 @@ export default function ProfilePage() {
             {profile.profileBio || 'No bio set.'}
           </p>
         </div>
+      </div>
+      <div className="app-profile-stats-card">
+        <h2 className="app-profile-stats-title">Profile stats</h2>
       </div>
     </div>
   );
