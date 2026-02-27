@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAccount } from 'wagmi';
+import { getAlchemyApiKey } from './lib/alchemy';
 import { loadProfile } from './profileStorage';
 import { fetchUserProfile } from './userData';
+import MosaicCreator from './MosaicCreator';
 
 function formatAddress(addr) {
   if (!addr || addr.length < 10) return addr || '';
@@ -17,6 +19,7 @@ export default function ProfilePage() {
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [mosaicOpen, setMosaicOpen] = useState(false);
 
   function withLocalFallback(data) {
     if (!data || !isOwnProfile || !connectedAddress) return data;
@@ -131,7 +134,24 @@ export default function ProfilePage() {
       </div>
       <div className="app-profile-stats-card">
         <h2 className="app-profile-stats-title">Profile stats</h2>
+        {isOwnProfile && connectedAddress && (
+          <button
+            type="button"
+            className="app-profile-mosaic-btn"
+            onClick={() => setMosaicOpen(true)}
+          >
+            Create 2×2 / 4×4 mosaic
+          </button>
+        )}
       </div>
+      {mosaicOpen && isOwnProfile && connectedAddress && (
+        <MosaicCreator
+          ownerAddress={connectedAddress}
+          apiKeyEth={getAlchemyApiKey(import.meta.env.VITE_ALCHEMY_API_KEY_ETH || import.meta.env.VITE_ALCHEMY_API_KEY)}
+          apiKeyApechain={getAlchemyApiKey(import.meta.env.VITE_ALCHEMY_API_KEY_APECHAIN || import.meta.env.VITE_ALCHEMY_API_KEY)}
+          onClose={() => setMosaicOpen(false)}
+        />
+      )}
     </div>
   );
 }
