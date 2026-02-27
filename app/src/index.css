@@ -128,29 +128,6 @@ body {
   display: block;
 }
 
-.app-sidebar-profile-pic-wrap.profile-pic-border {
-  padding: 3px;
-  border-radius: 8px;
-}
-
-.app-sidebar-profile-pic-wrap.profile-pic-border > * {
-  display: block;
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.app-sidebar-profile-pic-wrap.profile-pic-border-red {
-  background: linear-gradient(135deg, #ff6b6b, #c92a2a);
-}
-
-.app-sidebar-profile-pic-wrap.profile-pic-border-blue {
-  background: linear-gradient(135deg, #4dabf7, #1971c2);
-}
-
-.app-sidebar-profile-pic-wrap.profile-pic-border-green {
-  background: linear-gradient(135deg, #51cf66, #2f9e44);
-}
-
 .app-sidebar-profile-pic-link {
   display: block;
   width: 100%;

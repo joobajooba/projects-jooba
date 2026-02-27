@@ -112,7 +112,7 @@ export default function App() {
         </div>
 
         <div className="app-sidebar-profile">
-          <div className={`app-sidebar-profile-pic-wrap${profilePictureBorder ? ` profile-pic-border profile-pic-border-${profilePictureBorder}` : ''}`}>
+          <div className="app-sidebar-profile-pic-wrap">
             {address ? (
               <Link
                 to="/profile"
