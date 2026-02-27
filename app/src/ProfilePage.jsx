@@ -17,6 +17,14 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  async function refreshProfile() {
+    if (!walletAddress) return;
+    setLoading(true);
+    const data = await fetchUserProfile(walletAddress);
+    setProfile(data);
+    setLoading(false);
+  }
+
   useEffect(() => {
     if (!walletAddress) {
       setLoading(false);
@@ -33,6 +41,17 @@ export default function ProfilePage() {
     })();
     return () => { cancelled = true; };
   }, [walletAddress]);
+
+  useEffect(() => {
+    if (!isOwnProfile || !walletAddress) return;
+    const handler = (e) => {
+      const updatedAddress = e?.detail?.walletAddress;
+      if (!updatedAddress || updatedAddress !== walletAddress) return;
+      refreshProfile();
+    };
+    window.addEventListener('profile-updated', handler);
+    return () => window.removeEventListener('profile-updated', handler);
+  }, [isOwnProfile, walletAddress]);
 
   if (!walletAddress) {
     return (

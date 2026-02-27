@@ -64,10 +64,11 @@ export default function App() {
     setNftSelectorOpen(false);
   };
 
-  const handleProfileSave = () => {
+  const handleProfileSave = async () => {
     if (address) {
-      updateUserProfile(address, { username, profilePictureUrl, profileBio, profilePictureBorder });
+      await updateUserProfile(address, { username, profilePictureUrl, profileBio, profilePictureBorder });
       saveProfile(address, { username, profilePictureUrl });
+      window.dispatchEvent(new CustomEvent('profile-updated', { detail: { walletAddress: address.toLowerCase() } }));
     }
     setProfileOpen(false);
   };
