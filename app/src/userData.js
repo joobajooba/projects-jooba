@@ -38,7 +38,7 @@ export async function fetchUserProfile(walletAddress) {
   const normalized = walletAddress.toLowerCase();
   const { data, error } = await supabase
     .from(TABLE)
-    .select('username, profile_picture_url, first_logged_in_at, profile_bio, profile_picture_border')
+    .select('username, profile_picture_url, first_logged_in_at, profile_bio, profile_picture_border, mosaic_size, mosaic_urls')
     .eq('wallet_address', normalized)
     .maybeSingle();
   if (error) {
@@ -48,15 +48,18 @@ export async function fetchUserProfile(walletAddress) {
       return null;
     }
     const d = fallback.data;
-    return d ? { username: d.username ?? '', profilePictureUrl: d.profile_picture_url ?? '', firstLoggedInAt: d.first_logged_in_at ?? null, profileBio: '', profilePictureBorder: '' } : null;
+    return d ? { username: d.username ?? '', profilePictureUrl: d.profile_picture_url ?? '', firstLoggedInAt: d.first_logged_in_at ?? null, profileBio: '', profilePictureBorder: '', mosaicSize: null, mosaicUrls: [] } : null;
   }
   if (!data) return null;
+  const urls = data.mosaic_urls;
   return {
     username: data.username ?? '',
     profilePictureUrl: data.profile_picture_url ?? '',
     firstLoggedInAt: data.first_logged_in_at ?? null,
     profileBio: data.profile_bio ?? '',
     profilePictureBorder: data.profile_picture_border ?? '',
+    mosaicSize: data.mosaic_size ?? null,
+    mosaicUrls: Array.isArray(urls) ? urls : [],
   };
 }
 
@@ -79,6 +82,23 @@ export async function updateUserProfile(walletAddress, { username, profilePictur
       if (err2) console.warn('[userData] updateUserProfile failed', err2);
     } else {
       console.warn('[userData] updateUserProfile failed', error);
+    }
+  }
+}
+
+export async function saveUserMosaic(walletAddress, { mosaicSize, mosaicUrls }) {
+  if (!supabase || !walletAddress) return;
+  const normalized = walletAddress.toLowerCase();
+  const payload = {
+    mosaic_size: mosaicSize ?? null,
+    mosaic_urls: Array.isArray(mosaicUrls) ? mosaicUrls : null,
+  };
+  const { error } = await supabase.from(TABLE).update(payload).eq('wallet_address', normalized);
+  if (error) {
+    if (error.code === '42703') {
+      console.warn('[userData] saveUserMosaic: mosaic columns missing, run add_user_data_mosaic.sql');
+    } else {
+      console.warn('[userData] saveUserMosaic failed', error);
     }
   }
 }

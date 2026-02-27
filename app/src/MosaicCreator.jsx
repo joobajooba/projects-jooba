@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { fetchUserProfile, saveUserMosaic } from './userData';
 
 const NETWORKS = {
   ethereum: {
@@ -33,6 +34,8 @@ export default function MosaicCreator({ ownerAddress, apiKeyEth, apiKeyApechain,
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selected, setSelected] = useState([]); // ordered list of image URLs
+  const [savedMosaic, setSavedMosaic] = useState(null); // { size, urls } | null
+  const [saving, setSaving] = useState(false);
 
   const config = NETWORKS[network];
   const apiKey = network === 'ethereum' ? apiKeyEth : apiKeyApechain;
@@ -56,6 +59,28 @@ export default function MosaicCreator({ ownerAddress, apiKeyEth, apiKeyApechain,
       })
       .finally(() => setLoading(false));
   }, [step, ownerAddress, network, apiKey, config?.baseUrl]);
+
+  useEffect(() => {
+    if (!ownerAddress) return;
+    let cancelled = false;
+    fetchUserProfile(ownerAddress).then((profile) => {
+      if (cancelled) return;
+      if (profile?.mosaicSize && Array.isArray(profile?.mosaicUrls) && profile.mosaicUrls.length > 0) {
+        setSavedMosaic({ size: profile.mosaicSize, urls: profile.mosaicUrls });
+      } else {
+        setSavedMosaic(null);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [ownerAddress]);
+
+  async function handleSaveMosaic() {
+    if (!ownerAddress || selected.length !== required) return;
+    setSaving(true);
+    await saveUserMosaic(ownerAddress, { mosaicSize: size, mosaicUrls: selected });
+    setSavedMosaic({ size, urls: [...selected] });
+    setSaving(false);
+  }
 
   function toggleSelect(imgUrl) {
     const idx = selected.indexOf(imgUrl);
@@ -96,6 +121,8 @@ export default function MosaicCreator({ ownerAddress, apiKeyEth, apiKeyApechain,
           </button>
         </div>
 
+        <div className="app-mosaic-layout">
+          <div className="app-mosaic-builder">
         {step === 'setup' && (
           <>
             <div className="app-mosaic-setup-row">
@@ -219,7 +246,15 @@ export default function MosaicCreator({ ownerAddress, apiKeyEth, apiKeyApechain,
               ))}
             </div>
             <div className="app-mosaic-actions">
-              <button type="button" className="app-modal-btn app-modal-btn-primary" onClick={onClose}>
+              <button
+                type="button"
+                className="app-modal-btn app-modal-btn-primary"
+                onClick={handleSaveMosaic}
+                disabled={saving}
+              >
+                {saving ? 'Saving…' : 'Save mosaic'}
+              </button>
+              <button type="button" className="app-modal-btn app-modal-btn-secondary" onClick={onClose}>
                 Close
               </button>
               <button type="button" className="app-modal-btn app-modal-btn-secondary" onClick={() => setStep('pick')}>
@@ -228,6 +263,23 @@ export default function MosaicCreator({ ownerAddress, apiKeyEth, apiKeyApechain,
             </div>
           </>
         )}
+          </div>
+
+          <div className="app-mosaic-saved">
+            <h3 className="app-mosaic-saved-title">Saved mosaic</h3>
+            {savedMosaic?.urls?.length > 0 && savedMosaic.size ? (
+              <div className={`app-mosaic-preview app-mosaic-preview-${savedMosaic.size} app-mosaic-saved-preview`}>
+                {savedMosaic.urls.map((url, i) => (
+                  <div key={i} className="app-mosaic-preview-cell">
+                    <img src={url} alt="" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="app-mosaic-saved-empty">No saved mosaic yet. Create one and click Save mosaic.</p>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
