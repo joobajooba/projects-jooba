@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAccount } from 'wagmi';
+import { loadProfile } from './profileStorage';
 import { fetchUserProfile } from './userData';
 
 function formatAddress(addr) {
@@ -17,11 +18,24 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  function withLocalFallback(data) {
+    if (!data || !isOwnProfile || !connectedAddress) return data;
+    const local = loadProfile(connectedAddress);
+    if (!local) return data;
+    return {
+      ...data,
+      username: data.username || local.username || '',
+      profilePictureUrl: data.profilePictureUrl || local.profilePictureUrl || '',
+      profileBio: data.profileBio || local.profileBio || '',
+      profilePictureBorder: data.profilePictureBorder || local.profilePictureBorder || '',
+    };
+  }
+
   async function refreshProfile() {
     if (!walletAddress) return;
     setLoading(true);
     const data = await fetchUserProfile(walletAddress);
-    setProfile(data);
+    setProfile(withLocalFallback(data));
     setLoading(false);
   }
 
@@ -36,11 +50,11 @@ export default function ProfilePage() {
       setLoading(true);
       const data = await fetchUserProfile(walletAddress);
       if (cancelled) return;
-      setProfile(data);
+      setProfile(withLocalFallback(data));
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [walletAddress]);
+  }, [walletAddress, isOwnProfile, connectedAddress]);
 
   useEffect(() => {
     if (!isOwnProfile || !walletAddress) return;

@@ -1,5 +1,5 @@
 /**
- * Persist profile (username, profilePictureUrl) per wallet address in localStorage.
+ * Persist profile per wallet address in localStorage.
  */
 const KEY_PREFIX = 'app-profile-';
 
@@ -18,6 +18,8 @@ export function loadProfile(address) {
     return {
       username: data.username ?? '',
       profilePictureUrl: data.profilePictureUrl ?? '',
+      profileBio: data.profileBio ?? '',
+      profilePictureBorder: data.profilePictureBorder ?? '',
     };
   } catch {
     return null;
@@ -32,6 +34,8 @@ export function saveProfile(address, profile) {
     const next = {
       username: profile.username ?? existing.username,
       profilePictureUrl: profile.profilePictureUrl ?? existing.profilePictureUrl,
+      profileBio: profile.profileBio ?? existing.profileBio,
+      profilePictureBorder: profile.profilePictureBorder ?? existing.profilePictureBorder,
     };
     localStorage.setItem(k, JSON.stringify(next));
   } catch {

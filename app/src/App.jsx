@@ -43,13 +43,13 @@ export default function App() {
       const fromLocal = loadProfile(address);
       const username = fromDb?.username ?? fromLocal?.username ?? '';
       const profilePictureUrl = fromDb?.profilePictureUrl ?? fromLocal?.profilePictureUrl ?? '';
-      const profileBio = fromDb?.profileBio ?? '';
-      const profilePictureBorder = fromDb?.profilePictureBorder ?? '';
+      const profileBio = fromDb?.profileBio ?? fromLocal?.profileBio ?? '';
+      const profilePictureBorder = fromDb?.profilePictureBorder ?? fromLocal?.profilePictureBorder ?? '';
       setUsername(username);
       setProfilePictureUrl(profilePictureUrl);
       setProfileBio(profileBio);
       setProfilePictureBorder(profilePictureBorder);
-      saveProfile(address, { username, profilePictureUrl });
+      saveProfile(address, { username, profilePictureUrl, profileBio, profilePictureBorder });
     })();
     return () => { cancelled = true; };
   }, [address]);
@@ -67,7 +67,7 @@ export default function App() {
   const handleProfileSave = async () => {
     if (address) {
       await updateUserProfile(address, { username, profilePictureUrl, profileBio, profilePictureBorder });
-      saveProfile(address, { username, profilePictureUrl });
+      saveProfile(address, { username, profilePictureUrl, profileBio, profilePictureBorder });
       window.dispatchEvent(new CustomEvent('profile-updated', { detail: { walletAddress: address.toLowerCase() } }));
     }
     setProfileOpen(false);
