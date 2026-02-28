@@ -105,7 +105,7 @@ export default function ProfilePage() {
 
   return (
     <div className="app-main-inner app-profile-page">
-      <div className="app-profile-left">
+      <div className="app-profile-col-profile">
         <div className="app-profile-info-panel">
           <div className={`app-profile-info-pic-wrap${profile.profilePictureBorder ? ` profile-pic-border profile-pic-border-${profile.profilePictureBorder}` : ''}`}>
             {profile.profilePictureUrl ? (
@@ -120,55 +120,51 @@ export default function ProfilePage() {
           <p className="app-profile-info-line">Otherside | {displayName}</p>
           <p className="app-profile-info-line">X | {displayName}</p>
         </div>
-
-        <div className="app-profile-nft-column">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="app-profile-nft-cell" aria-label={`NFT slot ${i}`}>
-              NFT
-            </div>
-          ))}
-        </div>
-
-        <div className="app-profile-uploader-panel">
-          <h3 className="app-profile-panel-heading">Image Uploader</h3>
-        </div>
-
         <div className="app-profile-sep" aria-hidden />
-
-        <div className="app-profile-stat-panel app-profile-stat-row3">
+        <div className="app-profile-stat-panel">
           <h3 className="app-profile-panel-heading">Profile Statistics</h3>
           <p className="app-profile-stat-line">Profile Views |</p>
           <p className="app-profile-stat-line">Profile Age | {profileAgeDays} Days</p>
           <p className="app-profile-stat-line">Total Bops |</p>
         </div>
-
-        <div className="app-profile-desc-panel">
-          <h3 className="app-profile-panel-heading">Profile Description</h3>
-          <p className="app-profile-desc-text">{profile.profileBio || 'No bio set.'}</p>
-        </div>
-
-        <div className="app-profile-stat-panel app-profile-stat-row4">
+        <div className="app-profile-stat-panel">
           <h3 className="app-profile-panel-heading">Wordle Statistics</h3>
           <p className="app-profile-stat-line">Wordle Streak |</p>
           <p className="app-profile-stat-line">Average Guesses |</p>
           <p className="app-profile-stat-line">Leaderboard Ranking |</p>
         </div>
-
-        <div className="app-profile-stat-panel app-profile-stat-row5">
+        <div className="app-profile-stat-panel">
           <h3 className="app-profile-panel-heading">Connections Statistics</h3>
           <p className="app-profile-stat-line">Connections Streak |</p>
           <p className="app-profile-stat-line">Connections Wins |</p>
           <p className="app-profile-stat-line">Connections Avg Mistakes |</p>
         </div>
-
-        <div className="app-profile-stat-panel app-profile-stat-row6">
+        <div className="app-profile-stat-panel">
           <h3 className="app-profile-panel-heading">Typeracer Statistics</h3>
           <p className="app-profile-stat-line">Typeracer Streak</p>
           <p className="app-profile-stat-line">Leaderboard Ranking |</p>
         </div>
       </div>
 
-      <div className="app-profile-mosaic-column">
+      <div className="app-profile-col-nft">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className="app-profile-nft-cell" aria-label={`NFT slot ${i}`}>
+            NFT
+          </div>
+        ))}
+      </div>
+
+      <div className="app-profile-col-uploader">
+        <div className="app-profile-uploader-panel">
+          <h3 className="app-profile-panel-heading">Image Uploader</h3>
+        </div>
+        <div className="app-profile-desc-panel">
+          <h3 className="app-profile-panel-heading">Profile Description</h3>
+          <p className="app-profile-desc-text">{profile.profileBio || 'No bio set.'}</p>
+        </div>
+      </div>
+
+      <div className="app-profile-col-mosaic">
         <div className="app-profile-mosaic-panel">
           <h2 className="app-profile-mosaic-panel-title">Profile Mosaic</h2>
           {isOwnProfile && connectedAddress && (
