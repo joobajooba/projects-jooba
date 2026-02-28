@@ -98,92 +98,67 @@ export default function ProfilePage() {
     );
   }
 
-  const profileAgeDays = profile.firstLoggedInAt
-    ? Math.floor((Date.now() - new Date(profile.firstLoggedInAt).getTime()) / (1000 * 60 * 60 * 24))
-    : 0;
-
   return (
     <div className="app-main-inner app-profile-page">
-      <nav className="app-profile-nav" aria-label="Profile navigation">
-        <span className="app-profile-nav-label">Navigation bar</span>
-      </nav>
-
-      <div className="app-profile-main">
-        <aside className="app-profile-aside">
-          <div className="app-profile-header-panel">
-            <div className={`app-profile-header-pic-wrap${profile.profilePictureBorder ? ` profile-pic-border profile-pic-border-${profile.profilePictureBorder}` : ''}`}>
-              {profile.profilePictureUrl ? (
-                <img src={profile.profilePictureUrl} alt="" className="app-profile-header-pic" />
-              ) : (
-                <div className="app-profile-header-pic app-profile-header-pic-placeholder">
-                  <span className="app-sidebar-profile-emoji">☺</span>
-                </div>
-              )}
+      <div className="app-profile-left">
+      <div className="app-profile-card">
+        <div className={`app-profile-card-pic-wrap${profile.profilePictureBorder ? ` profile-pic-border profile-pic-border-${profile.profilePictureBorder}` : ''}`}>
+          {profile.profilePictureUrl ? (
+            <img
+              src={profile.profilePictureUrl}
+              alt=""
+              className="app-profile-card-pic"
+            />
+          ) : (
+            <div className="app-profile-card-pic app-profile-card-pic-placeholder">
+              <span className="app-sidebar-profile-emoji">☺</span>
             </div>
-            <p className="app-profile-header-line">Username | {profile.username || 'Unnamed'}</p>
-            <p className="app-profile-header-line">Otherside | {profile.username || 'Unnamed'}</p>
-            <p className="app-profile-header-line">X | {profile.username || 'Unnamed'}</p>
-          </div>
-
-          <div className="app-profile-stat-panel">
-            <h3 className="app-profile-stat-panel-title">Profile Statistics</h3>
-            <p className="app-profile-stat-line">Profile Views | 1000</p>
-            <p className="app-profile-stat-line">Profile Age | {profileAgeDays} Days</p>
-            <p className="app-profile-stat-line">Total Bops | 5</p>
-          </div>
-
-          <div className="app-profile-stat-panel">
-            <h3 className="app-profile-stat-panel-title">Wordle Statistics</h3>
-            <p className="app-profile-stat-line">Wordle Streak | 4</p>
-            <p className="app-profile-stat-line">Average Guesses | 4</p>
-            <p className="app-profile-stat-line">Leaderboard Ranking | 1/23</p>
-          </div>
-
-          <div className="app-profile-stat-panel">
-            <h3 className="app-profile-stat-panel-title">Connections Statistics</h3>
-            <p className="app-profile-stat-line">Connections Streak | 4</p>
-            <p className="app-profile-stat-line">Connections Wins | 4</p>
-            <p className="app-profile-stat-line">Connections Avg Mistakes | 4</p>
-          </div>
-
-          <div className="app-profile-stat-panel">
-            <h3 className="app-profile-stat-panel-title">Typeracer Statistics</h3>
-            <p className="app-profile-stat-line">Typeracer Streak</p>
-            <p className="app-profile-stat-line">Leaderboard Ranking | 4/23</p>
-          </div>
-        </aside>
-
-        <div className="app-profile-middle">
-          <div className="app-profile-nft-column">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="app-profile-nft-cell" aria-label={`NFT slot ${i}`}>
-                NFT
-              </div>
-            ))}
-          </div>
-          <div className="app-profile-middle-panels">
-            <div className="app-profile-image-uploader-panel">
-              <h3 className="app-profile-panel-label">Image Uploader</h3>
-            </div>
-            <div className="app-profile-description-panel">
-              <h3 className="app-profile-panel-label">Profile Description</h3>
-              <p className="app-profile-description-text">{profile.profileBio || 'No bio set.'}</p>
-            </div>
-          </div>
+          )}
         </div>
+        <h1 className="app-profile-card-username">
+          {profile.username || 'Unnamed'}
+        </h1>
+        <div className="app-profile-card-address" title={walletAddress}>
+          {formatAddress(walletAddress)}
+        </div>
+        {profile.firstLoggedInAt && (
+          <p className="app-profile-card-meta">
+            Member since {new Date(profile.firstLoggedInAt).toLocaleDateString()}
+          </p>
+        )}
+        <div className="app-profile-bio-block">
+          <p className="app-profile-bio-label">Bio</p>
+          <p className="app-profile-bio-text">
+            {profile.profileBio || 'No bio set.'}
+          </p>
+        </div>
+      </div>
+      <div className="app-profile-stats-card">
+        <h2 className="app-profile-stats-title">Profile stats</h2>
+        {isOwnProfile && connectedAddress && (
+          <button
+            type="button"
+            className="app-profile-mosaic-btn"
+            onClick={() => setMosaicOpen(true)}
+          >
+            Create 2×2 / 4×4 mosaic
+          </button>
+        )}
+      </div>
+      </div>
 
-        <div className="app-profile-mosaic-column">
+      <div className="app-profile-right">
+        <div className="app-profile-nft-squares">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="app-profile-nft-square" aria-label={`NFT slot ${i}`} />
+          ))}
+        </div>
+        <div className="app-profile-right-panels">
+          <div className="app-profile-landscape-panel" aria-label="Profile landscape">
+            <h2 className="app-profile-landscape-panel-title">Profile landscape</h2>
+          </div>
           <div className="app-profile-mosaic-panel">
-            <h2 className="app-profile-mosaic-panel-title">Profile Mosaic</h2>
-            {isOwnProfile && connectedAddress && (
-              <button
-                type="button"
-                className="app-profile-mosaic-btn"
-                onClick={() => setMosaicOpen(true)}
-              >
-                Create 2×2 / 4×4 mosaic
-              </button>
-            )}
+            <h2 className="app-profile-mosaic-panel-title">Mosaic</h2>
           </div>
         </div>
       </div>

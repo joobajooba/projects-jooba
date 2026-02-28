@@ -586,222 +586,183 @@ body {
 
 .app-profile-page {
   display: flex;
-  flex-direction: column;
-  gap: 0;
+  flex-direction: row;
+  gap: 24px;
   width: 100%;
   min-height: calc(100vh - 48px);
-  padding: 0;
 }
 
-.app-profile-nav {
+.app-profile-left {
   flex-shrink: 0;
-  height: 48px;
+  width: 320px;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #2a2a2a;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.app-profile-nav-label {
-  font-size: 14px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.app-profile-main {
-  flex: 1;
-  display: flex;
-  flex-direction: row;
-  gap: 0;
+  flex-direction: column;
+  gap: 24px;
   min-height: 0;
 }
 
-.app-profile-aside {
-  flex: 0 0 25%;
-  max-width: 280px;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  padding: 16px;
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
-  overflow: auto;
-}
-
-.app-profile-header-panel {
-  padding: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.app-profile-header-pic-wrap {
-  width: 100%;
-  aspect-ratio: 1;
-  max-width: 120px;
-  margin: 0 auto 12px;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.app-profile-header-pic-wrap.profile-pic-border {
-  padding: 3px;
-}
-
-.app-profile-header-pic-wrap.profile-pic-border > * {
-  border-radius: 6px;
-  overflow: hidden;
-  width: 100%;
-  height: 100%;
-}
-
-.app-profile-header-pic-wrap.profile-pic-border-red {
-  background: linear-gradient(135deg, #ff6b6b, #c92a2a);
-}
-
-.app-profile-header-pic-wrap.profile-pic-border-blue {
-  background: linear-gradient(135deg, #4dabf7, #1971c2);
-}
-
-.app-profile-header-pic-wrap.profile-pic-border-green {
-  background: linear-gradient(135deg, #51cf66, #2f9e44);
-}
-
-.app-profile-header-pic {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.app-profile-header-pic-placeholder {
-  background: rgba(255, 255, 255, 0.06);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.app-profile-header-line {
-  margin: 0 0 4px;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.app-profile-stat-panel {
-  padding: 12px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.app-profile-stat-panel-title {
-  margin: 0 0 8px;
-  font-size: 13px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.95);
-}
-
-.app-profile-stat-line {
-  margin: 0 0 4px;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.app-profile-middle {
-  flex: 0 0 33%;
-  min-width: 0;
+.app-profile-right {
+  flex: 1;
   display: flex;
   flex-direction: row;
-  gap: 0;
-}
-
-.app-profile-nft-column {
-  flex-shrink: 0;
-  width: 80px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 16px 8px;
-}
-
-.app-profile-nft-cell {
-  flex: 1;
-  min-height: 60px;
-  aspect-ratio: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 80, 90, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.app-profile-middle-panels {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 16px;
+  gap: 16px;
   min-width: 0;
 }
 
-.app-profile-image-uploader-panel {
-  flex: 0 0 40%;
-  min-height: 120px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 16px;
-}
-
-.app-profile-description-panel {
-  flex: 1;
-  min-height: 0;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 16px;
-}
-
-.app-profile-panel-label {
-  margin: 0 0 8px;
-  font-size: 13px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.app-profile-description-text {
-  margin: 0;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.8);
-  white-space: pre-wrap;
-}
-
-.app-profile-mosaic-column {
-  flex: 1;
-  min-width: 0;
-  padding: 16px;
-}
-
-.app-profile-mosaic-panel {
-  width: 100%;
-  height: 100%;
-  min-height: 200px;
+.app-profile-nft-squares {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
   gap: 12px;
+  flex-shrink: 0;
+  width: 140px;
+  height: 100%;
+}
+
+.app-profile-nft-square {
+  flex: 1;
+  min-height: 80px;
+  aspect-ratio: 1;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+}
+
+.app-profile-right-panels {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.app-profile-landscape-panel {
+  flex: 1;
+  min-height: 0;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
-  padding: 24px;
+  padding: 12px 24px 24px;
+}
+
+.app-profile-landscape-panel-title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.app-profile-mosaic-panel {
+  flex: 1;
+  min-height: 0;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px 24px 24px;
+  min-width: 0;
 }
 
 .app-profile-mosaic-panel-title {
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.app-profile-card {
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.app-profile-card-pic-wrap {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 16px;
+}
+
+.app-profile-card-pic-wrap.profile-pic-border {
+  padding: 3px;
+  border-radius: 50%;
+}
+
+.app-profile-card-pic-wrap.profile-pic-border > * {
+  border-radius: 50%;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+
+.app-profile-card-pic-wrap.profile-pic-border-red {
+  background: linear-gradient(135deg, #ff6b6b, #c92a2a);
+}
+
+.app-profile-card-pic-wrap.profile-pic-border-blue {
+  background: linear-gradient(135deg, #4dabf7, #1971c2);
+}
+
+.app-profile-card-pic-wrap.profile-pic-border-green {
+  background: linear-gradient(135deg, #51cf66, #2f9e44);
+}
+
+.app-profile-card-pic {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+.app-profile-card-pic-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-profile-card-username {
+  margin: 0 0 4px;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.app-profile-card-address {
+  text-align: center;
+  font-size: 13px;
+  font-family: ui-monospace, monospace;
+  color: rgba(255, 255, 255, 0.55);
+  margin-bottom: 8px;
+}
+
+.app-profile-card-meta {
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 20px;
+}
+
+.app-profile-bio-block {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.app-profile-bio-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0 0 6px;
+}
+
+.app-profile-bio-text {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0 0 10px;
+  white-space: pre-wrap;
 }
 
 .app-profile-bio-input {
