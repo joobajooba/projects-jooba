@@ -606,7 +606,7 @@ body {
 /* Yellow: NFT boxes - narrow, max 5 */
 .app-profile-col-nft {
   flex: 0 0 76px;
-  width: 76px;
+  width: 200px;
   display: flex;
   flex-direction: column;
   gap: 8px;
