@@ -598,6 +598,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 24px;
+  min-height: 0;
 }
 
 .app-profile-right {
@@ -643,6 +644,10 @@ body {
 }
 
 .app-profile-card {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
@@ -719,6 +724,8 @@ body {
 }
 
 .app-profile-bio-block {
+  flex: 1;
+  min-height: 0;
   margin-top: 16px;
   padding-top: 16px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -734,8 +741,9 @@ body {
 .app-profile-bio-text {
   font-size: 14px;
   color: rgba(255, 255, 255, 0.85);
-  margin: 0 0 10px;
+  margin: 0;
   white-space: pre-wrap;
+  overflow: auto;
 }
 
 .app-profile-bio-input {
@@ -763,12 +771,11 @@ body {
 }
 
 .app-profile-stats-card {
-  margin-top: 24px;
+  flex-shrink: 0;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   padding: 24px;
-  flex: 1;
 }
 
 .app-profile-stats-title {
