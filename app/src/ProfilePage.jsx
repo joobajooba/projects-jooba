@@ -158,21 +158,23 @@ export default function ProfilePage() {
         <div className="app-profile-uploader-panel">
           <h3 className="app-profile-panel-heading">Image Uploader</h3>
         </div>
-        <div className="app-profile-desc-panel">
-          <h3 className="app-profile-panel-heading">Profile Description</h3>
-          <p className="app-profile-desc-text">{profile.profileBio || 'No bio set.'}</p>
-        </div>
-        <div className="app-profile-mosaic-panel">
-          <h2 className="app-profile-mosaic-panel-title">Profile Mosaic</h2>
-          {isOwnProfile && connectedAddress && (
-            <button
-              type="button"
-              className="app-profile-mosaic-btn"
-              onClick={() => setMosaicOpen(true)}
-            >
-              Create 2×2 / 4×4 mosaic
-            </button>
-          )}
+        <div className="app-profile-right-bottom">
+          <div className="app-profile-desc-panel">
+            <h3 className="app-profile-panel-heading">Profile Description</h3>
+            <p className="app-profile-desc-text">{profile.profileBio || 'No bio set.'}</p>
+          </div>
+          <div className="app-profile-mosaic-panel">
+            <h2 className="app-profile-mosaic-panel-title">Profile Mosaic</h2>
+            {isOwnProfile && connectedAddress && (
+              <button
+                type="button"
+                className="app-profile-mosaic-btn"
+                onClick={() => setMosaicOpen(true)}
+              >
+                Create 2×2 / 4×4 mosaic
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
