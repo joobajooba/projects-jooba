@@ -100,6 +100,7 @@ export default function ProfilePage() {
 
   return (
     <div className="app-main-inner app-profile-page">
+      <div className="app-profile-left">
       <div className="app-profile-card">
         <div className={`app-profile-card-pic-wrap${profile.profilePictureBorder ? ` profile-pic-border profile-pic-border-${profile.profilePictureBorder}` : ''}`}>
           {profile.profilePictureUrl ? (
@@ -144,6 +145,19 @@ export default function ProfilePage() {
           </button>
         )}
       </div>
+      </div>
+
+      <div className="app-profile-right">
+        <div className="app-profile-nft-squares">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="app-profile-nft-square" aria-label={`NFT slot ${i}`} />
+          ))}
+        </div>
+        <div className="app-profile-mosaic-panel">
+          <h2 className="app-profile-mosaic-panel-title">Mosaic</h2>
+        </div>
+      </div>
+
       {mosaicOpen && isOwnProfile && connectedAddress && (
         <MosaicCreator
           ownerAddress={connectedAddress}

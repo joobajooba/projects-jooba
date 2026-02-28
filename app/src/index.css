@@ -585,10 +585,61 @@ body {
 }
 
 .app-profile-page {
-  max-width: 480px;
+  display: flex;
+  flex-direction: row;
+  gap: 24px;
+  width: 100%;
+  min-height: calc(100vh - 48px);
+}
+
+.app-profile-left {
+  flex-shrink: 0;
+  width: 320px;
   display: flex;
   flex-direction: column;
-  min-height: calc(100vh - 48px);
+  gap: 24px;
+}
+
+.app-profile-right {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  min-width: 0;
+}
+
+.app-profile-nft-squares {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex-shrink: 0;
+  width: 140px;
+  height: 100%;
+}
+
+.app-profile-nft-square {
+  flex: 1;
+  min-height: 80px;
+  aspect-ratio: 1;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+}
+
+.app-profile-mosaic-panel {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 24px;
+  min-width: 0;
+}
+
+.app-profile-mosaic-panel-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .app-profile-card {
