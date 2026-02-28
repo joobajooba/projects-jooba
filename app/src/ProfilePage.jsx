@@ -154,7 +154,7 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      <div className="app-profile-col-uploader">
+      <div className="app-profile-col-right">
         <div className="app-profile-uploader-panel">
           <h3 className="app-profile-panel-heading">Image Uploader</h3>
         </div>
@@ -162,9 +162,6 @@ export default function ProfilePage() {
           <h3 className="app-profile-panel-heading">Profile Description</h3>
           <p className="app-profile-desc-text">{profile.profileBio || 'No bio set.'}</p>
         </div>
-      </div>
-
-      <div className="app-profile-col-mosaic">
         <div className="app-profile-mosaic-panel">
           <h2 className="app-profile-mosaic-panel-title">Profile Mosaic</h2>
           {isOwnProfile && connectedAddress && (

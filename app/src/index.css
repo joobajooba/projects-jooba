@@ -617,23 +617,14 @@ body {
   gap: 8px;
 }
 
-/* Blue: image uploader and profile description width */
-.app-profile-col-uploader {
-  flex: 0 0 220px;
-  width: 220px;
+/* Right side: Image Uploader (full width), Profile Description, Profile Mosaic (under uploader) */
+.app-profile-col-right {
+  flex: 1;
   min-width: 0;
   min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  overflow: hidden;
-}
-
-/* Green: mosaic - widest */
-.app-profile-col-mosaic {
-  flex: 1;
-  min-width: 0;
-  min-height: 0;
   overflow: hidden;
 }
 
@@ -716,9 +707,10 @@ body {
   color: rgba(255, 255, 255, 0.9);
 }
 
-/* Yellow square */
+/* Yellow square - full width, reduced height (by 200px from previous ~55% of column) */
 .app-profile-uploader-panel {
-  flex: 0 0 55%;
+  flex: 0 0 auto;
+  height: 120px;
   min-height: 0;
   background: rgba(255, 255, 200, 0.06);
   border: 1px solid rgba(220, 200, 80, 0.35);
@@ -740,9 +732,10 @@ body {
   padding: 12px 16px;
 }
 
-/* Green square */
+/* Green square - fixed height so bottom border is never cut off */
 .app-profile-desc-panel {
-  flex: 0 0 45%;
+  flex: 0 0 auto;
+  height: 100px;
   min-height: 0;
   background: rgba(180, 255, 200, 0.06);
   border: 1px solid rgba(80, 200, 120, 0.35);
@@ -772,11 +765,11 @@ body {
 }
 
 
-/* Blue square */
+/* Blue square - under Image Uploader, fills remaining height */
 .app-profile-mosaic-panel {
-  width: 100%;
-  height: 100%;
+  flex: 1;
   min-height: 0;
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
