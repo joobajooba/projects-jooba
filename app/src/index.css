@@ -589,7 +589,10 @@ body {
   flex-direction: row;
   gap: 12px;
   width: 100%;
-  min-height: calc(100vh - 48px);
+  height: calc(100vh - 48px);
+  max-height: calc(100vh - 48px);
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* Red: profile and stats width */
@@ -597,16 +600,18 @@ body {
   flex: 0 0 220px;
   width: 220px;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  overflow: auto;
+  overflow-y: auto;
 }
 
 /* Yellow: NFT boxes - narrow, max 5 */
 .app-profile-col-nft {
-  flex: 0 0 250px;
-  width: 250px;
+  flex: 0 0 200px;
+  width: 200px;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -617,9 +622,11 @@ body {
   flex: 0 0 220px;
   width: 220px;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  overflow: hidden;
 }
 
 /* Green: mosaic - widest */
@@ -627,6 +634,7 @@ body {
   flex: 1;
   min-width: 0;
   min-height: 0;
+  overflow: hidden;
 }
 
 .app-profile-info-panel {
@@ -765,7 +773,7 @@ body {
 .app-profile-mosaic-panel {
   width: 100%;
   height: 100%;
-  min-height: 200px;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
