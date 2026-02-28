@@ -598,6 +598,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 24px;
+  min-height: 0;
 }
 
 .app-profile-right {
@@ -626,12 +627,37 @@ body {
   border-radius: 8px;
 }
 
-.app-profile-mosaic-panel {
+.app-profile-right-panels {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.app-profile-landscape-panel {
+  flex: 1;
+  min-height: 0;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
-  padding: 24px;
+  padding: 12px 24px 24px;
+}
+
+.app-profile-landscape-panel-title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.app-profile-mosaic-panel {
+  flex: 1;
+  min-height: 0;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px 24px 24px;
   min-width: 0;
 }
 
@@ -764,7 +790,8 @@ body {
 }
 
 .app-profile-stats-card {
-  flex-shrink: 0;
+  flex: 1;
+  min-height: 0;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;

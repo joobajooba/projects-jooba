@@ -153,8 +153,13 @@ export default function ProfilePage() {
             <div key={i} className="app-profile-nft-square" aria-label={`NFT slot ${i}`} />
           ))}
         </div>
-        <div className="app-profile-mosaic-panel">
-          <h2 className="app-profile-mosaic-panel-title">Mosaic</h2>
+        <div className="app-profile-right-panels">
+          <div className="app-profile-landscape-panel" aria-label="Profile landscape">
+            <h2 className="app-profile-landscape-panel-title">Profile landscape</h2>
+          </div>
+          <div className="app-profile-mosaic-panel">
+            <h2 className="app-profile-mosaic-panel-title">Mosaic</h2>
+          </div>
         </div>
       </div>
 
