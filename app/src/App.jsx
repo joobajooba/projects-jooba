@@ -1,11 +1,40 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, Link, NavLink } from 'react-router-dom';
+import { Routes, Route, Link, NavLink, useSearchParams } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { loadProfile, saveProfile } from './profileStorage';
 import { ensureUserRow, fetchUserProfile, updateUserProfile } from './userData';
 import NFTSelector from './NFTSelector';
 import ProfilePage from './ProfilePage';
+
+function XAuthCallbackPage() {
+  const [searchParams] = useSearchParams();
+  const [status, setStatus] = useState('loading'); // 'loading' | 'ok' | 'error'
+  const [message, setMessage] = useState('');
+  useEffect(() => {
+    const code = searchParams.get('code');
+    const state = searchParams.get('state');
+    const storedState = sessionStorage.getItem('x_oauth_state');
+    const storedVerifier = sessionStorage.getItem('x_oauth_code_verifier');
+    sessionStorage.removeItem('x_oauth_state');
+    if (!code || !state || state !== storedState || !storedVerifier) {
+      setStatus('error');
+      setMessage(state !== storedState ? 'Invalid state. Try connecting again.' : 'Missing code from X.');
+      return;
+    }
+    setStatus('ok');
+    setMessage('X returned successfully. To finish linking: exchange the code for a token, call X API users/me, then save the X user id to your DB. See docs/X_ACCOUNT_LINKING.md.');
+  }, [searchParams]);
+  return (
+    <div className="app-main-inner">
+      <h1>Connect to X</h1>
+      {status === 'loading' && <p>Linking your X account…</p>}
+      {status === 'ok' && <p className="app-auth-callback-ok">{message}</p>}
+      {status === 'error' && <p className="app-auth-callback-error">{message}</p>}
+      <Link to="/profile">Back to profile</Link>
+    </div>
+  );
+}
 
 function PlaceholderPage({ title }) {
   return (
@@ -71,6 +100,40 @@ export default function App() {
       window.dispatchEvent(new CustomEvent('profile-updated', { detail: { walletAddress: address.toLowerCase() } }));
     }
     setProfileOpen(false);
+  };
+
+  const handleConnectX = async () => {
+    const clientId = import.meta.env.VITE_X_CLIENT_ID;
+    if (!clientId) {
+      window.open('https://developer.x.com/en/docs/authentication/oauth-2-0/authorization-code', '_blank', 'noopener');
+      return;
+    }
+    const codeVerifier = Array.from(crypto.getRandomValues(new Uint8Array(32)))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+    const encoder = new TextEncoder();
+    const digest = await crypto.subtle.digest('SHA-256', encoder.encode(codeVerifier));
+    const codeChallenge = btoa(String.fromCharCode(...new Uint8Array(digest)))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+    const state = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+    const redirectUri = `${window.location.origin}/auth/x/callback`;
+    sessionStorage.setItem('x_oauth_code_verifier', codeVerifier);
+    sessionStorage.setItem('x_oauth_state', state);
+    if (address) sessionStorage.setItem('x_oauth_wallet', address.toLowerCase());
+    const params = new URLSearchParams({
+      response_type: 'code',
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      scope: 'users.read tweet.read',
+      state,
+      code_challenge: codeChallenge,
+      code_challenge_method: 'S256',
+    });
+    window.location.href = `https://twitter.com/i/oauth2/authorize?${params.toString()}`;
   };
 
   return (
@@ -190,6 +253,7 @@ export default function App() {
           <Route path="/mint" element={<PlaceholderPage title="Mint" />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/profile/:walletAddress" element={<ProfilePage />} />
+          <Route path="/auth/x/callback" element={<XAuthCallbackPage />} />
         </Routes>
       </main>
 
@@ -215,6 +279,16 @@ export default function App() {
                 placeholder="Enter username"
                 autoComplete="username"
               />
+              <div className="app-profile-connect-x-wrap">
+                <button
+                  type="button"
+                  className="app-profile-connect-x-btn"
+                  onClick={handleConnectX}
+                  title="Link your X (Twitter) account so your profile shows it as verified"
+                >
+                  Connect to X
+                </button>
+              </div>
             </label>
             <label className="app-modal-label">
               Bio

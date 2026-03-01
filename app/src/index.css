@@ -289,6 +289,23 @@ body {
   color: rgba(255, 255, 255, 0.4);
 }
 
+.app-profile-connect-x-wrap {
+  margin-top: 8px;
+}
+.app-profile-connect-x-btn {
+  font-size: 12px;
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+}
+.app-profile-connect-x-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
 .app-modal-section-title {
   margin: 0 0 10px;
   font-size: 14px;
@@ -570,6 +587,8 @@ body {
   margin: 0;
   color: rgba(255, 255, 255, 0.7);
 }
+.app-auth-callback-ok { color: rgba(180, 255, 180, 0.95); }
+.app-auth-callback-error { color: rgba(255, 180, 180, 0.95); }
 
 /* Profile page */
 .app-profile-back {
