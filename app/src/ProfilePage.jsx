@@ -118,7 +118,13 @@ export default function ProfilePage() {
           </div>
           <p className="app-profile-info-line">Username | {displayName}</p>
           <p className="app-profile-info-line">Otherside | {displayName}</p>
-          <p className="app-profile-info-line">X | {displayName}</p>
+          <p className="app-profile-info-line">
+            X | {profile.xUsername ? (
+              <a href={`https://x.com/${profile.xUsername}`} target="_blank" rel="noopener noreferrer" className="app-profile-x-link">@{profile.xUsername}</a>
+            ) : (
+              displayName
+            )}
+          </p>
         </div>
         <div className="app-profile-sep" aria-hidden />
         <div className="app-profile-stat-panel">

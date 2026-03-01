@@ -717,6 +717,13 @@ body {
   font-size: 13px;
   color: rgba(255, 255, 255, 0.9);
 }
+.app-profile-x-link {
+  color: rgba(29, 155, 240, 0.95);
+  text-decoration: none;
+}
+.app-profile-x-link:hover {
+  text-decoration: underline;
+}
 
 
 .app-profile-nft-cell {

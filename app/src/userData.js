@@ -38,7 +38,7 @@ export async function fetchUserProfile(walletAddress) {
   const normalized = walletAddress.toLowerCase();
   const { data, error } = await supabase
     .from(TABLE)
-    .select('username, profile_picture_url, first_logged_in_at, profile_bio, profile_picture_border, mosaic_size, mosaic_urls')
+    .select('username, profile_picture_url, first_logged_in_at, profile_bio, profile_picture_border, mosaic_size, mosaic_urls, x_twitter_id, x_username')
     .eq('wallet_address', normalized)
     .maybeSingle();
   if (error) {
@@ -48,7 +48,7 @@ export async function fetchUserProfile(walletAddress) {
       return null;
     }
     const d = fallback.data;
-    return d ? { username: d.username ?? '', profilePictureUrl: d.profile_picture_url ?? '', firstLoggedInAt: d.first_logged_in_at ?? null, profileBio: '', profilePictureBorder: '', mosaicSize: null, mosaicUrls: [] } : null;
+    return d ? { username: d.username ?? '', profilePictureUrl: d.profile_picture_url ?? '', firstLoggedInAt: d.first_logged_in_at ?? null, profileBio: '', profilePictureBorder: '', mosaicSize: null, mosaicUrls: [], xTwitterId: d.x_twitter_id ?? null, xUsername: d.x_username ?? null } : null;
   }
   if (!data) return null;
   const urls = data.mosaic_urls;
@@ -60,6 +60,8 @@ export async function fetchUserProfile(walletAddress) {
     profilePictureBorder: data.profile_picture_border ?? '',
     mosaicSize: data.mosaic_size ?? null,
     mosaicUrls: Array.isArray(urls) ? urls : [],
+    xTwitterId: data.x_twitter_id ?? null,
+    xUsername: data.x_username ?? null,
   };
 }
 
@@ -82,6 +84,20 @@ export async function updateUserProfile(walletAddress, { username, profilePictur
       if (err2) console.warn('[userData] updateUserProfile failed', err2);
     } else {
       console.warn('[userData] updateUserProfile failed', error);
+    }
+  }
+}
+
+export async function updateUserXLink(walletAddress, { xTwitterId, xUsername }) {
+  if (!supabase || !walletAddress) return;
+  const normalized = walletAddress.toLowerCase();
+  const payload = { x_twitter_id: xTwitterId ?? null, x_username: xUsername ?? null };
+  const { error } = await supabase.from(TABLE).update(payload).eq('wallet_address', normalized);
+  if (error) {
+    if (error.code === '42703') {
+      console.warn('[userData] updateUserXLink: x columns missing, run add_user_data_x_twitter.sql');
+    } else {
+      console.warn('[userData] updateUserXLink failed', error);
     }
   }
 }
