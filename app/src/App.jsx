@@ -3,7 +3,7 @@ import { Routes, Route, Link, NavLink, useSearchParams } from 'react-router-dom'
 import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { loadProfile, saveProfile } from './profileStorage';
-import { ensureUserRow, fetchUserProfile, updateUserProfile, updateUserXLink } from './userData';
+import { ensureUserRow, fetchUserProfile, updateUserProfile } from './userData';
 import NFTSelector from './NFTSelector';
 import ProfilePage from './ProfilePage';
 
@@ -23,60 +23,29 @@ function XAuthCallbackPage() {
       setMessage(!code || !storedVerifier ? 'Missing code from X. Try connecting again.' : state !== storedState ? 'Invalid state. Try connecting again.' : 'Wallet not found. Connect your wallet and try again.');
       return;
     }
-    const clientId = import.meta.env.VITE_X_CLIENT_ID;
-    if (!clientId) {
-      setStatus('error');
-      setMessage('VITE_X_CLIENT_ID not configured.');
-      return;
-    }
     const redirectUri = window.location.origin + '/auth/x/callback';
     (async () => {
       try {
-        const tokenRes = await fetch('https://api.twitter.com/2/oauth2/token', {
+        const res = await fetch('/api/auth/x-exchange', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({
-            grant_type: 'authorization_code',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
             code,
-            redirect_uri: redirectUri,
             code_verifier: storedVerifier,
-            client_id: clientId,
+            wallet,
+            redirect_uri: redirectUri,
           }),
         });
-        if (!tokenRes.ok) {
-          const err = await tokenRes.text();
-          setStatus('error');
-          setMessage('Could not get token from X. Try again.');
-          return;
-        }
-        const tokenData = await tokenRes.json();
-        const accessToken = tokenData.access_token;
-        if (!accessToken) {
-          setStatus('error');
-          setMessage('No access token from X.');
-          return;
-        }
-        const meRes = await fetch('https://api.twitter.com/2/users/me?user.fields=username', {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
-        if (!meRes.ok) {
-          setStatus('error');
-          setMessage('Could not load your X account.');
-          return;
-        }
-        const meData = await meRes.json();
-        const xId = meData.data?.id;
-        const xUsername = meData.data?.username;
-        if (!xId) {
-          setStatus('error');
-          setMessage('X account data missing.');
-          return;
-        }
+        const data = await res.json().catch(() => ({}));
         sessionStorage.removeItem('x_oauth_code_verifier');
         sessionStorage.removeItem('x_oauth_wallet');
-        await updateUserXLink(wallet, { xTwitterId: xId, xUsername: xUsername || null });
+        if (!res.ok) {
+          setStatus('error');
+          setMessage(data?.error || 'Something went wrong. Try again.');
+          return;
+        }
         setStatus('ok');
-        setMessage(xUsername ? `X account @${xUsername} linked.` : 'X account linked.');
+        setMessage(data?.username ? `X account @${data.username} linked.` : 'X account linked.');
       } catch (e) {
         setStatus('error');
         setMessage('Something went wrong. Try again.');
