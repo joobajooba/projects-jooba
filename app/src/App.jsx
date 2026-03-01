@@ -29,7 +29,7 @@ function XAuthCallbackPage() {
       setMessage('VITE_X_CLIENT_ID not configured.');
       return;
     }
-    const redirectUri = `${window.location.origin}/auth/x/callback`;
+    const redirectUri = window.location.origin + '/auth/x/callback';
     (async () => {
       try {
         const tokenRes = await fetch('https://api.twitter.com/2/oauth2/token', {
@@ -178,7 +178,7 @@ export default function App() {
     const state = Array.from(crypto.getRandomValues(new Uint8Array(16)))
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('');
-    const redirectUri = `${window.location.origin}/auth/x/callback`;
+    const redirectUri = window.location.origin + '/auth/x/callback';
     sessionStorage.setItem('x_oauth_code_verifier', codeVerifier);
     sessionStorage.setItem('x_oauth_state', state);
     if (address) sessionStorage.setItem('x_oauth_wallet', address.toLowerCase());
