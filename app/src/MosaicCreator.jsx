@@ -24,11 +24,11 @@ function getImageUrl(nft) {
 }
 
 /**
- * Create 2×2 or 4×4 NFT mosaics. User picks network (Ethereum / Apechain), size, then selects NFTs in order.
+ * Create 2×2, 3×3, or 4×4 NFT mosaics. User picks network (Ethereum / Apechain), size, then selects NFTs in order.
  */
 export default function MosaicCreator({ ownerAddress, apiKeyEth, apiKeyApechain, onClose }) {
   const [step, setStep] = useState('setup'); // 'setup' | 'pick' | 'preview'
-  const [size, setSize] = useState(2); // 2 = 2x2, 4 = 4x4
+  const [size, setSize] = useState(2); // 2 = 2x2, 3 = 3x3, 4 = 4x4
   const [network, setNetwork] = useState('ethereum');
   const [nfts, setNfts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -134,6 +134,13 @@ export default function MosaicCreator({ ownerAddress, apiKeyEth, apiKeyApechain,
                   onClick={() => setSize(2)}
                 >
                   2×2
+                </button>
+                <button
+                  type="button"
+                  className={`app-nft-selector-network-btn ${size === 3 ? 'active' : ''}`}
+                  onClick={() => setSize(3)}
+                >
+                  3×3
                 </button>
                 <button
                   type="button"

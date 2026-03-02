@@ -1000,6 +1000,11 @@ body {
   grid-template-rows: repeat(2, 1fr);
 }
 
+.app-mosaic-preview-3 {
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+}
+
 .app-mosaic-preview-4 {
   grid-template-columns: repeat(4, 1fr);
   grid-template-rows: repeat(4, 1fr);

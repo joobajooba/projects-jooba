@@ -177,7 +177,7 @@ export default function ProfilePage() {
                 className="app-profile-mosaic-btn"
                 onClick={() => setMosaicOpen(true)}
               >
-                Create 2×2 / 4×4 mosaic
+                Create 2×2 / 3×3 / 4×4 mosaic
               </button>
             )}
           </div>
