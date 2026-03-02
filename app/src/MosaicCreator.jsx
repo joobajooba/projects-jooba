@@ -36,6 +36,7 @@ export default function MosaicCreator({ ownerAddress, apiKeyEth, apiKeyApechain,
   const [selected, setSelected] = useState([]); // ordered list of image URLs
   const [savedMosaic, setSavedMosaic] = useState(null); // { size, urls } | null
   const [saving, setSaving] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   const config = NETWORKS[network];
   const apiKey = network === 'ethereum' ? apiKeyEth : apiKeyApechain;
@@ -80,6 +81,63 @@ export default function MosaicCreator({ ownerAddress, apiKeyEth, apiKeyApechain,
     await saveUserMosaic(ownerAddress, { mosaicSize: size, mosaicUrls: selected });
     setSavedMosaic({ size, urls: [...selected] });
     setSaving(false);
+  }
+
+  async function handleDownloadMosaic() {
+    if (!selected.length || selected.length !== required || downloading) return;
+    try {
+      setDownloading(true);
+      const canvasSize = 2048;
+      const cell = canvasSize / size;
+      const canvas = document.createElement('canvas');
+      canvas.width = canvasSize;
+      canvas.height = canvasSize;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        setError('Could not create drawing context.');
+        return;
+      }
+      ctx.fillStyle = 'black';
+      ctx.fillRect(0, 0, canvasSize, canvasSize);
+
+      for (let i = 0; i < selected.length; i += 1) {
+        const url = selected[i];
+        const row = Math.floor(i / size);
+        const col = i % size;
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => {
+            try {
+              ctx.drawImage(img, col * cell, row * cell, cell, cell);
+            } catch (e) {
+              // ignore draw errors for this image
+            }
+            resolve();
+          };
+          img.onerror = () => resolve(); // skip failed images
+          img.src = url;
+        });
+      }
+
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          setError('Browser blocked image export. Try a different browser.');
+          return;
+        }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `j00ba-mosaic-${size}x${size}.png`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }, 'image/png');
+    } finally {
+      setDownloading(false);
+    }
   }
 
   function toggleSelect(imgUrl) {
@@ -260,6 +318,14 @@ export default function MosaicCreator({ ownerAddress, apiKeyEth, apiKeyApechain,
                 disabled={saving}
               >
                 {saving ? 'Saving…' : 'Save mosaic'}
+              </button>
+              <button
+                type="button"
+                className="app-modal-btn app-modal-btn-secondary"
+                onClick={handleDownloadMosaic}
+                disabled={downloading}
+              >
+                {downloading ? 'Preparing image…' : 'Download PNG'}
               </button>
               <button type="button" className="app-modal-btn app-modal-btn-secondary" onClick={onClose}>
                 Close
