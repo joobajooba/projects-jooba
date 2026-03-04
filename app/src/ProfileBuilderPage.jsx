@@ -1,207 +1,459 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { useAccount } from 'wagmi';
-import { Link, useNavigate } from 'react-router-dom';
-import GridLayoutWrapper from './profile-builder/GridLayoutWrapper';
-import WidgetPanel from './profile-builder/WidgetPanel';
-import DescriptionWidget from './profile-builder/widgets/DescriptionWidget';
-import ImageWidget from './profile-builder/widgets/ImageWidget';
-import StatsWidget from './profile-builder/widgets/StatsWidget';
-import { ensureProfile, fetchProfileByWallet, updateProfile } from './profileBuilderApi';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 
-function makeId(prefix) {
-  return `${prefix}-${Math.random().toString(16).slice(2)}-${Date.now()}`;
-}
+const CELL_SIZE = 50;
+const PADDING = 8;
 
-function defaultLayout(profileId) {
-  // 12-col layout, rowHeight 30
+const PANEL_ITEMS = [
+  { id: 'rect', type: 'rectangle', cols: 2, rows: 1, label: 'MOVE' },
+  { id: 'sq-s', type: 'square-small', cols: 1, rows: 1 },
+  { id: 'sq-l', type: 'square-large', cols: 2, rows: 2 },
+];
+
+function getGridCoords(clientX, clientY, containerRect) {
+  const relX = clientX - containerRect.left - PADDING;
+  const relY = clientY - containerRect.top - PADDING;
   return {
-    layout: [
-      { i: 'desc-small', x: 0, y: 0, w: 4, h: 6, minW: 3, minH: 4 },
-      { i: 'image-small', x: 4, y: 0, w: 4, h: 6, minW: 3, minH: 4 },
-      { i: 'stats', x: 8, y: 0, w: 4, h: 4, minW: 3, minH: 3, maxH: 4 },
-    ],
-    widgets: {
-      'desc-small': { type: 'description', variant: 'small' },
-      'image-small': { type: 'image', variant: 'small' },
-      stats: { type: 'stats', variant: '' },
-    },
+    col: Math.floor(relX / CELL_SIZE),
+    row: Math.floor(relY / CELL_SIZE),
   };
 }
 
-export default function ProfileBuilderPage() {
-  const { address } = useAccount();
-  const navigate = useNavigate();
+function clampCell(item, col, row, gridCols, gridRows) {
+  const maxCol = Math.max(0, gridCols - item.cols);
+  const maxRow = Math.max(0, gridRows - item.rows);
+  return {
+    col: Math.max(0, Math.min(maxCol, col)),
+    row: Math.max(0, Math.min(maxRow, row)),
+  };
+}
 
-  const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState(null);
-  const [layout, setLayout] = useState([]);
-  const [widgets, setWidgets] = useState({});
-  const [bio, setBio] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState('');
-  const [panelOpen, setPanelOpen] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    if (!address) {
-      setLoading(false);
-      setProfile(null);
-      return;
-    }
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      setError('');
-      const ensured = await ensureProfile(address);
-      const p = ensured ?? (await fetchProfileByWallet(address));
-      if (cancelled) return;
-      setProfile(p);
-      if (!p) {
-        setError('Profiles table missing or Supabase error. Run the migration: supabase/migrations/create_profiles_and_views.sql in the Supabase SQL Editor.');
-        setLoading(false);
-        return;
-      }
-      const lj = p?.layout_json;
-      const parsed = lj && typeof lj === 'object' ? lj : null;
-      const init = parsed?.layout && parsed?.widgets ? parsed : defaultLayout(p?.id);
-      setLayout(init.layout);
-      setWidgets(init.widgets);
-      setBio(p?.bio || '');
-      setAvatarUrl(p?.avatar_url || '');
-      setLoading(false);
-    })();
-    return () => { cancelled = true; };
-  }, [address]);
-
-  const widgetNodes = useMemo(() => {
-    if (!profile) return null;
-    return layout.map((l) => {
-      const meta = widgets[l.i];
-      if (!meta) return null;
-      if (meta.type === 'description') {
-        return (
-          <div key={l.i} data-grid={l}>
-            <DescriptionWidget editMode variant={meta.variant} value={bio} onChange={setBio} />
-          </div>
-        );
-      }
-      if (meta.type === 'image') {
-        return (
-          <div key={l.i} data-grid={l}>
-            <ImageWidget editMode variant={meta.variant} ownerWallet={profile.owner_wallet} url={avatarUrl} onChangeUrl={setAvatarUrl} />
-          </div>
-        );
-      }
-      if (meta.type === 'stats') {
-        return (
-          <div key={l.i} data-grid={l}>
-            <StatsWidget profileId={profile.id} />
-          </div>
-        );
-      }
-      return null;
-    });
-  }, [profile, layout, widgets, bio, avatarUrl]);
-
-  function handleDropWidget({ item, widgetType, widgetVariant }) {
-    if (!widgetType) return;
-    const id = makeId(widgetType);
-    const w = widgetType === 'stats' ? 4 : widgetVariant === 'large' ? 6 : 4;
-    const h = widgetType === 'stats' ? 4 : widgetVariant === 'large' ? 10 : 6;
-    const newItem = { ...item, i: id, w, h, minW: 3, minH: 4 };
-    if (widgetType === 'stats') newItem.maxH = 4;
-    setLayout((prev) => [...prev, newItem]);
-    setWidgets((prev) => ({ ...prev, [id]: { type: widgetType, variant: widgetVariant || '' } }));
-  }
-
-  async function handleSave() {
-    if (!address || !profile) return;
-    setSaving(true);
-    setError('');
-    const payload = {
-      bio: bio || null,
-      avatar_url: avatarUrl || null,
-      layout_json: { layout, widgets },
-    };
-    const res = await updateProfile(address, payload);
-    if (!res.ok) setError('Failed to save. Check console for details.');
-    setSaving(false);
-  }
-
-  if (!address) {
-    return (
-      <div className="app-main-inner">
-        <h1>Profile Builder</h1>
-        <p>Connect your wallet to edit your profile layout.</p>
-        <Link to="/profile" className="app-profile-back">← Back</Link>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="app-main-inner">
-        <p>Loading builder…</p>
-      </div>
-    );
-  }
-
-  if (!profile) {
-    return (
-      <div className="app-main-inner">
-        <h1 className="m-0 mb-2 text-xl font-semibold text-white">Could not load profile</h1>
-        <p className="m-0 mb-3 text-white/80">{error || 'Something went wrong loading your profile.'}</p>
-        <p className="m-0 mb-3 text-sm text-white/60">
-          In Supabase Dashboard → SQL Editor, run the contents of <code className="rounded bg-white/10 px-1">supabase/migrations/create_profiles_and_views.sql</code> to create the <code className="rounded bg-white/10 px-1">profiles</code> and <code className="rounded bg-white/10 px-1">profile_views</code> tables.
-        </p>
-        <Link to="/profile" className="inline-block rounded border border-white/20 bg-white/5 px-3 py-2 text-sm text-white/90 no-underline hover:bg-white/10">← Back to profile</Link>
-      </div>
-    );
-  }
-
+function isOverElement(clientX, clientY, el) {
+  if (!el) return false;
+  const r = el.getBoundingClientRect();
   return (
-    <div className="app-main-inner">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div>
-          <h1 className="m-0 text-xl font-semibold text-white">Edit Profile Page</h1>
-          <p className="m-0 text-sm text-white/60">Drag widgets, resize, then save from the widgets panel.</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80 hover:bg-white/10"
-            onClick={() => setPanelOpen((v) => !v)}
-          >
-            {panelOpen ? 'Hide widgets' : 'Show widgets'}
-          </button>
-          <button
-            type="button"
-            className="rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm text-white/80 hover:bg-black/30"
-            onClick={() => navigate('/profile')}
-          >
-            Exit edit mode
-          </button>
-        </div>
-      </div>
-
-      {error && <div className="mb-3 rounded-md border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">{error}</div>}
-
-      <GridLayoutWrapper
-        editMode
-        layout={layout}
-        onLayoutChange={setLayout}
-        onDropWidget={handleDropWidget}
-      >
-        {widgetNodes}
-      </GridLayoutWrapper>
-
-      <WidgetPanel
-        open={panelOpen}
-        onToggle={() => setPanelOpen((v) => !v)}
-        onSave={handleSave}
-        saving={saving}
-      />
-    </div>
+    clientX >= r.left &&
+    clientX <= r.right &&
+    clientY >= r.top &&
+    clientY <= r.bottom
   );
 }
 
+export default function ProfileBuilderPage() {
+  const gridContainerRef = useRef(null);
+  const gridAreaRef = useRef(null);
+  const panelDropZoneRef = useRef(null);
+  const [gridSize, setGridSize] = useState({ cols: 10, rows: 10 });
+  const [placements, setPlacements] = useState({});
+  const [draggedId, setDraggedId] = useState(null);
+  const [dragOverReturn, setDragOverReturn] = useState(false);
+
+  const updateGridSize = useCallback(() => {
+    const el = gridAreaRef.current;
+    if (!el) return;
+    const w = el.clientWidth;
+    const h = el.clientHeight;
+    const cols = Math.max(10, Math.floor(w / CELL_SIZE));
+    const rows = Math.max(10, Math.floor(h / CELL_SIZE));
+    setGridSize((prev) =>
+      prev.cols !== cols || prev.rows !== rows ? { cols, rows } : prev
+    );
+  }, []);
+
+  useEffect(() => {
+    updateGridSize();
+    const el = gridAreaRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(updateGridSize);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [updateGridSize]);
+
+  const gridWidth = gridSize.cols * CELL_SIZE;
+  const gridHeight = gridSize.rows * CELL_SIZE;
+
+  const placeOnGrid = useCallback(
+    (id, col, row) => {
+      const item = PANEL_ITEMS.find((i) => i.id === id);
+      if (!item) return;
+      const { col: c, row: r } = clampCell(
+        item,
+        col,
+        row,
+        gridSize.cols,
+        gridSize.rows
+      );
+      setPlacements((prev) => ({ ...prev, [id]: { col: c, row: r } }));
+    },
+    [gridSize.cols, gridSize.rows]
+  );
+
+  const returnToPanel = useCallback((id) => {
+    setPlacements((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  }, []);
+
+  const handleMouseUp = useCallback(
+    (e) => {
+      if (!draggedId) return;
+
+      const overGrid = isOverElement(
+        e.clientX,
+        e.clientY,
+        gridContainerRef.current
+      );
+      const overReturn = isOverElement(
+        e.clientX,
+        e.clientY,
+        panelDropZoneRef.current
+      );
+
+      if (overGrid) {
+        const rect = gridContainerRef.current.getBoundingClientRect();
+        const { col, row } = getGridCoords(e.clientX, e.clientY, rect);
+        placeOnGrid(draggedId, col, row);
+      } else if (overReturn) {
+        returnToPanel(draggedId);
+      } else if (placements[draggedId]) {
+        const { col, row } = placements[draggedId];
+        placeOnGrid(draggedId, col, row);
+      }
+
+      setDraggedId(null);
+      setDragOverReturn(false);
+    },
+    [draggedId, placements, placeOnGrid, returnToPanel]
+  );
+
+  const handleMouseMove = useCallback(
+    (e) => {
+      if (!draggedId) return;
+
+      if (
+        isOverElement(e.clientX, e.clientY, panelDropZoneRef.current)
+      ) {
+        setDragOverReturn(true);
+      } else {
+        setDragOverReturn(false);
+      }
+
+      if (
+        placements[draggedId] &&
+        isOverElement(e.clientX, e.clientY, gridContainerRef.current)
+      ) {
+        const rect = gridContainerRef.current.getBoundingClientRect();
+        const { col, row } = getGridCoords(e.clientX, e.clientY, rect);
+        const item = PANEL_ITEMS.find((i) => i.id === draggedId);
+        if (item) {
+          const { col: c, row: r } = clampCell(
+            item,
+            col,
+            row,
+            gridSize.cols,
+            gridSize.rows
+          );
+          setPlacements((prev) => ({ ...prev, [draggedId]: { col: c, row: r } }));
+        }
+      }
+    },
+    [draggedId, placements, gridSize.cols, gridSize.rows]
+  );
+
+  useEffect(() => {
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => {
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, [handleMouseUp, handleMouseMove]);
+
+  const itemsOnGrid = PANEL_ITEMS.filter((item) => placements[item.id]);
+  const itemsInPanel = PANEL_ITEMS.filter((item) => !placements[item.id]);
+  const coordsText =
+    itemsOnGrid.length === 0
+      ? 'No items on grid. Drag from panel.'
+      : itemsOnGrid
+          .map(
+            (item) =>
+              `${item.type} at (${placements[item.id].col},${placements[item.id].row})`
+          )
+          .join(' · ');
+
+  return (
+    <div
+      className="profile-builder-page"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        margin: '5%',
+        display: 'flex',
+        flexDirection: 'row',
+        gap: '2rem',
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+        background: '#111827',
+        color: '#e5e7eb',
+        fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1rem',
+          alignItems: 'center',
+          flex: 1,
+          minWidth: 0,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+          <h1 style={{ fontSize: '1.5rem', letterSpacing: '0.05em', margin: 0 }}>
+            Edit Profile Page
+          </h1>
+          <Link
+            to="/profile"
+            style={{
+              fontSize: '0.9rem',
+              color: '#9ca3af',
+              textDecoration: 'none',
+            }}
+          >
+            ← Back to profile
+          </Link>
+        </div>
+        <p style={{ fontSize: '0.9rem', color: '#9ca3af', margin: 0 }}>
+          Drag items from the panel onto the grid. They snap to grid cells. Drag
+          back to the panel to return them.
+        </p>
+
+        <div
+          ref={gridAreaRef}
+          style={{
+            flex: 1,
+            minHeight: 0,
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <div
+            ref={gridContainerRef}
+            style={{
+              position: 'relative',
+              width: gridWidth + PADDING * 2,
+              height: gridHeight + PADDING * 2,
+              background: '#020617',
+              borderRadius: '0.75rem',
+              padding: PADDING,
+              boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
+              flexShrink: 0,
+            }}
+          >
+          <div
+            style={{
+              position: 'relative',
+              width: gridWidth,
+              height: gridHeight,
+              display: 'grid',
+              gridTemplateColumns: `repeat(${gridSize.cols}, ${CELL_SIZE}px)`,
+              gridTemplateRows: `repeat(${gridSize.rows}, ${CELL_SIZE}px)`,
+              borderRadius: '0.5rem',
+              overflow: 'hidden',
+            }}
+          >
+            {Array.from({ length: gridSize.cols * gridSize.rows }, (_, i) => (
+              <div
+                key={i}
+                className="profile-builder-cell"
+                style={{
+                  border: '1px solid rgba(55,65,81,0.7)',
+                  background:
+                    'radial-gradient(circle at 20% 20%, rgba(75,85,99,0.25), rgba(15,23,42,0.9))',
+                }}
+              />
+            ))}
+          </div>
+
+          {itemsOnGrid.map((item) => {
+            const pos = placements[item.id];
+            if (!pos) return null;
+            const x = PADDING + pos.col * CELL_SIZE;
+            const y = PADDING + pos.row * CELL_SIZE;
+            const w = item.cols * CELL_SIZE;
+            const h = item.rows * CELL_SIZE;
+            return (
+              <div
+                key={item.id}
+                className="profile-builder-grid-item"
+                data-type={item.type}
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  top: 0,
+                  width: w,
+                  height: h,
+                  transform: `translate(${x}px, ${y}px)`,
+                  cursor: 'grab',
+                  userSelect: 'none',
+                  pointerEvents: 'auto',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '0.375rem',
+                  boxSizing: 'border-box',
+                  ...(item.type === 'rectangle' && {
+                    background: '#ef4444',
+                    color: '#fee2e2',
+                    fontWeight: 600,
+                    fontSize: '0.7rem',
+                    letterSpacing: '0.05em',
+                  }),
+                  ...(item.type === 'square-small' && {
+                    background: '#374151',
+                    border: '1px solid #4b5563',
+                  }),
+                  ...(item.type === 'square-large' && {
+                    background: '#4b5563',
+                    border: '1px solid #6b7280',
+                  }),
+                }}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  setDraggedId(item.id);
+                }}
+              >
+                {item.label || ''}
+              </div>
+            );
+          })}
+          </div>
+        </div>
+
+        <p style={{ fontSize: '0.85rem', color: '#9ca3af', margin: 0 }}>
+          {coordsText}
+        </p>
+      </div>
+
+      <aside
+        style={{
+          width: 220,
+          background: '#1f2937',
+          borderRadius: '0.75rem',
+          padding: '1.25rem',
+          boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+          flexShrink: 0,
+        }}
+      >
+        <h2
+          style={{
+            fontSize: '1rem',
+            fontWeight: 600,
+            marginBottom: '1rem',
+            letterSpacing: '0.03em',
+          }}
+        >
+          Panel
+        </h2>
+        <p
+          style={{
+            fontSize: '0.75rem',
+            color: '#6b7280',
+            marginBottom: '0.25rem',
+          }}
+        >
+          Drag onto grid
+        </p>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem',
+            marginBottom: '1rem',
+          }}
+        >
+          {itemsInPanel.map((item) => (
+            <div
+              key={item.id}
+              className="profile-builder-panel-item"
+              data-type={item.type}
+              style={{
+                cursor: 'grab',
+                userSelect: 'none',
+                flexShrink: 0,
+                borderRadius: '0.375rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                ...(item.type === 'rectangle' && {
+                  width: 100,
+                  height: 50,
+                  background: '#ef4444',
+                  color: '#fee2e2',
+                  fontWeight: 600,
+                  fontSize: '0.7rem',
+                  letterSpacing: '0.05em',
+                }),
+                ...(item.type === 'square-small' && {
+                  width: 50,
+                  height: 50,
+                  background: '#374151',
+                  border: '1px solid #4b5563',
+                }),
+                ...(item.type === 'square-large' && {
+                  width: 100,
+                  height: 100,
+                  background: '#4b5563',
+                  border: '1px solid #6b7280',
+                }),
+              }}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                setDraggedId(item.id);
+              }}
+            >
+              {item.label || ''}
+            </div>
+          ))}
+        </div>
+        <p
+          style={{
+            fontSize: '0.75rem',
+            color: '#6b7280',
+            marginBottom: '0.25rem',
+          }}
+        >
+          Drop here to return
+        </p>
+        <div
+          ref={panelDropZoneRef}
+          style={{
+            minHeight: 60,
+            border: '2px dashed #4b5563',
+            borderRadius: '0.5rem',
+            marginTop: '0.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: dragOverReturn ? 'rgba(96,165,250,0.08)' : undefined,
+            borderColor: dragOverReturn ? '#60a5fa' : undefined,
+          }}
+        >
+          <span
+            style={{
+              fontSize: '0.75rem',
+              color: '#6b7280',
+              pointerEvents: 'none',
+            }}
+          >
+            Return items here
+          </span>
+        </div>
+      </aside>
+    </div>
+  );
+}
