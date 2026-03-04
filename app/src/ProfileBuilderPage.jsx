@@ -187,9 +187,11 @@ export default function ProfileBuilderPage() {
     <div
       className="profile-builder-page"
       style={{
-        position: 'fixed',
-        inset: 0,
+        width: '100%',
+        minHeight: '100vh',
+        boxSizing: 'border-box',
         margin: '5%',
+        padding: 0,
         display: 'flex',
         flexDirection: 'row',
         gap: '2rem',
