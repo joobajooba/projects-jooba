@@ -348,10 +348,8 @@ export default function ProfileBuilderPage() {
           })}
           </div>
         </div>
-      </div>
 
-      <aside
-        style={{
+      <aside style={{
           width: panelOpen ? 250 : 48,
           minWidth: panelOpen ? 250 : 48,
           height: '100vh',
@@ -360,8 +358,7 @@ export default function ProfileBuilderPage() {
           overflow: 'hidden',
           position: 'relative',
           transition: 'width 0.2s ease, min-width 0.2s ease',
-        }}
-      >
+        }}>
         <button
           type="button"
           onClick={() => setPanelOpen((v) => !v)}
