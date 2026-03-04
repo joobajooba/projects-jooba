@@ -17,7 +17,7 @@ function PanelItem({ label, type, variant }) {
   );
 }
 
-export default function WidgetPanel({ open }) {
+export default function WidgetPanel({ open, onToggle }) {
   return (
     <div
       className={[
@@ -25,7 +25,16 @@ export default function WidgetPanel({ open }) {
         open ? 'translate-x-0' : 'translate-x-full',
       ].join(' ')}
     >
-      <h3 className="mb-4 text-base font-semibold text-white">Widgets</h3>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h3 className="text-base font-semibold text-white">Widgets</h3>
+        <button
+          type="button"
+          className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-xs text-white/70 hover:bg-white/10"
+          onClick={onToggle}
+        >
+          {open ? 'Collapse' : 'Expand'}
+        </button>
+      </div>
       <PanelItem label="Profile Description (Small)" type="description" variant="small" />
       <PanelItem label="Profile Description (Large)" type="description" variant="large" />
       <PanelItem label="Profile Image (Small)" type="image" variant="small" />

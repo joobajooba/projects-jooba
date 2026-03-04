@@ -203,7 +203,7 @@ export default function ProfileBuilderPage() {
         {widgetNodes}
       </GridLayoutWrapper>
 
-      <WidgetPanel open={panelOpen} />
+      <WidgetPanel open={panelOpen} onToggle={() => setPanelOpen((v) => !v)} />
     </div>
   );
 }

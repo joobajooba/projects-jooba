@@ -1,15 +1,15 @@
-import React, { useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ResponsiveGridLayout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 
-const ROW_HEIGHT = 50;
-const ROW_GAP = 10;
-const CONTAINER_PADDING = 10;
-const COLS = 12;
-/** Grid width so each cell is 50x50: (W - 2*pad - (COLS-1)*gap) / COLS = 50 => W = 730 */
-const GRID_WIDTH_PX = 2 * CONTAINER_PADDING + (COLS - 1) * ROW_GAP + COLS * 50;
-const ROW_STEP = ROW_HEIGHT + ROW_GAP; // 60px
+// Base grid resolution: 5px squares
+const CELL_SIZE = 5;
+const ROW_HEIGHT = CELL_SIZE;
+const ROW_GAP = 0;
+const CONTAINER_PADDING = 0;
+const MIN_COLS = 40;
+const ROW_STEP = ROW_HEIGHT + ROW_GAP; // 5px
 
 export default function GridLayoutWrapper({
   editMode,
@@ -18,8 +18,28 @@ export default function GridLayoutWrapper({
   onDropWidget,
   children,
 }) {
+  const [cols, setCols] = useState(80);
   const layouts = useMemo(() => ({ lg: layout }), [layout]);
   const dropZoneRef = useRef(null);
+
+  // Keep horizontal snapping close to 5px by adapting column count
+  useEffect(() => {
+    if (!editMode) return;
+    const el = dropZoneRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      const width = entry?.contentRect?.width || el.offsetWidth || 0;
+      if (!width) return;
+      const nextCols = Math.max(
+        MIN_COLS,
+        Math.round(width / CELL_SIZE)
+      );
+      setCols((prev) => (prev === nextCols ? prev : nextCols));
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [editMode]);
 
   function handleDragOver(e) {
     e.preventDefault();
@@ -34,10 +54,13 @@ export default function GridLayoutWrapper({
     const el = dropZoneRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    const colWidth = (rect.width - 2 * CONTAINER_PADDING - (COLS - 1) * ROW_GAP) / COLS;
     const xPx = e.clientX - rect.left - CONTAINER_PADDING;
     const yPx = e.clientY - rect.top - CONTAINER_PADDING;
-    const gridX = Math.max(0, Math.min(COLS - 1, Math.floor(xPx / (colWidth + ROW_GAP))));
+    const approxCols = cols || MIN_COLS;
+    const gridX = Math.max(
+      0,
+      Math.min(approxCols - 1, Math.floor(xPx / CELL_SIZE))
+    );
     const gridY = Math.max(0, Math.floor(yPx / ROW_STEP));
     onDropWidget({
       item: { x: gridX, y: gridY },
@@ -48,27 +71,36 @@ export default function GridLayoutWrapper({
   }
 
   return (
-    <div className={editMode ? 'relative' : ''} style={editMode ? { width: GRID_WIDTH_PX } : undefined}>
+    <div
+      className={editMode ? 'relative flex items-stretch justify-center' : ''}
+      style={
+        editMode
+          ? {
+              height: '80vh',
+              margin: '10vh 10vw', // 10% top/bottom/left/right
+            }
+          : undefined
+      }
+    >
       {editMode && (
         <div
-          className="profile-builder-grid-overlay pointer-events-none absolute inset-[10px] rounded-lg"
+          className="profile-builder-grid-overlay pointer-events-none absolute inset-0 rounded-lg"
           aria-hidden
           style={{
             backgroundImage: [
-              [...Array(11)].map((_, i) => {
-                const pct = ((i + 1) / 12) * 100;
-                return `linear-gradient(to right, transparent ${pct}%, rgba(255,255,255,0.18) ${pct}%, rgba(255,255,255,0.18) ${pct + 0.15}%, transparent ${pct + 0.15}%)`;
-              }).join(', '),
-              `repeating-linear-gradient(to bottom, transparent 0, transparent ${ROW_STEP - 1}px, rgba(255,255,255,0.18) ${ROW_STEP - 1}px, rgba(255,255,255,0.18) ${ROW_STEP}px)`,
+              // Vertical lines every 5px
+              'linear-gradient(to right, rgba(255,255,255,0.18) 1px, transparent 1px)',
+              // Horizontal lines every 5px
+              'linear-gradient(to bottom, rgba(255,255,255,0.18) 1px, transparent 1px)',
             ].join(', '),
-            backgroundSize: '100% 100%, 100% ' + ROW_STEP + 'px',
-            backgroundPosition: '0 0, 0 0',
+            backgroundSize: `${CELL_SIZE}px ${CELL_SIZE}px`,
+            backgroundPosition: '0 0',
           }}
         />
       )}
       <div
         ref={dropZoneRef}
-        className={editMode ? 'relative z-10' : ''}
+        className={editMode ? 'relative z-10 flex-1' : ''}
         style={editMode ? { minHeight: 520 } : undefined}
         onDragOver={editMode ? handleDragOver : undefined}
         onDrop={editMode ? handleDrop : undefined}
@@ -77,7 +109,7 @@ export default function GridLayoutWrapper({
           className={editMode ? 'min-h-[520px]' : ''}
           layouts={layouts}
           breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480 }}
-          cols={{ lg: COLS, md: COLS, sm: COLS, xs: COLS }}
+          cols={{ lg: cols, md: cols, sm: cols, xs: cols }}
           rowHeight={ROW_HEIGHT}
           margin={[ROW_GAP, ROW_GAP]}
           containerPadding={[CONTAINER_PADDING, CONTAINER_PADDING]}
