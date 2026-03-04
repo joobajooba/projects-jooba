@@ -35,13 +35,13 @@ export default function ImageWidget({ editMode, variant, ownerWallet, url, onCha
   }
 
   return (
-    <div className="h-full rounded-lg border border-white/10 bg-white/5 p-3 text-white">
+    <div className="h-full rounded-none border border-white/10 bg-white/5 p-3 text-white">
       <div className="js-widget-drag-handle mb-2 cursor-move text-xs text-white/60">Profile Image</div>
       <div className={isLarge ? 'h-[calc(100%-40px)]' : 'h-[calc(100%-40px)]'}>
         {url ? (
-          <img src={url} alt="" className="h-full w-full rounded-md object-cover" />
+          <img src={url} alt="" className="h-full w-full rounded-none object-cover" />
         ) : (
-          <div className="flex h-full w-full items-center justify-center rounded-md bg-black/30 text-sm text-white/50">
+          <div className="flex h-full w-full items-center justify-center rounded-none bg-black/30 text-sm text-white/50">
             No image
           </div>
         )}
@@ -51,7 +51,7 @@ export default function ImageWidget({ editMode, variant, ownerWallet, url, onCha
           <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={onPickFile} />
           <button
             type="button"
-            className="rounded-md border border-white/10 bg-black/30 px-3 py-1 text-xs text-white/80 hover:bg-black/40"
+            className="rounded-none border border-white/10 bg-black/30 px-3 py-1 text-xs text-white/80 hover:bg-black/40"
             onClick={() => inputRef.current?.click()}
             disabled={uploading}
           >

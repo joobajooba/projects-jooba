@@ -19,27 +19,38 @@ export default function GridLayoutWrapper({
   children,
 }) {
   const [cols, setCols] = useState(60);
-  const [cellPx, setCellPx] = useState(CELL_SIZE);
   const layouts = useMemo(() => ({ lg: layout }), [layout]);
+  const gridWidthPx = cols * CELL_SIZE;
   const dropZoneRef = useRef(null);
 
-  // Keep horizontal snapping close to CELL_SIZE by adapting column count
+  // Fix column count so grid width = cols * CELL_SIZE for exact 20px columns
   useEffect(() => {
     if (!editMode) return;
-    const el = dropZoneRef.current;
+    const el = dropZoneRef.current?.parentElement;
     if (!el) return;
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0];
       const width = entry?.contentRect?.width || el.offsetWidth || 0;
       if (!width) return;
-      const nextCols = Math.max(MIN_COLS, Math.round(width / CELL_SIZE));
-      const nextCellPx = width / nextCols;
+      const nextCols = Math.max(MIN_COLS, Math.floor(width / CELL_SIZE));
       setCols((prev) => (prev === nextCols ? prev : nextCols));
-      setCellPx((prev) => (prev === nextCellPx ? prev : nextCellPx));
     });
     observer.observe(el);
     return () => observer.disconnect();
   }, [editMode]);
+
+  function handleLayoutChange(current) {
+    if (!onLayoutChange) return;
+    // Force every item to integer grid so corners always snap to grid intersections
+    const snapped = current.map((item) => ({
+      ...item,
+      x: Math.round(item.x),
+      y: Math.round(item.y),
+      w: Math.max(1, Math.round(item.w)),
+      h: Math.max(1, Math.round(item.h)),
+    }));
+    onLayoutChange(snapped);
+  }
 
   function handleDragOver(e) {
     e.preventDefault();
@@ -57,10 +68,9 @@ export default function GridLayoutWrapper({
     const xPx = e.clientX - rect.left - CONTAINER_PADDING;
     const yPx = e.clientY - rect.top - CONTAINER_PADDING;
     const approxCols = cols || MIN_COLS;
-    const effectiveCell = cellPx || CELL_SIZE;
     const gridX = Math.max(
       0,
-      Math.min(approxCols - 1, Math.floor(xPx / effectiveCell))
+      Math.min(approxCols - 1, Math.floor(xPx / CELL_SIZE))
     );
     const gridY = Math.max(0, Math.floor(yPx / ROW_STEP));
     onDropWidget({
@@ -94,15 +104,19 @@ export default function GridLayoutWrapper({
               // Horizontal lines
               'linear-gradient(to bottom, rgba(255,255,255,0.18) 1px, transparent 1px)',
             ].join(', '),
-            backgroundSize: `${cellPx || CELL_SIZE}px ${ROW_STEP}px`,
+            backgroundSize: `${CELL_SIZE}px ${ROW_STEP}px`,
             backgroundPosition: '0 0',
           }}
         />
       )}
       <div
         ref={dropZoneRef}
-        className={editMode ? 'relative z-10 flex-1' : ''}
-        style={editMode ? { minHeight: 520 } : undefined}
+        className={editMode ? 'relative z-10' : ''}
+        style={
+          editMode
+            ? { width: gridWidthPx, minHeight: 520 }
+            : undefined
+        }
         onDragOver={editMode ? handleDragOver : undefined}
         onDrop={editMode ? handleDrop : undefined}
       >
@@ -120,7 +134,7 @@ export default function GridLayoutWrapper({
           preventCollision={!editMode}
           isDroppable={false}
           useCSSTransforms
-          onLayoutChange={(current) => onLayoutChange?.(current)}
+          onLayoutChange={handleLayoutChange}
           draggableHandle={editMode ? '.js-widget-drag-handle' : undefined}
         >
           {children}
