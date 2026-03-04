@@ -6,6 +6,7 @@ import { loadProfile, saveProfile } from './profileStorage';
 import { ensureUserRow, fetchUserProfile, updateUserProfile } from './userData';
 import NFTSelector from './NFTSelector';
 import ProfilePage from './ProfilePage';
+import ProfileBuilderPage from './ProfileBuilderPage';
 
 function XAuthCallbackPage() {
   const [searchParams] = useSearchParams();
@@ -280,6 +281,7 @@ export default function App() {
           <Route path="/mint" element={<PlaceholderPage title="Mint" />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/profile/:walletAddress" element={<ProfilePage />} />
+          <Route path="/profile/builder" element={<ProfileBuilderPage />} />
           <Route path="/auth/x/callback" element={<XAuthCallbackPage />} />
         </Routes>
       </main>
@@ -315,6 +317,15 @@ export default function App() {
                 >
                   Connect to X
                 </button>
+                <Link
+                  to="/profile/builder"
+                  className="app-profile-connect-x-btn"
+                  style={{ marginLeft: 8, display: 'inline-block', textDecoration: 'none' }}
+                  onClick={() => setProfileOpen(false)}
+                  title="Customize your profile page layout"
+                >
+                  Edit Profile Page
+                </Link>
               </div>
             </label>
             <label className="app-modal-label">

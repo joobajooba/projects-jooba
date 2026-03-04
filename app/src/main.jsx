@@ -11,6 +11,7 @@ import App from './App';
 import { getAlchemyApiKey } from './lib/alchemy';
 import '@rainbow-me/rainbowkit/styles.css';
 import './index.css';
+import './tailwind.css';
 
 const queryClient = new QueryClient();
 
