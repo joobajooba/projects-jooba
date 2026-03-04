@@ -10,12 +10,16 @@ const PANEL_ITEMS = [
   { id: 'sq-l', type: 'square-large', cols: 2, rows: 2 },
 ];
 
-function getGridCoords(clientX, clientY, containerRect) {
+function getGridCoords(clientX, clientY, containerRect, cols, rows) {
+  const innerW = containerRect.width - 2 * PADDING;
+  const innerH = containerRect.height - 2 * PADDING;
+  const cellW = innerW / cols;
+  const cellH = innerH / rows;
   const relX = clientX - containerRect.left - PADDING;
   const relY = clientY - containerRect.top - PADDING;
   return {
-    col: Math.floor(relX / CELL_SIZE),
-    row: Math.floor(relY / CELL_SIZE),
+    col: Math.floor(relX / cellW),
+    row: Math.floor(relY / cellH),
   };
 }
 
@@ -44,17 +48,22 @@ export default function ProfileBuilderPage() {
   const gridAreaRef = useRef(null);
   const panelDropZoneRef = useRef(null);
   const [gridSize, setGridSize] = useState({ cols: 10, rows: 10 });
+  const [gridInnerSize, setGridInnerSize] = useState({ width: 0, height: 0 });
   const [placements, setPlacements] = useState({});
   const [draggedId, setDraggedId] = useState(null);
   const [dragOverReturn, setDragOverReturn] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(true);
 
   const updateGridSize = useCallback(() => {
     const el = gridAreaRef.current;
     if (!el) return;
     const w = el.clientWidth;
     const h = el.clientHeight;
-    const cols = Math.max(10, Math.floor(w / CELL_SIZE));
-    const rows = Math.max(10, Math.floor(h / CELL_SIZE));
+    const innerW = w - 2 * PADDING;
+    const innerH = h - 2 * PADDING;
+    const cols = Math.max(10, Math.floor(innerW / CELL_SIZE));
+    const rows = Math.max(10, Math.floor(innerH / CELL_SIZE));
+    setGridInnerSize({ width: w, height: h });
     setGridSize((prev) =>
       prev.cols !== cols || prev.rows !== rows ? { cols, rows } : prev
     );
@@ -69,8 +78,14 @@ export default function ProfileBuilderPage() {
     return () => observer.disconnect();
   }, [updateGridSize]);
 
-  const gridWidth = gridSize.cols * CELL_SIZE;
-  const gridHeight = gridSize.rows * CELL_SIZE;
+  const cellWidthPx =
+    gridInnerSize.width > 0
+      ? (gridInnerSize.width - 2 * PADDING) / gridSize.cols
+      : CELL_SIZE;
+  const cellHeightPx =
+    gridInnerSize.height > 0
+      ? (gridInnerSize.height - 2 * PADDING) / gridSize.rows
+      : CELL_SIZE;
 
   const placeOnGrid = useCallback(
     (id, col, row) => {
@@ -113,7 +128,13 @@ export default function ProfileBuilderPage() {
 
       if (overGrid) {
         const rect = gridContainerRef.current.getBoundingClientRect();
-        const { col, row } = getGridCoords(e.clientX, e.clientY, rect);
+        const { col, row } = getGridCoords(
+          e.clientX,
+          e.clientY,
+          rect,
+          gridSize.cols,
+          gridSize.rows
+        );
         placeOnGrid(draggedId, col, row);
       } else if (overReturn) {
         returnToPanel(draggedId);
@@ -145,7 +166,13 @@ export default function ProfileBuilderPage() {
         isOverElement(e.clientX, e.clientY, gridContainerRef.current)
       ) {
         const rect = gridContainerRef.current.getBoundingClientRect();
-        const { col, row } = getGridCoords(e.clientX, e.clientY, rect);
+        const { col, row } = getGridCoords(
+          e.clientX,
+          e.clientY,
+          rect,
+          gridSize.cols,
+          gridSize.rows
+        );
         const item = PANEL_ITEMS.find((i) => i.id === draggedId);
         if (item) {
           const { col: c, row: r } = clampCell(
@@ -173,99 +200,73 @@ export default function ProfileBuilderPage() {
 
   const itemsOnGrid = PANEL_ITEMS.filter((item) => placements[item.id]);
   const itemsInPanel = PANEL_ITEMS.filter((item) => !placements[item.id]);
-  const coordsText =
-    itemsOnGrid.length === 0
-      ? 'No items on grid. Drag from panel.'
-      : itemsOnGrid
-          .map(
-            (item) =>
-              `${item.type} at (${placements[item.id].col},${placements[item.id].row})`
-          )
-          .join(' · ');
 
   return (
     <div
       className="profile-builder-page"
       style={{
         width: '100%',
+        height: '100vh',
         minHeight: '100vh',
         boxSizing: 'border-box',
-        margin: '5%',
+        margin: 0,
         padding: 0,
         display: 'flex',
         flexDirection: 'row',
-        gap: '2rem',
-        alignItems: 'flex-start',
-        justifyContent: 'center',
-        background: '#111827',
+        gap: 0,
+        alignItems: 'stretch',
+        background: '#1a1a1a',
         color: '#e5e7eb',
         fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
       }}
     >
       <div
+        ref={gridAreaRef}
         style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '1rem',
-          alignItems: 'center',
           flex: 1,
           minWidth: 0,
+          minHeight: 0,
+          display: 'flex',
+          alignItems: 'stretch',
+          justifyContent: 'stretch',
+          position: 'relative',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-          <h1 style={{ fontSize: '1.5rem', letterSpacing: '0.05em', margin: 0 }}>
-            Edit Profile Page
-          </h1>
-          <Link
-            to="/profile"
-            style={{
-              fontSize: '0.9rem',
-              color: '#9ca3af',
-              textDecoration: 'none',
-            }}
-          >
-            ← Back to profile
-          </Link>
-        </div>
-        <p style={{ fontSize: '0.9rem', color: '#9ca3af', margin: 0 }}>
-          Drag items from the panel onto the grid. They snap to grid cells. Drag
-          back to the panel to return them.
-        </p>
-
-        <div
-          ref={gridAreaRef}
+        <Link
+          to="/profile"
           style={{
-            flex: 1,
-            minHeight: 0,
+            position: 'absolute',
+            top: 12,
+            left: 12,
+            zIndex: 5,
+            fontSize: '0.85rem',
+            color: 'rgba(255,255,255,0.6)',
+            textDecoration: 'none',
+          }}
+        >
+          ← Back to profile
+        </Link>
+        <div
+          ref={gridContainerRef}
+          style={{
+            position: 'absolute',
+            inset: 0,
             width: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            height: '100%',
+            padding: PADDING,
+            boxSizing: 'border-box',
           }}
         >
           <div
-            ref={gridContainerRef}
             style={{
               position: 'relative',
-              width: gridWidth + PADDING * 2,
-              height: gridHeight + PADDING * 2,
-              background: '#020617',
-              borderRadius: '0.75rem',
-              padding: PADDING,
-              boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
-              flexShrink: 0,
-            }}
-          >
-          <div
-            style={{
-              position: 'relative',
-              width: gridWidth,
-              height: gridHeight,
+              width: '100%',
+              height: '100%',
               display: 'grid',
-              gridTemplateColumns: `repeat(${gridSize.cols}, ${CELL_SIZE}px)`,
-              gridTemplateRows: `repeat(${gridSize.rows}, ${CELL_SIZE}px)`,
-              borderRadius: '0.5rem',
+              gridTemplateColumns: `repeat(${gridSize.cols}, 1fr)`,
+              gridTemplateRows: `repeat(${gridSize.rows}, 1fr)`,
               overflow: 'hidden',
+              background: '#0f0f0f',
             }}
           >
             {Array.from({ length: gridSize.cols * gridSize.rows }, (_, i) => (
@@ -273,9 +274,9 @@ export default function ProfileBuilderPage() {
                 key={i}
                 className="profile-builder-cell"
                 style={{
-                  border: '1px solid rgba(55,65,81,0.7)',
+                  border: '1px solid rgba(60,60,60,0.8)',
                   background:
-                    'radial-gradient(circle at 20% 20%, rgba(75,85,99,0.25), rgba(15,23,42,0.9))',
+                    'radial-gradient(circle at 20% 20%, rgba(50,50,50,0.4), rgba(20,20,20,0.95))',
                 }}
               />
             ))}
@@ -284,10 +285,10 @@ export default function ProfileBuilderPage() {
           {itemsOnGrid.map((item) => {
             const pos = placements[item.id];
             if (!pos) return null;
-            const x = PADDING + pos.col * CELL_SIZE;
-            const y = PADDING + pos.row * CELL_SIZE;
-            const w = item.cols * CELL_SIZE;
-            const h = item.rows * CELL_SIZE;
+            const x = PADDING + pos.col * cellWidthPx;
+            const y = PADDING + pos.row * cellHeightPx;
+            const w = item.cols * cellWidthPx;
+            const h = item.rows * cellHeightPx;
             return (
               <div
                 key={item.id}
@@ -335,22 +336,58 @@ export default function ProfileBuilderPage() {
           })}
           </div>
         </div>
-
-        <p style={{ fontSize: '0.85rem', color: '#9ca3af', margin: 0 }}>
-          {coordsText}
-        </p>
       </div>
 
       <aside
         style={{
-          width: 220,
-          background: '#1f2937',
-          borderRadius: '0.75rem',
-          padding: '1.25rem',
-          boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+          width: panelOpen ? 250 : 48,
+          minWidth: panelOpen ? 250 : 48,
+          height: '100vh',
+          background: 'linear-gradient(180deg, #2a2a2a 0%, #1e1e1e 50%, #151515 100%)',
           flexShrink: 0,
+          overflow: 'hidden',
+          position: 'relative',
+          transition: 'width 0.2s ease, min-width 0.2s ease',
         }}
       >
+        <button
+          type="button"
+          onClick={() => setPanelOpen((v) => !v)}
+          style={{
+            position: 'absolute',
+            top: 8,
+            left: 8,
+            zIndex: 10,
+            width: 32,
+            height: 32,
+            borderRadius: 4,
+            border: '1px solid rgba(255,255,255,0.15)',
+            background: 'rgba(255,255,255,0.08)',
+            color: 'rgba(255,255,255,0.9)',
+            cursor: 'pointer',
+            fontSize: '1rem',
+            lineHeight: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          title={panelOpen ? 'Collapse panel' : 'Expand panel'}
+        >
+          {panelOpen ? '←' : '→'}
+        </button>
+        <div
+          style={{
+            padding: '1.25rem 1rem 1rem 2.5rem',
+            height: '100%',
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            boxSizing: 'border-box',
+            visibility: panelOpen ? 'visible' : 'hidden',
+            opacity: panelOpen ? 1 : 0,
+            transition: 'opacity 0.15s ease',
+            pointerEvents: panelOpen ? 'auto' : 'none',
+          }}
+        >
         <h2
           style={{
             fontSize: '1rem',
@@ -364,7 +401,7 @@ export default function ProfileBuilderPage() {
         <p
           style={{
             fontSize: '0.75rem',
-            color: '#6b7280',
+            color: 'rgba(255,255,255,0.5)',
             marginBottom: '0.25rem',
           }}
         >
@@ -425,7 +462,7 @@ export default function ProfileBuilderPage() {
         <p
           style={{
             fontSize: '0.75rem',
-            color: '#6b7280',
+            color: 'rgba(255,255,255,0.5)',
             marginBottom: '0.25rem',
           }}
         >
@@ -435,25 +472,26 @@ export default function ProfileBuilderPage() {
           ref={panelDropZoneRef}
           style={{
             minHeight: 60,
-            border: '2px dashed #4b5563',
+            border: '2px dashed rgba(255,255,255,0.2)',
             borderRadius: '0.5rem',
             marginTop: '0.5rem',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: dragOverReturn ? 'rgba(96,165,250,0.08)' : undefined,
-            borderColor: dragOverReturn ? '#60a5fa' : undefined,
+            background: dragOverReturn ? 'rgba(255,255,255,0.06)' : undefined,
+            borderColor: dragOverReturn ? 'rgba(255,255,255,0.4)' : undefined,
           }}
         >
           <span
             style={{
               fontSize: '0.75rem',
-              color: '#6b7280',
+              color: 'rgba(255,255,255,0.5)',
               pointerEvents: 'none',
             }}
           >
             Return items here
           </span>
+        </div>
         </div>
       </aside>
     </div>
