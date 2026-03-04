@@ -54,6 +54,18 @@ export default function ProfileBuilderPage() {
   const [dragOverReturn, setDragOverReturn] = useState(false);
   const [panelOpen, setPanelOpen] = useState(true);
 
+  // Lock page scrolling while the builder is open so width/height stay static.
+  useEffect(() => {
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevBodyOverflow;
+      document.documentElement.style.overflow = prevHtmlOverflow;
+    };
+  }, []);
+
   const updateGridSize = useCallback(() => {
     const el = gridAreaRef.current;
     if (!el) return;
