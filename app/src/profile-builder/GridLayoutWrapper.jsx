@@ -95,13 +95,11 @@ export default function GridLayoutWrapper({
     >
       {editMode && (
         <div
-          className="profile-builder-grid-overlay pointer-events-none absolute inset-0 rounded-lg"
+          className="profile-builder-grid-overlay pointer-events-none absolute inset-0"
           aria-hidden
           style={{
             backgroundImage: [
-              // Vertical lines
               'linear-gradient(to right, rgba(255,255,255,0.18) 1px, transparent 1px)',
-              // Horizontal lines
               'linear-gradient(to bottom, rgba(255,255,255,0.18) 1px, transparent 1px)',
             ].join(', '),
             backgroundSize: `${CELL_SIZE}px ${ROW_STEP}px`,
@@ -142,7 +140,7 @@ export default function GridLayoutWrapper({
       </div>
 
       {editMode && (
-        <div className="pointer-events-none absolute inset-0 rounded-lg ring-1 ring-white/10 z-0" />
+        <div className="pointer-events-none absolute inset-0 ring-1 ring-white/10 z-0" />
       )}
     </div>
   );

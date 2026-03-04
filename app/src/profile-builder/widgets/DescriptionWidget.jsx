@@ -3,7 +3,7 @@ import React from 'react';
 export default function DescriptionWidget({ editMode, variant, value, onChange }) {
   const isLarge = variant === 'large';
   return (
-    <div className="h-full rounded-none border border-white/10 bg-white/5 p-3 text-white">
+    <div className="h-full bg-white/5 p-3 text-white">
       <div className="js-widget-drag-handle mb-2 cursor-move text-xs text-white/60">
         Profile Description
       </div>
