@@ -3,13 +3,13 @@ import { ResponsiveGridLayout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 
-// Base grid resolution: 5px squares
-const CELL_SIZE = 5;
+// Base grid resolution: 20px squares
+const CELL_SIZE = 20;
 const ROW_HEIGHT = CELL_SIZE;
 const ROW_GAP = 0;
 const CONTAINER_PADDING = 0;
-const MIN_COLS = 40;
-const ROW_STEP = ROW_HEIGHT + ROW_GAP; // 5px
+const MIN_COLS = 20;
+const ROW_STEP = ROW_HEIGHT + ROW_GAP; // 20px
 
 export default function GridLayoutWrapper({
   editMode,
@@ -18,11 +18,12 @@ export default function GridLayoutWrapper({
   onDropWidget,
   children,
 }) {
-  const [cols, setCols] = useState(80);
+  const [cols, setCols] = useState(60);
+  const [cellPx, setCellPx] = useState(CELL_SIZE);
   const layouts = useMemo(() => ({ lg: layout }), [layout]);
   const dropZoneRef = useRef(null);
 
-  // Keep horizontal snapping close to 5px by adapting column count
+  // Keep horizontal snapping close to CELL_SIZE by adapting column count
   useEffect(() => {
     if (!editMode) return;
     const el = dropZoneRef.current;
@@ -31,11 +32,10 @@ export default function GridLayoutWrapper({
       const entry = entries[0];
       const width = entry?.contentRect?.width || el.offsetWidth || 0;
       if (!width) return;
-      const nextCols = Math.max(
-        MIN_COLS,
-        Math.round(width / CELL_SIZE)
-      );
+      const nextCols = Math.max(MIN_COLS, Math.round(width / CELL_SIZE));
+      const nextCellPx = width / nextCols;
       setCols((prev) => (prev === nextCols ? prev : nextCols));
+      setCellPx((prev) => (prev === nextCellPx ? prev : nextCellPx));
     });
     observer.observe(el);
     return () => observer.disconnect();
@@ -57,9 +57,10 @@ export default function GridLayoutWrapper({
     const xPx = e.clientX - rect.left - CONTAINER_PADDING;
     const yPx = e.clientY - rect.top - CONTAINER_PADDING;
     const approxCols = cols || MIN_COLS;
+    const effectiveCell = cellPx || CELL_SIZE;
     const gridX = Math.max(
       0,
-      Math.min(approxCols - 1, Math.floor(xPx / CELL_SIZE))
+      Math.min(approxCols - 1, Math.floor(xPx / effectiveCell))
     );
     const gridY = Math.max(0, Math.floor(yPx / ROW_STEP));
     onDropWidget({
@@ -77,7 +78,7 @@ export default function GridLayoutWrapper({
         editMode
           ? {
               height: '80vh',
-              margin: '10vh 10vw', // 10% top/bottom/left/right
+              margin: '5vh 5vw', // slightly tighter margins
             }
           : undefined
       }
@@ -88,12 +89,12 @@ export default function GridLayoutWrapper({
           aria-hidden
           style={{
             backgroundImage: [
-              // Vertical lines every 5px
+              // Vertical lines
               'linear-gradient(to right, rgba(255,255,255,0.18) 1px, transparent 1px)',
-              // Horizontal lines every 5px
+              // Horizontal lines
               'linear-gradient(to bottom, rgba(255,255,255,0.18) 1px, transparent 1px)',
             ].join(', '),
-            backgroundSize: `${CELL_SIZE}px ${CELL_SIZE}px`,
+            backgroundSize: `${cellPx || CELL_SIZE}px ${ROW_STEP}px`,
             backgroundPosition: '0 0',
           }}
         />

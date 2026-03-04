@@ -17,7 +17,7 @@ function PanelItem({ label, type, variant }) {
   );
 }
 
-export default function WidgetPanel({ open, onToggle }) {
+export default function WidgetPanel({ open, onToggle, onSave, saving }) {
   return (
     <div
       className={[
@@ -27,13 +27,23 @@ export default function WidgetPanel({ open, onToggle }) {
     >
       <div className="mb-4 flex items-center justify-between gap-3">
         <h3 className="text-base font-semibold text-white">Widgets</h3>
-        <button
-          type="button"
-          className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-xs text-white/70 hover:bg-white/10"
-          onClick={onToggle}
-        >
-          {open ? 'Collapse' : 'Expand'}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-xs text-white/70 hover:bg-white/10"
+            onClick={onToggle}
+          >
+            {open ? 'Collapse' : 'Expand'}
+          </button>
+          <button
+            type="button"
+            className="rounded-md border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90 hover:bg-white/20"
+            onClick={onSave}
+            disabled={saving}
+          >
+            {saving ? 'Saving…' : 'Save'}
+          </button>
+        </div>
       </div>
       <PanelItem label="Profile Description (Small)" type="description" variant="small" />
       <PanelItem label="Profile Description (Large)" type="description" variant="large" />
@@ -41,7 +51,8 @@ export default function WidgetPanel({ open, onToggle }) {
       <PanelItem label="Profile Image (Large)" type="image" variant="large" />
       <PanelItem label="Profile Stats" type="stats" variant="" />
       <p className="mt-6 text-xs text-white/40">
-        Tip: drag widgets into the grid, then resize and move them. Click Save when finished.
+        Tip: drag widgets into the grid, then resize and move them. Use the Save button above when
+        you&apos;re done.
       </p>
     </div>
   );

@@ -164,7 +164,7 @@ export default function ProfileBuilderPage() {
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
           <h1 className="m-0 text-xl font-semibold text-white">Edit Profile Page</h1>
-          <p className="m-0 text-sm text-white/60">Drag widgets, resize, then click Save.</p>
+          <p className="m-0 text-sm text-white/60">Drag widgets, resize, then save from the widgets panel.</p>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -173,14 +173,6 @@ export default function ProfileBuilderPage() {
             onClick={() => setPanelOpen((v) => !v)}
           >
             {panelOpen ? 'Hide widgets' : 'Show widgets'}
-          </button>
-          <button
-            type="button"
-            className="rounded-md border border-white/10 bg-white/10 px-3 py-2 text-sm text-white hover:bg-white/15"
-            onClick={handleSave}
-            disabled={saving}
-          >
-            {saving ? 'Saving…' : 'Save'}
           </button>
           <button
             type="button"
@@ -203,7 +195,12 @@ export default function ProfileBuilderPage() {
         {widgetNodes}
       </GridLayoutWrapper>
 
-      <WidgetPanel open={panelOpen} onToggle={() => setPanelOpen((v) => !v)} />
+      <WidgetPanel
+        open={panelOpen}
+        onToggle={() => setPanelOpen((v) => !v)}
+        onSave={handleSave}
+        saving={saving}
+      />
     </div>
   );
 }
