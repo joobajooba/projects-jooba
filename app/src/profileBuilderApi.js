@@ -11,7 +11,6 @@ export async function ensureProfile(ownerWallet, { username } = {}) {
     .from('profiles')
     .upsert(payload, { onConflict: 'owner_wallet' })
     .select('id, owner_wallet, username, bio, avatar_url, x_username, layout_json, created_at')
-    .eq('owner_wallet', normalized)
     .maybeSingle();
   if (error) {
     console.warn('[profileBuilderApi] ensureProfile failed', error);

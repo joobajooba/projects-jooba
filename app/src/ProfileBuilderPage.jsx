@@ -52,10 +52,15 @@ export default function ProfileBuilderPage() {
     (async () => {
       setLoading(true);
       setError('');
-      await ensureProfile(address);
-      const p = await fetchProfileByWallet(address);
+      const ensured = await ensureProfile(address);
+      const p = ensured ?? (await fetchProfileByWallet(address));
       if (cancelled) return;
       setProfile(p);
+      if (!p) {
+        setError('Profiles table missing or Supabase error. Run the migration: supabase/migrations/create_profiles_and_views.sql in the Supabase SQL Editor.');
+        setLoading(false);
+        return;
+      }
       const lj = p?.layout_json;
       const parsed = lj && typeof lj === 'object' ? lj : null;
       const init = parsed?.layout && parsed?.widgets ? parsed : defaultLayout(p?.id);
@@ -144,8 +149,12 @@ export default function ProfileBuilderPage() {
   if (!profile) {
     return (
       <div className="app-main-inner">
-        <p>Could not load profile.</p>
-        <Link to="/profile" className="app-profile-back">← Back</Link>
+        <h1 className="m-0 mb-2 text-xl font-semibold text-white">Could not load profile</h1>
+        <p className="m-0 mb-3 text-white/80">{error || 'Something went wrong loading your profile.'}</p>
+        <p className="m-0 mb-3 text-sm text-white/60">
+          In Supabase Dashboard → SQL Editor, run the contents of <code className="rounded bg-white/10 px-1">supabase/migrations/create_profiles_and_views.sql</code> to create the <code className="rounded bg-white/10 px-1">profiles</code> and <code className="rounded bg-white/10 px-1">profile_views</code> tables.
+        </p>
+        <Link to="/profile" className="inline-block rounded border border-white/20 bg-white/5 px-3 py-2 text-sm text-white/90 no-underline hover:bg-white/10">← Back to profile</Link>
       </div>
     );
   }
