@@ -3,12 +3,13 @@ import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import NFTSelector from './NFTSelector';
 import { getAlchemyApiKey } from './lib/alchemy';
+import { fetchProfileByWallet } from './profileBuilderApi';
 
 const CELL_SIZE = 50;
 const PADDING = 16;
 
 const PANEL_ITEMS = [
-  { id: 'rect', type: 'rectangle', cols: 6, rows: 10, label: 'profile info/pic' },
+  { id: 'rect', type: 'rectangle', cols: 6, rows: 9, label: 'profile info/pic' },
   { id: 'sq-s', type: 'square-small', cols: 1, rows: 1 },
   { id: 'sq-l', type: 'square-large', cols: 2, rows: 2 },
 ];
@@ -59,7 +60,25 @@ export default function ProfileBuilderPage() {
   const [profileBlockNftImages, setProfileBlockNftImages] = useState({});
   const [nftSelectorOpen, setNftSelectorOpen] = useState(false);
   const [nftSelectorForInstance, setNftSelectorForInstance] = useState(null);
+  const [profile, setProfile] = useState({ username: null, x_username: null });
   const { address } = useAccount();
+
+  useEffect(() => {
+    if (!address) {
+      setProfile({ username: null, x_username: null });
+      return;
+    }
+    let cancelled = false;
+    fetchProfileByWallet(address).then((data) => {
+      if (!cancelled && data) {
+        setProfile({
+          username: data.username ?? null,
+          x_username: data.x_username ?? null,
+        });
+      }
+    });
+    return () => { cancelled = true; };
+  }, [address]);
 
   // Lock page scrolling while the builder is open so width/height stay static.
   useEffect(() => {
@@ -361,11 +380,12 @@ export default function ProfileBuilderPage() {
                   boxSizing: 'border-box',
                   overflow: 'hidden',
                   ...(item.type === 'rectangle' && {
-                    background: nftImage ? '#1a1a1a' : '#ef4444',
-                    color: '#fee2e2',
-                    fontWeight: 600,
+                    background: '#1a1a1a',
+                    color: '#e5e5e5',
+                    fontWeight: 500,
                     fontSize: '0.7rem',
-                    letterSpacing: '0.05em',
+                    flexDirection: 'column',
+                    alignItems: 'stretch',
                   }),
                   ...(item.type === 'square-small' && {
                     background: '#374151',
@@ -384,113 +404,137 @@ export default function ProfileBuilderPage() {
               >
                 {isProfileBlock ? (
                   <>
-                    {nftImage && (
-                      <img
-                        src={nftImage}
-                        alt="Profile NFT"
-                        style={{
-                          position: 'absolute',
-                          inset: 0,
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover',
-                          pointerEvents: 'none',
-                        }}
-                      />
-                    )}
-                    {!nftImage && (item.label || '')}
-                    <button
-                      type="button"
-                      title="Move block"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setDraggedId(item.instanceId);
-                      }}
+                    {/* Top: square photo area */}
+                    <div
                       style={{
-                        position: 'absolute',
-                        top: 6,
-                        left: 6,
-                        zIndex: 2,
-                        width: 28,
-                        height: 28,
-                        borderRadius: 4,
-                        border: '1px solid rgba(255,255,255,0.4)',
-                        background: 'rgba(0,0,0,0.5)',
-                        color: '#fff',
-                        cursor: 'grab',
-                        fontSize: '0.7rem',
+                        width: '100%',
+                        flex: '0 0 auto',
+                        aspectRatio: '1',
+                        maxHeight: w,
+                        position: 'relative',
+                        background: nftImage ? undefined : 'rgba(239,68,68,0.4)',
+                        borderRadius: '0.25rem 0.25rem 0 0',
+                        overflow: 'hidden',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        lineHeight: 1,
                       }}
                     >
-                      ⋮⋮
-                    </button>
-                    {address ? (
+                      {nftImage ? (
+                        <img
+                          src={nftImage}
+                          alt="Profile"
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            pointerEvents: 'none',
+                          }}
+                        />
+                      ) : (
+                        <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.6)' }}>Add photo</span>
+                      )}
                       <button
                         type="button"
-                        title="Choose NFT from wallet"
-                        onClick={(e) => {
+                        title="Move block"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
-                          setNftSelectorForInstance(item.instanceId);
-                          setNftSelectorOpen(true);
+                          setDraggedId(item.instanceId);
                         }}
-                        onMouseDown={(e) => e.stopPropagation()}
                         style={{
                           position: 'absolute',
-                          top: 6,
-                          right: 6,
+                          top: 4,
+                          left: 4,
                           zIndex: 2,
-                          padding: '4px 8px',
+                          width: 24,
+                          height: 24,
                           borderRadius: 4,
                           border: '1px solid rgba(255,255,255,0.4)',
-                          background: 'rgba(0,0,0,0.5)',
+                          background: 'rgba(0,0,0,0.6)',
                           color: '#fff',
-                          cursor: 'pointer',
-                          fontSize: '0.65rem',
-                          fontWeight: 600,
+                          cursor: 'grab',
+                          fontSize: '0.6rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          lineHeight: 1,
                         }}
                       >
-                        NFT
+                        ⋮⋮
                       </button>
-                    ) : (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          top: 6,
-                          right: 6,
-                          zIndex: 2,
-                        }}
-                        onMouseDown={(e) => e.stopPropagation()}
-                      >
-                        <ConnectButton.Custom>
-                          {({ openConnectModal }) => (
-                            <button
-                              type="button"
-                              title="Connect wallet to choose NFT"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                openConnectModal?.();
-                              }}
-                              style={{
-                                padding: '4px 8px',
-                                borderRadius: 4,
-                                border: '1px solid rgba(255,255,255,0.4)',
-                                background: 'rgba(0,0,0,0.5)',
-                                color: '#fff',
-                                cursor: 'pointer',
-                                fontSize: '0.65rem',
-                                fontWeight: 600,
-                              }}
-                            >
-                              Connect
-                            </button>
-                          )}
-                        </ConnectButton.Custom>
+                      {address ? (
+                        <button
+                          type="button"
+                          title="Choose NFT from wallet"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setNftSelectorForInstance(item.instanceId);
+                            setNftSelectorOpen(true);
+                          }}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          style={{
+                            position: 'absolute',
+                            top: 4,
+                            right: 4,
+                            zIndex: 2,
+                            padding: '2px 6px',
+                            borderRadius: 4,
+                            border: '1px solid rgba(255,255,255,0.4)',
+                            background: 'rgba(0,0,0,0.6)',
+                            color: '#fff',
+                            cursor: 'pointer',
+                            fontSize: '0.6rem',
+                            fontWeight: 600,
+                          }}
+                        >
+                          NFT
+                        </button>
+                      ) : (
+                        <div style={{ position: 'absolute', top: 4, right: 4, zIndex: 2 }} onMouseDown={(e) => e.stopPropagation()}>
+                          <ConnectButton.Custom>
+                            {({ openConnectModal }) => (
+                              <button
+                                type="button"
+                                title="Connect wallet to choose NFT"
+                                onClick={(e) => { e.stopPropagation(); openConnectModal?.(); }}
+                                style={{
+                                  padding: '2px 6px',
+                                  borderRadius: 4,
+                                  border: '1px solid rgba(255,255,255,0.4)',
+                                  background: 'rgba(0,0,0,0.6)',
+                                  color: '#fff',
+                                  cursor: 'pointer',
+                                  fontSize: '0.6rem',
+                                  fontWeight: 600,
+                                }}
+                              >
+                                Connect
+                              </button>
+                            )}
+                          </ConnectButton.Custom>
+                        </div>
+                      )}
+                    </div>
+                    {/* Below: username and X username from Supabase profiles */}
+                    <div
+                      style={{
+                        flex: '1 1 auto',
+                        minHeight: 0,
+                        padding: '6px 8px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        gap: 2,
+                      }}
+                    >
+                      <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {profile.username || 'No username'}
                       </div>
-                    )}
+                      <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {profile.x_username ? `@${profile.x_username.replace(/^@/, '')}` : 'No X linked'}
+                      </div>
+                    </div>
                   </>
                 ) : (
                   item.label || ''
@@ -591,7 +635,7 @@ export default function ProfileBuilderPage() {
                 justifyContent: 'center',
                 ...(item.type === 'rectangle' && {
                   width: 90,
-                  height: 150,
+                  height: 135,
                   background: '#ef4444',
                   color: '#fee2e2',
                   fontWeight: 600,
