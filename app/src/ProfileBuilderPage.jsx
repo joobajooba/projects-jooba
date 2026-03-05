@@ -3,7 +3,7 @@ import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import NFTSelector from './NFTSelector';
 import { getAlchemyApiKey } from './lib/alchemy';
-import { fetchProfileByWallet } from './profileBuilderApi';
+import { fetchUserProfile } from './userData';
 
 const CELL_SIZE = 50;
 const PADDING = 16;
@@ -60,20 +60,20 @@ export default function ProfileBuilderPage() {
   const [profileBlockNftImages, setProfileBlockNftImages] = useState({});
   const [nftSelectorOpen, setNftSelectorOpen] = useState(false);
   const [nftSelectorForInstance, setNftSelectorForInstance] = useState(null);
-  const [profile, setProfile] = useState({ username: null, x_username: null });
+  const [profile, setProfile] = useState({ username: null, xUsername: null });
   const { address } = useAccount();
 
   useEffect(() => {
     if (!address) {
-      setProfile({ username: null, x_username: null });
+      setProfile({ username: null, xUsername: null });
       return;
     }
     let cancelled = false;
-    fetchProfileByWallet(address).then((data) => {
+    fetchUserProfile(address).then((data) => {
       if (!cancelled && data) {
         setProfile({
           username: data.username ?? null,
-          x_username: data.x_username ?? null,
+          xUsername: data.xUsername ?? null,
         });
       }
     });
@@ -532,7 +532,7 @@ export default function ProfileBuilderPage() {
                         {profile.username || 'No username'}
                       </div>
                       <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {profile.x_username ? `@${profile.x_username.replace(/^@/, '')}` : 'No X linked'}
+                        {profile.xUsername ? `@${String(profile.xUsername).replace(/^@/, '')}` : 'No X linked'}
                       </div>
                     </div>
                   </>
