@@ -1,10 +1,14 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useAccount } from 'wagmi';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+import NFTSelector from './NFTSelector';
+import { getAlchemyApiKey } from './lib/alchemy';
 
 const CELL_SIZE = 50;
 const PADDING = 16;
 
 const PANEL_ITEMS = [
-  { id: 'rect', type: 'rectangle', cols: 4, rows: 6, label: 'profile info/pic' },
+  { id: 'rect', type: 'rectangle', cols: 6, rows: 10, label: 'profile info/pic' },
   { id: 'sq-s', type: 'square-small', cols: 1, rows: 1 },
   { id: 'sq-l', type: 'square-large', cols: 2, rows: 2 },
 ];
@@ -52,6 +56,9 @@ export default function ProfileBuilderPage() {
   const [draggedId, setDraggedId] = useState(null);
   const [dragOverReturn, setDragOverReturn] = useState(false);
   const [panelOpen, setPanelOpen] = useState(true);
+  const [profileBlockNftImage, setProfileBlockNftImage] = useState(null);
+  const [nftSelectorOpen, setNftSelectorOpen] = useState(false);
+  const { address } = useAccount();
 
   // Lock page scrolling while the builder is open so width/height stay static.
   useEffect(() => {
@@ -286,6 +293,7 @@ export default function ProfileBuilderPage() {
             const y = PADDING + pos.row * cellHeightPx;
             const w = item.cols * cellWidthPx;
             const h = item.rows * cellHeightPx;
+            const isProfileBlock = item.id === 'rect' && item.type === 'rectangle';
             return (
               <div
                 key={item.id}
@@ -298,7 +306,7 @@ export default function ProfileBuilderPage() {
                   width: w,
                   height: h,
                   transform: `translate(${x}px, ${y}px)`,
-                  cursor: 'grab',
+                  cursor: isProfileBlock ? 'default' : 'grab',
                   userSelect: 'none',
                   pointerEvents: 'auto',
                   display: 'flex',
@@ -306,8 +314,9 @@ export default function ProfileBuilderPage() {
                   justifyContent: 'center',
                   borderRadius: '0.375rem',
                   boxSizing: 'border-box',
+                  overflow: 'hidden',
                   ...(item.type === 'rectangle' && {
-                    background: '#ef4444',
+                    background: profileBlockNftImage ? '#1a1a1a' : '#ef4444',
                     color: '#fee2e2',
                     fontWeight: 600,
                     fontSize: '0.7rem',
@@ -323,11 +332,123 @@ export default function ProfileBuilderPage() {
                   }),
                 }}
                 onMouseDown={(e) => {
+                  if (isProfileBlock) return;
                   e.preventDefault();
                   setDraggedId(item.id);
                 }}
               >
-                {item.label || ''}
+                {isProfileBlock ? (
+                  <>
+                    {profileBlockNftImage && (
+                      <img
+                        src={profileBlockNftImage}
+                        alt="Profile NFT"
+                        style={{
+                          position: 'absolute',
+                          inset: 0,
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          pointerEvents: 'none',
+                        }}
+                      />
+                    )}
+                    {!profileBlockNftImage && (item.label || '')}
+                    <button
+                      type="button"
+                      title="Move block"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setDraggedId(item.id);
+                      }}
+                      style={{
+                        position: 'absolute',
+                        top: 6,
+                        left: 6,
+                        zIndex: 2,
+                        width: 28,
+                        height: 28,
+                        borderRadius: 4,
+                        border: '1px solid rgba(255,255,255,0.4)',
+                        background: 'rgba(0,0,0,0.5)',
+                        color: '#fff',
+                        cursor: 'grab',
+                        fontSize: '0.7rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        lineHeight: 1,
+                      }}
+                    >
+                      ⋮⋮
+                    </button>
+                    {address ? (
+                      <button
+                        type="button"
+                        title="Choose NFT from wallet"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setNftSelectorOpen(true);
+                        }}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        style={{
+                          position: 'absolute',
+                          top: 6,
+                          right: 6,
+                          zIndex: 2,
+                          padding: '4px 8px',
+                          borderRadius: 4,
+                          border: '1px solid rgba(255,255,255,0.4)',
+                          background: 'rgba(0,0,0,0.5)',
+                          color: '#fff',
+                          cursor: 'pointer',
+                          fontSize: '0.65rem',
+                          fontWeight: 600,
+                        }}
+                      >
+                        NFT
+                      </button>
+                    ) : (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: 6,
+                          right: 6,
+                          zIndex: 2,
+                        }}
+                        onMouseDown={(e) => e.stopPropagation()}
+                      >
+                        <ConnectButton.Custom>
+                          {({ openConnectModal }) => (
+                            <button
+                              type="button"
+                              title="Connect wallet to choose NFT"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openConnectModal?.();
+                              }}
+                              style={{
+                                padding: '4px 8px',
+                                borderRadius: 4,
+                                border: '1px solid rgba(255,255,255,0.4)',
+                                background: 'rgba(0,0,0,0.5)',
+                                color: '#fff',
+                                cursor: 'pointer',
+                                fontSize: '0.65rem',
+                                fontWeight: 600,
+                              }}
+                            >
+                              Connect
+                            </button>
+                          )}
+                        </ConnectButton.Custom>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  item.label || ''
+                )}
               </div>
             );
           })}
@@ -423,7 +544,7 @@ export default function ProfileBuilderPage() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 ...(item.type === 'rectangle' && {
-                  width: 100,
+                  width: 90,
                   height: 150,
                   background: '#ef4444',
                   color: '#fee2e2',
@@ -490,6 +611,19 @@ export default function ProfileBuilderPage() {
         </div>
         </div>
       </aside>
+
+      {nftSelectorOpen && address && (
+        <NFTSelector
+          ownerAddress={address}
+          apiKeyEth={getAlchemyApiKey(import.meta.env.VITE_ALCHEMY_API_KEY_ETH || import.meta.env.VITE_ALCHEMY_API_KEY)}
+          apiKeyApechain={getAlchemyApiKey(import.meta.env.VITE_ALCHEMY_API_KEY_APECHAIN || import.meta.env.VITE_ALCHEMY_API_KEY)}
+          onSelect={(imageUrl) => {
+            setProfileBlockNftImage(imageUrl);
+            setNftSelectorOpen(false);
+          }}
+          onClose={() => setNftSelectorOpen(false)}
+        />
+      )}
     </div>
   );
 }
