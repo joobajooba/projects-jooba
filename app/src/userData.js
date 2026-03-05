@@ -42,13 +42,19 @@ export async function fetchUserProfile(walletAddress) {
     .eq('wallet_address', normalized)
     .maybeSingle();
   if (error) {
+    // Try fallback with X columns in case only some columns (e.g. mosaic) were missing
+    const fallbackWithX = await supabase.from(TABLE).select('username, profile_picture_url, first_logged_in_at, x_twitter_id, x_username').eq('wallet_address', normalized).maybeSingle();
+    if (!fallbackWithX.error && fallbackWithX.data) {
+      const d = fallbackWithX.data;
+      return { username: d.username ?? '', profilePictureUrl: d.profile_picture_url ?? '', firstLoggedInAt: d.first_logged_in_at ?? null, profileBio: '', profilePictureBorder: '', mosaicSize: null, mosaicUrls: [], xTwitterId: d.x_twitter_id ?? null, xUsername: d.x_username ?? null };
+    }
     const fallback = await supabase.from(TABLE).select('username, profile_picture_url, first_logged_in_at').eq('wallet_address', normalized).maybeSingle();
     if (fallback.error) {
       console.warn('[userData] fetchUserProfile failed', error);
       return null;
     }
     const d = fallback.data;
-    return d ? { username: d.username ?? '', profilePictureUrl: d.profile_picture_url ?? '', firstLoggedInAt: d.first_logged_in_at ?? null, profileBio: '', profilePictureBorder: '', mosaicSize: null, mosaicUrls: [], xTwitterId: d.x_twitter_id ?? null, xUsername: d.x_username ?? null } : null;
+    return d ? { username: d.username ?? '', profilePictureUrl: d.profile_picture_url ?? '', firstLoggedInAt: d.first_logged_in_at ?? null, profileBio: '', profilePictureBorder: '', mosaicSize: null, mosaicUrls: [], xTwitterId: null, xUsername: null } : null;
   }
   if (!data) return null;
   const urls = data.mosaic_urls;
