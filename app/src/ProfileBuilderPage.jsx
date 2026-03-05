@@ -261,7 +261,9 @@ export default function ProfileBuilderPage() {
       return template ? { instanceId, ...template, col: p.col, row: p.row } : null;
     })
     .filter(Boolean);
-  const itemsInPanel = PANEL_ITEMS;
+
+  // Panel always shows all item types so user can drag multiple of each onto the grid
+  const panelItemsToShow = PANEL_ITEMS;
 
   return (
     <div
@@ -574,7 +576,7 @@ export default function ProfileBuilderPage() {
             marginBottom: '1rem',
           }}
         >
-          {itemsInPanel.map((item) => (
+          {panelItemsToShow.map((item) => (
             <div
               key={item.id}
               className="profile-builder-panel-item"
