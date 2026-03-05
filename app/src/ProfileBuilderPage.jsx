@@ -56,8 +56,9 @@ export default function ProfileBuilderPage() {
   const [draggedId, setDraggedId] = useState(null);
   const [dragOverReturn, setDragOverReturn] = useState(false);
   const [panelOpen, setPanelOpen] = useState(true);
-  const [profileBlockNftImage, setProfileBlockNftImage] = useState(null);
+  const [profileBlockNftImages, setProfileBlockNftImages] = useState({});
   const [nftSelectorOpen, setNftSelectorOpen] = useState(false);
+  const [nftSelectorForInstance, setNftSelectorForInstance] = useState(null);
   const { address } = useAccount();
 
   // Lock page scrolling while the builder is open so width/height stay static.
@@ -106,25 +107,62 @@ export default function ProfileBuilderPage() {
       : CELL_SIZE;
 
   const placeOnGrid = useCallback(
-    (id, col, row) => {
-      const item = PANEL_ITEMS.find((i) => i.id === id);
-      if (!item) return;
-      const { col: c, row: r } = clampCell(
-        item,
-        col,
-        row,
-        gridSize.cols,
-        gridSize.rows
-      );
-      setPlacements((prev) => ({ ...prev, [id]: { col: c, row: r } }));
+    (draggedIdOrNew, col, row) => {
+      const isNew = typeof draggedIdOrNew === 'string' && draggedIdOrNew.startsWith('new:');
+      const templateId = isNew ? draggedIdOrNew.slice(4) : null;
+      const item = isNew
+        ? PANEL_ITEMS.find((i) => i.id === templateId)
+        : null;
+
+      if (isNew && item) {
+        const { col: c, row: r } = clampCell(
+          item,
+          col,
+          row,
+          gridSize.cols,
+          gridSize.rows
+        );
+        const instanceId = `${templateId}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+        setPlacements((prev) => ({
+          ...prev,
+          [instanceId]: { col: c, row: r, templateId: item.id },
+        }));
+        return;
+      }
+
+      if (!isNew) {
+        setPlacements((prev) => {
+          const existing = prev[draggedIdOrNew];
+          if (!existing) return prev;
+          const template = PANEL_ITEMS.find((i) => i.id === existing.templateId);
+          if (!template) return prev;
+          const { col: c, row: r } = clampCell(
+            template,
+            col,
+            row,
+            gridSize.cols,
+            gridSize.rows
+          );
+          return {
+            ...prev,
+            [draggedIdOrNew]: { ...existing, col: c, row: r },
+          };
+        });
+      }
     },
     [gridSize.cols, gridSize.rows]
   );
 
-  const returnToPanel = useCallback((id) => {
+  const returnToPanel = useCallback((instanceId) => {
+    if (typeof instanceId === 'string' && instanceId.startsWith('new:')) return;
     setPlacements((prev) => {
       const next = { ...prev };
-      delete next[id];
+      delete next[instanceId];
+      return next;
+    });
+    setProfileBlockNftImages((prev) => {
+      const next = { ...prev };
+      delete next[instanceId];
       return next;
     });
   }, []);
@@ -191,7 +229,8 @@ export default function ProfileBuilderPage() {
           gridSize.cols,
           gridSize.rows
         );
-        const item = PANEL_ITEMS.find((i) => i.id === draggedId);
+        const placement = placements[draggedId];
+        const item = PANEL_ITEMS.find((i) => i.id === placement.templateId);
         if (item) {
           const { col: c, row: r } = clampCell(
             item,
@@ -200,7 +239,7 @@ export default function ProfileBuilderPage() {
             gridSize.cols,
             gridSize.rows
           );
-          setPlacements((prev) => ({ ...prev, [draggedId]: { col: c, row: r } }));
+          setPlacements((prev) => ({ ...prev, [draggedId]: { ...placement, col: c, row: r } }));
         }
       }
     },
@@ -216,8 +255,13 @@ export default function ProfileBuilderPage() {
     };
   }, [handleMouseUp, handleMouseMove]);
 
-  const itemsOnGrid = PANEL_ITEMS.filter((item) => placements[item.id]);
-  const itemsInPanel = PANEL_ITEMS.filter((item) => !placements[item.id]);
+  const itemsOnGrid = Object.entries(placements)
+    .map(([instanceId, p]) => {
+      const template = PANEL_ITEMS.find((t) => t.id === p.templateId);
+      return template ? { instanceId, ...template, col: p.col, row: p.row } : null;
+    })
+    .filter(Boolean);
+  const itemsInPanel = PANEL_ITEMS;
 
   return (
     <div
@@ -287,16 +331,15 @@ export default function ProfileBuilderPage() {
           </div>
 
           {itemsOnGrid.map((item) => {
-            const pos = placements[item.id];
-            if (!pos) return null;
-            const x = PADDING + pos.col * cellWidthPx;
-            const y = PADDING + pos.row * cellHeightPx;
+            const x = PADDING + item.col * cellWidthPx;
+            const y = PADDING + item.row * cellHeightPx;
             const w = item.cols * cellWidthPx;
             const h = item.rows * cellHeightPx;
-            const isProfileBlock = item.id === 'rect' && item.type === 'rectangle';
+            const isProfileBlock = item.type === 'rectangle';
+            const nftImage = profileBlockNftImages[item.instanceId];
             return (
               <div
-                key={item.id}
+                key={item.instanceId}
                 className="profile-builder-grid-item"
                 data-type={item.type}
                 style={{
@@ -316,7 +359,7 @@ export default function ProfileBuilderPage() {
                   boxSizing: 'border-box',
                   overflow: 'hidden',
                   ...(item.type === 'rectangle' && {
-                    background: profileBlockNftImage ? '#1a1a1a' : '#ef4444',
+                    background: nftImage ? '#1a1a1a' : '#ef4444',
                     color: '#fee2e2',
                     fontWeight: 600,
                     fontSize: '0.7rem',
@@ -334,14 +377,14 @@ export default function ProfileBuilderPage() {
                 onMouseDown={(e) => {
                   if (isProfileBlock) return;
                   e.preventDefault();
-                  setDraggedId(item.id);
+                  setDraggedId(item.instanceId);
                 }}
               >
                 {isProfileBlock ? (
                   <>
-                    {profileBlockNftImage && (
+                    {nftImage && (
                       <img
-                        src={profileBlockNftImage}
+                        src={nftImage}
                         alt="Profile NFT"
                         style={{
                           position: 'absolute',
@@ -353,14 +396,14 @@ export default function ProfileBuilderPage() {
                         }}
                       />
                     )}
-                    {!profileBlockNftImage && (item.label || '')}
+                    {!nftImage && (item.label || '')}
                     <button
                       type="button"
                       title="Move block"
                       onMouseDown={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        setDraggedId(item.id);
+                        setDraggedId(item.instanceId);
                       }}
                       style={{
                         position: 'absolute',
@@ -389,6 +432,7 @@ export default function ProfileBuilderPage() {
                         title="Choose NFT from wallet"
                         onClick={(e) => {
                           e.stopPropagation();
+                          setNftSelectorForInstance(item.instanceId);
                           setNftSelectorOpen(true);
                         }}
                         onMouseDown={(e) => e.stopPropagation()}
@@ -569,7 +613,7 @@ export default function ProfileBuilderPage() {
               }}
               onMouseDown={(e) => {
                 e.preventDefault();
-                setDraggedId(item.id);
+                setDraggedId(`new:${item.id}`);
               }}
             >
               {item.label || ''}
@@ -612,16 +656,20 @@ export default function ProfileBuilderPage() {
         </div>
       </aside>
 
-      {nftSelectorOpen && address && (
+      {nftSelectorOpen && address && nftSelectorForInstance && (
         <NFTSelector
           ownerAddress={address}
           apiKeyEth={getAlchemyApiKey(import.meta.env.VITE_ALCHEMY_API_KEY_ETH || import.meta.env.VITE_ALCHEMY_API_KEY)}
           apiKeyApechain={getAlchemyApiKey(import.meta.env.VITE_ALCHEMY_API_KEY_APECHAIN || import.meta.env.VITE_ALCHEMY_API_KEY)}
           onSelect={(imageUrl) => {
-            setProfileBlockNftImage(imageUrl);
+            setProfileBlockNftImages((prev) => ({ ...prev, [nftSelectorForInstance]: imageUrl }));
             setNftSelectorOpen(false);
+            setNftSelectorForInstance(null);
           }}
-          onClose={() => setNftSelectorOpen(false)}
+          onClose={() => {
+            setNftSelectorOpen(false);
+            setNftSelectorForInstance(null);
+          }}
         />
       )}
     </div>
