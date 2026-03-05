@@ -1,11 +1,10 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 
 const CELL_SIZE = 50;
 const PADDING = 16;
 
 const PANEL_ITEMS = [
-  { id: 'rect', type: 'rectangle', cols: 2, rows: 1, label: 'MOVE' },
+  { id: 'rect', type: 'rectangle', cols: 4, rows: 6, label: 'profile info/pic' },
   { id: 'sq-s', type: 'square-small', cols: 1, rows: 1 },
   { id: 'sq-l', type: 'square-large', cols: 2, rows: 2 },
 ];
@@ -244,20 +243,6 @@ export default function ProfileBuilderPage() {
           position: 'relative',
         }}
       >
-        <Link
-          to="/profile"
-          style={{
-            position: 'absolute',
-            top: 12,
-            left: 12,
-            zIndex: 5,
-            fontSize: '0.85rem',
-            color: 'rgba(255,255,255,0.6)',
-            textDecoration: 'none',
-          }}
-        >
-          ← Back to profile
-        </Link>
         <div
           ref={gridContainerRef}
           style={{
@@ -439,12 +424,14 @@ export default function ProfileBuilderPage() {
                 justifyContent: 'center',
                 ...(item.type === 'rectangle' && {
                   width: 100,
-                  height: 50,
+                  height: 150,
                   background: '#ef4444',
                   color: '#fee2e2',
                   fontWeight: 600,
-                  fontSize: '0.7rem',
+                  fontSize: '0.65rem',
                   letterSpacing: '0.05em',
+                  textAlign: 'center',
+                  padding: 4,
                 }),
                 ...(item.type === 'square-small' && {
                   width: 50,
