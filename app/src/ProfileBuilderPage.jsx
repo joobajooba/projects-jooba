@@ -9,8 +9,8 @@ const CELL_SIZE = 50;
 const PADDING = 16;
 
 const PANEL_ITEMS = [
-  { id: 'rect', type: 'rectangle', cols: 6, rows: 9, label: 'User panel' },
-  { id: 'sq-s', type: 'square-small', cols: 5, rows: 4 },
+  { id: 'rect', type: 'rectangle', cols: 6, rows: 10, label: 'User panel' },
+  { id: 'sq-s', type: 'square-small', cols: 5, rows: 5, label: 'Image Portrait | Small' },
   { id: 'sq-l', type: 'square-large', cols: 2, rows: 2 },
 ];
 
