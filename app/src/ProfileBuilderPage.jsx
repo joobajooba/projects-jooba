@@ -9,8 +9,8 @@ const CELL_SIZE = 50;
 const PADDING = 16;
 
 const PANEL_ITEMS = [
-  { id: 'rect', type: 'rectangle', cols: 6, rows: 9, label: 'user panel' },
-  { id: 'sq-s', type: 'square-small', cols: 1, rows: 1 },
+  { id: 'rect', type: 'rectangle', cols: 6, rows: 9, label: 'User panel' },
+  { id: 'sq-s', type: 'square-small', cols: 5, rows: 4 },
   { id: 'sq-l', type: 'square-large', cols: 2, rows: 2 },
 ];
 
@@ -51,7 +51,7 @@ export default function ProfileBuilderPage() {
   const gridContainerRef = useRef(null);
   const gridAreaRef = useRef(null);
   const panelDropZoneRef = useRef(null);
-  const [gridSize, setGridSize] = useState({ cols: 10, rows: 10 });
+  const [gridSize, setGridSize] = useState({ cols: 10, rows: 20 });
   const [gridInnerSize, setGridInnerSize] = useState({ width: 0, height: 0 });
   const [placements, setPlacements] = useState({});
   const [draggedId, setDraggedId] = useState(null);
@@ -100,7 +100,7 @@ export default function ProfileBuilderPage() {
     const innerW = w - 2 * PADDING;
     const innerH = h - 2 * PADDING;
     const cols = Math.max(10, Math.floor(innerW / CELL_SIZE));
-    const rows = Math.max(10, Math.floor(innerH / CELL_SIZE));
+    const rows = Math.max(20, Math.floor(innerH / CELL_SIZE));
     setGridInnerSize({ width: w, height: h });
     setGridSize((prev) =>
       prev.cols !== cols || prev.rows !== rows ? { cols, rows } : prev
