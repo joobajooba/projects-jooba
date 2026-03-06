@@ -4,6 +4,7 @@ import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import NFTSelector from './NFTSelector';
 import { getAlchemyApiKey } from './lib/alchemy';
+import { supabase } from './lib/supabase';
 import { fetchUserProfile } from './userData';
 import { ensureProfile, fetchProfileByWallet, updateProfile } from './profileBuilderApi';
 
@@ -12,7 +13,7 @@ const PADDING = 16;
 
 const PANEL_ITEMS = [
   { id: 'rect', type: 'rectangle', cols: 6, rows: 10, label: 'User panel' },
-  { id: 'sq-s', type: 'square-small', cols: 6, rows: 5, label: 'Image Portrait | Small' },
+  { id: 'sq-s', type: 'square-small', cols: 6, rows: 5, label: 'Image Landscape | Small' },
   { id: 'sq-l', type: 'square-large', cols: 2, rows: 2 },
 ];
 
@@ -60,11 +61,15 @@ export default function ProfileBuilderPage() {
   const [dragOverReturn, setDragOverReturn] = useState(false);
   const [panelOpen, setPanelOpen] = useState(true);
   const [profileBlockNftImages, setProfileBlockNftImages] = useState({});
+  const [imageWidgetImages, setImageWidgetImages] = useState({});
   const [nftSelectorOpen, setNftSelectorOpen] = useState(false);
   const [nftSelectorForInstance, setNftSelectorForInstance] = useState(null);
+  const [nftSelectorTarget, setNftSelectorTarget] = useState('profile'); // 'profile' | 'imageWidget'
   const [profile, setProfile] = useState({ username: null, xUsername: null });
   const [saveStatus, setSaveStatus] = useState(null); // null | 'saving' | 'success' | 'error'
   const [editMode, setEditMode] = useState(true); // true = edit (grid), false = profile view (no grid)
+  const uploadInputRef = useRef(null);
+  const [uploadForInstance, setUploadForInstance] = useState(null);
   const layoutLoadedRef = useRef(false);
   const { address } = useAccount();
   const navigate = useNavigate();
@@ -100,6 +105,9 @@ export default function ProfileBuilderPage() {
       if (layout?.nftImages && typeof layout.nftImages === 'object') {
         setProfileBlockNftImages(layout.nftImages);
       }
+      if (layout?.imageWidgetImages && typeof layout.imageWidgetImages === 'object') {
+        setImageWidgetImages(layout.imageWidgetImages);
+      }
     });
     return () => { cancelled = true; };
   }, [address]);
@@ -113,6 +121,7 @@ export default function ProfileBuilderPage() {
         layout_json: {
           placements: { ...placements },
           nftImages: { ...profileBlockNftImages },
+          imageWidgetImages: { ...imageWidgetImages },
         },
       });
       if (ok) {
@@ -126,7 +135,45 @@ export default function ProfileBuilderPage() {
       setSaveStatus('error');
       setTimeout(() => setSaveStatus(null), 3000);
     }
-  }, [address, placements, profileBlockNftImages]);
+  }, [address, placements, profileBlockNftImages, imageWidgetImages]);
+
+  const startUploadFor = useCallback((instanceId) => {
+    if (!editMode) return;
+    setUploadForInstance(instanceId);
+    uploadInputRef.current?.click();
+  }, [editMode]);
+
+  const onUploadFileChange = useCallback(async (e) => {
+    const file = e.target?.files?.[0];
+    const instanceId = uploadForInstance;
+    e.target.value = '';
+    setUploadForInstance(null);
+    if (!file || !instanceId || !address || !supabase) return;
+
+    try {
+      const normalized = String(address).toLowerCase();
+      const safeName = String(file.name || 'upload').replace(/[^a-zA-Z0-9._-]/g, '_');
+      const path = `profile_page/${normalized}/${instanceId}/${Date.now()}-${safeName}`;
+
+      const { error: uploadError } = await supabase
+        .storage
+        .from('profile_page_assets')
+        .upload(path, file, { upsert: true, contentType: file.type || 'image/*' });
+
+      if (uploadError) {
+        console.warn('[ProfileBuilderPage] upload failed', uploadError);
+        return;
+      }
+
+      const { data } = supabase.storage.from('profile_page_assets').getPublicUrl(path);
+      const url = data?.publicUrl;
+      if (url) {
+        setImageWidgetImages((prev) => ({ ...prev, [instanceId]: url }));
+      }
+    } catch (err) {
+      console.warn('[ProfileBuilderPage] upload failed', err);
+    }
+  }, [uploadForInstance, address]);
 
   // Lock page scrolling while the builder is open so width/height stay static.
   useEffect(() => {
@@ -228,6 +275,11 @@ export default function ProfileBuilderPage() {
       return next;
     });
     setProfileBlockNftImages((prev) => {
+      const next = { ...prev };
+      delete next[instanceId];
+      return next;
+    });
+    setImageWidgetImages((prev) => {
       const next = { ...prev };
       delete next[instanceId];
       return next;
@@ -406,6 +458,8 @@ export default function ProfileBuilderPage() {
             const h = item.rows * cellHeightPx;
             const isProfileBlock = item.type === 'rectangle';
             const nftImage = profileBlockNftImages[item.instanceId];
+            const isImageWidget = item.type === 'square-small';
+            const imageWidgetUrl = imageWidgetImages[item.instanceId];
             return (
               <div
                 key={item.instanceId}
@@ -519,6 +573,7 @@ export default function ProfileBuilderPage() {
                               title="Choose NFT from wallet"
                               onClick={(e) => {
                                 e.stopPropagation();
+                                setNftSelectorTarget('profile');
                                 setNftSelectorForInstance(item.instanceId);
                                 setNftSelectorOpen(true);
                               }}
@@ -588,6 +643,119 @@ export default function ProfileBuilderPage() {
                       </div>
                     </div>
                   </>
+                ) : isImageWidget ? (
+                  <div
+                    style={{
+                      position: 'relative',
+                      width: '100%',
+                      height: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {imageWidgetUrl ? (
+                      <img
+                        src={imageWidgetUrl}
+                        alt={item.label || 'Image'}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          pointerEvents: 'none',
+                        }}
+                      />
+                    ) : (
+                      <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.85)', textAlign: 'center', padding: 10 }}>
+                        {item.label || ''}
+                      </div>
+                    )}
+
+                    {editMode && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: 8,
+                          right: 8,
+                          zIndex: 2,
+                          display: 'flex',
+                          gap: 6,
+                        }}
+                        onMouseDown={(e) => e.stopPropagation()}
+                      >
+                        {address ? (
+                          <button
+                            type="button"
+                            title="Choose NFT from wallet"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setNftSelectorTarget('imageWidget');
+                              setNftSelectorForInstance(item.instanceId);
+                              setNftSelectorOpen(true);
+                            }}
+                            style={{
+                              padding: '4px 8px',
+                              borderRadius: 4,
+                              border: '1px solid rgba(255,255,255,0.35)',
+                              background: 'rgba(0,0,0,0.55)',
+                              color: '#fff',
+                              cursor: 'pointer',
+                              fontSize: '0.65rem',
+                              fontWeight: 700,
+                            }}
+                          >
+                            NFT
+                          </button>
+                        ) : (
+                          <ConnectButton.Custom>
+                            {({ openConnectModal }) => (
+                              <button
+                                type="button"
+                                title="Connect wallet to choose NFT"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openConnectModal?.();
+                                }}
+                                style={{
+                                  padding: '4px 8px',
+                                  borderRadius: 4,
+                                  border: '1px solid rgba(255,255,255,0.35)',
+                                  background: 'rgba(0,0,0,0.55)',
+                                  color: '#fff',
+                                  cursor: 'pointer',
+                                  fontSize: '0.65rem',
+                                  fontWeight: 700,
+                                }}
+                              >
+                                Connect
+                              </button>
+                            )}
+                          </ConnectButton.Custom>
+                        )}
+                        <button
+                          type="button"
+                          title="Upload image"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            startUploadFor(item.instanceId);
+                          }}
+                          style={{
+                            padding: '4px 8px',
+                            borderRadius: 4,
+                            border: '1px solid rgba(255,255,255,0.35)',
+                            background: 'rgba(0,0,0,0.55)',
+                            color: '#fff',
+                            cursor: 'pointer',
+                            fontSize: '0.65rem',
+                            fontWeight: 700,
+                          }}
+                        >
+                          Upload
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   item.label || ''
                 )}
@@ -838,7 +1006,11 @@ export default function ProfileBuilderPage() {
           apiKeyEth={getAlchemyApiKey(import.meta.env.VITE_ALCHEMY_API_KEY_ETH || import.meta.env.VITE_ALCHEMY_API_KEY)}
           apiKeyApechain={getAlchemyApiKey(import.meta.env.VITE_ALCHEMY_API_KEY_APECHAIN || import.meta.env.VITE_ALCHEMY_API_KEY)}
           onSelect={(imageUrl) => {
-            setProfileBlockNftImages((prev) => ({ ...prev, [nftSelectorForInstance]: imageUrl }));
+            if (nftSelectorTarget === 'imageWidget') {
+              setImageWidgetImages((prev) => ({ ...prev, [nftSelectorForInstance]: imageUrl }));
+            } else {
+              setProfileBlockNftImages((prev) => ({ ...prev, [nftSelectorForInstance]: imageUrl }));
+            }
             setNftSelectorOpen(false);
             setNftSelectorForInstance(null);
           }}
@@ -848,6 +1020,14 @@ export default function ProfileBuilderPage() {
           }}
         />
       )}
+
+      <input
+        ref={uploadInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={onUploadFileChange}
+      />
     </div>
   );
 }
