@@ -13,7 +13,7 @@ const PADDING = 16;
 
 const PANEL_ITEMS = [
   { id: 'rect', type: 'rectangle', cols: 6, rows: 10, label: 'User panel' },
-  { id: 'sq-s', type: 'square-small', cols: 6, rows: 5, label: 'Image Landscape | Small' },
+  { id: 'sq-s', type: 'square-small', cols: 6, rows: 6, label: 'Image Landscape | Small' },
   { id: 'sq-l', type: 'square-large', cols: 2, rows: 2 },
 ];
 
@@ -69,7 +69,7 @@ export default function ProfileBuilderPage() {
   const [saveStatus, setSaveStatus] = useState(null); // null | 'saving' | 'success' | 'error'
   const [editMode, setEditMode] = useState(true); // true = edit (grid), false = profile view (no grid)
   const uploadInputRef = useRef(null);
-  const [uploadForInstance, setUploadForInstance] = useState(null);
+  const uploadForInstanceRef = useRef(null);
   const layoutLoadedRef = useRef(false);
   const { address } = useAccount();
   const navigate = useNavigate();
@@ -139,41 +139,48 @@ export default function ProfileBuilderPage() {
 
   const startUploadFor = useCallback((instanceId) => {
     if (!editMode) return;
-    setUploadForInstance(instanceId);
+    uploadForInstanceRef.current = instanceId;
     uploadInputRef.current?.click();
   }, [editMode]);
 
   const onUploadFileChange = useCallback(async (e) => {
     const file = e.target?.files?.[0];
-    const instanceId = uploadForInstance;
+    const instanceId = uploadForInstanceRef.current;
     e.target.value = '';
-    setUploadForInstance(null);
-    if (!file || !instanceId || !address || !supabase) return;
+    uploadForInstanceRef.current = null;
+    if (!file || !instanceId) return;
 
-    try {
-      const normalized = String(address).toLowerCase();
-      const safeName = String(file.name || 'upload').replace(/[^a-zA-Z0-9._-]/g, '_');
-      const path = `profile_page/${normalized}/${instanceId}/${Date.now()}-${safeName}`;
+    // Show image immediately with object URL so the box updates right away
+    const objectUrl = URL.createObjectURL(file);
+    setImageWidgetImages((prev) => ({ ...prev, [instanceId]: objectUrl }));
 
-      const { error: uploadError } = await supabase
-        .storage
-        .from('profile_page_assets')
-        .upload(path, file, { upsert: true, contentType: file.type || 'image/*' });
+    // If Supabase is configured, upload and replace with public URL so it persists
+    if (address && supabase) {
+      try {
+        const normalized = String(address).toLowerCase();
+        const safeName = String(file.name || 'upload').replace(/[^a-zA-Z0-9._-]/g, '_');
+        const path = `profile_page/${normalized}/${instanceId}/${Date.now()}-${safeName}`;
 
-      if (uploadError) {
-        console.warn('[ProfileBuilderPage] upload failed', uploadError);
-        return;
+        const { error: uploadError } = await supabase
+          .storage
+          .from('profile_page_assets')
+          .upload(path, file, { upsert: true, contentType: file.type || 'image/*' });
+
+        if (!uploadError) {
+          const { data } = supabase.storage.from('profile_page_assets').getPublicUrl(path);
+          const publicUrl = data?.publicUrl;
+          if (publicUrl) {
+            URL.revokeObjectURL(objectUrl);
+            setImageWidgetImages((prev) => ({ ...prev, [instanceId]: publicUrl }));
+          }
+        } else {
+          console.warn('[ProfileBuilderPage] upload failed', uploadError);
+        }
+      } catch (err) {
+        console.warn('[ProfileBuilderPage] upload failed', err);
       }
-
-      const { data } = supabase.storage.from('profile_page_assets').getPublicUrl(path);
-      const url = data?.publicUrl;
-      if (url) {
-        setImageWidgetImages((prev) => ({ ...prev, [instanceId]: url }));
-      }
-    } catch (err) {
-      console.warn('[ProfileBuilderPage] upload failed', err);
     }
-  }, [uploadForInstance, address]);
+  }, [address]);
 
   // Lock page scrolling while the builder is open so width/height stay static.
   useEffect(() => {
