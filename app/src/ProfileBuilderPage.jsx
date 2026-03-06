@@ -9,7 +9,7 @@ const CELL_SIZE = 50;
 const PADDING = 16;
 
 const PANEL_ITEMS = [
-  { id: 'rect', type: 'rectangle', cols: 6, rows: 9, label: 'profile info/pic' },
+  { id: 'rect', type: 'rectangle', cols: 6, rows: 9, label: 'user panel' },
   { id: 'sq-s', type: 'square-small', cols: 1, rows: 1 },
   { id: 'sq-l', type: 'square-large', cols: 2, rows: 2 },
 ];
@@ -634,15 +634,16 @@ export default function ProfileBuilderPage() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 ...(item.type === 'rectangle' && {
-                  width: 90,
-                  height: 135,
+                  width: '75%',
+                  height: 20,
+                  borderRadius: 10,
                   background: '#ef4444',
                   color: '#fee2e2',
                   fontWeight: 600,
-                  fontSize: '0.65rem',
-                  letterSpacing: '0.05em',
+                  fontSize: '0.7rem',
+                  letterSpacing: '0.03em',
                   textAlign: 'center',
-                  padding: 4,
+                  padding: '0 8px',
                 }),
                 ...(item.type === 'square-small' && {
                   width: 50,
