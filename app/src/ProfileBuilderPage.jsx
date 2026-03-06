@@ -64,6 +64,7 @@ export default function ProfileBuilderPage() {
   const [nftSelectorForInstance, setNftSelectorForInstance] = useState(null);
   const [profile, setProfile] = useState({ username: null, xUsername: null });
   const [saveStatus, setSaveStatus] = useState(null); // null | 'saving' | 'success' | 'error'
+  const [editMode, setEditMode] = useState(true); // true = edit (grid), false = profile view (no grid)
   const layoutLoadedRef = useRef(false);
   const { address } = useAccount();
   const navigate = useNavigate();
@@ -378,14 +379,14 @@ export default function ProfileBuilderPage() {
               position: 'relative',
               width: '100%',
               height: '100%',
-              display: 'grid',
-              gridTemplateColumns: `repeat(${gridSize.cols}, 1fr)`,
-              gridTemplateRows: `repeat(${gridSize.rows}, 1fr)`,
+              display: editMode ? 'grid' : 'block',
+              gridTemplateColumns: editMode ? `repeat(${gridSize.cols}, 1fr)` : undefined,
+              gridTemplateRows: editMode ? `repeat(${gridSize.rows}, 1fr)` : undefined,
               overflow: 'hidden',
-              background: '#0f0f0f',
+              background: editMode ? '#0f0f0f' : '#1a1a1a',
             }}
           >
-            {Array.from({ length: gridSize.cols * gridSize.rows }, (_, i) => (
+            {editMode && Array.from({ length: gridSize.cols * gridSize.rows }, (_, i) => (
               <div
                 key={i}
                 className="profile-builder-cell"
@@ -417,7 +418,7 @@ export default function ProfileBuilderPage() {
                   width: w,
                   height: h,
                   transform: `translate(${x}px, ${y}px)`,
-                  cursor: isProfileBlock ? 'default' : 'grab',
+                  cursor: !editMode ? 'default' : isProfileBlock ? 'default' : 'grab',
                   userSelect: 'none',
                   pointerEvents: 'auto',
                   display: 'flex',
@@ -444,7 +445,7 @@ export default function ProfileBuilderPage() {
                   }),
                 }}
                 onMouseDown={(e) => {
-                  if (isProfileBlock) return;
+                  if (!editMode || isProfileBlock) return;
                   e.preventDefault();
                   setDraggedId(item.instanceId);
                 }}
@@ -484,11 +485,12 @@ export default function ProfileBuilderPage() {
                       <button
                         type="button"
                         title="Move block"
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setDraggedId(item.instanceId);
-                        }}
+                      onMouseDown={(e) => {
+                        if (!editMode) return;
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setDraggedId(item.instanceId);
+                      }}
                         style={{
                           position: 'absolute',
                           top: 4,
@@ -500,16 +502,16 @@ export default function ProfileBuilderPage() {
                           border: '1px solid rgba(255,255,255,0.4)',
                           background: 'rgba(0,0,0,0.6)',
                           color: '#fff',
-                          cursor: 'grab',
-                          fontSize: '0.6rem',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          lineHeight: 1,
-                        }}
-                      >
-                        ⋮⋮
-                      </button>
+                        cursor: editMode ? 'grab' : 'default',
+                        fontSize: '0.6rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        lineHeight: 1,
+                      }}
+                    >
+                      ⋮⋮
+                    </button>
                       {address ? (
                         <button
                           type="button"
@@ -642,17 +644,60 @@ export default function ProfileBuilderPage() {
             flexDirection: 'column',
           }}
         >
-          <h2
+          <div
             style={{
-              fontSize: '1.1rem',
-              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 12,
               marginBottom: 4,
-              letterSpacing: '0.02em',
-              color: '#fff',
+              flexWrap: 'wrap',
             }}
           >
-            Profile page widgets
-          </h2>
+            <h2
+              style={{
+                fontSize: '1.1rem',
+                fontWeight: 700,
+                margin: 0,
+                letterSpacing: '0.02em',
+                color: '#fff',
+              }}
+            >
+              Profile page widgets
+            </h2>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+              }}
+            >
+              <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.9)' }}>Edit Mode</span>
+              <button
+                type="button"
+                role="checkbox"
+                aria-checked={editMode}
+                title={editMode ? 'Profile view (hide grid)' : 'Edit mode (show grid)'}
+                onClick={() => setEditMode((v) => !v)}
+                style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: 4,
+                  border: '2px solid rgba(255,255,255,0.3)',
+                  background: editMode ? '#16a34a' : 'rgba(255,255,255,0.1)',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.9rem',
+                  lineHeight: 1,
+                }}
+              >
+                {editMode ? '✓' : ''}
+              </button>
+            </div>
+          </div>
           <p
             style={{
               fontSize: '0.8rem',
@@ -678,10 +723,10 @@ export default function ProfileBuilderPage() {
                 className="profile-builder-panel-item"
                 data-type={item.type}
                 style={{
-                  cursor: 'grab',
-                  userSelect: 'none',
-                  flexShrink: 0,
-                  width: '78%',
+                cursor: editMode ? 'grab' : 'default',
+                userSelect: 'none',
+                flexShrink: 0,
+                width: '78%',
                   height: 28,
                   borderRadius: 6,
                   background: 'linear-gradient(180deg, #3a3a3a 0%, #2a2a2a 50%, #222 100%)',
@@ -696,10 +741,11 @@ export default function ProfileBuilderPage() {
                   padding: '0 10px',
                   boxShadow: '0 1px 0 rgba(255,255,255,0.06)',
                 }}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  setDraggedId(`new:${item.id}`);
-                }}
+              onMouseDown={(e) => {
+                if (!editMode) return;
+                e.preventDefault();
+                setDraggedId(`new:${item.id}`);
+              }}
               >
                 {item.label || ''}
               </div>
