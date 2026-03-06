@@ -546,10 +546,11 @@ export default function ProfileBuilderPage() {
         </div>
 
       <aside style={{
-          width: panelOpen ? 250 : 48,
-          minWidth: panelOpen ? 250 : 48,
+          width: panelOpen ? 260 : 48,
+          minWidth: panelOpen ? 260 : 48,
           height: '100vh',
-          background: 'linear-gradient(180deg, #2a2a2a 0%, #1e1e1e 50%, #151515 100%)',
+          background: '#282828',
+          borderRadius: 0,
           flexShrink: 0,
           overflow: 'hidden',
           position: 'relative',
@@ -560,17 +561,16 @@ export default function ProfileBuilderPage() {
           onClick={() => setPanelOpen((v) => !v)}
           style={{
             position: 'absolute',
-            top: 8,
-            left: 8,
+            top: 10,
+            left: 10,
             zIndex: 10,
-            width: 32,
-            height: 32,
-            borderRadius: 4,
-            border: '1px solid rgba(255,255,255,0.15)',
-            background: 'rgba(255,255,255,0.08)',
-            color: 'rgba(255,255,255,0.9)',
+            padding: '6px 10px',
+            borderRadius: 6,
+            border: '1px solid rgba(255,255,255,0.2)',
+            background: 'rgba(255,255,255,0.12)',
+            color: 'rgba(255,255,255,0.95)',
             cursor: 'pointer',
-            fontSize: '1rem',
+            fontSize: '0.8rem',
             lineHeight: 1,
             display: 'flex',
             alignItems: 'center',
@@ -582,7 +582,7 @@ export default function ProfileBuilderPage() {
         </button>
         <div
           style={{
-            padding: '1.25rem 1rem 1rem 2.5rem',
+            padding: '2.5rem 1rem 1rem 1rem',
             height: '100%',
             overflowY: 'auto',
             overflowX: 'hidden',
@@ -591,115 +591,144 @@ export default function ProfileBuilderPage() {
             opacity: panelOpen ? 1 : 0,
             transition: 'opacity 0.15s ease',
             pointerEvents: panelOpen ? 'auto' : 'none',
-          }}
-        >
-        <h2
-          style={{
-            fontSize: '1rem',
-            fontWeight: 600,
-            marginBottom: '1rem',
-            letterSpacing: '0.03em',
-          }}
-        >
-          Panel
-        </h2>
-        <p
-          style={{
-            fontSize: '0.75rem',
-            color: 'rgba(255,255,255,0.5)',
-            marginBottom: '0.25rem',
-          }}
-        >
-          Drag onto grid
-        </p>
-        <div
-          style={{
             display: 'flex',
             flexDirection: 'column',
-            gap: '1rem',
-            marginBottom: '1rem',
           }}
         >
-          {panelItemsToShow.map((item) => (
-            <div
-              key={item.id}
-              className="profile-builder-panel-item"
-              data-type={item.type}
-              style={{
-                cursor: 'grab',
-                userSelect: 'none',
-                flexShrink: 0,
-                borderRadius: '0.375rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                ...(item.type === 'rectangle' && {
-                  width: '75%',
-                  height: 20,
-                  borderRadius: 10,
-                  background: '#ef4444',
-                  color: '#fee2e2',
-                  fontWeight: 600,
-                  fontSize: '0.7rem',
-                  letterSpacing: '0.03em',
+          <h2
+            style={{
+              fontSize: '1.1rem',
+              fontWeight: 700,
+              marginBottom: 4,
+              letterSpacing: '0.02em',
+              color: '#fff',
+            }}
+          >
+            Profile page widgets
+          </h2>
+          <p
+            style={{
+              fontSize: '0.8rem',
+              color: 'rgba(255,255,255,0.7)',
+              marginBottom: '1rem',
+            }}
+          >
+            Drag/drop onto the grid
+          </p>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+              marginBottom: '1rem',
+              flex: '1 1 auto',
+              minHeight: 0,
+            }}
+          >
+            {panelItemsToShow.map((item) => (
+              <div
+                key={item.id}
+                className="profile-builder-panel-item"
+                data-type={item.type}
+                style={{
+                  cursor: 'grab',
+                  userSelect: 'none',
+                  flexShrink: 0,
+                  width: '78%',
+                  height: 28,
+                  borderRadius: 6,
+                  background: 'linear-gradient(180deg, #3a3a3a 0%, #2a2a2a 50%, #222 100%)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  color: 'rgba(255,255,255,0.95)',
+                  fontWeight: 500,
+                  fontSize: '0.8rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   textAlign: 'center',
-                  padding: '0 8px',
-                }),
-                ...(item.type === 'square-small' && {
-                  width: 50,
-                  height: 50,
-                  background: '#374151',
-                  border: '1px solid #4b5563',
-                }),
-                ...(item.type === 'square-large' && {
-                  width: 100,
-                  height: 100,
-                  background: '#4b5563',
-                  border: '1px solid #6b7280',
-                }),
-              }}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                setDraggedId(`new:${item.id}`);
-              }}
-            >
-              {item.label || ''}
-            </div>
-          ))}
-        </div>
-        <p
-          style={{
-            fontSize: '0.75rem',
-            color: 'rgba(255,255,255,0.5)',
-            marginBottom: '0.25rem',
-          }}
-        >
-          Drop here to return
-        </p>
-        <div
-          ref={panelDropZoneRef}
-          style={{
-            minHeight: 60,
-            border: '2px dashed rgba(255,255,255,0.2)',
-            borderRadius: '0.5rem',
-            marginTop: '0.5rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: dragOverReturn ? 'rgba(255,255,255,0.06)' : undefined,
-            borderColor: dragOverReturn ? 'rgba(255,255,255,0.4)' : undefined,
-          }}
-        >
-          <span
+                  padding: '0 10px',
+                  boxShadow: '0 1px 0 rgba(255,255,255,0.06)',
+                }}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  setDraggedId(`new:${item.id}`);
+                }}
+              >
+                {item.label || ''}
+              </div>
+            ))}
+          </div>
+          <p
             style={{
               fontSize: '0.75rem',
               color: 'rgba(255,255,255,0.5)',
-              pointerEvents: 'none',
+              marginBottom: 6,
             }}
           >
-            Return items here
-          </span>
-        </div>
+            Drop here to return
+          </p>
+          <div
+            ref={panelDropZoneRef}
+            style={{
+              minHeight: 48,
+              border: '2px dashed rgba(255,255,255,0.18)',
+              borderRadius: 6,
+              marginBottom: '1rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: dragOverReturn ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.15)',
+              borderColor: dragOverReturn ? 'rgba(255,255,255,0.35)' : undefined,
+            }}
+          >
+            <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', pointerEvents: 'none' }}>
+              Return items here
+            </span>
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              gap: 10,
+              justifyContent: 'space-between',
+              marginTop: 'auto',
+              paddingTop: 8,
+            }}
+          >
+            <button
+              type="button"
+              style={{
+                flex: 1,
+                maxWidth: '48%',
+                padding: '10px 16px',
+                borderRadius: 6,
+                border: 'none',
+                background: '#dc2626',
+                color: '#fff',
+                fontWeight: 600,
+                fontSize: '0.85rem',
+                cursor: 'pointer',
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              style={{
+                flex: 1,
+                maxWidth: '48%',
+                padding: '10px 16px',
+                borderRadius: 6,
+                border: 'none',
+                background: '#16a34a',
+                color: '#fff',
+                fontWeight: 600,
+                fontSize: '0.85rem',
+                cursor: 'pointer',
+              }}
+            >
+              Save
+            </button>
+          </div>
         </div>
       </aside>
 
