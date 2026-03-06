@@ -13,7 +13,7 @@ const PADDING = 16;
 
 const PANEL_ITEMS = [
   { id: 'rect', type: 'rectangle', cols: 6, rows: 10, label: 'User panel' },
-  { id: 'sq-s', type: 'square-small', cols: 6, rows: 6, label: 'Image Landscape | Small' },
+  { id: 'sq-s', type: 'square-small', cols: 4, rows: 5, label: 'Image Landscape | Small' },
   { id: 'sq-l', type: 'square-large', cols: 2, rows: 2 },
 ];
 
