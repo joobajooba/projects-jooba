@@ -1,9 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import NFTSelector from './NFTSelector';
 import { getAlchemyApiKey } from './lib/alchemy';
 import { fetchUserProfile } from './userData';
+import { ensureProfile, fetchProfileByWallet, updateProfile } from './profileBuilderApi';
 
 const CELL_SIZE = 50;
 const PADDING = 16;
@@ -61,7 +63,10 @@ export default function ProfileBuilderPage() {
   const [nftSelectorOpen, setNftSelectorOpen] = useState(false);
   const [nftSelectorForInstance, setNftSelectorForInstance] = useState(null);
   const [profile, setProfile] = useState({ username: null, xUsername: null });
+  const [saveStatus, setSaveStatus] = useState(null); // null | 'saving' | 'success' | 'error'
+  const layoutLoadedRef = useRef(false);
   const { address } = useAccount();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!address) {
@@ -79,6 +84,48 @@ export default function ProfileBuilderPage() {
     });
     return () => { cancelled = true; };
   }, [address]);
+
+  // Load saved layout from profiles (Supabase) for this user
+  useEffect(() => {
+    if (!address || layoutLoadedRef.current) return;
+    layoutLoadedRef.current = true;
+    let cancelled = false;
+    fetchProfileByWallet(address).then((data) => {
+      if (cancelled || !data?.layout_json) return;
+      const layout = data.layout_json;
+      if (layout?.placements && typeof layout.placements === 'object') {
+        setPlacements(layout.placements);
+      }
+      if (layout?.nftImages && typeof layout.nftImages === 'object') {
+        setProfileBlockNftImages(layout.nftImages);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [address]);
+
+  const handleSaveLayout = useCallback(async () => {
+    if (!address) return;
+    setSaveStatus('saving');
+    try {
+      await ensureProfile(address);
+      const { ok, error } = await updateProfile(address, {
+        layout_json: {
+          placements: { ...placements },
+          nftImages: { ...profileBlockNftImages },
+        },
+      });
+      if (ok) {
+        setSaveStatus('success');
+        setTimeout(() => setSaveStatus(null), 2500);
+      } else {
+        setSaveStatus('error');
+        setTimeout(() => setSaveStatus(null), 3000);
+      }
+    } catch (e) {
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus(null), 3000);
+    }
+  }, [address, placements, profileBlockNftImages]);
 
   // Lock page scrolling while the builder is open so width/height stay static.
   useEffect(() => {
@@ -696,6 +743,7 @@ export default function ProfileBuilderPage() {
           >
             <button
               type="button"
+              onClick={() => navigate('/profile')}
               style={{
                 flex: 1,
                 maxWidth: '48%',
@@ -713,20 +761,23 @@ export default function ProfileBuilderPage() {
             </button>
             <button
               type="button"
+              onClick={handleSaveLayout}
+              disabled={saveStatus === 'saving' || !address}
               style={{
                 flex: 1,
                 maxWidth: '48%',
                 padding: '10px 16px',
                 borderRadius: 6,
                 border: 'none',
-                background: '#16a34a',
+                background: saveStatus === 'success' ? '#15803d' : saveStatus === 'error' ? '#b91c1c' : '#16a34a',
                 color: '#fff',
                 fontWeight: 600,
                 fontSize: '0.85rem',
-                cursor: 'pointer',
+                cursor: saveStatus === 'saving' || !address ? 'not-allowed' : 'pointer',
+                opacity: saveStatus === 'saving' || !address ? 0.8 : 1,
               }}
             >
-              Save
+              {saveStatus === 'saving' ? 'Saving…' : saveStatus === 'success' ? 'Saved' : saveStatus === 'error' ? 'Error' : 'Save'}
             </button>
           </div>
         </div>
