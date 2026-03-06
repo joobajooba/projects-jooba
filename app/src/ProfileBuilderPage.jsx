@@ -12,7 +12,7 @@ const PADDING = 16;
 
 const PANEL_ITEMS = [
   { id: 'rect', type: 'rectangle', cols: 6, rows: 10, label: 'User panel' },
-  { id: 'sq-s', type: 'square-small', cols: 5, rows: 5, label: 'Image Portrait | Small' },
+  { id: 'sq-s', type: 'square-small', cols: 6, rows: 5, label: 'Image Portrait | Small' },
   { id: 'sq-l', type: 'square-large', cols: 2, rows: 2 },
 ];
 
@@ -147,7 +147,7 @@ export default function ProfileBuilderPage() {
     const h = el.clientHeight;
     const innerW = w - 2 * PADDING;
     const innerH = h - 2 * PADDING;
-    const cols = Math.max(10, Math.floor(innerW / CELL_SIZE));
+    const cols = Math.max(10, Math.floor(innerW / CELL_SIZE) - 2);
     const rows = Math.max(20, Math.floor(innerH / CELL_SIZE));
     setGridInnerSize({ width: w, height: h });
     setGridSize((prev) =>
