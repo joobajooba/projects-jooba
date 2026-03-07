@@ -128,11 +128,15 @@ export default function ProfileBuilderPage() {
     setSaveStatus('saving');
     try {
       await ensureProfile(address);
+      // Only persist URLs that work in a new tab (no blob:)
+      const persistableImageWidgetImages = Object.fromEntries(
+        Object.entries(imageWidgetImages).filter(([, url]) => typeof url === 'string' && !url.startsWith('blob:'))
+      );
       const { ok, error } = await updateProfile(address, {
         layout_json: {
           placements: { ...placements },
           nftImages: { ...profileBlockNftImages },
-          imageWidgetImages: { ...imageWidgetImages },
+          imageWidgetImages: persistableImageWidgetImages,
         },
       });
       if (ok) {
@@ -161,11 +165,15 @@ export default function ProfileBuilderPage() {
     uploadForInstanceRef.current = null;
     if (!file || !instanceId) return;
 
-    // Show image immediately with object URL so the box updates right away
     const objectUrl = URL.createObjectURL(file);
     setImageWidgetImages((prev) => ({ ...prev, [instanceId]: objectUrl }));
 
-    // If Supabase is configured, upload and replace with public URL so it persists
+    const setPersistableUrl = (url) => {
+      URL.revokeObjectURL(objectUrl);
+      setImageWidgetImages((prev) => ({ ...prev, [instanceId]: url }));
+    };
+
+    let storageSucceeded = false;
     if (address && supabase) {
       try {
         const normalized = String(address).toLowerCase();
@@ -179,10 +187,9 @@ export default function ProfileBuilderPage() {
 
         if (!uploadError) {
           const { data } = supabase.storage.from('profile_page_assets').getPublicUrl(path);
-          const publicUrl = data?.publicUrl;
-          if (publicUrl) {
-            URL.revokeObjectURL(objectUrl);
-            setImageWidgetImages((prev) => ({ ...prev, [instanceId]: publicUrl }));
+          if (data?.publicUrl) {
+            setPersistableUrl(data.publicUrl);
+            storageSucceeded = true;
           }
         } else {
           console.warn('[ProfileBuilderPage] upload failed', uploadError);
@@ -190,6 +197,16 @@ export default function ProfileBuilderPage() {
       } catch (err) {
         console.warn('[ProfileBuilderPage] upload failed', err);
       }
+    }
+
+    // Fallback: data URL so the image persists in layout_json when user clicks Save (works in new tab)
+    if (!storageSucceeded && file.type?.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result;
+        if (typeof dataUrl === 'string' && dataUrl.startsWith('data:')) setPersistableUrl(dataUrl);
+      };
+      reader.readAsDataURL(file);
     }
   }, [address]);
 
