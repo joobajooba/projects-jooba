@@ -100,11 +100,19 @@ export default function ProfileBuilderPage() {
     layoutLoadedRef.current = true;
     let cancelled = false;
     fetchProfileByWallet(address).then((data) => {
-      if (cancelled || !data?.layout_json) return;
-      const layout = data.layout_json;
-      if (layout?.placements && typeof layout.placements === 'object') {
-        setPlacements(layout.placements);
-      }
+      if (cancelled) return;
+      const layout = data?.layout_json;
+      const initialPlacements =
+        layout?.placements && typeof layout.placements === 'object'
+          ? layout.placements
+          : {};
+      const hasUserPanel = Object.values(initialPlacements).some(
+        (p) => p.templateId === 'rect'
+      );
+      const placementsToSet = hasUserPanel
+        ? initialPlacements
+        : { ...initialPlacements, 'rect-default': { col: 0, row: 0, templateId: 'rect' } };
+      setPlacements(placementsToSet);
       if (layout?.nftImages && typeof layout.nftImages === 'object') {
         setProfileBlockNftImages(layout.nftImages);
       }
@@ -322,7 +330,12 @@ export default function ProfileBuilderPage() {
         );
         placeOnGrid(draggedId, col, row);
       } else if (overReturn) {
-        returnToPanel(draggedId);
+        if (placements[draggedId]?.templateId !== 'rect') {
+          returnToPanel(draggedId);
+        } else {
+          const { col, row } = placements[draggedId];
+          placeOnGrid(draggedId, col, row);
+        }
       } else if (placements[draggedId]) {
         const { col, row } = placements[draggedId];
         placeOnGrid(draggedId, col, row);
@@ -391,8 +404,8 @@ export default function ProfileBuilderPage() {
     })
     .filter(Boolean);
 
-  // Panel always shows all item types so user can drag multiple of each onto the grid
-  const panelItemsToShow = PANEL_ITEMS;
+  // User panel is always on the grid and not in the panel; other widgets are draggable from the panel
+  const panelItemsToShow = PANEL_ITEMS.filter((item) => item.id !== 'rect');
 
   return (
     <div
