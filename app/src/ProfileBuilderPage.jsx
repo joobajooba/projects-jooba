@@ -22,6 +22,12 @@ const PANEL_ITEMS = [
   { id: 'sq-l', type: 'square-large', cols: 2, rows: 2 },
 ];
 
+const WIDGET_CATEGORIES = [
+  { id: 'images', label: 'Images', templateIds: ['img-3x5', 'sq-s', 'img-8x5', 'img-11x10'] },
+  { id: 'textboxes', label: 'Text Boxes', templateIds: ['txt-6x10', 'txt-8x10'] },
+  { id: 'all', label: 'All', templateIds: ['img-3x5', 'sq-s', 'img-8x5', 'img-11x10', 'txt-6x10', 'txt-8x10', 'sq-l'] },
+];
+
 function getGridCoords(clientX, clientY, containerRect, cols, rows) {
   const innerW = containerRect.width - 2 * PADDING;
   const innerH = containerRect.height - 2 * PADDING;
@@ -72,6 +78,7 @@ export default function ProfileBuilderPage() {
   const [profile, setProfile] = useState({ username: null, xUsername: null });
   const [saveStatus, setSaveStatus] = useState(null); // null | 'saving' | 'success' | 'error'
   const [editMode, setEditMode] = useState(true); // true = edit (grid), false = profile view (no grid)
+  const [selectedCategory, setSelectedCategory] = useState(null); // null | 'images' | 'textboxes' | 'all'
   const uploadInputRef = useRef(null);
   const uploadForInstanceRef = useRef(null);
   const layoutLoadedRef = useRef(false);
@@ -415,7 +422,10 @@ export default function ProfileBuilderPage() {
     .filter(Boolean);
 
   // User panel is always on the grid and not in the panel; other widgets are draggable from the panel
-  const panelItemsToShow = PANEL_ITEMS.filter((item) => item.id !== 'rect');
+  const selectedCategoryDef = selectedCategory ? WIDGET_CATEGORIES.find((c) => c.id === selectedCategory) : null;
+  const panelItemsToShow = selectedCategoryDef
+    ? PANEL_ITEMS.filter((item) => selectedCategoryDef.templateIds.includes(item.id))
+    : [];
 
   return (
     <div
@@ -947,26 +957,57 @@ export default function ProfileBuilderPage() {
               Profile Mode
             </button>
           </div>
-          <p
-            style={{
-              fontSize: '0.8rem',
-              color: 'rgba(255,255,255,0.7)',
-              marginBottom: '1rem',
-            }}
-          >
-            Drag/drop onto the grid
-          </p>
           <div
             style={{
-              display: 'flex',
-              flexDirection: 'column',
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr 1fr',
               gap: 8,
               marginBottom: '1rem',
-              flex: '1 1 auto',
-              minHeight: 0,
             }}
           >
-            {panelItemsToShow.map((item) => (
+            {WIDGET_CATEGORIES.map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setSelectedCategory(cat.id)}
+                style={{
+                  padding: '10px 8px',
+                  borderRadius: 6,
+                  border: '1px solid rgba(255,255,255,0.25)',
+                  background: selectedCategory === cat.id ? '#16a34a' : 'rgba(255,255,255,0.1)',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  textAlign: 'center',
+                }}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+          {selectedCategory && (
+            <>
+              <p
+                style={{
+                  fontSize: '0.8rem',
+                  color: 'rgba(255,255,255,0.7)',
+                  marginBottom: '0.5rem',
+                }}
+              >
+                Drag/drop onto the grid
+              </p>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 8,
+                  marginBottom: '1rem',
+                  flex: '1 1 auto',
+                  minHeight: 0,
+                }}
+              >
+                {panelItemsToShow.map((item) => (
               <div
                 key={item.id}
                 className="profile-builder-panel-item"
@@ -999,7 +1040,9 @@ export default function ProfileBuilderPage() {
                 {item.label || ''}
               </div>
             ))}
-          </div>
+              </div>
+            </>
+          )}
           <div
             style={{
               display: 'flex',
