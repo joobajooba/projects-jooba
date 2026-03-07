@@ -911,6 +911,20 @@ export default function ProfileBuilderPage() {
           position: 'relative',
           transition: 'width 0.2s ease, min-width 0.2s ease',
         }}>
+        {/* Gradient on left edge of panel (same as left sidebar) */}
+        <div
+          aria-hidden
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: 8,
+            background: 'linear-gradient(180deg, #2a2a2a 0%, #1e1e1e 50%, #151515 100%)',
+            pointerEvents: 'none',
+            zIndex: 0,
+          }}
+        />
         <button
           type="button"
           onClick={() => setPanelOpen((v) => !v)}
@@ -937,6 +951,8 @@ export default function ProfileBuilderPage() {
         </button>
         <div
           style={{
+            position: 'relative',
+            zIndex: 1,
             padding: '3.25rem 1rem 1rem 1rem',
             height: '100%',
             overflowY: 'auto',
@@ -967,6 +983,8 @@ export default function ProfileBuilderPage() {
               alignItems: 'center',
               gap: 8,
               marginBottom: 12,
+              paddingBottom: 12,
+              borderBottom: '1px solid rgba(0,0,0,0.3)',
               flexWrap: 'wrap',
             }}
           >
@@ -1011,6 +1029,8 @@ export default function ProfileBuilderPage() {
               gridTemplateColumns: '1fr 1fr 1fr',
               gap: 8,
               marginBottom: '1rem',
+              paddingBottom: '1rem',
+              borderBottom: '1px solid rgba(0,0,0,0.3)',
             }}
           >
             {WIDGET_CATEGORIES.map((cat) => (
