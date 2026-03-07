@@ -530,7 +530,7 @@ export default function ProfileBuilderPage() {
                     border: '1px solid #6b7280',
                   }),
                   ...(item.type === 'textbox' && {
-                    background: '#3f3f46',
+                    background: '#1a1a1a',
                     border: '1px solid #52525b',
                   }),
                 }}
@@ -800,7 +800,7 @@ export default function ProfileBuilderPage() {
                     style={{
                       width: '100%',
                       height: '100%',
-                      padding: 8,
+                      padding: 16,
                       boxSizing: 'border-box',
                       overflow: 'hidden',
                       display: 'flex',
@@ -820,12 +820,12 @@ export default function ProfileBuilderPage() {
                           minHeight: 60,
                           resize: 'none',
                           overflow: 'hidden',
-                          background: 'rgba(0,0,0,0.25)',
+                          background: '#1a1a1a',
                           border: '1px solid rgba(255,255,255,0.2)',
                           borderRadius: 4,
                           color: '#fff',
                           fontSize: '0.8rem',
-                          padding: 6,
+                          padding: 10,
                           boxSizing: 'border-box',
                         }}
                       />
