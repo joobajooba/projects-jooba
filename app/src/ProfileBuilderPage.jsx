@@ -58,7 +58,7 @@ function isOverElement(clientX, clientY, el) {
 export default function ProfileBuilderPage() {
   const gridContainerRef = useRef(null);
   const gridAreaRef = useRef(null);
-  const [gridSize, setGridSize] = useState({ cols: 10, rows: 20 });
+  const [gridSize, setGridSize] = useState({ cols: 11, rows: 20 });
   const [gridInnerSize, setGridInnerSize] = useState({ width: 0, height: 0 });
   const [placements, setPlacements] = useState({});
   const [draggedId, setDraggedId] = useState(null);
@@ -523,15 +523,12 @@ export default function ProfileBuilderPage() {
                   }),
                   ...((item.type === 'square-small' || item.type === 'image-3x5' || item.type === 'image-8x5' || item.type === 'image-11x10') && {
                     background: '#374151',
-                    border: '1px solid #4b5563',
                   }),
                   ...(item.type === 'square-large' && {
                     background: '#4b5563',
-                    border: '1px solid #6b7280',
                   }),
                   ...(item.type === 'textbox' && {
                     background: '#1a1a1a',
-                    border: '1px solid #52525b',
                   }),
                 }}
                 onMouseDown={(e) => {
