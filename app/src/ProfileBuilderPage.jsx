@@ -879,7 +879,7 @@ export default function ProfileBuilderPage() {
         </button>
         <div
           style={{
-            padding: '2.5rem 1rem 1rem 1rem',
+            padding: '3.25rem 1rem 1rem 1rem',
             height: '100%',
             overflowY: 'auto',
             overflowX: 'hidden',
@@ -892,59 +892,60 @@ export default function ProfileBuilderPage() {
             flexDirection: 'column',
           }}
         >
+          <h2
+            style={{
+              fontSize: '1.1rem',
+              fontWeight: 700,
+              margin: '0 0 1rem 0',
+              letterSpacing: '0.02em',
+              color: '#fff',
+            }}
+          >
+            Profile Page Widgets
+          </h2>
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 12,
-              marginBottom: 4,
+              gap: 8,
+              marginBottom: 12,
               flexWrap: 'wrap',
             }}
           >
-            <h2
+            <button
+              type="button"
+              title="Show grid and edit widgets"
+              onClick={() => setEditMode(true)}
               style={{
-                fontSize: '1.1rem',
-                fontWeight: 700,
-                margin: 0,
-                letterSpacing: '0.02em',
+                padding: '6px 12px',
+                borderRadius: 6,
+                border: '1px solid rgba(255,255,255,0.3)',
+                background: editMode ? '#16a34a' : 'rgba(255,255,255,0.1)',
                 color: '#fff',
+                cursor: 'pointer',
+                fontSize: '0.8rem',
+                fontWeight: 500,
               }}
             >
-              Profile page widgets
-            </h2>
-            <div
+              Edit Mode
+            </button>
+            <button
+              type="button"
+              title="Profile view, no grid, read-only"
+              onClick={() => setEditMode(false)}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
+                padding: '6px 12px',
+                borderRadius: 6,
+                border: '1px solid rgba(255,255,255,0.3)',
+                background: !editMode ? '#16a34a' : 'rgba(255,255,255,0.1)',
+                color: '#fff',
+                cursor: 'pointer',
+                fontSize: '0.8rem',
+                fontWeight: 500,
               }}
             >
-              <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.9)' }}>Edit Mode</span>
-              <button
-                type="button"
-                role="checkbox"
-                aria-checked={editMode}
-                title={editMode ? 'Profile view (hide grid)' : 'Edit mode (show grid)'}
-                onClick={() => setEditMode((v) => !v)}
-                style={{
-                  width: 22,
-                  height: 22,
-                  borderRadius: 4,
-                  border: '2px solid rgba(255,255,255,0.3)',
-                  background: editMode ? '#16a34a' : 'rgba(255,255,255,0.1)',
-                  color: '#fff',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '0.9rem',
-                  lineHeight: 1,
-                }}
-              >
-                {editMode ? '✓' : ''}
-              </button>
-            </div>
+              Profile Mode
+            </button>
           </div>
           <p
             style={{
