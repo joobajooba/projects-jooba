@@ -38,7 +38,7 @@ export async function fetchUserProfile(walletAddress) {
   const normalized = walletAddress.toLowerCase();
   const { data, error } = await supabase
     .from(TABLE)
-    .select('username, profile_picture_url, first_logged_in_at, profile_bio, profile_picture_border, mosaic_size, mosaic_urls, x_twitter_id, x_username')
+    .select('username, profile_picture_url, first_logged_in_at, profile_bio, profile_picture_border, mosaic_size, mosaic_urls, x_twitter_id, x_username, username_changed_at')
     .eq('wallet_address', normalized)
     .maybeSingle();
   if (error) {
@@ -46,7 +46,7 @@ export async function fetchUserProfile(walletAddress) {
     const fallbackWithX = await supabase.from(TABLE).select('username, profile_picture_url, first_logged_in_at, x_twitter_id, x_username').eq('wallet_address', normalized).maybeSingle();
     if (!fallbackWithX.error && fallbackWithX.data) {
       const d = fallbackWithX.data;
-      return { username: d.username ?? '', profilePictureUrl: d.profile_picture_url ?? '', firstLoggedInAt: d.first_logged_in_at ?? null, profileBio: '', profilePictureBorder: '', mosaicSize: null, mosaicUrls: [], xTwitterId: d.x_twitter_id ?? null, xUsername: d.x_username ?? null };
+      return { username: d.username ?? '', profilePictureUrl: d.profile_picture_url ?? '', firstLoggedInAt: d.first_logged_in_at ?? null, profileBio: '', profilePictureBorder: '', mosaicSize: null, mosaicUrls: [], xTwitterId: d.x_twitter_id ?? null, xUsername: d.x_username ?? null, usernameChangedAt: d.username_changed_at ?? null };
     }
     const fallback = await supabase.from(TABLE).select('username, profile_picture_url, first_logged_in_at').eq('wallet_address', normalized).maybeSingle();
     if (fallback.error) {
@@ -54,7 +54,7 @@ export async function fetchUserProfile(walletAddress) {
       return null;
     }
     const d = fallback.data;
-    return d ? { username: d.username ?? '', profilePictureUrl: d.profile_picture_url ?? '', firstLoggedInAt: d.first_logged_in_at ?? null, profileBio: '', profilePictureBorder: '', mosaicSize: null, mosaicUrls: [], xTwitterId: null, xUsername: null } : null;
+    return d ? { username: d.username ?? '', profilePictureUrl: d.profile_picture_url ?? '', firstLoggedInAt: d.first_logged_in_at ?? null, profileBio: '', profilePictureBorder: '', mosaicSize: null, mosaicUrls: [], xTwitterId: null, xUsername: null, usernameChangedAt: d.username_changed_at ?? null } : null;
   }
   if (!data) return null;
   const urls = data.mosaic_urls;
@@ -68,10 +68,27 @@ export async function fetchUserProfile(walletAddress) {
     mosaicUrls: Array.isArray(urls) ? urls : [],
     xTwitterId: data.x_twitter_id ?? null,
     xUsername: data.x_username ?? null,
+    usernameChangedAt: data.username_changed_at ?? null,
   };
 }
 
-export async function updateUserProfile(walletAddress, { username, profilePictureUrl, profileBio, profilePictureBorder }) {
+/** Returns true if another user (not excludeWalletAddress) has this username (case-insensitive). Empty username is not taken. */
+export async function isUsernameTaken(proposedUsername, excludeWalletAddress) {
+  if (!supabase) return false;
+  const trimmed = (proposedUsername || '').trim();
+  if (!trimmed) return false;
+  const normalizedExclude = excludeWalletAddress ? excludeWalletAddress.toLowerCase() : null;
+  let query = supabase.from(TABLE).select('wallet_address').ilike('username', trimmed).limit(1);
+  if (normalizedExclude) query = query.neq('wallet_address', normalizedExclude);
+  const { data, error } = await query;
+  if (error) {
+    console.warn('[userData] isUsernameTaken failed', error);
+    return true;
+  }
+  return !!(data && data.length > 0);
+}
+
+export async function updateUserProfile(walletAddress, { username, profilePictureUrl, profileBio, profilePictureBorder, setUsernameChangedAt }) {
   if (!supabase || !walletAddress) return;
   const normalized = walletAddress.toLowerCase();
   const payload = {
@@ -81,13 +98,17 @@ export async function updateUserProfile(walletAddress, { username, profilePictur
   };
   if (profileBio !== undefined) payload.profile_bio = profileBio || null;
   if (profilePictureBorder !== undefined) payload.profile_picture_border = profilePictureBorder || null;
+  if (setUsernameChangedAt) payload.username_changed_at = new Date().toISOString();
   const { error } = await supabase.from(TABLE).upsert(payload, { onConflict: 'wallet_address' });
   if (error) {
     if (error.code === '42703') {
       delete payload.profile_bio;
       delete payload.profile_picture_border;
+      delete payload.username_changed_at;
       const { error: err2 } = await supabase.from(TABLE).upsert(payload, { onConflict: 'wallet_address' });
       if (err2) console.warn('[userData] updateUserProfile failed', err2);
+    } else if (error.code === '23505') {
+      throw new Error('username_taken');
     } else {
       console.warn('[userData] updateUserProfile failed', error);
     }

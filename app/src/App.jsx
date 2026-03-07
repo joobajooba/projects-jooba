@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Routes, Route, Link, NavLink, useSearchParams } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { loadProfile, saveProfile } from './profileStorage';
-import { ensureUserRow, fetchUserProfile, updateUserProfile } from './userData';
+import { ensureUserRow, fetchUserProfile, updateUserProfile, isUsernameTaken } from './userData';
 import NFTSelector from './NFTSelector';
 import ProfilePage from './ProfilePage';
 import ProfileBuilderPage from './ProfileBuilderPage';
@@ -88,6 +88,9 @@ export default function App() {
   const [profilePictureUrl, setProfilePictureUrl] = useState('');
   const [profileBio, setProfileBio] = useState('');
   const [profilePictureBorder, setProfilePictureBorder] = useState('');
+  const [profileSaveError, setProfileSaveError] = useState('');
+  const originalUsernameRef = useRef('');
+  const usernameChangedAtRef = useRef(null);
 
   useEffect(() => {
     if (!address) return;
@@ -106,6 +109,8 @@ export default function App() {
       setProfilePictureUrl(profilePictureUrl);
       setProfileBio(profileBio);
       setProfilePictureBorder(profilePictureBorder);
+      originalUsernameRef.current = username || '';
+      usernameChangedAtRef.current = fromDb?.usernameChangedAt ?? null;
       saveProfile(address, { username, profilePictureUrl, profileBio, profilePictureBorder });
     })();
     return () => { cancelled = true; };
@@ -121,13 +126,57 @@ export default function App() {
     setNftSelectorOpen(false);
   };
 
+  const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+
   const handleProfileSave = async () => {
-    if (address) {
-      await updateUserProfile(address, { username, profilePictureUrl, profileBio, profilePictureBorder });
-      saveProfile(address, { username, profilePictureUrl, profileBio, profilePictureBorder });
-      window.dispatchEvent(new CustomEvent('profile-updated', { detail: { walletAddress: address.toLowerCase() } }));
+    setProfileSaveError('');
+    if (!address) {
+      setProfileOpen(false);
+      return;
     }
-    setProfileOpen(false);
+    const trimmedUsername = (username || '').trim();
+    const originalUsername = originalUsernameRef.current || '';
+    const isUsernameChanging = trimmedUsername !== originalUsername;
+
+    if (isUsernameChanging && trimmedUsername) {
+      const taken = await isUsernameTaken(trimmedUsername, address);
+      if (taken) {
+        setProfileSaveError('That username is already taken. Please choose another.');
+        return;
+      }
+      const lastChanged = usernameChangedAtRef.current;
+      if (lastChanged) {
+        const elapsed = Date.now() - new Date(lastChanged).getTime();
+        if (elapsed < THREE_DAYS_MS) {
+          const nextDate = new Date(new Date(lastChanged).getTime() + THREE_DAYS_MS);
+          setProfileSaveError(`You can change your username again after ${nextDate.toLocaleDateString()}.`);
+          return;
+        }
+      }
+    }
+
+    try {
+      await updateUserProfile(address, {
+        username: trimmedUsername || null,
+        profilePictureUrl,
+        profileBio,
+        profilePictureBorder,
+        setUsernameChangedAt: isUsernameChanging && !!trimmedUsername,
+      });
+      if (isUsernameChanging && trimmedUsername) {
+        originalUsernameRef.current = trimmedUsername;
+        usernameChangedAtRef.current = new Date().toISOString();
+      }
+      saveProfile(address, { username: trimmedUsername, profilePictureUrl, profileBio, profilePictureBorder });
+      window.dispatchEvent(new CustomEvent('profile-updated', { detail: { walletAddress: address.toLowerCase() } }));
+      setProfileOpen(false);
+    } catch (e) {
+      if (e?.message === 'username_taken') {
+        setProfileSaveError('That username is already taken. Please choose another.');
+      } else {
+        setProfileSaveError(e?.message || 'Failed to save profile.');
+      }
+    }
   };
 
   const handleConnectX = async () => {
@@ -289,7 +338,7 @@ export default function App() {
       {profileOpen && (
         <div
           className="app-modal-overlay"
-          onClick={() => setProfileOpen(false)}
+          onClick={() => { setProfileOpen(false); setProfileSaveError(''); }}
           role="dialog"
           aria-modal="true"
           aria-labelledby="app-profile-modal-title"
@@ -304,10 +353,15 @@ export default function App() {
                 type="text"
                 className="app-modal-input"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(e) => { setUsername(e.target.value); setProfileSaveError(''); }}
                 placeholder="Enter username"
                 autoComplete="username"
               />
+              {profileSaveError && (
+                <p className="app-modal-error" role="alert" style={{ marginTop: 6, marginBottom: 0, color: '#f87171', fontSize: '0.875rem' }}>
+                  {profileSaveError}
+                </p>
+              )}
               <div className="app-profile-connect-x-wrap">
                 <button
                   type="button"
