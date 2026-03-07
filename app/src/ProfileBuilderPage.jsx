@@ -979,15 +979,23 @@ export default function ProfileBuilderPage() {
                 type="button"
                 onClick={() => setSelectedCategory(cat.id)}
                 style={{
-                  padding: '10px 8px',
+                  width: '100%',
+                  minHeight: 44,
+                  padding: '8px 6px',
                   borderRadius: 6,
                   border: '1px solid rgba(255,255,255,0.25)',
                   background: selectedCategory === cat.id ? '#16a34a' : 'rgba(255,255,255,0.1)',
                   color: '#fff',
                   cursor: 'pointer',
-                  fontSize: '0.75rem',
+                  fontSize: '0.7rem',
                   fontWeight: 600,
                   textAlign: 'center',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxSizing: 'border-box',
+                  lineHeight: 1.2,
+                  wordBreak: 'break-word',
                 }}
               >
                 {cat.label}
