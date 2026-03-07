@@ -58,7 +58,7 @@ function isOverElement(clientX, clientY, el) {
 export default function ProfileBuilderPage() {
   const gridContainerRef = useRef(null);
   const gridAreaRef = useRef(null);
-  const [gridSize, setGridSize] = useState({ cols: 11, rows: 20 });
+  const [gridSize, setGridSize] = useState({ cols: 8, rows: 20 });
   const [gridInnerSize, setGridInnerSize] = useState({ width: 0, height: 0 });
   const [placements, setPlacements] = useState({});
   const [draggedId, setDraggedId] = useState(null);
