@@ -20,9 +20,9 @@ const PANEL_ITEMS = [
   { id: 'txt-6x10', type: 'textbox', cols: 6, rows: 10, label: 'Text Box | 6X10' },
   { id: 'txt-8x10', type: 'textbox', cols: 8, rows: 10, label: 'Text Box | 8X10' },
   { id: 'kodacams-6x6', type: 'kodacams', cols: 6, rows: 6, label: 'Kodacams | 6x6' },
-  { id: 'bops-6x6', type: 'bops', cols: 6, rows: 6, label: 'Bops | 6x6' },
-  { id: 'stats-6x6', type: 'stats', cols: 6, rows: 6, label: 'Stats | 6x6' },
-  { id: 'badges-6x6', type: 'badges', cols: 6, rows: 6, label: 'Badges | 6x6' },
+  { id: 'bops-4x5', type: 'bops', cols: 4, rows: 5, label: 'Bop | 4x5' },
+  { id: 'stats-4x2', type: 'stats', cols: 4, rows: 2, label: 'Badge Panel | 4x2' },
+  { id: 'badges-6x2', type: 'badges', cols: 6, rows: 2, label: 'Badge Panel | 6x2' },
   { id: 'sq-l', type: 'square-large', cols: 2, rows: 2 },
 ];
 
@@ -30,9 +30,9 @@ const WIDGET_CATEGORIES = [
   { id: 'images', label: 'Images', templateIds: ['img-3x5', 'sq-s', 'img-8x5', 'img-11x10'] },
   { id: 'textboxes', label: 'Text Boxes', templateIds: ['txt-6x10', 'txt-8x10'] },
   { id: 'kodacams', label: 'Kodacams', templateIds: ['kodacams-6x6'] },
-  { id: 'bops', label: 'Bops', templateIds: ['bops-6x6'] },
-  { id: 'stats', label: 'Stats', templateIds: ['stats-6x6'] },
-  { id: 'badges', label: 'Badges', templateIds: ['badges-6x6'] },
+  { id: 'bops', label: 'Bops', templateIds: ['bops-4x5'] },
+  { id: 'stats', label: 'Stats', templateIds: ['stats-4x2'] },
+  { id: 'badges', label: 'Badges', templateIds: ['badges-6x2'] },
 ];
 
 function getGridCoords(clientX, clientY, containerRect, cols, rows) {
