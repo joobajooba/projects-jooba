@@ -14,6 +14,7 @@ const PADDING = 16;
 const PANEL_ITEMS = [
   { id: 'rect', type: 'rectangle', cols: 6, rows: 10, label: 'User panel' },
   { id: 'sq-s', type: 'square-small', cols: 4, rows: 5, label: 'Image Landscape | Small' },
+  { id: 'img-3x5', type: 'image-3x5', cols: 3, rows: 5, label: 'image | 3x5' },
   { id: 'sq-l', type: 'square-large', cols: 2, rows: 2 },
 ];
 
@@ -465,7 +466,7 @@ export default function ProfileBuilderPage() {
             const h = item.rows * cellHeightPx;
             const isProfileBlock = item.type === 'rectangle';
             const nftImage = profileBlockNftImages[item.instanceId];
-            const isImageWidget = item.type === 'square-small';
+            const isImageWidget = item.type === 'square-small' || item.type === 'image-3x5';
             const imageWidgetUrl = imageWidgetImages[item.instanceId];
             return (
               <div
@@ -496,7 +497,7 @@ export default function ProfileBuilderPage() {
                     flexDirection: 'column',
                     alignItems: 'stretch',
                   }),
-                  ...(item.type === 'square-small' && {
+                  ...((item.type === 'square-small' || item.type === 'image-3x5') && {
                     background: '#374151',
                     border: '1px solid #4b5563',
                   }),
