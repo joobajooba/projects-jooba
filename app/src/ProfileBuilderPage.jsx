@@ -56,12 +56,10 @@ function isOverElement(clientX, clientY, el) {
 export default function ProfileBuilderPage() {
   const gridContainerRef = useRef(null);
   const gridAreaRef = useRef(null);
-  const panelDropZoneRef = useRef(null);
   const [gridSize, setGridSize] = useState({ cols: 10, rows: 20 });
   const [gridInnerSize, setGridInnerSize] = useState({ width: 0, height: 0 });
   const [placements, setPlacements] = useState({});
   const [draggedId, setDraggedId] = useState(null);
-  const [dragOverReturn, setDragOverReturn] = useState(false);
   const [panelOpen, setPanelOpen] = useState(true);
   const [profileBlockNftImages, setProfileBlockNftImages] = useState({});
   const [imageWidgetImages, setImageWidgetImages] = useState({});
@@ -313,12 +311,6 @@ export default function ProfileBuilderPage() {
         e.clientY,
         gridContainerRef.current
       );
-      const overReturn = isOverElement(
-        e.clientX,
-        e.clientY,
-        panelDropZoneRef.current
-      );
-
       if (overGrid) {
         const rect = gridContainerRef.current.getBoundingClientRect();
         const { col, row } = getGridCoords(
@@ -329,35 +321,19 @@ export default function ProfileBuilderPage() {
           gridSize.rows
         );
         placeOnGrid(draggedId, col, row);
-      } else if (overReturn) {
-        if (placements[draggedId]?.templateId !== 'rect') {
-          returnToPanel(draggedId);
-        } else {
-          const { col, row } = placements[draggedId];
-          placeOnGrid(draggedId, col, row);
-        }
       } else if (placements[draggedId]) {
         const { col, row } = placements[draggedId];
         placeOnGrid(draggedId, col, row);
       }
 
       setDraggedId(null);
-      setDragOverReturn(false);
     },
-    [draggedId, placements, placeOnGrid, returnToPanel]
+    [draggedId, placements, placeOnGrid]
   );
 
   const handleMouseMove = useCallback(
     (e) => {
       if (!draggedId) return;
-
-      if (
-        isOverElement(e.clientX, e.clientY, panelDropZoneRef.current)
-      ) {
-        setDragOverReturn(true);
-      } else {
-        setDragOverReturn(false);
-      }
 
       if (
         placements[draggedId] &&
@@ -495,7 +471,7 @@ export default function ProfileBuilderPage() {
                   width: w,
                   height: h,
                   transform: `translate(${x}px, ${y}px)`,
-                  cursor: !editMode ? 'default' : isProfileBlock ? 'default' : 'grab',
+                  cursor: !editMode ? 'default' : 'grab',
                   userSelect: 'none',
                   pointerEvents: 'auto',
                   display: 'flex',
@@ -522,11 +498,43 @@ export default function ProfileBuilderPage() {
                   }),
                 }}
                 onMouseDown={(e) => {
-                  if (!editMode || isProfileBlock) return;
+                  if (!editMode) return;
                   e.preventDefault();
                   setDraggedId(item.instanceId);
                 }}
               >
+                {editMode && !isProfileBlock && (
+                  <button
+                    type="button"
+                    title="Remove from grid"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      returnToPanel(item.instanceId);
+                    }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    style={{
+                      position: 'absolute',
+                      top: 4,
+                      left: 4,
+                      zIndex: 10,
+                      width: 24,
+                      height: 24,
+                      borderRadius: 4,
+                      border: '1px solid rgba(255,255,255,0.4)',
+                      background: 'rgba(0,0,0,0.7)',
+                      color: '#fff',
+                      cursor: 'pointer',
+                      fontSize: '1rem',
+                      lineHeight: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    ×
+                  </button>
+                )}
                 {isProfileBlock ? (
                   <>
                     {/* Top: square photo area */}
@@ -561,35 +569,6 @@ export default function ProfileBuilderPage() {
                       )}
                       {editMode && (
                         <>
-                          <button
-                            type="button"
-                            title="Move block"
-                            onMouseDown={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setDraggedId(item.instanceId);
-                            }}
-                            style={{
-                              position: 'absolute',
-                              top: 4,
-                              left: 4,
-                              zIndex: 2,
-                              width: 24,
-                              height: 24,
-                              borderRadius: 4,
-                              border: '1px solid rgba(255,255,255,0.4)',
-                              background: 'rgba(0,0,0,0.6)',
-                              color: '#fff',
-                              cursor: 'grab',
-                              fontSize: '0.6rem',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              lineHeight: 1,
-                            }}
-                          >
-                            ⋮⋮
-                          </button>
                           {address ? (
                             <button
                               type="button"
@@ -944,33 +923,6 @@ export default function ProfileBuilderPage() {
                 {item.label || ''}
               </div>
             ))}
-          </div>
-          <p
-            style={{
-              fontSize: '0.75rem',
-              color: 'rgba(255,255,255,0.5)',
-              marginBottom: 6,
-            }}
-          >
-            Drop here to return
-          </p>
-          <div
-            ref={panelDropZoneRef}
-            style={{
-              minHeight: 48,
-              border: '2px dashed rgba(255,255,255,0.18)',
-              borderRadius: 6,
-              marginBottom: '1rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: dragOverReturn ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.15)',
-              borderColor: dragOverReturn ? 'rgba(255,255,255,0.35)' : undefined,
-            }}
-          >
-            <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', pointerEvents: 'none' }}>
-              Return items here
-            </span>
           </div>
           <div
             style={{
