@@ -73,6 +73,23 @@ function wouldOverlapPlacements(placements, excludeInstanceId, col, row, cols, r
   return false;
 }
 
+function filterNonOverlappingPlacements(placements) {
+  const entries = Object.entries(placements);
+  const rectFirst = entries.sort(([idA, a], [idB, b]) => {
+    const aIsRect = a.templateId === 'rect' ? 1 : 0;
+    const bIsRect = b.templateId === 'rect' ? 1 : 0;
+    return bIsRect - aIsRect;
+  });
+  const kept = {};
+  for (const [instanceId, p] of rectFirst) {
+    const template = PANEL_ITEMS.find((t) => t.id === p.templateId);
+    if (!template) continue;
+    if (wouldOverlapPlacements(kept, null, p.col, p.row, template.cols, template.rows)) continue;
+    kept[instanceId] = p;
+  }
+  return kept;
+}
+
 function isOverElement(clientX, clientY, el) {
   if (!el) return false;
   const r = el.getBoundingClientRect();
@@ -140,9 +157,10 @@ export default function ProfileBuilderPage() {
       const hasUserPanel = Object.values(initialPlacements).some(
         (p) => p.templateId === 'rect'
       );
-      const placementsToSet = hasUserPanel
+      const rawPlacements = hasUserPanel
         ? initialPlacements
         : { ...initialPlacements, 'rect-default': { col: 0, row: 0, templateId: 'rect' } };
+      const placementsToSet = filterNonOverlappingPlacements(rawPlacements);
       setPlacements(placementsToSet);
       if (layout?.nftImages && typeof layout.nftImages === 'object') {
         setProfileBlockNftImages(layout.nftImages);
@@ -422,7 +440,10 @@ export default function ProfileBuilderPage() {
             gridSize.cols,
             gridSize.rows
           );
-          setPlacements((prev) => ({ ...prev, [draggedId]: { ...placement, col: c, row: r } }));
+          setPlacements((prev) => {
+            if (wouldOverlapPlacements(prev, draggedId, c, r, item.cols, item.rows)) return prev;
+            return { ...prev, [draggedId]: { ...placement, col: c, row: r } };
+          });
         }
       }
     },
