@@ -121,7 +121,11 @@ export default function ProfileBuilderPage() {
         setImageWidgetImages(layout.imageWidgetImages);
       }
       if (layout?.textWidgetText && typeof layout.textWidgetText === 'object') {
-        setTextWidgetText(layout.textWidgetText);
+        const truncated = {};
+        for (const [k, v] of Object.entries(layout.textWidgetText)) {
+          truncated[k] = typeof v === 'string' ? v.slice(0, 1600) : '';
+        }
+        setTextWidgetText(truncated);
       }
     });
     return () => { cancelled = true; };
@@ -670,10 +674,10 @@ export default function ProfileBuilderPage() {
                         gap: 2,
                       }}
                     >
-                      <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {profile.username || 'No username'}
                       </div>
-                      <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {profile.xUsername ? `@${String(profile.xUsername).replace(/^@/, '')}` : 'No X linked'}
                       </div>
                     </div>
@@ -798,7 +802,7 @@ export default function ProfileBuilderPage() {
                       height: '100%',
                       padding: 8,
                       boxSizing: 'border-box',
-                      overflow: 'auto',
+                      overflow: 'hidden',
                       display: 'flex',
                       flexDirection: 'column',
                     }}
@@ -807,13 +811,15 @@ export default function ProfileBuilderPage() {
                     {editMode ? (
                       <textarea
                         value={textWidgetText[item.instanceId] ?? ''}
-                        onChange={(e) => setTextWidgetText((prev) => ({ ...prev, [item.instanceId]: e.target.value }))}
+                        onChange={(e) => setTextWidgetText((prev) => ({ ...prev, [item.instanceId]: e.target.value.slice(0, 1600) }))}
                         placeholder="Write something..."
+                        maxLength={1600}
                         style={{
                           width: '100%',
                           height: '100%',
                           minHeight: 60,
                           resize: 'none',
+                          overflow: 'hidden',
                           background: 'rgba(0,0,0,0.25)',
                           border: '1px solid rgba(255,255,255,0.2)',
                           borderRadius: 4,
@@ -824,7 +830,7 @@ export default function ProfileBuilderPage() {
                         }}
                       />
                     ) : (
-                      <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '0.8rem', color: '#e5e5e5' }}>
+                      <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '0.8rem', color: '#e5e5e5', overflow: 'hidden', height: '100%' }}>
                         {textWidgetText[item.instanceId] || ''}
                       </div>
                     )}
