@@ -238,7 +238,8 @@ export default function ProfileBuilderPage() {
     const h = el.clientHeight;
     const innerW = w - 2 * PADDING;
     const innerH = h - 2 * PADDING;
-    const cols = Math.max(10, Math.floor(innerW / CELL_SIZE) - 2);
+    // Grid is 3 columns narrower than the previous formula (was -2, now -5)
+    const cols = Math.max(8, Math.floor(innerW / CELL_SIZE) - 5);
     const rows = Math.max(20, Math.floor(innerH / CELL_SIZE));
     setGridInnerSize({ width: w, height: h });
     setGridSize((prev) =>
