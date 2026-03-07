@@ -21,7 +21,7 @@ const PANEL_ITEMS = [
   { id: 'txt-8x10', type: 'textbox', cols: 8, rows: 10, label: 'Text Box | 8X10' },
   { id: 'kodacams-6x6', type: 'kodacams', cols: 6, rows: 6, label: 'Kodacams | 6x6' },
   { id: 'bops-4x5', type: 'bops', cols: 4, rows: 5, label: 'Bop | 4x5' },
-  { id: 'stats-4x2', type: 'stats', cols: 4, rows: 2, label: 'Badge Panel | 4x2' },
+  { id: 'stats-4x2', type: 'stats', cols: 4, rows: 2, label: 'Stat Block | 4x2' },
   { id: 'badges-6x2', type: 'badges', cols: 6, rows: 2, label: 'Badge Panel | 6x2' },
   { id: 'sq-l', type: 'square-large', cols: 2, rows: 2 },
 ];
@@ -55,6 +55,22 @@ function clampCell(item, col, row, gridCols, gridRows) {
     col: Math.max(0, Math.min(maxCol, col)),
     row: Math.max(0, Math.min(maxRow, row)),
   };
+}
+
+function rectanglesOverlap(aCol, aRow, aCols, aRows, bCol, bRow, bCols, bRows) {
+  return !(aCol + aCols <= bCol || bCol + bCols <= aCol || aRow + aRows <= bRow || bRow + bRows <= aRow);
+}
+
+function wouldOverlapPlacements(placements, excludeInstanceId, col, row, cols, rows) {
+  for (const [instanceId, p] of Object.entries(placements)) {
+    if (instanceId === excludeInstanceId) continue;
+    const template = PANEL_ITEMS.find((t) => t.id === p.templateId);
+    if (!template) continue;
+    if (rectanglesOverlap(col, row, cols, rows, p.col, p.row, template.cols, template.rows)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function isOverElement(clientX, clientY, el) {
@@ -295,11 +311,11 @@ export default function ProfileBuilderPage() {
           gridSize.cols,
           gridSize.rows
         );
-        const instanceId = `${templateId}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-        setPlacements((prev) => ({
-          ...prev,
-          [instanceId]: { col: c, row: r, templateId: item.id },
-        }));
+        setPlacements((prev) => {
+          if (wouldOverlapPlacements(prev, null, c, r, item.cols, item.rows)) return prev;
+          const instanceId = `${templateId}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+          return { ...prev, [instanceId]: { col: c, row: r, templateId: item.id } };
+        });
         return;
       }
 
@@ -316,6 +332,7 @@ export default function ProfileBuilderPage() {
             gridSize.cols,
             gridSize.rows
           );
+          if (wouldOverlapPlacements(prev, draggedIdOrNew, c, r, template.cols, template.rows)) return prev;
           return {
             ...prev,
             [draggedIdOrNew]: { ...existing, col: c, row: r },
@@ -1034,7 +1051,7 @@ export default function ProfileBuilderPage() {
                 cursor: editMode ? 'grab' : 'default',
                 userSelect: 'none',
                 flexShrink: 0,
-                width: '78%',
+                width: '100%',
                   height: 28,
                   borderRadius: 6,
                   background: 'linear-gradient(180deg, #3a3a3a 0%, #2a2a2a 50%, #222 100%)',
