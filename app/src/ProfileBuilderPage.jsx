@@ -22,6 +22,7 @@ const PANEL_ITEMS = [
   { id: 'kodacams-6x6', type: 'kodacams', cols: 6, rows: 6, label: 'Kodacams | 6x6' },
   { id: 'bops-6x6', type: 'bops', cols: 6, rows: 6, label: 'Bops | 6x6' },
   { id: 'stats-6x6', type: 'stats', cols: 6, rows: 6, label: 'Stats | 6x6' },
+  { id: 'badges-6x6', type: 'badges', cols: 6, rows: 6, label: 'Badges | 6x6' },
   { id: 'sq-l', type: 'square-large', cols: 2, rows: 2 },
 ];
 
@@ -31,6 +32,7 @@ const WIDGET_CATEGORIES = [
   { id: 'kodacams', label: 'Kodacams', templateIds: ['kodacams-6x6'] },
   { id: 'bops', label: 'Bops', templateIds: ['bops-6x6'] },
   { id: 'stats', label: 'Stats', templateIds: ['stats-6x6'] },
+  { id: 'badges', label: 'Badges', templateIds: ['badges-6x6'] },
 ];
 
 function getGridCoords(clientX, clientY, containerRect, cols, rows) {
@@ -546,7 +548,7 @@ export default function ProfileBuilderPage() {
                   ...(item.type === 'textbox' && {
                     background: '#1a1a1a',
                   }),
-                  ...((item.type === 'kodacams' || item.type === 'bops' || item.type === 'stats') && {
+                  ...((item.type === 'kodacams' || item.type === 'bops' || item.type === 'stats' || item.type === 'badges') && {
                     background: '#1a1a1a',
                   }),
                 }}
