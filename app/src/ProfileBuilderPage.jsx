@@ -16,7 +16,7 @@ const PANEL_ITEMS = [
   { id: 'img-3x5', type: 'image-3x5', cols: 3, rows: 5, label: 'Image | 3x5' },
   { id: 'sq-s', type: 'square-small', cols: 4, rows: 5, label: 'Image | 4x5' },
   { id: 'img-8x5', type: 'image-8x5', cols: 8, rows: 5, label: 'Image | 8 x 5' },
-  { id: 'img-11x5', type: 'image-11x5', cols: 11, rows: 5, label: 'Image | 11 x 5' },
+  { id: 'img-11x10', type: 'image-11x10', cols: 11, rows: 10, label: 'Image | 11x10' },
   { id: 'txt-6x10', type: 'textbox', cols: 6, rows: 10, label: 'Text Box | 6X10' },
   { id: 'txt-8x10', type: 'textbox', cols: 8, rows: 10, label: 'Text Box | 8X10' },
   { id: 'sq-l', type: 'square-large', cols: 2, rows: 2 },
@@ -65,6 +65,7 @@ export default function ProfileBuilderPage() {
   const [panelOpen, setPanelOpen] = useState(true);
   const [profileBlockNftImages, setProfileBlockNftImages] = useState({});
   const [imageWidgetImages, setImageWidgetImages] = useState({});
+  const [textWidgetText, setTextWidgetText] = useState({});
   const [nftSelectorOpen, setNftSelectorOpen] = useState(false);
   const [nftSelectorForInstance, setNftSelectorForInstance] = useState(null);
   const [nftSelectorTarget, setNftSelectorTarget] = useState('profile'); // 'profile' | 'imageWidget'
@@ -119,6 +120,9 @@ export default function ProfileBuilderPage() {
       if (layout?.imageWidgetImages && typeof layout.imageWidgetImages === 'object') {
         setImageWidgetImages(layout.imageWidgetImages);
       }
+      if (layout?.textWidgetText && typeof layout.textWidgetText === 'object') {
+        setTextWidgetText(layout.textWidgetText);
+      }
     });
     return () => { cancelled = true; };
   }, [address]);
@@ -137,6 +141,7 @@ export default function ProfileBuilderPage() {
           placements: { ...placements },
           nftImages: { ...profileBlockNftImages },
           imageWidgetImages: persistableImageWidgetImages,
+          textWidgetText: { ...textWidgetText },
         },
       });
       if (ok) {
@@ -150,7 +155,7 @@ export default function ProfileBuilderPage() {
       setSaveStatus('error');
       setTimeout(() => setSaveStatus(null), 3000);
     }
-  }, [address, placements, profileBlockNftImages, imageWidgetImages]);
+  }, [address, placements, profileBlockNftImages, imageWidgetImages, textWidgetText]);
 
   const startUploadFor = useCallback((instanceId) => {
     if (!editMode) return;
@@ -319,6 +324,11 @@ export default function ProfileBuilderPage() {
       delete next[instanceId];
       return next;
     });
+    setTextWidgetText((prev) => {
+      const next = { ...prev };
+      delete next[instanceId];
+      return next;
+    });
   }, []);
 
   const handleMouseUp = useCallback(
@@ -476,7 +486,7 @@ export default function ProfileBuilderPage() {
             const h = item.rows * cellHeightPx;
             const isProfileBlock = item.type === 'rectangle';
             const nftImage = profileBlockNftImages[item.instanceId];
-            const isImageWidget = item.type === 'square-small' || item.type === 'image-3x5' || item.type === 'image-8x5' || item.type === 'image-11x5';
+            const isImageWidget = item.type === 'square-small' || item.type === 'image-3x5' || item.type === 'image-8x5' || item.type === 'image-11x10';
             const imageWidgetUrl = imageWidgetImages[item.instanceId];
             return (
               <div
@@ -507,7 +517,7 @@ export default function ProfileBuilderPage() {
                     flexDirection: 'column',
                     alignItems: 'stretch',
                   }),
-                  ...((item.type === 'square-small' || item.type === 'image-3x5' || item.type === 'image-8x5' || item.type === 'image-11x5') && {
+                  ...((item.type === 'square-small' || item.type === 'image-3x5' || item.type === 'image-8x5' || item.type === 'image-11x10') && {
                     background: '#374151',
                     border: '1px solid #4b5563',
                   }),
@@ -778,6 +788,44 @@ export default function ProfileBuilderPage() {
                         >
                           Upload
                         </button>
+                      </div>
+                    )}
+                  </div>
+                ) : item.type === 'textbox' ? (
+                  <div
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      padding: 8,
+                      boxSizing: 'border-box',
+                      overflow: 'auto',
+                      display: 'flex',
+                      flexDirection: 'column',
+                    }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                  >
+                    {editMode ? (
+                      <textarea
+                        value={textWidgetText[item.instanceId] ?? ''}
+                        onChange={(e) => setTextWidgetText((prev) => ({ ...prev, [item.instanceId]: e.target.value }))}
+                        placeholder="Write something..."
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          minHeight: 60,
+                          resize: 'none',
+                          background: 'rgba(0,0,0,0.25)',
+                          border: '1px solid rgba(255,255,255,0.2)',
+                          borderRadius: 4,
+                          color: '#fff',
+                          fontSize: '0.8rem',
+                          padding: 6,
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                    ) : (
+                      <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '0.8rem', color: '#e5e5e5' }}>
+                        {textWidgetText[item.instanceId] || ''}
                       </div>
                     )}
                   </div>
