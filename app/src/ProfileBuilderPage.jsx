@@ -19,13 +19,18 @@ const PANEL_ITEMS = [
   { id: 'img-11x10', type: 'image-11x10', cols: 11, rows: 10, label: 'Image | 11x10' },
   { id: 'txt-6x10', type: 'textbox', cols: 6, rows: 10, label: 'Text Box | 6X10' },
   { id: 'txt-8x10', type: 'textbox', cols: 8, rows: 10, label: 'Text Box | 8X10' },
+  { id: 'kodacams-6x6', type: 'kodacams', cols: 6, rows: 6, label: 'Kodacams | 6x6' },
+  { id: 'bops-6x6', type: 'bops', cols: 6, rows: 6, label: 'Bops | 6x6' },
+  { id: 'stats-6x6', type: 'stats', cols: 6, rows: 6, label: 'Stats | 6x6' },
   { id: 'sq-l', type: 'square-large', cols: 2, rows: 2 },
 ];
 
 const WIDGET_CATEGORIES = [
   { id: 'images', label: 'Images', templateIds: ['img-3x5', 'sq-s', 'img-8x5', 'img-11x10'] },
   { id: 'textboxes', label: 'Text Boxes', templateIds: ['txt-6x10', 'txt-8x10'] },
-  { id: 'all', label: 'All', templateIds: ['img-3x5', 'sq-s', 'img-8x5', 'img-11x10', 'txt-6x10', 'txt-8x10', 'sq-l'] },
+  { id: 'kodacams', label: 'Kodacams', templateIds: ['kodacams-6x6'] },
+  { id: 'bops', label: 'Bops', templateIds: ['bops-6x6'] },
+  { id: 'stats', label: 'Stats', templateIds: ['stats-6x6'] },
 ];
 
 function getGridCoords(clientX, clientY, containerRect, cols, rows) {
@@ -539,6 +544,9 @@ export default function ProfileBuilderPage() {
                     background: '#4b5563',
                   }),
                   ...(item.type === 'textbox' && {
+                    background: '#1a1a1a',
+                  }),
+                  ...((item.type === 'kodacams' || item.type === 'bops' || item.type === 'stats') && {
                     background: '#1a1a1a',
                   }),
                 }}
