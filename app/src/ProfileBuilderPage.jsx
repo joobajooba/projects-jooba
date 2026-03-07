@@ -13,10 +13,12 @@ const PADDING = 16;
 
 const PANEL_ITEMS = [
   { id: 'rect', type: 'rectangle', cols: 6, rows: 10, label: 'User panel' },
-  { id: 'sq-s', type: 'square-small', cols: 4, rows: 5, label: 'Image/NFT | 4X5' },
   { id: 'img-3x5', type: 'image-3x5', cols: 3, rows: 5, label: 'Image | 3x5' },
+  { id: 'sq-s', type: 'square-small', cols: 4, rows: 5, label: 'Image | 4x5' },
   { id: 'img-8x5', type: 'image-8x5', cols: 8, rows: 5, label: 'Image | 8 x 5' },
   { id: 'img-11x5', type: 'image-11x5', cols: 11, rows: 5, label: 'Image | 11 x 5' },
+  { id: 'txt-6x10', type: 'textbox', cols: 6, rows: 10, label: 'Text Box | 6X10' },
+  { id: 'txt-8x10', type: 'textbox', cols: 8, rows: 10, label: 'Text Box | 8X10' },
   { id: 'sq-l', type: 'square-large', cols: 2, rows: 2 },
 ];
 
@@ -495,6 +497,10 @@ export default function ProfileBuilderPage() {
                   ...(item.type === 'square-large' && {
                     background: '#4b5563',
                     border: '1px solid #6b7280',
+                  }),
+                  ...(item.type === 'textbox' && {
+                    background: '#3f3f46',
+                    border: '1px solid #52525b',
                   }),
                 }}
                 onMouseDown={(e) => {
