@@ -15,12 +15,14 @@ const ALLOWED_HTML_TAGS = new Set(['b', 'i', 'u', 'strong', 'em', 'ul', 'ol', 'l
 function sanitizeHtml(html) {
   if (!html || typeof html !== 'string') return '';
   const doc = new DOMParser().parseFromString(html, 'text/html');
-  const bad = doc.querySelectorAll('*');
-  bad.forEach((el) => {
+  // Only process elements inside body (never html/body — replacing those would call document.replaceChild and throw HierarchyRequestError)
+  const elements = Array.from(doc.body.querySelectorAll('*'));
+  elements.forEach((el) => {
+    if (!el.parentNode) return;
     const tag = el.tagName.toLowerCase();
     if (!ALLOWED_HTML_TAGS.has(tag)) {
       const text = doc.createTextNode(el.textContent || '');
-      el.parentNode?.replaceChild(text, el);
+      el.parentNode.replaceChild(text, el);
     } else {
       for (const a of [...el.attributes]) el.removeAttribute(a.name);
     }
