@@ -251,6 +251,8 @@ export default function ProfileBuilderPage({ staticView = false }) {
   const [profileBlockNftImages, setProfileBlockNftImages] = useState({});
   const [imageWidgetImages, setImageWidgetImages] = useState({});
   const [textWidgetText, setTextWidgetText] = useState({});
+  const [imageWidgetOptions, setImageWidgetOptions] = useState({}); // { [instanceId]: { corners: 'rounded'|'square', border: boolean } }
+  const [selectedImageInstanceId, setSelectedImageInstanceId] = useState(null);
   const [nftSelectorOpen, setNftSelectorOpen] = useState(false);
   const [nftSelectorForInstance, setNftSelectorForInstance] = useState(null);
   const [nftSelectorTarget, setNftSelectorTarget] = useState('profile'); // 'profile' | 'imageWidget'
@@ -331,6 +333,9 @@ export default function ProfileBuilderPage({ staticView = false }) {
         }
         setTextWidgetText(truncated);
       }
+      if (layout?.imageWidgetOptions && typeof layout.imageWidgetOptions === 'object') {
+        setImageWidgetOptions(layout.imageWidgetOptions);
+      }
     });
     return () => { cancelled = true; };
   }, [staticView, effectiveAddress, address]);
@@ -370,6 +375,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
           nftImages: { ...profileBlockNftImages },
           imageWidgetImages: persistableImageWidgetImages,
           textWidgetText: textToSave,
+          imageWidgetOptions: { ...imageWidgetOptions },
         },
       });
       if (ok) {
@@ -383,7 +389,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
       setSaveStatus('error');
       setTimeout(() => setSaveStatus(null), 3000);
     }
-  }, [address, placements, profileBlockNftImages, imageWidgetImages, textWidgetText]);
+  }, [address, placements, profileBlockNftImages, imageWidgetImages, textWidgetText, imageWidgetOptions]);
 
   const startUploadFor = useCallback((instanceId) => {
     if (!editMode) return;
@@ -781,6 +787,9 @@ export default function ProfileBuilderPage({ staticView = false }) {
                     flexDirection: 'column',
                     alignItems: 'stretch',
                   }),
+                  ...(isImageWidget && {
+                    borderRadius: (imageWidgetOptions[item.instanceId]?.corners === 'square') ? 0 : '0.375rem',
+                  }),
                   ...((item.type === 'square-small' || item.type === 'image-3x5' || item.type === 'image-8x5' || item.type === 'image-12x10') && {
                     background: '#374151',
                   }),
@@ -799,6 +808,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
                   if (item.type === 'textbox' && e.target.closest('textarea')) return;
                   e.preventDefault();
                   setDraggedId(item.instanceId);
+                  if (isImageWidget) setSelectedImageInstanceId(item.instanceId);
                 }}
               >
                 {effectiveEditMode && !isProfileBlock && (
@@ -944,6 +954,11 @@ export default function ProfileBuilderPage({ staticView = false }) {
                     </div>
                   </>
                 ) : isImageWidget ? (
+                  (() => {
+                    const opts = imageWidgetOptions[item.instanceId] || {};
+                    const corners = opts.corners !== 'square' ? 'rounded' : 'square';
+                    const hasBorder = !!opts.border;
+                    return (
                   <div
                     style={{
                       position: 'relative',
@@ -953,6 +968,9 @@ export default function ProfileBuilderPage({ staticView = false }) {
                       alignItems: 'center',
                       justifyContent: 'center',
                       overflow: 'hidden',
+                      borderRadius: corners === 'square' ? 0 : '0.375rem',
+                      border: hasBorder ? '2px solid #fff' : undefined,
+                      boxSizing: 'border-box',
                     }}
                   >
                     {imageWidgetUrl ? (
@@ -1056,6 +1074,8 @@ export default function ProfileBuilderPage({ staticView = false }) {
                       </div>
                     )}
                   </div>
+                    );
+                  })()
                 ) : item.type === 'textbox' ? (
                   <TextBoxContent
                     editMode={effectiveEditMode}
@@ -1300,6 +1320,79 @@ export default function ProfileBuilderPage({ staticView = false }) {
             ))}
                 </div>
               </div>
+              {selectedCategory === 'images' && (
+                <>
+                  <div style={{ borderTop: '1px solid rgba(0,0,0,0.3)' }} />
+                  <div style={{ paddingTop: 16, paddingBottom: 16, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', marginTop: 0, marginBottom: 6 }}>
+                      Image options (focus an image on the grid first):
+                    </p>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+                      <button
+                        type="button"
+                        title="Rounded corners"
+                        onClick={() => {
+                          if (!selectedImageInstanceId) return;
+                          setImageWidgetOptions((prev) => ({
+                            ...prev,
+                            [selectedImageInstanceId]: {
+                              ...(prev[selectedImageInstanceId] || { corners: 'rounded', border: false }),
+                              corners: 'rounded',
+                            },
+                          }));
+                        }}
+                        style={{
+                          ...sidePanelFormatBtnStyle,
+                          background: (imageWidgetOptions[selectedImageInstanceId]?.corners !== 'square') ? 'rgba(255,255,255,0.2)' : sidePanelFormatBtnStyle.background,
+                        }}
+                      >
+                        Rounded
+                      </button>
+                      <button
+                        type="button"
+                        title="Square corners"
+                        onClick={() => {
+                          if (!selectedImageInstanceId) return;
+                          setImageWidgetOptions((prev) => ({
+                            ...prev,
+                            [selectedImageInstanceId]: {
+                              ...(prev[selectedImageInstanceId] || { corners: 'rounded', border: false }),
+                              corners: 'square',
+                            },
+                          }));
+                        }}
+                        style={{
+                          ...sidePanelFormatBtnStyle,
+                          background: imageWidgetOptions[selectedImageInstanceId]?.corners === 'square' ? 'rgba(255,255,255,0.2)' : sidePanelFormatBtnStyle.background,
+                        }}
+                      >
+                        Square
+                      </button>
+                      <button
+                        type="button"
+                        title="White border"
+                        onClick={() => {
+                          if (!selectedImageInstanceId) return;
+                          setImageWidgetOptions((prev) => ({
+                            ...prev,
+                            [selectedImageInstanceId]: {
+                              ...(prev[selectedImageInstanceId] || { corners: 'rounded', border: false }),
+                              border: !prev[selectedImageInstanceId]?.border,
+                            },
+                          }));
+                        }}
+                        style={{
+                          ...sidePanelFormatBtnStyle,
+                          background: imageWidgetOptions[selectedImageInstanceId]?.border ? 'rgba(255,255,255,0.2)' : sidePanelFormatBtnStyle.background,
+                          border: imageWidgetOptions[selectedImageInstanceId]?.border ? '1px solid rgba(255,255,255,0.5)' : sidePanelFormatBtnStyle.border,
+                        }}
+                      >
+                        Border
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
               {selectedCategory === 'textboxes' && (
                 <>
                   <div style={{ borderTop: '1px solid rgba(0,0,0,0.3)' }} />
