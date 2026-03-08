@@ -36,7 +36,7 @@ const PANEL_ITEMS = [
   { id: 'sq-s', type: 'square-small', cols: 4, rows: 5, label: 'Image | 4x5' },
   { id: 'img-8x5', type: 'image-8x5', cols: 8, rows: 5, label: 'Image | 8 x 5' },
   { id: 'img-12x10', type: 'image-12x10', cols: 12, rows: 10, label: 'Image | 12x10' },
-  { id: 'txt-6x10', type: 'textbox', cols: 6, rows: 10, label: 'Text Box | 6X10' },
+  { id: 'txt-6x10', type: 'textbox', cols: 6, rows: 10, label: 'Text Box | 6X10', maxChars: 850 },
   { id: 'txt-8x10', type: 'textbox', cols: 8, rows: 10, label: 'Text Box | 8X10' },
   { id: 'kodacams-6x6', type: 'kodacams', cols: 6, rows: 6, label: 'Kodacams | 6x6' },
   { id: 'bops-4x5', type: 'bops', cols: 4, rows: 5, label: 'Bop | 4x5' },
@@ -122,7 +122,7 @@ function isOverElement(clientX, clientY, el) {
 
 const RICH_TEXT_MAX_LENGTH = 4000;
 
-function TextBoxContent({ editMode, instanceId, value, onValueChange }) {
+function TextBoxContent({ editMode, instanceId, value, onValueChange, maxChars }) {
   const editableRef = useRef(null);
   const lastValueRef = useRef(value);
 
@@ -147,9 +147,17 @@ function TextBoxContent({ editMode, instanceId, value, onValueChange }) {
     let html = editableRef.current.innerHTML;
     html = sanitizeHtml(html);
     if (html.length > RICH_TEXT_MAX_LENGTH) html = html.slice(0, RICH_TEXT_MAX_LENGTH);
+    if (maxChars != null) {
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const textLen = (doc.body.textContent || '').length;
+      if (textLen > maxChars) {
+        editableRef.current.innerHTML = lastValueRef.current || '';
+        return;
+      }
+    }
     lastValueRef.current = html;
     onValueChange(html);
-  }, [onValueChange]);
+  }, [onValueChange, maxChars]);
 
   const runCommand = useCallback((cmd) => {
     editableRef.current?.focus();
@@ -1024,6 +1032,7 @@ export default function ProfileBuilderPage() {
                     instanceId={item.instanceId}
                     value={textWidgetText[item.instanceId] ?? ''}
                     onValueChange={(v) => setTextWidgetText((prev) => ({ ...prev, [item.instanceId]: v }))}
+                    maxChars={item.maxChars}
                   />
                 ) : (
                   item.label || ''
@@ -1198,23 +1207,32 @@ export default function ProfileBuilderPage() {
           </div>
           {selectedCategory && (
             <>
-              <p
-                style={{
-                  fontSize: '0.8rem',
-                  color: 'rgba(255,255,255,0.7)',
-                  marginBottom: '0.5rem',
-                }}
-              >
-                Drag/drop onto the grid
-              </p>
               <div
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: 8,
+                  justifyContent: 'center',
+                  minHeight: 100,
                   flexShrink: 0,
                 }}
               >
+                <p
+                  style={{
+                    fontSize: '0.8rem',
+                    color: 'rgba(255,255,255,0.7)',
+                    marginBottom: '0.5rem',
+                  }}
+                >
+                  Drag/drop onto the grid
+                </p>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 8,
+                    flexShrink: 0,
+                  }}
+                >
                 {panelItemsToShow.map((item) => (
               <div
                 key={item.id}
@@ -1248,6 +1266,7 @@ export default function ProfileBuilderPage() {
                 {item.label || ''}
               </div>
             ))}
+                </div>
               </div>
               {selectedCategory === 'textboxes' && (
                 <>
@@ -1255,7 +1274,7 @@ export default function ProfileBuilderPage() {
                   <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', marginBottom: 6 }}>
                     Format text (focus a text box on the grid first):
                   </p>
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
                     <button type="button" title="Bold" onClick={() => { document.execCommand('bold', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}>B</button>
                     <button type="button" title="Italic" onClick={() => { document.execCommand('italic', false, null); syncFocusedTextBoxFromPanel(); }} style={{ ...sidePanelFormatBtnStyle, fontStyle: 'italic' }}>I</button>
                     <button type="button" title="Underline" onClick={() => { document.execCommand('underline', false, null); syncFocusedTextBoxFromPanel(); }} style={{ ...sidePanelFormatBtnStyle, textDecoration: 'underline' }}>U</button>
