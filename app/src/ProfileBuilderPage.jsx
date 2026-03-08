@@ -233,6 +233,17 @@ const richTextBtnStyle = {
   fontWeight: 700,
 };
 
+const sidePanelFormatBtnStyle = {
+  padding: '6px 10px',
+  borderRadius: 4,
+  border: '1px solid rgba(255,255,255,0.3)',
+  background: 'rgba(255,255,255,0.1)',
+  color: '#fff',
+  cursor: 'pointer',
+  fontSize: '0.75rem',
+  fontWeight: 700,
+};
+
 export default function ProfileBuilderPage() {
   const gridContainerRef = useRef(null);
   const gridAreaRef = useRef(null);
@@ -1217,6 +1228,21 @@ export default function ProfileBuilderPage() {
               </div>
             ))}
               </div>
+              {selectedCategory === 'textboxes' && (
+                <>
+                  <div style={{ borderTop: '1px solid rgba(0,0,0,0.3)', paddingTop: '0.75rem', marginTop: '0.5rem', marginBottom: '0.5rem' }} />
+                  <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', marginBottom: 6 }}>
+                    Format text (focus a text box on the grid first):
+                  </p>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    <button type="button" title="Bold" onClick={() => document.execCommand('bold', false, null)} style={sidePanelFormatBtnStyle}>B</button>
+                    <button type="button" title="Italic" onClick={() => document.execCommand('italic', false, null)} style={{ ...sidePanelFormatBtnStyle, fontStyle: 'italic' }}>I</button>
+                    <button type="button" title="Underline" onClick={() => document.execCommand('underline', false, null)} style={{ ...sidePanelFormatBtnStyle, textDecoration: 'underline' }}>U</button>
+                    <button type="button" title="Bullet list" onClick={() => document.execCommand('insertUnorderedList', false, null)} style={sidePanelFormatBtnStyle}>•</button>
+                    <button type="button" title="Numbered list" onClick={() => document.execCommand('insertOrderedList', false, null)} style={sidePanelFormatBtnStyle}>1.</button>
+                  </div>
+                </>
+              )}
             </>
           )}
           <div
