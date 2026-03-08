@@ -1125,8 +1125,8 @@ export default function ProfileBuilderPage() {
               display: 'flex',
               alignItems: 'center',
               gap: 8,
-              marginBottom: 12,
-              paddingBottom: 12,
+              paddingTop: 16,
+              paddingBottom: 16,
               borderBottom: '1px solid rgba(0,0,0,0.3)',
               flexWrap: 'wrap',
             }}
@@ -1171,8 +1171,8 @@ export default function ProfileBuilderPage() {
               display: 'grid',
               gridTemplateColumns: '1fr 1fr 1fr',
               gap: 8,
-              paddingTop: '1rem',
-              paddingBottom: '1rem',
+              paddingTop: 16,
+              paddingBottom: 16,
               borderBottom: '1px solid rgba(0,0,0,0.3)',
             }}
           >
@@ -1271,8 +1271,8 @@ export default function ProfileBuilderPage() {
               </div>
               {selectedCategory === 'textboxes' && (
                 <>
-                  <div style={{ borderTop: '1px solid rgba(0,0,0,0.3)', paddingBottom: 16 }} />
-                  <div style={{ paddingTop: 16, paddingBottom: 16, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <div style={{ borderTop: '1px solid rgba(0,0,0,0.3)', paddingTop: 16, paddingBottom: 16 }} />
+                  <div style={{ paddingBottom: 16, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', marginBottom: 6 }}>
                       Format text (focus a text box on the grid first):
                     </p>
