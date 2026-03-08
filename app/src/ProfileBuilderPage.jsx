@@ -159,12 +159,6 @@ function TextBoxContent({ editMode, instanceId, value, onValueChange, maxChars }
     onValueChange(html);
   }, [onValueChange, maxChars]);
 
-  const runCommand = useCallback((cmd) => {
-    editableRef.current?.focus();
-    document.execCommand(cmd, false, null);
-    syncFromEditable();
-  }, [syncFromEditable]);
-
   if (editMode) {
     return (
       <div
@@ -178,13 +172,6 @@ function TextBoxContent({ editMode, instanceId, value, onValueChange, maxChars }
           flexDirection: 'column',
         }}
       >
-        <div style={{ display: 'flex', gap: 4, marginBottom: 6, flexShrink: 0 }} onMouseDown={(e) => e.stopPropagation()}>
-          <button type="button" title="Bold" onMouseDown={(e) => { e.preventDefault(); runCommand('bold'); }} style={richTextBtnStyle}>B</button>
-          <button type="button" title="Italic" onMouseDown={(e) => { e.preventDefault(); runCommand('italic'); }} style={{ ...richTextBtnStyle, fontStyle: 'italic' }}>I</button>
-          <button type="button" title="Underline" onMouseDown={(e) => { e.preventDefault(); runCommand('underline'); }} style={{ ...richTextBtnStyle, textDecoration: 'underline' }}>U</button>
-          <button type="button" title="Bullet list" onMouseDown={(e) => { e.preventDefault(); runCommand('insertUnorderedList'); }} style={richTextBtnStyle}>•</button>
-          <button type="button" title="Numbered list" onMouseDown={(e) => { e.preventDefault(); runCommand('insertOrderedList'); }} style={richTextBtnStyle}>1.</button>
-        </div>
         <div
           ref={editableRef}
           contentEditable
@@ -232,17 +219,6 @@ function TextBoxContent({ editMode, instanceId, value, onValueChange, maxChars }
     </div>
   );
 }
-
-const richTextBtnStyle = {
-  padding: '4px 8px',
-  borderRadius: 4,
-  border: '1px solid rgba(255,255,255,0.3)',
-  background: 'rgba(255,255,255,0.1)',
-  color: '#fff',
-  cursor: 'pointer',
-  fontSize: '0.75rem',
-  fontWeight: 700,
-};
 
 const sidePanelFormatBtnStyle = {
   padding: '6px 10px',
