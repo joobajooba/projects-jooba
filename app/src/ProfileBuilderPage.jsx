@@ -642,6 +642,9 @@ export default function ProfileBuilderPage({ staticView = false }) {
     ? PANEL_ITEMS.filter((item) => selectedCategoryDef.templateIds.includes(item.id))
     : [];
 
+  // On /profile (staticView) always show profile mode; Edit/Profile toggle only applies in builder
+  const effectiveEditMode = staticView ? false : editMode;
+
   if (staticView && !effectiveAddress) {
     return (
       <div
@@ -713,14 +716,14 @@ export default function ProfileBuilderPage({ staticView = false }) {
               position: 'relative',
               width: '100%',
               height: '100%',
-              display: editMode ? 'grid' : 'block',
-              gridTemplateColumns: editMode ? `repeat(${gridSize.cols}, 1fr)` : undefined,
-              gridTemplateRows: editMode ? `repeat(${gridSize.rows}, 1fr)` : undefined,
+              display: effectiveEditMode ? 'grid' : 'block',
+              gridTemplateColumns: effectiveEditMode ? `repeat(${gridSize.cols}, 1fr)` : undefined,
+              gridTemplateRows: effectiveEditMode ? `repeat(${gridSize.rows}, 1fr)` : undefined,
               overflow: 'hidden',
-              background: editMode ? '#0f0f0f' : '#1a1a1a',
+              background: effectiveEditMode ? '#0f0f0f' : '#1a1a1a',
             }}
           >
-            {editMode && Array.from({ length: gridSize.cols * gridSize.rows }, (_, i) => (
+            {effectiveEditMode && Array.from({ length: gridSize.cols * gridSize.rows }, (_, i) => (
               <div
                 key={i}
                 className="profile-builder-cell"
@@ -754,7 +757,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
                   width: w,
                   height: h,
                   transform: `translate(${x}px, ${y}px)`,
-                  cursor: !editMode ? 'default' : 'grab',
+                  cursor: !effectiveEditMode ? 'default' : 'grab',
                   userSelect: 'none',
                   pointerEvents: 'auto',
                   display: 'flex',
@@ -785,13 +788,13 @@ export default function ProfileBuilderPage({ staticView = false }) {
                   }),
                 }}
                 onMouseDown={(e) => {
-                  if (!editMode) return;
+                  if (!effectiveEditMode) return;
                   if (item.type === 'textbox' && e.target.closest('textarea')) return;
                   e.preventDefault();
                   setDraggedId(item.instanceId);
                 }}
               >
-                {editMode && !isProfileBlock && (
+                {effectiveEditMode && !isProfileBlock && (
                   <button
                     type="button"
                     title="Remove from grid"
@@ -855,7 +858,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
                       ) : (
                         <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.6)' }}>Add photo</span>
                       )}
-                      {editMode && (
+                      {effectiveEditMode && (
                         <>
                           {address ? (
                             <button
@@ -962,7 +965,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
                       </div>
                     )}
 
-                    {editMode && (
+                    {effectiveEditMode && (
                       <div
                         style={{
                           position: 'absolute',
@@ -1048,7 +1051,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
                   </div>
                 ) : item.type === 'textbox' ? (
                   <TextBoxContent
-                    editMode={editMode}
+                    editMode={effectiveEditMode}
                     instanceId={item.instanceId}
                     value={textWidgetText[item.instanceId] ?? ''}
                     onValueChange={(v) => setTextWidgetText((prev) => ({ ...prev, [item.instanceId]: v }))}
@@ -1171,7 +1174,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
             </button>
             <button
               type="button"
-              title="Profile view, no grid, read-only"
+              title="Preview how your profile will look when others view it"
               onClick={() => setEditMode(false)}
               style={{
                 padding: '6px 12px',
