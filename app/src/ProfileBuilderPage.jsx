@@ -182,6 +182,7 @@ function TextBoxContent({ editMode, instanceId, value, onValueChange }) {
           onInput={syncFromEditable}
           onMouseDown={(e) => e.stopPropagation()}
           data-placeholder="Write something..."
+          data-instance-id={instanceId}
           style={{
             flex: 1,
             minHeight: 40,
@@ -321,6 +322,15 @@ export default function ProfileBuilderPage() {
     });
     return () => { cancelled = true; };
   }, [address]);
+
+  const syncFocusedTextBoxFromPanel = useCallback(() => {
+    const el = document.activeElement;
+    if (!el?.isContentEditable || !el.dataset.instanceId) return;
+    let html = el.innerHTML;
+    html = sanitizeHtml(html);
+    if (html.length > RICH_TEXT_MAX_LENGTH) html = html.slice(0, RICH_TEXT_MAX_LENGTH);
+    setTextWidgetText((prev) => ({ ...prev, [el.dataset.instanceId]: html }));
+  }, []);
 
   const handleSaveLayout = useCallback(async () => {
     if (!address) return;
@@ -1189,9 +1199,7 @@ export default function ProfileBuilderPage() {
                   display: 'flex',
                   flexDirection: 'column',
                   gap: 8,
-                  marginBottom: '1rem',
-                  flex: '1 1 auto',
-                  minHeight: 0,
+                  flexShrink: 0,
                 }}
               >
                 {panelItemsToShow.map((item) => (
@@ -1230,16 +1238,16 @@ export default function ProfileBuilderPage() {
               </div>
               {selectedCategory === 'textboxes' && (
                 <>
-                  <div style={{ borderTop: '1px solid rgba(0,0,0,0.3)', paddingTop: '0.75rem', marginTop: '0.5rem', marginBottom: '0.5rem' }} />
+                  <div style={{ borderTop: '1px solid rgba(0,0,0,0.3)', paddingTop: 8, marginTop: 8, marginBottom: 6 }} />
                   <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', marginBottom: 6 }}>
                     Format text (focus a text box on the grid first):
                   </p>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    <button type="button" title="Bold" onClick={() => document.execCommand('bold', false, null)} style={sidePanelFormatBtnStyle}>B</button>
-                    <button type="button" title="Italic" onClick={() => document.execCommand('italic', false, null)} style={{ ...sidePanelFormatBtnStyle, fontStyle: 'italic' }}>I</button>
-                    <button type="button" title="Underline" onClick={() => document.execCommand('underline', false, null)} style={{ ...sidePanelFormatBtnStyle, textDecoration: 'underline' }}>U</button>
-                    <button type="button" title="Bullet list" onClick={() => document.execCommand('insertUnorderedList', false, null)} style={sidePanelFormatBtnStyle}>•</button>
-                    <button type="button" title="Numbered list" onClick={() => document.execCommand('insertOrderedList', false, null)} style={sidePanelFormatBtnStyle}>1.</button>
+                    <button type="button" title="Bold" onClick={() => { document.execCommand('bold', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}>B</button>
+                    <button type="button" title="Italic" onClick={() => { document.execCommand('italic', false, null); syncFocusedTextBoxFromPanel(); }} style={{ ...sidePanelFormatBtnStyle, fontStyle: 'italic' }}>I</button>
+                    <button type="button" title="Underline" onClick={() => { document.execCommand('underline', false, null); syncFocusedTextBoxFromPanel(); }} style={{ ...sidePanelFormatBtnStyle, textDecoration: 'underline' }}>U</button>
+                    <button type="button" title="Bullet list" onClick={() => { document.execCommand('insertUnorderedList', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}>•</button>
+                    <button type="button" title="Numbered list" onClick={() => { document.execCommand('insertOrderedList', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}>1.</button>
                   </div>
                 </>
               )}
