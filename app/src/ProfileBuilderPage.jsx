@@ -291,14 +291,20 @@ export default function ProfileBuilderPage({ staticView = false }) {
     }
     const walletToLoad = staticView ? effectiveAddress : address;
     let cancelled = false;
+    // Static view: username/X come from user_data (Profile modal); layout from profile_page
+    if (staticView) {
+      fetchUserProfile(walletToLoad).then((userData) => {
+        if (cancelled) return;
+        if (userData) {
+          setProfile({
+            username: userData.username ?? null,
+            xUsername: userData.xUsername ?? null,
+          });
+        }
+      });
+    }
     fetchProfileByWallet(walletToLoad).then((data) => {
       if (cancelled) return;
-      if (staticView && data) {
-        setProfile({
-          username: data.username ?? null,
-          xUsername: data.x_username ?? null,
-        });
-      }
       const layout = data?.layout_json;
       const initialPlacements =
         layout?.placements && typeof layout.placements === 'object'
