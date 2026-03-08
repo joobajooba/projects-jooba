@@ -381,19 +381,20 @@ export default function App() {
                 </Link>
               </div>
             </label>
-            <p className="app-modal-section-title">Set profile picture</p>
-            <div className="app-modal-actions">
+            <p className="app-modal-section-title" style={{ marginBottom: 4 }}>Set profile picture</p>
+            <div className="app-modal-actions" style={{ marginTop: 6, width: '100%' }}>
               <button
                 type="button"
                 className="app-modal-btn app-modal-btn-secondary"
                 onClick={() => setNftSelectorOpen(true)}
+                style={{ width: '100%', boxSizing: 'border-box' }}
               >
-                Choose NFT from wallet
+                NFT pfp Selection
               </button>
             </div>
             <div className="app-modal-actions" style={{ marginTop: 16 }}>
               <button type="button" className="app-modal-btn app-modal-btn-primary" onClick={handleProfileSave}>
-                Done
+                Save
               </button>
             </div>
             <button
