@@ -381,16 +381,6 @@ export default function App() {
                 </Link>
               </div>
             </label>
-            <label className="app-modal-label">
-              Bio
-              <textarea
-                className="app-modal-input app-profile-bio-input"
-                value={profileBio}
-                onChange={(e) => setProfileBio(e.target.value)}
-                placeholder="Tell others about yourself…"
-                rows={3}
-              />
-            </label>
             <p className="app-modal-section-title">Set profile picture</p>
             <div className="app-modal-actions">
               <button
@@ -399,36 +389,6 @@ export default function App() {
                 onClick={() => setNftSelectorOpen(true)}
               >
                 Choose NFT from wallet
-              </button>
-            </div>
-            <p className="app-modal-section-title">Profile picture border</p>
-            <div className="app-modal-border-options">
-              <button
-                type="button"
-                className={`app-modal-border-btn ${profilePictureBorder === 'red' ? 'active' : ''}`}
-                onClick={() => setProfilePictureBorder(profilePictureBorder === 'red' ? '' : 'red')}
-                title="Red gradient"
-              >
-                <span className="app-modal-border-swatch app-modal-border-red" aria-hidden />
-                Red
-              </button>
-              <button
-                type="button"
-                className={`app-modal-border-btn ${profilePictureBorder === 'blue' ? 'active' : ''}`}
-                onClick={() => setProfilePictureBorder(profilePictureBorder === 'blue' ? '' : 'blue')}
-                title="Blue gradient"
-              >
-                <span className="app-modal-border-swatch app-modal-border-blue" aria-hidden />
-                Blue
-              </button>
-              <button
-                type="button"
-                className={`app-modal-border-btn ${profilePictureBorder === 'green' ? 'active' : ''}`}
-                onClick={() => setProfilePictureBorder(profilePictureBorder === 'green' ? '' : 'green')}
-                title="Green gradient"
-              >
-                <span className="app-modal-border-swatch app-modal-border-green" aria-hidden />
-                Green
               </button>
             </div>
             <div className="app-modal-actions" style={{ marginTop: 16 }}>
