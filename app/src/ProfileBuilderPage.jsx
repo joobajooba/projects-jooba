@@ -679,6 +679,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
         boxSizing: 'border-box',
         margin: 0,
         padding: 0,
+        ...(staticView && { paddingLeft: 24, paddingRight: 24 }),
         display: 'flex',
         flexDirection: 'row',
         gap: 0,
