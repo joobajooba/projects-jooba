@@ -11,6 +11,23 @@ import { ensureProfile, fetchProfileByWallet, updateProfile } from './profileBui
 const CELL_SIZE = 50;
 const PADDING = 16;
 
+const ALLOWED_HTML_TAGS = new Set(['b', 'i', 'u', 'strong', 'em', 'ul', 'ol', 'li', 'p', 'br']);
+function sanitizeHtml(html) {
+  if (!html || typeof html !== 'string') return '';
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const bad = doc.querySelectorAll('*');
+  bad.forEach((el) => {
+    const tag = el.tagName.toLowerCase();
+    if (!ALLOWED_HTML_TAGS.has(tag)) {
+      const text = doc.createTextNode(el.textContent || '');
+      el.parentNode?.replaceChild(text, el);
+    } else {
+      for (const a of [...el.attributes]) el.removeAttribute(a.name);
+    }
+  });
+  return doc.body.innerHTML;
+}
+
 const PANEL_ITEMS = [
   { id: 'rect', type: 'rectangle', cols: 6, rows: 10, label: 'User panel' },
   { id: 'img-3x5', type: 'image-3x5', cols: 3, rows: 5, label: 'Image | 3x5' },
@@ -101,6 +118,121 @@ function isOverElement(clientX, clientY, el) {
   );
 }
 
+const RICH_TEXT_MAX_LENGTH = 4000;
+
+function TextBoxContent({ editMode, instanceId, value, onValueChange }) {
+  const editableRef = useRef(null);
+  const lastValueRef = useRef(value);
+
+  const valueToHtml = useCallback((v) => {
+    if (!v || typeof v !== 'string') return '';
+    if (v.trim().startsWith('<') && v.includes('>')) return sanitizeHtml(v);
+    return '<p>' + String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>') + '</p>';
+  }, []);
+
+  useEffect(() => {
+    if (!editableRef.current || !editMode) return;
+    if (document.activeElement === editableRef.current) return;
+    const html = valueToHtml(value);
+    if (editableRef.current.innerHTML !== html) {
+      editableRef.current.innerHTML = html;
+      lastValueRef.current = value;
+    }
+  }, [editMode, instanceId, valueToHtml, value]);
+
+  const syncFromEditable = useCallback(() => {
+    if (!editableRef.current) return;
+    let html = editableRef.current.innerHTML;
+    html = sanitizeHtml(html);
+    if (html.length > RICH_TEXT_MAX_LENGTH) html = html.slice(0, RICH_TEXT_MAX_LENGTH);
+    lastValueRef.current = html;
+    onValueChange(html);
+  }, [onValueChange]);
+
+  const runCommand = useCallback((cmd) => {
+    editableRef.current?.focus();
+    document.execCommand(cmd, false, null);
+    syncFromEditable();
+  }, [syncFromEditable]);
+
+  if (editMode) {
+    return (
+      <div
+        style={{
+          width: '100%',
+          height: '100%',
+          padding: 16,
+          boxSizing: 'border-box',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        <div style={{ display: 'flex', gap: 4, marginBottom: 6, flexShrink: 0 }} onMouseDown={(e) => e.stopPropagation()}>
+          <button type="button" title="Bold" onMouseDown={(e) => { e.preventDefault(); runCommand('bold'); }} style={richTextBtnStyle}>B</button>
+          <button type="button" title="Italic" onMouseDown={(e) => { e.preventDefault(); runCommand('italic'); }} style={{ ...richTextBtnStyle, fontStyle: 'italic' }}>I</button>
+          <button type="button" title="Underline" onMouseDown={(e) => { e.preventDefault(); runCommand('underline'); }} style={{ ...richTextBtnStyle, textDecoration: 'underline' }}>U</button>
+          <button type="button" title="Bullet list" onMouseDown={(e) => { e.preventDefault(); runCommand('insertUnorderedList'); }} style={richTextBtnStyle}>•</button>
+          <button type="button" title="Numbered list" onMouseDown={(e) => { e.preventDefault(); runCommand('insertOrderedList'); }} style={richTextBtnStyle}>1.</button>
+        </div>
+        <div
+          ref={editableRef}
+          contentEditable
+          suppressContentEditableWarning
+          onInput={syncFromEditable}
+          onMouseDown={(e) => e.stopPropagation()}
+          data-placeholder="Write something..."
+          style={{
+            flex: 1,
+            minHeight: 40,
+            overflow: 'auto',
+            background: '#1a1a1a',
+            border: '1px solid rgba(255,255,255,0.2)',
+            borderRadius: 4,
+            color: '#fff',
+            fontSize: '0.8rem',
+            padding: 10,
+            boxSizing: 'border-box',
+            outline: 'none',
+          }}
+        />
+      </div>
+    );
+  }
+
+  const html = valueToHtml(value);
+  return (
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        padding: 16,
+        boxSizing: 'border-box',
+        overflow: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      <div
+        style={{ fontSize: '0.8rem', color: '#e5e5e5', lineHeight: 1.5, wordBreak: 'break-word' }}
+        onMouseDown={(e) => e.stopPropagation()}
+        dangerouslySetInnerHTML={{ __html: html || '<p></p>' }}
+      />
+    </div>
+  );
+}
+
+const richTextBtnStyle = {
+  padding: '4px 8px',
+  borderRadius: 4,
+  border: '1px solid rgba(255,255,255,0.3)',
+  background: 'rgba(255,255,255,0.1)',
+  color: '#fff',
+  cursor: 'pointer',
+  fontSize: '0.75rem',
+  fontWeight: 700,
+};
+
 export default function ProfileBuilderPage() {
   const gridContainerRef = useRef(null);
   const gridAreaRef = useRef(null);
@@ -171,7 +303,7 @@ export default function ProfileBuilderPage() {
       if (layout?.textWidgetText && typeof layout.textWidgetText === 'object') {
         const truncated = {};
         for (const [k, v] of Object.entries(layout.textWidgetText)) {
-          truncated[k] = typeof v === 'string' ? v.slice(0, 1600) : '';
+          truncated[k] = typeof v === 'string' ? v.slice(0, RICH_TEXT_MAX_LENGTH) : '';
         }
         setTextWidgetText(truncated);
       }
@@ -853,45 +985,12 @@ export default function ProfileBuilderPage() {
                     )}
                   </div>
                 ) : item.type === 'textbox' ? (
-                  <div
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      padding: 16,
-                      boxSizing: 'border-box',
-                      overflow: 'hidden',
-                      display: 'flex',
-                      flexDirection: 'column',
-                    }}
-                  >
-                    {editMode ? (
-                      <textarea
-                        value={textWidgetText[item.instanceId] ?? ''}
-                        onChange={(e) => setTextWidgetText((prev) => ({ ...prev, [item.instanceId]: e.target.value.slice(0, 1600) }))}
-                        onMouseDown={(e) => e.stopPropagation()}
-                        placeholder="Write something..."
-                        maxLength={1600}
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          minHeight: 60,
-                          resize: 'none',
-                          overflow: 'hidden',
-                          background: '#1a1a1a',
-                          border: '1px solid rgba(255,255,255,0.2)',
-                          borderRadius: 4,
-                          color: '#fff',
-                          fontSize: '0.8rem',
-                          padding: 10,
-                          boxSizing: 'border-box',
-                        }}
-                      />
-                    ) : (
-                      <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '0.8rem', color: '#e5e5e5', overflow: 'hidden', height: '100%' }} onMouseDown={(e) => e.stopPropagation()}>
-                        {textWidgetText[item.instanceId] || ''}
-                      </div>
-                    )}
-                  </div>
+                  <TextBoxContent
+                    editMode={editMode}
+                    instanceId={item.instanceId}
+                    value={textWidgetText[item.instanceId] ?? ''}
+                    onValueChange={(v) => setTextWidgetText((prev) => ({ ...prev, [item.instanceId]: v }))}
+                  />
                 ) : (
                   item.label || ''
                 )}
