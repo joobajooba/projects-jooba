@@ -337,7 +337,16 @@ export default function ProfileBuilderPage() {
     setSaveStatus('saving');
     try {
       await ensureProfile(address);
-      // Only persist URLs that work in a new tab (no blob:)
+      // Capture current DOM content from any focused text box so we never save stale state (e.g. bold applied but sync not flushed)
+      let textToSave = { ...textWidgetText };
+      const focused = document.activeElement;
+      if (focused?.isContentEditable && focused.dataset?.instanceId) {
+        let html = focused.innerHTML;
+        html = sanitizeHtml(html);
+        if (html.length > RICH_TEXT_MAX_LENGTH) html = html.slice(0, RICH_TEXT_MAX_LENGTH);
+        textToSave[focused.dataset.instanceId] = html;
+        setTextWidgetText(textToSave);
+      }
       const persistableImageWidgetImages = Object.fromEntries(
         Object.entries(imageWidgetImages).filter(([, url]) => typeof url === 'string' && !url.startsWith('blob:'))
       );
@@ -346,7 +355,7 @@ export default function ProfileBuilderPage() {
           placements: { ...placements },
           nftImages: { ...profileBlockNftImages },
           imageWidgetImages: persistableImageWidgetImages,
-          textWidgetText: { ...textWidgetText },
+          textWidgetText: textToSave,
         },
       });
       if (ok) {
