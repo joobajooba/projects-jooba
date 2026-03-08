@@ -16,7 +16,7 @@ const PANEL_ITEMS = [
   { id: 'img-3x5', type: 'image-3x5', cols: 3, rows: 5, label: 'Image | 3x5' },
   { id: 'sq-s', type: 'square-small', cols: 4, rows: 5, label: 'Image | 4x5' },
   { id: 'img-8x5', type: 'image-8x5', cols: 8, rows: 5, label: 'Image | 8 x 5' },
-  { id: 'img-11x10', type: 'image-11x10', cols: 11, rows: 10, label: 'Image | 11x10' },
+  { id: 'img-12x10', type: 'image-12x10', cols: 12, rows: 10, label: 'Image | 12x10' },
   { id: 'txt-6x10', type: 'textbox', cols: 6, rows: 10, label: 'Text Box | 6X10' },
   { id: 'txt-8x10', type: 'textbox', cols: 8, rows: 10, label: 'Text Box | 8X10' },
   { id: 'kodacams-6x6', type: 'kodacams', cols: 6, rows: 6, label: 'Kodacams | 6x6' },
@@ -27,7 +27,7 @@ const PANEL_ITEMS = [
 ];
 
 const WIDGET_CATEGORIES = [
-  { id: 'images', label: 'Images', templateIds: ['img-3x5', 'sq-s', 'img-8x5', 'img-11x10'] },
+  { id: 'images', label: 'Images', templateIds: ['img-3x5', 'sq-s', 'img-8x5', 'img-12x10'] },
   { id: 'textboxes', label: 'Text Boxes', templateIds: ['txt-6x10', 'txt-8x10'] },
   { id: 'kodacams', label: 'Kodacams', templateIds: ['kodacams-6x6'] },
   { id: 'bops', label: 'Bops', templateIds: ['bops-4x5'] },
@@ -546,7 +546,7 @@ export default function ProfileBuilderPage() {
             const h = item.rows * cellHeightPx;
             const isProfileBlock = item.type === 'rectangle';
             const nftImage = profileBlockNftImages[item.instanceId];
-            const isImageWidget = item.type === 'square-small' || item.type === 'image-3x5' || item.type === 'image-8x5' || item.type === 'image-11x10';
+            const isImageWidget = item.type === 'square-small' || item.type === 'image-3x5' || item.type === 'image-8x5' || item.type === 'image-12x10';
             const imageWidgetUrl = imageWidgetImages[item.instanceId];
             return (
               <div
@@ -577,7 +577,7 @@ export default function ProfileBuilderPage() {
                     flexDirection: 'column',
                     alignItems: 'stretch',
                   }),
-                  ...((item.type === 'square-small' || item.type === 'image-3x5' || item.type === 'image-8x5' || item.type === 'image-11x10') && {
+                  ...((item.type === 'square-small' || item.type === 'image-3x5' || item.type === 'image-8x5' || item.type === 'image-12x10') && {
                     background: '#374151',
                   }),
                   ...(item.type === 'square-large' && {
@@ -592,6 +592,7 @@ export default function ProfileBuilderPage() {
                 }}
                 onMouseDown={(e) => {
                   if (!editMode) return;
+                  if (item.type === 'textbox' && e.target.closest('textarea')) return;
                   e.preventDefault();
                   setDraggedId(item.instanceId);
                 }}
@@ -862,12 +863,12 @@ export default function ProfileBuilderPage() {
                       display: 'flex',
                       flexDirection: 'column',
                     }}
-                    onMouseDown={(e) => e.stopPropagation()}
                   >
                     {editMode ? (
                       <textarea
                         value={textWidgetText[item.instanceId] ?? ''}
                         onChange={(e) => setTextWidgetText((prev) => ({ ...prev, [item.instanceId]: e.target.value.slice(0, 1600) }))}
+                        onMouseDown={(e) => e.stopPropagation()}
                         placeholder="Write something..."
                         maxLength={1600}
                         style={{
@@ -886,7 +887,7 @@ export default function ProfileBuilderPage() {
                         }}
                       />
                     ) : (
-                      <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '0.8rem', color: '#e5e5e5', overflow: 'hidden', height: '100%' }}>
+                      <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '0.8rem', color: '#e5e5e5', overflow: 'hidden', height: '100%' }} onMouseDown={(e) => e.stopPropagation()}>
                         {textWidgetText[item.instanceId] || ''}
                       </div>
                     )}
