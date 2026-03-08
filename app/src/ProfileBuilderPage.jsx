@@ -1171,7 +1171,7 @@ export default function ProfileBuilderPage() {
               display: 'grid',
               gridTemplateColumns: '1fr 1fr 1fr',
               gap: 8,
-              marginBottom: '1rem',
+              paddingTop: '1rem',
               paddingBottom: '1rem',
               borderBottom: '1px solid rgba(0,0,0,0.3)',
             }}
@@ -1212,7 +1212,8 @@ export default function ProfileBuilderPage() {
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'center',
-                  minHeight: 100,
+                  paddingTop: 16,
+                  paddingBottom: 16,
                   flexShrink: 0,
                 }}
               >
@@ -1270,16 +1271,18 @@ export default function ProfileBuilderPage() {
               </div>
               {selectedCategory === 'textboxes' && (
                 <>
-                  <div style={{ borderTop: '1px solid rgba(0,0,0,0.3)', paddingTop: 8, marginTop: 8, marginBottom: 6 }} />
-                  <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', marginBottom: 6 }}>
-                    Format text (focus a text box on the grid first):
-                  </p>
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+                  <div style={{ borderTop: '1px solid rgba(0,0,0,0.3)', paddingBottom: 16 }} />
+                  <div style={{ paddingTop: 16, paddingBottom: 16, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', marginBottom: 6 }}>
+                      Format text (focus a text box on the grid first):
+                    </p>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
                     <button type="button" title="Bold" onClick={() => { document.execCommand('bold', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}>B</button>
                     <button type="button" title="Italic" onClick={() => { document.execCommand('italic', false, null); syncFocusedTextBoxFromPanel(); }} style={{ ...sidePanelFormatBtnStyle, fontStyle: 'italic' }}>I</button>
                     <button type="button" title="Underline" onClick={() => { document.execCommand('underline', false, null); syncFocusedTextBoxFromPanel(); }} style={{ ...sidePanelFormatBtnStyle, textDecoration: 'underline' }}>U</button>
                     <button type="button" title="Bullet list" onClick={() => { document.execCommand('insertUnorderedList', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}>•</button>
                     <button type="button" title="Numbered list" onClick={() => { document.execCommand('insertOrderedList', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}>1.</button>
+                    </div>
                   </div>
                 </>
               )}
