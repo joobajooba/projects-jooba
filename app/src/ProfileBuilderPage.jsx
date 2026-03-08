@@ -1211,7 +1211,6 @@ export default function ProfileBuilderPage() {
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
-                  justifyContent: 'center',
                   paddingTop: 16,
                   paddingBottom: 16,
                   flexShrink: 0,
@@ -1221,7 +1220,8 @@ export default function ProfileBuilderPage() {
                   style={{
                     fontSize: '0.8rem',
                     color: 'rgba(255,255,255,0.7)',
-                    marginBottom: '0.5rem',
+                    marginTop: 0,
+                    marginBottom: 8,
                   }}
                 >
                   Drag/drop onto the grid
@@ -1271,9 +1271,9 @@ export default function ProfileBuilderPage() {
               </div>
               {selectedCategory === 'textboxes' && (
                 <>
-                  <div style={{ borderTop: '1px solid rgba(0,0,0,0.3)', paddingTop: 16, paddingBottom: 16 }} />
-                  <div style={{ paddingBottom: 16, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', marginBottom: 6 }}>
+                  <div style={{ borderTop: '1px solid rgba(0,0,0,0.3)' }} />
+                  <div style={{ paddingTop: 16, paddingBottom: 16, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', marginTop: 0, marginBottom: 6 }}>
                       Format text (focus a text box on the grid first):
                     </p>
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
