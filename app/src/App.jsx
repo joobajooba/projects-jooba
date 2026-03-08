@@ -5,7 +5,6 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { loadProfile, saveProfile } from './profileStorage';
 import { ensureUserRow, fetchUserProfile, updateUserProfile, isUsernameTaken } from './userData';
 import NFTSelector from './NFTSelector';
-import ProfilePage from './ProfilePage';
 import ProfileBuilderPage from './ProfileBuilderPage';
 
 function XAuthCallbackPage() {
@@ -328,8 +327,8 @@ export default function App() {
           <Route path="/community" element={<PlaceholderPage title="Community" />} />
           <Route path="/projects" element={<PlaceholderPage title="Projects" />} />
           <Route path="/mint" element={<PlaceholderPage title="Mint" />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/profile/:walletAddress" element={<ProfilePage />} />
+          <Route path="/profile" element={<ProfileBuilderPage staticView />} />
+          <Route path="/profile/:walletAddress" element={<ProfileBuilderPage staticView />} />
           <Route path="/profile/builder" element={<ProfileBuilderPage />} />
           <Route path="/auth/x/callback" element={<XAuthCallbackPage />} />
         </Routes>

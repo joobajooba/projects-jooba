@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import NFTSelector from './NFTSelector';
@@ -10,6 +10,8 @@ import { ensureProfile, fetchProfileByWallet, updateProfile } from './profileBui
 
 const CELL_SIZE = 50;
 const PADDING = 16;
+// Optimal image pixel sizes (1×) per grid cell: width = cols * CELL_SIZE, height = rows * CELL_SIZE.
+// Image | 3x5 → 150×250, 4x5 → 200×250, 8x5 → 400×250, 12x10 → 600×500. Use 2× for retina.
 
 const ALLOWED_HTML_TAGS = new Set(['b', 'i', 'u', 'strong', 'em', 'ul', 'ol', 'li', 'p', 'br']);
 function sanitizeHtml(html) {
@@ -231,7 +233,14 @@ const sidePanelFormatBtnStyle = {
   fontWeight: 700,
 };
 
-export default function ProfileBuilderPage() {
+export default function ProfileBuilderPage({ staticView = false }) {
+  const { walletAddress: paramWallet } = useParams();
+  const { address } = useAccount();
+  const navigate = useNavigate();
+  const effectiveAddress = staticView
+    ? (paramWallet || address || '').toLowerCase()
+    : (address || '').toLowerCase();
+
   const gridContainerRef = useRef(null);
   const gridAreaRef = useRef(null);
   const [gridSize, setGridSize] = useState({ cols: 8, rows: 20 });
@@ -247,15 +256,15 @@ export default function ProfileBuilderPage() {
   const [nftSelectorTarget, setNftSelectorTarget] = useState('profile'); // 'profile' | 'imageWidget'
   const [profile, setProfile] = useState({ username: null, xUsername: null });
   const [saveStatus, setSaveStatus] = useState(null); // null | 'saving' | 'success' | 'error'
-  const [editMode, setEditMode] = useState(true); // true = edit (grid), false = profile view (no grid)
+  const [editMode, setEditMode] = useState(!staticView); // builder: true; static profile: always false
   const [selectedCategory, setSelectedCategory] = useState(null); // null | 'images' | 'textboxes' | 'all'
   const uploadInputRef = useRef(null);
   const uploadForInstanceRef = useRef(null);
   const layoutLoadedRef = useRef(false);
-  const { address } = useAccount();
-  const navigate = useNavigate();
 
+  // Profile (username, xUsername): from userData when builder, from profile_page when staticView
   useEffect(() => {
+    if (staticView) return; // static view sets profile from fetchProfileByWallet below
     if (!address) {
       setProfile({ username: null, xUsername: null });
       return;
@@ -270,15 +279,26 @@ export default function ProfileBuilderPage() {
       }
     });
     return () => { cancelled = true; };
-  }, [address]);
+  }, [address, staticView]);
 
-  // Load saved layout from profiles (Supabase) for this user
+  // Load saved layout: builder uses address once; static view uses effectiveAddress when it changes
   useEffect(() => {
-    if (!address || layoutLoadedRef.current) return;
-    layoutLoadedRef.current = true;
+    if (staticView) {
+      if (!effectiveAddress) return;
+    } else {
+      if (!address || layoutLoadedRef.current) return;
+      layoutLoadedRef.current = true;
+    }
+    const walletToLoad = staticView ? effectiveAddress : address;
     let cancelled = false;
-    fetchProfileByWallet(address).then((data) => {
+    fetchProfileByWallet(walletToLoad).then((data) => {
       if (cancelled) return;
+      if (staticView && data) {
+        setProfile({
+          username: data.username ?? null,
+          xUsername: data.x_username ?? null,
+        });
+      }
       const layout = data?.layout_json;
       const initialPlacements =
         layout?.placements && typeof layout.placements === 'object'
@@ -307,7 +327,7 @@ export default function ProfileBuilderPage() {
       }
     });
     return () => { cancelled = true; };
-  }, [address]);
+  }, [staticView, effectiveAddress, address]);
 
   const syncFocusedTextBoxFromPanel = useCallback(() => {
     const el = document.activeElement;
@@ -621,6 +641,30 @@ export default function ProfileBuilderPage() {
   const panelItemsToShow = selectedCategoryDef
     ? PANEL_ITEMS.filter((item) => selectedCategoryDef.templateIds.includes(item.id))
     : [];
+
+  if (staticView && !effectiveAddress) {
+    return (
+      <div
+        className="profile-builder-page"
+        style={{
+          width: '100%',
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: '#1a1a1a',
+          color: '#e5e7eb',
+          fontFamily: 'system-ui, -apple-system, sans-serif',
+          padding: 24,
+        }}
+      >
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ marginBottom: 12 }}>Connect your wallet to view your profile, or use a profile link.</p>
+          <a href="/" style={{ color: '#16a34a', textDecoration: 'underline' }}>← Back home</a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -1019,6 +1063,7 @@ export default function ProfileBuilderPage() {
           </div>
         </div>
 
+      {!staticView && (
       <aside style={{
           width: panelOpen ? 260 : 48,
           minWidth: panelOpen ? 260 : 48,
@@ -1314,6 +1359,7 @@ export default function ProfileBuilderPage() {
           </div>
         </div>
       </aside>
+      )}
 
       {nftSelectorOpen && address && nftSelectorForInstance && (
         <NFTSelector
