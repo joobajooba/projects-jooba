@@ -15,6 +15,19 @@ function dayIndexUtc(now = new Date()) {
   return Math.floor((t - EPOCH_UTC) / (24 * 60 * 60 * 1000));
 }
 
+function msUntilNextDayUtc(now = new Date()) {
+  const tomorrow = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+  return tomorrow.getTime() - now.getTime();
+}
+
+function formatCountdown(ms) {
+  const totalSec = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  return `${h}h ${m}m ${s}s`;
+}
+
 function evaluateGuess(solution, guess) {
   const sol = solution.split('');
   const g = guess.split('');
@@ -65,6 +78,8 @@ export default function WordlePage() {
   const [statusRows, setStatusRows] = useState([]); // array of arrays of statuses
   const [message, setMessage] = useState('');
   const [done, setDone] = useState(false);
+  const [playedTodayFromServer, setPlayedTodayFromServer] = useState(false);
+  const [nextIn, setNextIn] = useState('');
 
   useEffect(() => {
     try {
@@ -82,6 +97,37 @@ export default function WordlePage() {
       // ignore
     }
   }, [storageKey, solution]);
+
+  // Server-side "one game per day": if user already played today (e.g. different device or cleared storage), lock game
+  useEffect(() => {
+    if (!address || !solution) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const normalized = address.toLowerCase();
+        const existing = await fetchWordleStats(normalized);
+        if (cancelled) return;
+        if (existing?.last_played_day != null && Number(existing.last_played_day) === idx) {
+          setPlayedTodayFromServer(true);
+        }
+      } catch {
+        // ignore
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [address, solution, idx]);
+
+  useEffect(() => {
+    if (playedTodayFromServer && guesses.length === 0 && solution) setDone(true);
+  }, [playedTodayFromServer, guesses.length, solution]);
+
+  useEffect(() => {
+    if (!done) return;
+    const tick = () => setNextIn(formatCountdown(msUntilNextDayUtc()));
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [done]);
 
   useEffect(() => {
     try {
@@ -291,9 +337,11 @@ export default function WordlePage() {
   }, [guesses, statusRows, current, done]);
 
   const banner = done
-    ? guesses[guesses.length - 1] === solution
-      ? 'Nice. You got it.'
-      : `The word was ${solution.toUpperCase()}.`
+    ? playedTodayFromServer && guesses.length === 0
+      ? "You've already played today. Come back tomorrow!"
+      : guesses[guesses.length - 1] === solution
+        ? 'Nice. You got it.'
+        : `The word was ${solution.toUpperCase()}.`
     : message;
 
   const colorFor = (st) => {
@@ -351,6 +399,9 @@ export default function WordlePage() {
 
       <div style={{ width: '100%', maxWidth: 560, marginTop: 14, minHeight: 22, textAlign: 'center' }}>
         {banner ? <div style={{ fontSize: 13, opacity: done ? 0.95 : 0.8 }}>{banner}</div> : null}
+        {done && nextIn ? (
+          <div style={{ fontSize: 12, opacity: 0.7, marginTop: 6 }}>Next puzzle in {nextIn}</div>
+        ) : null}
       </div>
 
       <div style={{ width: '100%', maxWidth: 560, marginTop: 14, display: 'grid', gap: 8 }}>
