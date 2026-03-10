@@ -9,35 +9,45 @@ import { getAlchemyApiKey } from './lib/alchemy';
 
 const BADGES_TABLE = 'badges';
 
-/** Badge image URL for Not A Punks Cult holders (served from app public folder). */
+/** Badge image URL for Not A Punks Cult / MineBoys holders (served from app public folder). */
 export const NOT_A_PUNKS_CULT_BADGE_URL = '/badges/notapunkscult.png';
 
 /** Not A Punks Cult is on ApeChain (OpenSea slug: not-a-punks-cult). */
 const NOT_A_PUNKS_CULT_CONTRACT = '0xfa1c20e0d4277b1e0b289dffadb5bd92fb8486aa';
+
+/** MineBoys (by same creator, Uncle Mac) on ApeChain (OpenSea: mineboys). */
+const MINEBOYS_CONTRACT = '0xa8a16c3259ad84162a0868e7927523b81ef8bf2d';
 
 const ALCHEMY_NFT_BASE = {
   ethereum: 'https://eth-mainnet.g.alchemy.com/nft/v3',
   apechain: 'https://apechain-mainnet.g.alchemy.com/nft/v3',
 };
 
-/** List of badge rules: chain, contract address (lowercase), badge image URL. */
+/** Collections that grant the same badge (Not A Punks Cult / MineBoys). First match wins. */
 const COLLECTION_BADGES = [
   {
     chain: 'apechain',
     contractAddress: NOT_A_PUNKS_CULT_CONTRACT,
     badgeImageUrl: NOT_A_PUNKS_CULT_BADGE_URL,
   },
+  {
+    chain: 'apechain',
+    contractAddress: MINEBOYS_CONTRACT,
+    badgeImageUrl: NOT_A_PUNKS_CULT_BADGE_URL,
+  },
 ];
 
 /**
  * Check if the wallet holds at least one NFT from the given contract on the given chain.
- * Uses Alchemy getNFTsForOwner (browser-safe, no CORS issues).
+ * Uses Alchemy getNFTsForOwner (browser-safe, no CORS issues). Paginates to handle large holdings.
  * @param {string} walletAddress - EIP-155 address
  * @param {string} chain - 'ethereum' | 'apechain'
  * @param {string} contractAddress - Contract address (lowercase)
+ * @param {{ log?: boolean }} opts - set log: true to log progress to console
  * @returns {Promise<boolean>}
  */
-export async function walletHoldsCollectionNft(walletAddress, chain, contractAddress) {
+export async function walletHoldsCollectionNft(walletAddress, chain, contractAddress, opts = {}) {
+  const log = opts.log ?? false;
   if (!walletAddress || !contractAddress) return false;
   const address = walletAddress.trim();
   if (!address.startsWith('0x') || address.length !== 42) return false;
@@ -50,23 +60,47 @@ export async function walletHoldsCollectionNft(walletAddress, chain, contractAdd
       ? getAlchemyApiKey(import.meta.env.VITE_ALCHEMY_API_KEY_APECHAIN || import.meta.env.VITE_ALCHEMY_API_KEY)
       : getAlchemyApiKey(import.meta.env.VITE_ALCHEMY_API_KEY_ETH || import.meta.env.VITE_ALCHEMY_API_KEY);
   if (!apiKey) {
-    console.warn('[badges] No Alchemy API key for', chain);
+    if (log) console.warn('[badges] No Alchemy API key for', chain, '- set VITE_ALCHEMY_API_KEY or VITE_ALCHEMY_API_KEY_APECHAIN in your build env (e.g. Netlify)');
     return false;
   }
 
-  const url = `${baseUrl}/${apiKey}/getNFTsForOwner?owner=${encodeURIComponent(address)}&pageSize=100&withMetadata=false`;
+  const contractLower = contractAddress.toLowerCase();
+  let pageToken = undefined;
+  let totalFetched = 0;
+
   try {
-    const res = await fetch(url);
-    if (!res.ok) return false;
-    const data = await res.json();
-    const nfts = data?.ownedNfts ?? [];
-    const contractLower = contractAddress.toLowerCase();
-    const holds = nfts.some(
-      (n) => n?.contract?.address && n.contract.address.toLowerCase() === contractLower
-    );
-    return holds;
+    do {
+      const params = new URLSearchParams({
+        owner: address,
+        pageSize: '100',
+        withMetadata: 'false',
+      });
+      if (pageToken) params.set('pageToken', pageToken);
+      const url = `${baseUrl}/${apiKey}/getNFTsForOwner?${params.toString()}`;
+      const res = await fetch(url);
+      if (!res.ok) {
+        const text = await res.text();
+        if (log) console.warn('[badges] Alchemy response not ok', res.status, text?.slice(0, 200));
+        return false;
+      }
+      const data = await res.json();
+      const nfts = data?.ownedNfts ?? [];
+      pageToken = data?.nextPageToken ?? null;
+      totalFetched += nfts.length;
+
+      const holds = nfts.some(
+        (n) => n?.contract?.address && n.contract.address.toLowerCase() === contractLower
+      );
+      if (holds) {
+        if (log) console.log('[badges] Found qualifying NFT (contract', contractAddress, ') after', totalFetched, 'NFTs checked');
+        return true;
+      }
+    } while (pageToken);
+
+    if (log) console.log('[badges] No NFT from contract', contractAddress, 'found in', totalFetched, 'NFTs on', chain);
+    return false;
   } catch (e) {
-    console.warn('[badges] walletHoldsCollectionNft failed', chain, contractAddress, e?.message || e);
+    if (log) console.warn('[badges] walletHoldsCollectionNft failed', chain, e?.message || e);
     return false;
   }
 }
@@ -75,15 +109,21 @@ export async function walletHoldsCollectionNft(walletAddress, chain, contractAdd
  * For a connected wallet, check NFT eligibility and assign the first matching badge.
  * Idempotent: safe to call on every connect.
  * @param {string} walletAddress - Connected wallet address
- * @returns {Promise<{ assigned: boolean, badgeImageUrl?: string }>}
+ * @param {{ log?: boolean }} opts - set log: true to log progress to console
+ * @returns {Promise<{ assigned: boolean, badgeImageUrl?: string, error?: string }>}
  */
-export async function checkAndAssignBadge(walletAddress) {
-  if (!supabase || !walletAddress) return { assigned: false };
+export async function checkAndAssignBadge(walletAddress, opts = {}) {
+  const log = opts.log ?? false;
+  if (!walletAddress) return { assigned: false, error: 'No wallet' };
+  if (!supabase) return { assigned: false, error: 'Supabase not configured' };
   const normalized = walletAddress.toLowerCase().trim();
 
+  if (log) console.log('[badges] Checking badge eligibility for', normalized);
+
   for (const { chain, contractAddress, badgeImageUrl } of COLLECTION_BADGES) {
-    const holds = await walletHoldsCollectionNft(walletAddress, chain, contractAddress);
+    const holds = await walletHoldsCollectionNft(walletAddress, chain, contractAddress, { log });
     if (holds) {
+      if (log) console.log('[badges] Eligible – upserting badge into Supabase');
       const { error } = await supabase.from(BADGES_TABLE).upsert(
         {
           wallet_address: normalized,
@@ -93,13 +133,15 @@ export async function checkAndAssignBadge(walletAddress) {
         { onConflict: 'wallet_address' }
       );
       if (error) {
-        console.warn('[badges] upsert badge failed', error);
-        return { assigned: false };
+        if (log) console.warn('[badges] Supabase upsert failed', error);
+        return { assigned: false, error: error.message };
       }
+      if (log) console.log('[badges] Badge assigned successfully');
       return { assigned: true, badgeImageUrl };
     }
   }
 
+  if (log) console.log('[badges] No matching collection found – no badge assigned');
   return { assigned: false };
 }
 

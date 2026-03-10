@@ -1417,7 +1417,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
                       <img
                         src={profileBadgeUrl}
                         alt="Holder badge"
-                        title="Not A Punks Cult holder"
+                        title="Not A Punks Cult / MineBoys holder"
                         style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
                       />
                     ) : (
