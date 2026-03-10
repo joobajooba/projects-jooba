@@ -864,8 +864,8 @@ export default function ProfileBuilderPage({ staticView = false }) {
       ? (gridInnerSize.height - 2 * PADDING) / gridSize.rows
       : CELL_SIZE;
 
-  const resizeStartRef = useRef(null); // { instanceId, startX, startY, startCols, startRows }
-  const handleResizeStart = useCallback((instanceId, clientX, clientY) => {
+  const resizeStartRef = useRef(null); // { instanceId, startX, startY, startCol, startRow, startCols, startRows, handle }
+  const handleResizeStart = useCallback((instanceId, clientX, clientY, handle) => {
     const p = placements[instanceId];
     if (!p) return;
     const template = PANEL_ITEMS.find((t) => t.id === getTemplateIdForLookup(p.templateId));
@@ -873,25 +873,76 @@ export default function ProfileBuilderPage({ staticView = false }) {
     const cols = p.cols ?? template.cols;
     const rows = p.rows ?? template.rows;
     setResizingInstanceId(instanceId);
-    resizeStartRef.current = { instanceId, startX: clientX, startY: clientY, startCols: cols, startRows: rows };
+    resizeStartRef.current = {
+      instanceId,
+      startX: clientX,
+      startY: clientY,
+      startCol: p.col,
+      startRow: p.row,
+      startCols: cols,
+      startRows: rows,
+      handle,
+    };
   }, [placements]);
 
   const handleMouseMoveResize = useCallback((e) => {
     if (!resizeStartRef.current) return;
-    const { instanceId, startX, startY, startCols, startRows } = resizeStartRef.current;
+    const { instanceId, startX, startY, startCol, startRow, startCols, startRows, handle } = resizeStartRef.current;
     const deltaPxX = e.clientX - startX;
     const deltaPxY = e.clientY - startY;
-    const gridCols = Math.round(deltaPxX / cellWidthPx) || 0;
-    const gridRows = Math.round(deltaPxY / cellHeightPx) || 0;
-    const newCols = Math.max(1, Math.min(gridSize.cols, startCols + gridCols));
-    const newRows = Math.max(1, Math.min(gridSize.rows, startRows + gridRows));
+    const gridDeltaCol = Math.round(deltaPxX / cellWidthPx) || 0;
+    const gridDeltaRow = Math.round(deltaPxY / cellHeightPx) || 0;
+    let newCol = startCol;
+    let newRow = startRow;
+    let newCols = startCols;
+    let newRows = startRows;
+    if (handle === 'se') {
+      newCols = startCols + gridDeltaCol;
+      newRows = startRows + gridDeltaRow;
+    } else if (handle === 'sw') {
+      newCol = startCol + gridDeltaCol;
+      newCols = startCols - gridDeltaCol;
+      newRows = startRows + gridDeltaRow;
+    } else if (handle === 'ne') {
+      newRow = startRow + gridDeltaRow;
+      newCols = startCols + gridDeltaCol;
+      newRows = startRows - gridDeltaRow;
+    } else if (handle === 'nw') {
+      newCol = startCol + gridDeltaCol;
+      newRow = startRow + gridDeltaRow;
+      newCols = startCols - gridDeltaCol;
+      newRows = startRows - gridDeltaRow;
+    } else if (handle === 's') {
+      newRows = startRows + gridDeltaRow;
+    } else if (handle === 'n') {
+      newRow = startRow + gridDeltaRow;
+      newRows = startRows - gridDeltaRow;
+    } else if (handle === 'e') {
+      newCols = startCols + gridDeltaCol;
+    } else if (handle === 'w') {
+      newCol = startCol + gridDeltaCol;
+      newCols = startCols - gridDeltaCol;
+    }
+    newCol = Math.max(0, Math.min(gridSize.cols - 1, newCol));
+    newRow = Math.max(0, Math.min(gridSize.rows - 1, newRow));
+    newCols = Math.max(1, Math.min(gridSize.cols - newCol, newCols));
+    newRows = Math.max(1, Math.min(gridSize.rows - newRow, newRows));
     setPlacements((prev) => {
       const p = prev[instanceId];
       if (!p) return prev;
-      if (wouldOverlapPlacements(prev, instanceId, p.col, p.row, newCols, newRows)) return prev;
-      return { ...prev, [instanceId]: { ...p, cols: newCols, rows: newRows } };
+      if (wouldOverlapPlacements(prev, instanceId, newCol, newRow, newCols, newRows)) return prev;
+      return { ...prev, [instanceId]: { ...p, col: newCol, row: newRow, cols: newCols, rows: newRows } };
     });
-    resizeStartRef.current = { instanceId, startX: e.clientX, startY: e.clientY, startCols: newCols, startRows: newRows };
+    resizeStartRef.current = {
+      instanceId,
+      startX: e.clientX,
+      startY: e.clientY,
+      startCol: newCol,
+      startRow: newRow,
+      startCols: newCols,
+      startRows: newRows,
+      handle,
+    };
   }, [gridSize.cols, gridSize.rows, cellWidthPx, cellHeightPx]);
 
   const placeOnGrid = useCallback(
@@ -1544,29 +1595,37 @@ export default function ProfileBuilderPage({ staticView = false }) {
                   item.label || ''
                 )}
                 {effectiveEditMode && !isProfileBlock && (
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    title="Resize"
-                    onMouseDown={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      handleResizeStart(item.instanceId, e.clientX, e.clientY);
-                    }}
-                    style={{
-                      position: 'absolute',
-                      right: 0,
-                      bottom: 0,
-                      width: 20,
-                      height: 20,
-                      cursor: 'nwse-resize',
-                      zIndex: 10,
-                      borderLeft: '2px solid rgba(255,255,255,0.5)',
-                      borderTop: '2px solid rgba(255,255,255,0.5)',
-                      borderTopLeftRadius: 4,
-                      boxSizing: 'border-box',
-                    }}
-                  />
+                  <>
+                    {[
+                      { handle: 'nw', cursor: 'nwse-resize', style: { left: 0, top: 0, width: 14, height: 14, borderRight: '2px solid rgba(255,255,255,0.5)', borderBottom: '2px solid rgba(255,255,255,0.5)', borderBottomRightRadius: 3 } },
+                      { handle: 'n', cursor: 'ns-resize', style: { left: 0, right: 0, top: 0, height: 14, borderBottom: '2px solid rgba(255,255,255,0.5)' } },
+                      { handle: 'ne', cursor: 'nesw-resize', style: { right: 0, top: 0, width: 14, height: 14, borderLeft: '2px solid rgba(255,255,255,0.5)', borderBottom: '2px solid rgba(255,255,255,0.5)', borderBottomLeftRadius: 3 } },
+                      { handle: 'e', cursor: 'ew-resize', style: { right: 0, top: 0, bottom: 0, width: 14, borderLeft: '2px solid rgba(255,255,255,0.5)' } },
+                      { handle: 'se', cursor: 'nwse-resize', style: { right: 0, bottom: 0, width: 14, height: 14, borderLeft: '2px solid rgba(255,255,255,0.5)', borderTop: '2px solid rgba(255,255,255,0.5)', borderTopLeftRadius: 3 } },
+                      { handle: 's', cursor: 'ns-resize', style: { left: 0, right: 0, bottom: 0, height: 14, borderTop: '2px solid rgba(255,255,255,0.5)' } },
+                      { handle: 'sw', cursor: 'nesw-resize', style: { left: 0, bottom: 0, width: 14, height: 14, borderRight: '2px solid rgba(255,255,255,0.5)', borderTop: '2px solid rgba(255,255,255,0.5)', borderTopRightRadius: 3 } },
+                      { handle: 'w', cursor: 'ew-resize', style: { left: 0, top: 0, bottom: 0, width: 14, borderRight: '2px solid rgba(255,255,255,0.5)' } },
+                    ].map(({ handle, cursor, style }) => (
+                      <div
+                        key={handle}
+                        role="button"
+                        tabIndex={0}
+                        title="Resize"
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          handleResizeStart(item.instanceId, e.clientX, e.clientY, handle);
+                        }}
+                        style={{
+                          position: 'absolute',
+                          zIndex: 10,
+                          cursor,
+                          boxSizing: 'border-box',
+                          ...style,
+                        }}
+                      />
+                    ))}
+                  </>
                 )}
               </div>
             );
