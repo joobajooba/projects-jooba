@@ -13,7 +13,7 @@ const PADDING = 16;
 // Optimal image pixel sizes (1×) per grid cell: width = cols * CELL_SIZE, height = rows * CELL_SIZE.
 // Image | 3x5 → 150×250, 4x5 → 200×250, 8x5 → 400×250, 12x10 → 600×500. Use 2× for retina.
 
-const ALLOWED_HTML_TAGS = new Set(['b', 'i', 'u', 'strong', 'em', 'ul', 'ol', 'li', 'p', 'br']);
+const ALLOWED_HTML_TAGS = new Set(['b', 'i', 'u', 'strong', 'em', 'ul', 'ol', 'li', 'p', 'br', 'div']);
 function sanitizeHtml(html) {
   if (!html || typeof html !== 'string') return '';
   const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -26,7 +26,13 @@ function sanitizeHtml(html) {
       const text = doc.createTextNode(el.textContent || '');
       el.parentNode.replaceChild(text, el);
     } else {
+      // Strip all attributes except a tightly-scoped text-align style used by alignment commands.
+      const style = el.getAttribute('style') || '';
+      const alignMatch = style.match(/text-align\s*:\s*(left|center|right|justify)\s*;?/i);
       for (const a of [...el.attributes]) el.removeAttribute(a.name);
+      if (alignMatch && (tag === 'p' || tag === 'div' || tag === 'li')) {
+        el.setAttribute('style', `text-align: ${alignMatch[1].toLowerCase()};`);
+      }
     }
   });
   return doc.body.innerHTML;
@@ -1464,6 +1470,13 @@ export default function ProfileBuilderPage({ staticView = false }) {
                     <button type="button" title="Underline" onClick={() => { document.execCommand('underline', false, null); syncFocusedTextBoxFromPanel(); }} style={{ ...sidePanelFormatBtnStyle, textDecoration: 'underline' }}>U</button>
                     <button type="button" title="Bullet list" onClick={() => { document.execCommand('insertUnorderedList', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}>•</button>
                     <button type="button" title="Numbered list" onClick={() => { document.execCommand('insertOrderedList', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}>1.</button>
+                    </div>
+                    <div style={{ height: 10 }} />
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+                      <button type="button" title="Align left" onClick={() => { document.execCommand('justifyLeft', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}>L</button>
+                      <button type="button" title="Align center" onClick={() => { document.execCommand('justifyCenter', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}>C</button>
+                      <button type="button" title="Align right" onClick={() => { document.execCommand('justifyRight', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}>R</button>
+                      <button type="button" title="Justify" onClick={() => { document.execCommand('justifyFull', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}>J</button>
                     </div>
                     <div style={{ height: 10 }} />
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
