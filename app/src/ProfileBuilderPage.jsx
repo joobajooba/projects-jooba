@@ -301,6 +301,110 @@ const IconJustify = () => (
   </Icon>
 );
 
+const IconOutlineRounded = () => (
+  <Icon>
+    <path d="M7 6h10a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3zm0 2a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1H7z" />
+  </Icon>
+);
+const IconOutlineSquare = () => (
+  <Icon>
+    <path d="M6 6h12v12H6V6zm2 2v8h8V8H8z" />
+  </Icon>
+);
+const IconOutlineNone = () => (
+  <Icon>
+    <path d="M6 6h12v12H6V6zm2 2v8h8V8H8z" />
+    <path d="M5 19l14-14" stroke="currentColor" strokeWidth="2" fill="none" />
+  </Icon>
+);
+
+function OutlineDropdown({ instanceId, value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const enabled = !!value?.enabled;
+  const shape = value?.shape === 'square' ? 'square' : 'rounded';
+  const currentKey = enabled ? shape : 'none';
+
+  const pick = (nextKey) => {
+    if (!instanceId) return;
+    if (nextKey === 'none') onChange({ enabled: false, shape: 'rounded' });
+    else if (nextKey === 'square') onChange({ enabled: true, shape: 'square' });
+    else onChange({ enabled: true, shape: 'rounded' });
+    setOpen(false);
+  };
+
+  const CurrentIcon = currentKey === 'square' ? IconOutlineSquare : currentKey === 'rounded' ? IconOutlineRounded : IconOutlineNone;
+
+  return (
+    <div style={{ position: 'relative', display: 'inline-block' }}>
+      <button
+        type="button"
+        title="Outline"
+        aria-label="Outline"
+        disabled={!instanceId}
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          ...sidePanelFormatBtnStyle,
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 6,
+          opacity: instanceId ? 1 : 0.5,
+        }}
+      >
+        <CurrentIcon />
+      </button>
+      {open && instanceId && (
+        <div
+          role="menu"
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + 6px)',
+            right: 0,
+            minWidth: 160,
+            background: '#1f1f1f',
+            border: '1px solid rgba(255,255,255,0.18)',
+            borderRadius: 8,
+            padding: 6,
+            boxShadow: '0 10px 25px rgba(0,0,0,0.45)',
+            zIndex: 50,
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          {[
+            { key: 'none', label: 'No outline', IconCmp: IconOutlineNone },
+            { key: 'rounded', label: 'Rounded outline', IconCmp: IconOutlineRounded },
+            { key: 'square', label: 'Square outline', IconCmp: IconOutlineSquare },
+          ].map(({ key, label, IconCmp }) => (
+            <button
+              key={key}
+              type="button"
+              role="menuitem"
+              onClick={() => pick(key)}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                padding: '8px 10px',
+                borderRadius: 6,
+                border: 'none',
+                background: key === currentKey ? 'rgba(255,255,255,0.12)' : 'transparent',
+                color: '#fff',
+                cursor: 'pointer',
+                textAlign: 'left',
+                fontSize: '0.8rem',
+              }}
+            >
+              <span style={{ width: 16, display: 'inline-flex', justifyContent: 'center' }}><IconCmp /></span>
+              <span>{label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ProfileBuilderPage({ staticView = false }) {
   const { walletAddress: paramWallet } = useParams();
   const { address } = useAccount();
@@ -333,6 +437,16 @@ export default function ProfileBuilderPage({ staticView = false }) {
   const uploadInputRef = useRef(null);
   const uploadForInstanceRef = useRef(null);
   const layoutLoadedRef = useRef(false);
+
+  const setPanelCategoryForType = useCallback((type) => {
+    if (!type) return;
+    if (type === 'textbox') setSelectedCategory('textboxes');
+    else if (type === 'kodacams') setSelectedCategory('kodacams');
+    else if (type === 'bops') setSelectedCategory('bops');
+    else if (type === 'stats') setSelectedCategory('stats');
+    else if (type === 'badges') setSelectedCategory('badges');
+    else if (type === 'square-small' || type === 'image-3x5' || type === 'image-8x5' || type === 'image-12x10') setSelectedCategory('images');
+  }, []);
 
   // Profile (username, xUsername): from userData when builder, from profile_page when staticView
   useEffect(() => {
@@ -902,6 +1016,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
                   e.preventDefault();
                   setDraggedId(item.instanceId);
                   setSelectedWidgetInstanceId(item.instanceId);
+                  setPanelCategoryForType(item.type);
                   if (isImageWidget) setSelectedImageInstanceId(item.instanceId);
                 }}
               >
@@ -1175,7 +1290,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
                     value={textWidgetText[item.instanceId] ?? ''}
                     onValueChange={(v) => setTextWidgetText((prev) => ({ ...prev, [item.instanceId]: v }))}
                     maxChars={item.maxChars}
-                    onFocusInstance={(id) => setSelectedWidgetInstanceId(id)}
+                    onFocusInstance={(id) => { setSelectedWidgetInstanceId(id); setSelectedCategory('textboxes'); }}
                   />
                 ) : (
                   item.label || ''
@@ -1461,59 +1576,14 @@ export default function ProfileBuilderPage({ staticView = false }) {
                       >
                         Square
                       </button>
-                      <button
-                        type="button"
-                        title="Rounded outline"
-                        onClick={() => {
+                      <OutlineDropdown
+                        instanceId={selectedImageInstanceId}
+                        value={selectedImageInstanceId ? widgetOutline[selectedImageInstanceId] : null}
+                        onChange={(next) => {
                           if (!selectedImageInstanceId) return;
-                          setWidgetOutline((prev) => ({
-                            ...prev,
-                            [selectedImageInstanceId]: { enabled: true, shape: 'rounded' },
-                          }));
+                          setWidgetOutline((prev) => ({ ...prev, [selectedImageInstanceId]: next }));
                         }}
-                        style={{
-                          ...sidePanelFormatBtnStyle,
-                          background: widgetOutline[selectedImageInstanceId]?.enabled && widgetOutline[selectedImageInstanceId]?.shape !== 'square' ? 'rgba(255,255,255,0.2)' : sidePanelFormatBtnStyle.background,
-                          border: widgetOutline[selectedImageInstanceId]?.enabled && widgetOutline[selectedImageInstanceId]?.shape !== 'square' ? '1px solid rgba(255,255,255,0.5)' : sidePanelFormatBtnStyle.border,
-                        }}
-                      >
-                        Outline (R)
-                      </button>
-                      <button
-                        type="button"
-                        title="Square outline"
-                        onClick={() => {
-                          if (!selectedImageInstanceId) return;
-                          setWidgetOutline((prev) => ({
-                            ...prev,
-                            [selectedImageInstanceId]: { enabled: true, shape: 'square' },
-                          }));
-                        }}
-                        style={{
-                          ...sidePanelFormatBtnStyle,
-                          background: widgetOutline[selectedImageInstanceId]?.enabled && widgetOutline[selectedImageInstanceId]?.shape === 'square' ? 'rgba(255,255,255,0.2)' : sidePanelFormatBtnStyle.background,
-                          border: widgetOutline[selectedImageInstanceId]?.enabled && widgetOutline[selectedImageInstanceId]?.shape === 'square' ? '1px solid rgba(255,255,255,0.5)' : sidePanelFormatBtnStyle.border,
-                        }}
-                      >
-                        Outline (S)
-                      </button>
-                      <button
-                        type="button"
-                        title="Remove outline"
-                        onClick={() => {
-                          if (!selectedImageInstanceId) return;
-                          setWidgetOutline((prev) => ({
-                            ...prev,
-                            [selectedImageInstanceId]: { ...(prev[selectedImageInstanceId] || { shape: 'rounded' }), enabled: false },
-                          }));
-                        }}
-                        style={{
-                          ...sidePanelFormatBtnStyle,
-                          background: widgetOutline[selectedImageInstanceId]?.enabled === false ? 'rgba(255,255,255,0.2)' : sidePanelFormatBtnStyle.background,
-                        }}
-                      >
-                        No outline
-                      </button>
+                      />
                     </div>
                   </div>
                 </>
@@ -1541,59 +1611,14 @@ export default function ProfileBuilderPage({ staticView = false }) {
                     </div>
                     <div style={{ height: 10 }} />
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
-                      <button
-                        type="button"
-                        title="Rounded outline"
-                        onClick={() => {
+                      <OutlineDropdown
+                        instanceId={selectedWidgetInstanceId}
+                        value={selectedWidgetInstanceId ? widgetOutline[selectedWidgetInstanceId] : null}
+                        onChange={(next) => {
                           if (!selectedWidgetInstanceId) return;
-                          setWidgetOutline((prev) => ({
-                            ...prev,
-                            [selectedWidgetInstanceId]: { enabled: true, shape: 'rounded' },
-                          }));
+                          setWidgetOutline((prev) => ({ ...prev, [selectedWidgetInstanceId]: next }));
                         }}
-                        style={{
-                          ...sidePanelFormatBtnStyle,
-                          background: widgetOutline[selectedWidgetInstanceId]?.enabled && widgetOutline[selectedWidgetInstanceId]?.shape !== 'square' ? 'rgba(255,255,255,0.2)' : sidePanelFormatBtnStyle.background,
-                          border: widgetOutline[selectedWidgetInstanceId]?.enabled && widgetOutline[selectedWidgetInstanceId]?.shape !== 'square' ? '1px solid rgba(255,255,255,0.5)' : sidePanelFormatBtnStyle.border,
-                        }}
-                      >
-                        Outline (R)
-                      </button>
-                      <button
-                        type="button"
-                        title="Square outline"
-                        onClick={() => {
-                          if (!selectedWidgetInstanceId) return;
-                          setWidgetOutline((prev) => ({
-                            ...prev,
-                            [selectedWidgetInstanceId]: { enabled: true, shape: 'square' },
-                          }));
-                        }}
-                        style={{
-                          ...sidePanelFormatBtnStyle,
-                          background: widgetOutline[selectedWidgetInstanceId]?.enabled && widgetOutline[selectedWidgetInstanceId]?.shape === 'square' ? 'rgba(255,255,255,0.2)' : sidePanelFormatBtnStyle.background,
-                          border: widgetOutline[selectedWidgetInstanceId]?.enabled && widgetOutline[selectedWidgetInstanceId]?.shape === 'square' ? '1px solid rgba(255,255,255,0.5)' : sidePanelFormatBtnStyle.border,
-                        }}
-                      >
-                        Outline (S)
-                      </button>
-                      <button
-                        type="button"
-                        title="Remove outline"
-                        onClick={() => {
-                          if (!selectedWidgetInstanceId) return;
-                          setWidgetOutline((prev) => ({
-                            ...prev,
-                            [selectedWidgetInstanceId]: { ...(prev[selectedWidgetInstanceId] || { shape: 'rounded' }), enabled: false },
-                          }));
-                        }}
-                        style={{
-                          ...sidePanelFormatBtnStyle,
-                          background: widgetOutline[selectedWidgetInstanceId]?.enabled === false ? 'rgba(255,255,255,0.2)' : sidePanelFormatBtnStyle.background,
-                        }}
-                      >
-                        No outline
-                      </button>
+                      />
                     </div>
                   </div>
                 </>
@@ -1606,59 +1631,14 @@ export default function ProfileBuilderPage({ staticView = false }) {
                       Widget options (focus a widget on the grid first):
                     </p>
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
-                      <button
-                        type="button"
-                        title="Rounded outline"
-                        onClick={() => {
+                      <OutlineDropdown
+                        instanceId={selectedWidgetInstanceId}
+                        value={selectedWidgetInstanceId ? widgetOutline[selectedWidgetInstanceId] : null}
+                        onChange={(next) => {
                           if (!selectedWidgetInstanceId) return;
-                          setWidgetOutline((prev) => ({
-                            ...prev,
-                            [selectedWidgetInstanceId]: { enabled: true, shape: 'rounded' },
-                          }));
+                          setWidgetOutline((prev) => ({ ...prev, [selectedWidgetInstanceId]: next }));
                         }}
-                        style={{
-                          ...sidePanelFormatBtnStyle,
-                          background: widgetOutline[selectedWidgetInstanceId]?.enabled && widgetOutline[selectedWidgetInstanceId]?.shape !== 'square' ? 'rgba(255,255,255,0.2)' : sidePanelFormatBtnStyle.background,
-                          border: widgetOutline[selectedWidgetInstanceId]?.enabled && widgetOutline[selectedWidgetInstanceId]?.shape !== 'square' ? '1px solid rgba(255,255,255,0.5)' : sidePanelFormatBtnStyle.border,
-                        }}
-                      >
-                        Outline (R)
-                      </button>
-                      <button
-                        type="button"
-                        title="Square outline"
-                        onClick={() => {
-                          if (!selectedWidgetInstanceId) return;
-                          setWidgetOutline((prev) => ({
-                            ...prev,
-                            [selectedWidgetInstanceId]: { enabled: true, shape: 'square' },
-                          }));
-                        }}
-                        style={{
-                          ...sidePanelFormatBtnStyle,
-                          background: widgetOutline[selectedWidgetInstanceId]?.enabled && widgetOutline[selectedWidgetInstanceId]?.shape === 'square' ? 'rgba(255,255,255,0.2)' : sidePanelFormatBtnStyle.background,
-                          border: widgetOutline[selectedWidgetInstanceId]?.enabled && widgetOutline[selectedWidgetInstanceId]?.shape === 'square' ? '1px solid rgba(255,255,255,0.5)' : sidePanelFormatBtnStyle.border,
-                        }}
-                      >
-                        Outline (S)
-                      </button>
-                      <button
-                        type="button"
-                        title="Remove outline"
-                        onClick={() => {
-                          if (!selectedWidgetInstanceId) return;
-                          setWidgetOutline((prev) => ({
-                            ...prev,
-                            [selectedWidgetInstanceId]: { ...(prev[selectedWidgetInstanceId] || { shape: 'rounded' }), enabled: false },
-                          }));
-                        }}
-                        style={{
-                          ...sidePanelFormatBtnStyle,
-                          background: widgetOutline[selectedWidgetInstanceId]?.enabled === false ? 'rgba(255,255,255,0.2)' : sidePanelFormatBtnStyle.background,
-                        }}
-                      >
-                        No outline
-                      </button>
+                      />
                     </div>
                   </div>
                 </>
