@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import { fetchWordleStats, upsertWordleStats } from './userData';
 
@@ -345,8 +344,8 @@ export default function WordlePage() {
     : message;
 
   const colorFor = (st) => {
-    if (st === 'correct') return '#15803d';
-    if (st === 'present') return '#a16207';
+    if (st === 'correct') return '#22c55e'; // brighter green
+    if (st === 'present') return '#facc15'; // brighter yellow
     if (st === 'absent') return '#374151';
     return 'rgba(255,255,255,0.06)';
   };
@@ -354,11 +353,9 @@ export default function WordlePage() {
   return (
     <div className="app-main-inner" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <div style={{ width: '100%', maxWidth: 560 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <h1 style={{ marginBottom: 6 }}>Wordle</h1>
-          <Link to="/games" style={{ color: 'rgba(255,255,255,0.75)', textDecoration: 'none' }}>← Games</Link>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <h1 style={{ marginBottom: 6, textAlign: 'center', width: '100%' }}>Wordle</h1>
         </div>
-        <p style={{ marginTop: 0, marginBottom: 14, opacity: 0.8 }}>Daily puzzle</p>
       </div>
 
       {lists.status !== 'ok' && (
