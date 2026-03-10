@@ -7,6 +7,8 @@ import { ensureUserRow, fetchUserProfile, updateUserProfile, isUsernameTaken } f
 import NFTSelector from './NFTSelector';
 import ProfileBuilderPage from './ProfileBuilderPage';
 import CommunityPage from './CommunityPage';
+import GamesPage from './GamesPage';
+import WordlePage from './WordlePage';
 
 function XAuthCallbackPage() {
   const [searchParams] = useSearchParams();
@@ -324,7 +326,8 @@ export default function App() {
               <p>Start from here.</p>
             </div>
           } />
-          <Route path="/games" element={<PlaceholderPage title="Games" />} />
+          <Route path="/games" element={<GamesPage />} />
+          <Route path="/games/wordle" element={<WordlePage />} />
           <Route path="/community" element={<CommunityPage />} />
           <Route path="/projects" element={<PlaceholderPage title="Projects" />} />
           <Route path="/mint" element={<PlaceholderPage title="Mint" />} />
