@@ -407,6 +407,95 @@ function OutlineDropdown({ instanceId, value, onChange }) {
   );
 }
 
+function BorderDropdown({ instanceId, value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const enabled = !!value?.enabled;
+  const shape = value?.shape === 'square' ? 'square' : 'rounded';
+  const currentKey = enabled ? shape : 'none';
+
+  const pick = (nextKey) => {
+    if (!instanceId) return;
+    if (nextKey === 'none') onChange({ enabled: false, shape: 'rounded' });
+    else if (nextKey === 'square') onChange({ enabled: true, shape: 'square' });
+    else onChange({ enabled: true, shape: 'rounded' });
+    setOpen(false);
+  };
+
+  const CurrentIcon = currentKey === 'square' ? IconOutlineSquare : currentKey === 'rounded' ? IconOutlineRounded : IconOutlineNone;
+
+  return (
+    <div style={{ position: 'relative', display: 'inline-block' }}>
+      <button
+        type="button"
+        title="Border"
+        aria-label="Border"
+        disabled={!instanceId}
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          ...sidePanelFormatBtnStyle,
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 6,
+          opacity: instanceId ? 1 : 0.5,
+        }}
+      >
+        <span style={{ fontSize: '0.75rem', fontWeight: 700, lineHeight: 1 }}>Border</span>
+        <span style={{ opacity: 0.6, lineHeight: 1 }} aria-hidden>|</span>
+        <CurrentIcon />
+      </button>
+      {open && instanceId && (
+        <div
+          role="menu"
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + 6px)',
+            right: 0,
+            minWidth: 160,
+            background: '#1f1f1f',
+            border: '1px solid rgba(255,255,255,0.18)',
+            borderRadius: 8,
+            padding: 6,
+            boxShadow: '0 10px 25px rgba(0,0,0,0.45)',
+            zIndex: 50,
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          {[
+            { key: 'none', label: 'No border', IconCmp: IconOutlineNone },
+            { key: 'rounded', label: 'Rounded border', IconCmp: IconOutlineRounded },
+            { key: 'square', label: 'Square border', IconCmp: IconOutlineSquare },
+          ].map(({ key, label, IconCmp }) => (
+            <button
+              key={key}
+              type="button"
+              role="menuitem"
+              onClick={() => pick(key)}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                padding: '8px 10px',
+                borderRadius: 6,
+                border: 'none',
+                background: key === currentKey ? 'rgba(255,255,255,0.12)' : 'transparent',
+                color: '#fff',
+                cursor: 'pointer',
+                textAlign: 'left',
+                fontSize: '0.8rem',
+              }}
+            >
+              <span style={{ width: 16, display: 'inline-flex', justifyContent: 'center' }}><IconCmp /></span>
+              <span>{label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ProfileBuilderPage({ staticView = false }) {
   const { walletAddress: paramWallet } = useParams();
   const { address } = useAccount();
@@ -428,6 +517,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
   const [imageWidgetOptions, setImageWidgetOptions] = useState({}); // { [instanceId]: { corners: 'rounded'|'square', border: boolean } }
   const [selectedImageInstanceId, setSelectedImageInstanceId] = useState(null);
   const [widgetOutline, setWidgetOutline] = useState({}); // { [instanceId]: { enabled: boolean, shape: 'rounded'|'square' } }
+  const [widgetBorder, setWidgetBorder] = useState({}); // { [instanceId]: { enabled: boolean, shape: 'rounded'|'square' } } (images/kodacams/bops/stats)
   const [selectedWidgetInstanceId, setSelectedWidgetInstanceId] = useState(null);
   const [nftSelectorOpen, setNftSelectorOpen] = useState(false);
   const [nftSelectorForInstance, setNftSelectorForInstance] = useState(null);
@@ -536,6 +626,20 @@ export default function ProfileBuilderPage({ staticView = false }) {
         }
         setWidgetOutline(migrated);
       }
+      if (layout?.widgetBorder && typeof layout.widgetBorder === 'object') {
+        const migrated = {};
+        for (const [k, v] of Object.entries(layout.widgetBorder)) {
+          if (v && typeof v === 'object') {
+            migrated[k] = {
+              enabled: !!v.enabled,
+              shape: v.shape === 'square' ? 'square' : 'rounded',
+            };
+          } else if (typeof v === 'boolean') {
+            migrated[k] = { enabled: v, shape: 'rounded' };
+          }
+        }
+        setWidgetBorder(migrated);
+      }
     });
     return () => { cancelled = true; };
   }, [staticView, effectiveAddress, address]);
@@ -577,6 +681,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
           textWidgetText: textToSave,
           imageWidgetOptions: { ...imageWidgetOptions },
           widgetOutline: { ...widgetOutline },
+          widgetBorder: { ...widgetBorder },
         },
       });
       if (ok) {
@@ -590,7 +695,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
       setSaveStatus('error');
       setTimeout(() => setSaveStatus(null), 3000);
     }
-  }, [address, placements, profileBlockNftImages, imageWidgetImages, textWidgetText, imageWidgetOptions, widgetOutline]);
+  }, [address, placements, profileBlockNftImages, imageWidgetImages, textWidgetText, imageWidgetOptions, widgetOutline, widgetBorder]);
 
   const startUploadFor = useCallback((instanceId) => {
     if (!editMode) return;
@@ -958,10 +1063,15 @@ export default function ProfileBuilderPage({ staticView = false }) {
             const isProfileBlock = item.type === 'rectangle';
             const nftImage = profileBlockNftImages[item.instanceId];
             const isImageWidget = item.type === 'square-small' || item.type === 'image-3x5' || item.type === 'image-8x5' || item.type === 'image-12x10';
+            const supportsBorder = isImageWidget || item.type === 'kodacams' || item.type === 'bops' || item.type === 'stats';
             const imageWidgetUrl = imageWidgetImages[item.instanceId];
             const outlineCfg = widgetOutline[item.instanceId];
             const hasOutline = (outlineCfg && outlineCfg.enabled) || isProfileBlock;
             const outlineShape = isProfileBlock ? 'square' : (outlineCfg?.shape === 'square' ? 'square' : 'rounded');
+            const borderCfg = widgetBorder[item.instanceId];
+            const hasBorder = supportsBorder && !!borderCfg?.enabled;
+            const borderShape = borderCfg?.shape === 'square' ? 'square' : 'rounded';
+            const effectiveShape = (outlineShape === 'square' || (hasBorder && borderShape === 'square')) ? 'square' : 'rounded';
             const baseRadius = isProfileBlock ? 0 : '0.375rem';
             return (
               <div
@@ -981,10 +1091,11 @@ export default function ProfileBuilderPage({ staticView = false }) {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  borderRadius: outlineShape === 'square' ? 0 : baseRadius,
+                  borderRadius: effectiveShape === 'square' ? 0 : baseRadius,
                   boxSizing: 'border-box',
                   overflow: 'hidden',
                   border: hasOutline ? '2px solid #fff' : undefined,
+                  boxShadow: hasBorder ? 'inset 0 0 0 2px rgba(255,255,255,0.95)' : undefined,
                   ...(item.type === 'rectangle' && {
                     background: '#1a1a1a',
                     color: '#e5e5e5',
@@ -995,7 +1106,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
                   }),
                   ...(isImageWidget && {
                     borderRadius:
-                      (imageWidgetOptions[item.instanceId]?.corners === 'square' || outlineShape === 'square')
+                      (imageWidgetOptions[item.instanceId]?.corners === 'square' || effectiveShape === 'square')
                         ? 0
                         : '0.375rem',
                   }),
@@ -1578,6 +1689,14 @@ export default function ProfileBuilderPage({ staticView = false }) {
                       >
                         Square
                       </button>
+                      <BorderDropdown
+                        instanceId={selectedImageInstanceId}
+                        value={selectedImageInstanceId ? widgetBorder[selectedImageInstanceId] : null}
+                        onChange={(next) => {
+                          if (!selectedImageInstanceId) return;
+                          setWidgetBorder((prev) => ({ ...prev, [selectedImageInstanceId]: next }));
+                        }}
+                      />
                       <OutlineDropdown
                         instanceId={selectedImageInstanceId}
                         value={selectedImageInstanceId ? widgetOutline[selectedImageInstanceId] : null}
@@ -1633,6 +1752,16 @@ export default function ProfileBuilderPage({ staticView = false }) {
                       Widget options (focus a widget on the grid first):
                     </p>
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+                      {(selectedCategory === 'kodacams' || selectedCategory === 'bops' || selectedCategory === 'stats') && (
+                        <BorderDropdown
+                          instanceId={selectedWidgetInstanceId}
+                          value={selectedWidgetInstanceId ? widgetBorder[selectedWidgetInstanceId] : null}
+                          onChange={(next) => {
+                            if (!selectedWidgetInstanceId) return;
+                            setWidgetBorder((prev) => ({ ...prev, [selectedWidgetInstanceId]: next }));
+                          }}
+                        />
+                      )}
                       <OutlineDropdown
                         instanceId={selectedWidgetInstanceId}
                         value={selectedWidgetInstanceId ? widgetOutline[selectedWidgetInstanceId] : null}
