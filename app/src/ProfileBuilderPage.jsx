@@ -877,7 +877,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
   }, [placements]);
 
   const handleMouseMoveResize = useCallback((e) => {
-    if (!resizingInstanceId || !resizeStartRef.current) return;
+    if (!resizeStartRef.current) return;
     const { instanceId, startX, startY, startCols, startRows } = resizeStartRef.current;
     const deltaPxX = e.clientX - startX;
     const deltaPxY = e.clientY - startY;
@@ -892,7 +892,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
       return { ...prev, [instanceId]: { ...p, cols: newCols, rows: newRows } };
     });
     resizeStartRef.current = { instanceId, startX: e.clientX, startY: e.clientY, startCols: newCols, startRows: newRows };
-  }, [resizingInstanceId, gridSize.cols, gridSize.rows, cellWidthPx, cellHeightPx]);
+  }, [gridSize.cols, gridSize.rows, cellWidthPx, cellHeightPx]);
 
   const placeOnGrid = useCallback(
     (draggedIdOrNew, col, row) => {
@@ -970,7 +970,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
 
   const handleMouseUp = useCallback(
     (e) => {
-      if (resizingInstanceId) {
+      if (resizeStartRef.current) {
         setResizingInstanceId(null);
         resizeStartRef.current = null;
         return;
@@ -999,12 +999,12 @@ export default function ProfileBuilderPage({ staticView = false }) {
 
       setDraggedId(null);
     },
-    [draggedId, placements, placeOnGrid, resizingInstanceId]
+    [draggedId, placements, placeOnGrid]
   );
 
   const handleMouseMove = useCallback(
     (e) => {
-      if (resizingInstanceId) {
+      if (resizeStartRef.current) {
         handleMouseMoveResize(e);
         return;
       }
@@ -1041,7 +1041,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
         }
       }
     },
-    [draggedId, placements, gridSize.cols, gridSize.rows, resizingInstanceId, handleMouseMoveResize]
+    [draggedId, placements, gridSize.cols, gridSize.rows, handleMouseMoveResize]
   );
 
   useEffect(() => {
