@@ -52,15 +52,17 @@ const PANEL_ITEMS = [
   { id: 'stats-4x2', type: 'stats', cols: 4, rows: 2, label: 'Stat Block | 4x2' },
   { id: 'badges-8x2', type: 'badges', cols: 8, rows: 2, label: 'Badge Panel | 8x2' },
   { id: 'sq-l', type: 'square-large', cols: 2, rows: 2 },
+  { id: 'divider-8x1', type: 'divider', cols: 8, rows: 1, label: 'Divider' },
 ];
 
-const WIDGET_CATEGORIES = [
-  { id: 'images', label: 'Images', templateIds: ['img-3x5', 'sq-s', 'img-8x5', 'img-12x10'] },
-  { id: 'textboxes', label: 'Text Boxes', templateIds: ['txt-6x10', 'txt-8x10'] },
-  { id: 'kodacams', label: 'Kodacams', templateIds: ['kodacams-6x6'] },
-  { id: 'bops', label: 'Bops', templateIds: ['bops-4x5'] },
-  { id: 'stats', label: 'Stats', templateIds: ['stats-4x2'] },
-  { id: 'badges', label: 'Badges', templateIds: ['badges-8x2'] },
+/** Widgets shown in Add Widget panel: Text Block, Image, NFT, Divider, Badge, Bops. */
+const ADD_WIDGET_ITEMS = [
+  { id: 'txt-6x10', label: 'Text Block', icon: 'T' },
+  { id: 'sq-s', label: 'Image', icon: '🖼' },
+  { id: 'rect', label: 'NFT', icon: '◇' },
+  { id: 'divider-8x1', label: 'Divider', icon: '—' },
+  { id: 'badges-8x2', label: 'Badge', icon: '🏷' },
+  { id: 'bops-4x5', label: 'Bops', icon: '◎' },
 ];
 
 /** Backwards compatibility: old saved layouts may have badges-6x2; treat as 8x2. */
@@ -139,7 +141,9 @@ function wouldOverlapPlacements(placements, excludeInstanceId, col, row, cols, r
     if (instanceId === excludeInstanceId) continue;
     const template = PANEL_ITEMS.find((t) => t.id === getTemplateIdForLookup(p.templateId));
     if (!template) continue;
-    if (rectanglesOverlap(col, row, cols, rows, p.col, p.row, template.cols, template.rows)) {
+    const pCols = p.cols ?? template.cols;
+    const pRows = p.rows ?? template.rows;
+    if (rectanglesOverlap(col, row, cols, rows, p.col, p.row, pCols, pRows)) {
       return true;
     }
   }
@@ -157,7 +161,9 @@ function filterNonOverlappingPlacements(placements) {
   for (const [instanceId, p] of rectFirst) {
     const template = PANEL_ITEMS.find((t) => t.id === getTemplateIdForLookup(p.templateId));
     if (!template) continue;
-    if (wouldOverlapPlacements(kept, null, p.col, p.row, template.cols, template.rows)) continue;
+    const pCols = p.cols ?? template.cols;
+    const pRows = p.rows ?? template.rows;
+    if (wouldOverlapPlacements(kept, null, p.col, p.row, pCols, pRows)) continue;
     kept[instanceId] = p;
   }
   return kept;
@@ -572,19 +578,15 @@ export default function ProfileBuilderPage({ staticView = false }) {
   const [profileBadgeUrl, setProfileBadgeUrl] = useState(null); // badge image URL for profile owner (NFT-holder badge)
   const [saveStatus, setSaveStatus] = useState(null); // null | 'saving' | 'success' | 'error'
   const [editMode, setEditMode] = useState(!staticView); // builder: true; static profile: always false
-  const [selectedCategory, setSelectedCategory] = useState(null); // null | 'images' | 'textboxes' | 'all'
+  const [rightPanelTab, setRightPanelTab] = useState('add'); // 'add' | 'style'
+  const [resizingInstanceId, setResizingInstanceId] = useState(null); // when dragging resize handle
   const uploadInputRef = useRef(null);
   const uploadForInstanceRef = useRef(null);
   const layoutLoadedRef = useRef(false);
 
   const setPanelCategoryForType = useCallback((type) => {
     if (!type) return;
-    if (type === 'textbox') setSelectedCategory('textboxes');
-    else if (type === 'kodacams') setSelectedCategory('kodacams');
-    else if (type === 'bops') setSelectedCategory('bops');
-    else if (type === 'stats') setSelectedCategory('stats');
-    else if (type === 'badges') setSelectedCategory('badges');
-    else if (type === 'square-small' || type === 'image-3x5' || type === 'image-8x5' || type === 'image-12x10') setSelectedCategory('images');
+    setRightPanelTab('style');
   }, []);
 
   // Profile (username, xUsername): from userData when builder, from profile_page when staticView
@@ -862,6 +864,36 @@ export default function ProfileBuilderPage({ staticView = false }) {
       ? (gridInnerSize.height - 2 * PADDING) / gridSize.rows
       : CELL_SIZE;
 
+  const resizeStartRef = useRef(null); // { instanceId, startX, startY, startCols, startRows }
+  const handleResizeStart = useCallback((instanceId, clientX, clientY) => {
+    const p = placements[instanceId];
+    if (!p) return;
+    const template = PANEL_ITEMS.find((t) => t.id === getTemplateIdForLookup(p.templateId));
+    if (!template) return;
+    const cols = p.cols ?? template.cols;
+    const rows = p.rows ?? template.rows;
+    setResizingInstanceId(instanceId);
+    resizeStartRef.current = { instanceId, startX: clientX, startY: clientY, startCols: cols, startRows: rows };
+  }, [placements]);
+
+  const handleMouseMoveResize = useCallback((e) => {
+    if (!resizingInstanceId || !resizeStartRef.current) return;
+    const { instanceId, startX, startY, startCols, startRows } = resizeStartRef.current;
+    const deltaPxX = e.clientX - startX;
+    const deltaPxY = e.clientY - startY;
+    const gridCols = Math.round(deltaPxX / cellWidthPx) || 0;
+    const gridRows = Math.round(deltaPxY / cellHeightPx) || 0;
+    const newCols = Math.max(1, Math.min(gridSize.cols, startCols + gridCols));
+    const newRows = Math.max(1, Math.min(gridSize.rows, startRows + gridRows));
+    setPlacements((prev) => {
+      const p = prev[instanceId];
+      if (!p) return prev;
+      if (wouldOverlapPlacements(prev, instanceId, p.col, p.row, newCols, newRows)) return prev;
+      return { ...prev, [instanceId]: { ...p, cols: newCols, rows: newRows } };
+    });
+    resizeStartRef.current = { instanceId, startX: e.clientX, startY: e.clientY, startCols: newCols, startRows: newRows };
+  }, [resizingInstanceId, gridSize.cols, gridSize.rows, cellWidthPx, cellHeightPx]);
+
   const placeOnGrid = useCallback(
     (draggedIdOrNew, col, row) => {
       const isNew = typeof draggedIdOrNew === 'string' && draggedIdOrNew.startsWith('new:');
@@ -881,7 +913,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
         setPlacements((prev) => {
           if (wouldOverlapPlacements(prev, null, c, r, item.cols, item.rows)) return prev;
           const instanceId = `${templateId}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-          return { ...prev, [instanceId]: { col: c, row: r, templateId: item.id } };
+          return { ...prev, [instanceId]: { col: c, row: r, templateId: item.id, cols: item.cols, rows: item.rows } };
         });
         return;
       }
@@ -892,14 +924,16 @@ export default function ProfileBuilderPage({ staticView = false }) {
           if (!existing) return prev;
           const template = PANEL_ITEMS.find((i) => i.id === getTemplateIdForLookup(existing.templateId));
           if (!template) return prev;
+          const effCols = existing.cols ?? template.cols;
+          const effRows = existing.rows ?? template.rows;
           const { col: c, row: r } = clampCell(
-            template,
+            { ...template, cols: effCols, rows: effRows },
             col,
             row,
             gridSize.cols,
             gridSize.rows
           );
-          if (wouldOverlapPlacements(prev, draggedIdOrNew, c, r, template.cols, template.rows)) return prev;
+          if (wouldOverlapPlacements(prev, draggedIdOrNew, c, r, effCols, effRows)) return prev;
           return {
             ...prev,
             [draggedIdOrNew]: { ...existing, col: c, row: r },
@@ -936,6 +970,11 @@ export default function ProfileBuilderPage({ staticView = false }) {
 
   const handleMouseUp = useCallback(
     (e) => {
+      if (resizingInstanceId) {
+        setResizingInstanceId(null);
+        resizeStartRef.current = null;
+        return;
+      }
       if (!draggedId) return;
 
       const overGrid = isOverElement(
@@ -960,11 +999,15 @@ export default function ProfileBuilderPage({ staticView = false }) {
 
       setDraggedId(null);
     },
-    [draggedId, placements, placeOnGrid]
+    [draggedId, placements, placeOnGrid, resizingInstanceId]
   );
 
   const handleMouseMove = useCallback(
     (e) => {
+      if (resizingInstanceId) {
+        handleMouseMoveResize(e);
+        return;
+      }
       if (!draggedId) return;
 
       if (
@@ -980,23 +1023,25 @@ export default function ProfileBuilderPage({ staticView = false }) {
           gridSize.rows
         );
         const placement = placements[draggedId];
-        const item = PANEL_ITEMS.find((i) => i.id === getTemplateIdForLookup(placement.templateId));
-        if (item) {
+        const template = PANEL_ITEMS.find((i) => i.id === getTemplateIdForLookup(placement.templateId));
+        if (template) {
+          const effCols = placement.cols ?? template.cols;
+          const effRows = placement.rows ?? template.rows;
           const { col: c, row: r } = clampCell(
-            item,
+            { ...template, cols: effCols, rows: effRows },
             col,
             row,
             gridSize.cols,
             gridSize.rows
           );
           setPlacements((prev) => {
-            if (wouldOverlapPlacements(prev, draggedId, c, r, item.cols, item.rows)) return prev;
+            if (wouldOverlapPlacements(prev, draggedId, c, r, effCols, effRows)) return prev;
             return { ...prev, [draggedId]: { ...placement, col: c, row: r } };
           });
         }
       }
     },
-    [draggedId, placements, gridSize.cols, gridSize.rows]
+    [draggedId, placements, gridSize.cols, gridSize.rows, resizingInstanceId, handleMouseMoveResize]
   );
 
   useEffect(() => {
@@ -1011,16 +1056,14 @@ export default function ProfileBuilderPage({ staticView = false }) {
   const itemsOnGrid = Object.entries(placements)
     .map(([instanceId, p]) => {
       const template = PANEL_ITEMS.find((t) => t.id === getTemplateIdForLookup(p.templateId));
-      return template ? { instanceId, ...template, col: p.col, row: p.row } : null;
+      if (!template) return null;
+      const cols = p.cols ?? template.cols;
+      const rows = p.rows ?? template.rows;
+      return { instanceId, ...template, col: p.col, row: p.row, cols, rows };
     })
     .filter(Boolean);
 
   // User panel is always on the grid and not in the panel; other widgets are draggable from the panel
-  const selectedCategoryDef = selectedCategory ? WIDGET_CATEGORIES.find((c) => c.id === selectedCategory) : null;
-  const panelItemsToShow = selectedCategoryDef
-    ? PANEL_ITEMS.filter((item) => selectedCategoryDef.templateIds.includes(item.id))
-    : [];
-
   // On /profile (staticView) always show profile mode; Edit/Profile toggle only applies in builder
   const effectiveEditMode = staticView ? false : editMode;
 
@@ -1495,8 +1538,35 @@ export default function ProfileBuilderPage({ staticView = false }) {
                       });
                     })()}
                   </div>
+                ) : item.type === 'divider' ? (
+                  <div style={{ width: '100%', height: 0, borderTop: '2px solid rgba(255,255,255,0.4)', alignSelf: 'center' }} />
                 ) : (
                   item.label || ''
+                )}
+                {effectiveEditMode && !isProfileBlock && (
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    title="Resize"
+                    onMouseDown={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      handleResizeStart(item.instanceId, e.clientX, e.clientY);
+                    }}
+                    style={{
+                      position: 'absolute',
+                      right: 0,
+                      bottom: 0,
+                      width: 20,
+                      height: 20,
+                      cursor: 'nwse-resize',
+                      zIndex: 10,
+                      borderLeft: '2px solid rgba(255,255,255,0.5)',
+                      borderTop: '2px solid rgba(255,255,255,0.5)',
+                      borderTopLeftRadius: 4,
+                      boxSizing: 'border-box',
+                    }}
+                  />
                 )}
               </div>
             );
@@ -1571,23 +1641,11 @@ export default function ProfileBuilderPage({ staticView = false }) {
             flexDirection: 'column',
           }}
         >
-          <h2
-            style={{
-              fontSize: '1.1rem',
-              fontWeight: 700,
-              margin: '0 0 1rem 0',
-              letterSpacing: '0.02em',
-              color: '#fff',
-            }}
-          >
-            Profile Page Widgets
-          </h2>
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: 8,
-              paddingTop: 16,
               paddingBottom: 16,
               borderBottom: '1px solid rgba(0,0,0,0.3)',
               flexWrap: 'wrap',
@@ -1628,203 +1686,149 @@ export default function ProfileBuilderPage({ staticView = false }) {
               Profile Mode
             </button>
           </div>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr 1fr',
-              gap: 8,
-              paddingTop: 16,
-              paddingBottom: 16,
-              borderBottom: '1px solid rgba(0,0,0,0.3)',
-            }}
-          >
-            {WIDGET_CATEGORIES.map((cat) => (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => setSelectedCategory(cat.id)}
-                style={{
-                  width: '100%',
-                  minHeight: 44,
-                  padding: '8px 6px',
-                  borderRadius: 6,
-                  border: '1px solid rgba(255,255,255,0.25)',
-                  background: selectedCategory === cat.id ? '#16a34a' : 'rgba(255,255,255,0.1)',
-                  color: '#fff',
-                  cursor: 'pointer',
-                  fontSize: '0.7rem',
-                  fontWeight: 600,
-                  textAlign: 'center',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxSizing: 'border-box',
-                  lineHeight: 1.2,
-                  wordBreak: 'break-word',
-                }}
-              >
-                {cat.label}
-              </button>
-            ))}
-          </div>
-          {selectedCategory && (
-            <>
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  paddingTop: 16,
-                  paddingBottom: 16,
-                  flexShrink: 0,
-                }}
-              >
-                <p
-                  style={{
-                    fontSize: '0.8rem',
-                    color: 'rgba(255,255,255,0.7)',
-                    marginTop: 0,
-                    marginBottom: 8,
-                  }}
-                >
-                  Drag/drop onto the grid
-                </p>
-                <div
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 8,
-                    flexShrink: 0,
-                  }}
-                >
-                {panelItemsToShow.map((item) => (
-              <div
-                key={item.id}
-                className="profile-builder-panel-item"
-                data-type={item.type}
-                style={{
-                cursor: editMode ? 'grab' : 'default',
-                userSelect: 'none',
-                flexShrink: 0,
-                width: '100%',
-                  height: 28,
-                  borderRadius: 6,
-                  background: 'linear-gradient(180deg, #3a3a3a 0%, #2a2a2a 50%, #222 100%)',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  color: 'rgba(255,255,255,0.95)',
-                  fontWeight: 500,
-                  fontSize: '0.8rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  textAlign: 'center',
-                  padding: '0 10px',
-                  boxShadow: '0 1px 0 rgba(255,255,255,0.06)',
-                }}
-              onMouseDown={(e) => {
-                if (!editMode) return;
-                e.preventDefault();
-                setDraggedId(`new:${item.id}`);
+          {/* Add Widget / Style tabs */}
+          <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid rgba(255,255,255,0.12)', marginBottom: 12 }}>
+            <button
+              type="button"
+              onClick={() => setRightPanelTab('add')}
+              style={{
+                flex: 1,
+                padding: '10px 12px',
+                background: 'transparent',
+                border: 'none',
+                borderBottom: rightPanelTab === 'add' ? '2px solid #a855f7' : '2px solid transparent',
+                color: rightPanelTab === 'add' ? '#e9d5ff' : 'rgba(255,255,255,0.7)',
+                cursor: 'pointer',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
               }}
-              >
-                {item.label || ''}
+            >
+              <span style={{ fontSize: '1rem' }}>+</span>
+              Add Widget
+            </button>
+            <button
+              type="button"
+              onClick={() => setRightPanelTab('style')}
+              style={{
+                flex: 1,
+                padding: '10px 12px',
+                background: 'transparent',
+                border: 'none',
+                borderBottom: rightPanelTab === 'style' ? '2px solid #a855f7' : '2px solid transparent',
+                color: rightPanelTab === 'style' ? '#e9d5ff' : 'rgba(255,255,255,0.7)',
+                cursor: 'pointer',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+              }}
+            >
+              <span style={{ fontSize: '0.95rem' }}>🖌</span>
+              Style
+            </button>
+          </div>
+          {rightPanelTab === 'add' ? (
+            <>
+              <h3 style={{ fontSize: '0.7rem', fontWeight: 700, color: 'rgba(255,255,255,0.5)', margin: '0 0 10px 0', letterSpacing: '0.08em' }}>
+                WIDGETS
+              </h3>
+              <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)', marginTop: 0, marginBottom: 8 }}>
+                Drag onto the grid
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {ADD_WIDGET_ITEMS.map((item) => (
+                  <div
+                    key={item.id}
+                    className="profile-builder-panel-item"
+                    data-type={item.id}
+                    style={{
+                      cursor: editMode ? 'grab' : 'default',
+                      userSelect: 'none',
+                      minHeight: 44,
+                      borderRadius: 8,
+                      background: 'rgba(255,255,255,0.08)',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      color: 'rgba(255,255,255,0.95)',
+                      fontWeight: 500,
+                      fontSize: '0.85rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'flex-start',
+                      gap: 10,
+                      padding: '10px 14px',
+                      boxSizing: 'border-box',
+                    }}
+                    onMouseDown={(e) => {
+                      if (!editMode) return;
+                      e.preventDefault();
+                      setDraggedId(`new:${item.id}`);
+                    }}
+                  >
+                    <span style={{ fontSize: '1.1rem', opacity: 0.9 }}>{item.icon}</span>
+                    {item.label}
+                  </div>
+                ))}
               </div>
-            ))}
-                </div>
-              </div>
-              {selectedCategory === 'images' && (
-                <>
-                  <div style={{ borderTop: '1px solid rgba(0,0,0,0.3)' }} />
-                  <div style={{ paddingTop: 16, paddingBottom: 16, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', marginTop: 0, marginBottom: 6 }}>
-                      Image options (focus an image on the grid first):
-                    </p>
-                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
-                      <BorderDropdown
-                        instanceId={selectedImageInstanceId}
-                        value={selectedImageInstanceId ? widgetBorder[selectedImageInstanceId] : null}
-                        onChange={(next) => {
-                          if (!selectedImageInstanceId) return;
-                          setWidgetBorder((prev) => ({ ...prev, [selectedImageInstanceId]: next }));
-                        }}
-                      />
-                      <OutlineDropdown
-                        instanceId={selectedImageInstanceId}
-                        value={selectedImageInstanceId ? widgetOutline[selectedImageInstanceId] : null}
-                        onChange={(next) => {
-                          if (!selectedImageInstanceId) return;
-                          setWidgetOutline((prev) => ({ ...prev, [selectedImageInstanceId]: next }));
-                        }}
-                      />
-                    </div>
-                  </div>
-                </>
-              )}
-              {selectedCategory === 'textboxes' && (
-                <>
-                  <div style={{ borderTop: '1px solid rgba(0,0,0,0.3)' }} />
-                  <div style={{ paddingTop: 16, paddingBottom: 16, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', marginTop: 0, marginBottom: 6 }}>
-                      Format text (focus a text box on the grid first):
-                    </p>
-                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
-                    <button type="button" title="Bold" aria-label="Bold" onClick={() => { document.execCommand('bold', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}><IconBold /></button>
-                    <button type="button" title="Italic" aria-label="Italic" onClick={() => { document.execCommand('italic', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}><IconItalic /></button>
-                    <button type="button" title="Underline" aria-label="Underline" onClick={() => { document.execCommand('underline', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}><IconUnderline /></button>
-                    <button type="button" title="Bullet list" aria-label="Bullet list" onClick={() => { document.execCommand('insertUnorderedList', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}><IconBullets /></button>
-                    <button type="button" title="Numbered list" aria-label="Numbered list" onClick={() => { document.execCommand('insertOrderedList', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}><IconNumbered /></button>
-                    </div>
-                    <div style={{ height: 10 }} />
-                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
-                      <button type="button" title="Align left" aria-label="Align left" onClick={() => { document.execCommand('justifyLeft', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}><IconAlignLeft /></button>
-                      <button type="button" title="Align center" aria-label="Align center" onClick={() => { document.execCommand('justifyCenter', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}><IconAlignCenter /></button>
-                      <button type="button" title="Align right" aria-label="Align right" onClick={() => { document.execCommand('justifyRight', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}><IconAlignRight /></button>
-                      <button type="button" title="Justify" aria-label="Justify" onClick={() => { document.execCommand('justifyFull', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}><IconJustify /></button>
-                    </div>
-                    <div style={{ height: 10 }} />
-                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
-                      <OutlineDropdown
-                        instanceId={selectedWidgetInstanceId}
-                        value={selectedWidgetInstanceId ? widgetOutline[selectedWidgetInstanceId] : null}
-                        onChange={(next) => {
-                          if (!selectedWidgetInstanceId) return;
-                          setWidgetOutline((prev) => ({ ...prev, [selectedWidgetInstanceId]: next }));
-                        }}
-                      />
-                    </div>
-                  </div>
-                </>
-              )}
-              {(selectedCategory === 'kodacams' || selectedCategory === 'bops' || selectedCategory === 'stats' || selectedCategory === 'badges') && (
-                <>
-                  <div style={{ borderTop: '1px solid rgba(0,0,0,0.3)' }} />
-                  <div style={{ paddingTop: 16, paddingBottom: 16, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', marginTop: 0, marginBottom: 6 }}>
-                      Widget options (focus a widget on the grid first):
-                    </p>
-                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
-                      {(selectedCategory === 'kodacams' || selectedCategory === 'bops' || selectedCategory === 'stats') && (
-                        <BorderDropdown
-                          instanceId={selectedWidgetInstanceId}
-                          value={selectedWidgetInstanceId ? widgetBorder[selectedWidgetInstanceId] : null}
-                          onChange={(next) => {
-                            if (!selectedWidgetInstanceId) return;
-                            setWidgetBorder((prev) => ({ ...prev, [selectedWidgetInstanceId]: next }));
-                          }}
-                        />
-                      )}
-                      <OutlineDropdown
-                        instanceId={selectedWidgetInstanceId}
-                        value={selectedWidgetInstanceId ? widgetOutline[selectedWidgetInstanceId] : null}
-                        onChange={(next) => {
-                          if (!selectedWidgetInstanceId) return;
-                          setWidgetOutline((prev) => ({ ...prev, [selectedWidgetInstanceId]: next }));
-                        }}
-                      />
-                    </div>
-                  </div>
-                </>
-              )}
             </>
+          ) : (
+            (() => {
+              const selectedPlacement = selectedWidgetInstanceId ? placements[selectedWidgetInstanceId] : null;
+              const selectedTemplate = selectedPlacement ? PANEL_ITEMS.find((t) => t.id === getTemplateIdForLookup(selectedPlacement.templateId)) : null;
+              const selectedType = selectedTemplate?.type;
+              const isImageType = selectedType === 'square-small' || selectedType === 'image-3x5' || selectedType === 'image-8x5' || selectedType === 'image-12x10';
+              const isTextboxType = selectedType === 'textbox';
+              const supportsBorderType = isImageType || selectedType === 'kodacams' || selectedType === 'bops' || selectedType === 'stats';
+              const showOutline = selectedType && selectedType !== 'divider';
+              if (!selectedWidgetInstanceId || !selectedType) {
+                return (
+                  <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
+                    Select a widget on the grid to style it.
+                  </p>
+                );
+              }
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {isTextboxType && (
+                    <>
+                      <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Format text</p>
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                        <button type="button" title="Bold" aria-label="Bold" onClick={() => { document.execCommand('bold', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}><IconBold /></button>
+                        <button type="button" title="Italic" aria-label="Italic" onClick={() => { document.execCommand('italic', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}><IconItalic /></button>
+                        <button type="button" title="Underline" aria-label="Underline" onClick={() => { document.execCommand('underline', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}><IconUnderline /></button>
+                        <button type="button" title="Bullet list" aria-label="Bullet list" onClick={() => { document.execCommand('insertUnorderedList', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}><IconBullets /></button>
+                        <button type="button" title="Numbered list" aria-label="Numbered list" onClick={() => { document.execCommand('insertOrderedList', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}><IconNumbered /></button>
+                      </div>
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                        <button type="button" title="Align left" onClick={() => { document.execCommand('justifyLeft', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}><IconAlignLeft /></button>
+                        <button type="button" title="Align center" onClick={() => { document.execCommand('justifyCenter', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}><IconAlignCenter /></button>
+                        <button type="button" title="Align right" onClick={() => { document.execCommand('justifyRight', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}><IconAlignRight /></button>
+                        <button type="button" title="Justify" onClick={() => { document.execCommand('justifyFull', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}><IconJustify /></button>
+                      </div>
+                    </>
+                  )}
+                  {supportsBorderType && (
+                    <BorderDropdown
+                      instanceId={selectedWidgetInstanceId}
+                      value={widgetBorder[selectedWidgetInstanceId] ?? null}
+                      onChange={(next) => setWidgetBorder((prev) => ({ ...prev, [selectedWidgetInstanceId]: next }))}
+                    />
+                  )}
+                  {showOutline && (
+                    <OutlineDropdown
+                      instanceId={selectedWidgetInstanceId}
+                      value={widgetOutline[selectedWidgetInstanceId] ?? null}
+                      onChange={(next) => setWidgetOutline((prev) => ({ ...prev, [selectedWidgetInstanceId]: next }))}
+                    />
+                  )}
+                </div>
+              );
+            })()
           )}
           <div
             style={{
