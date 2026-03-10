@@ -351,6 +351,8 @@ function OutlineDropdown({ instanceId, value, onChange }) {
           opacity: instanceId ? 1 : 0.5,
         }}
       >
+        <span style={{ fontSize: '0.75rem', fontWeight: 700, lineHeight: 1 }}>Outline</span>
+        <span style={{ opacity: 0.6, lineHeight: 1 }} aria-hidden>|</span>
         <CurrentIcon />
       </button>
       {open && instanceId && (
