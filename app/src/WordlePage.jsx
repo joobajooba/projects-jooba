@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { answers, all } from 'wordle-words/index.mjs';
 
 const WORD_LEN = 5;
 const MAX_GUESSES = 6;
 const EPOCH_UTC = Date.UTC(2021, 5, 19); // 2021-06-19 (commonly used Wordle epoch)
+const WORDLIST_URL = 'https://raw.githubusercontent.com/chantastic/wordle-words/master/index.mjs';
+const WORDLIST_CACHE_KEY = 'wordle:wordlists:v1';
+const WORDLIST_CACHE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 function dayIndexUtc(now = new Date()) {
   const t = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
@@ -47,9 +49,13 @@ const KEY_ROWS = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
 
 export default function WordlePage() {
   const idx = useMemo(() => dayIndexUtc(), []);
-  const solution = useMemo(() => answers[(idx % answers.length + answers.length) % answers.length], [idx]);
+  const [lists, setLists] = useState({ status: 'loading', answers: [], all: [] }); // status: loading|ok|error
+  const solution = useMemo(() => {
+    if (!lists.answers.length) return '';
+    return lists.answers[(idx % lists.answers.length + lists.answers.length) % lists.answers.length];
+  }, [idx, lists.answers]);
   const storageKey = useMemo(() => `wordle:${idx}`, [idx]);
-  const validSet = useMemo(() => new Set(all), []);
+  const validSet = useMemo(() => new Set(lists.all), [lists.all]);
 
   const [guesses, setGuesses] = useState([]); // array of strings
   const [current, setCurrent] = useState('');
@@ -97,6 +103,7 @@ export default function WordlePage() {
 
   const submit = () => {
     if (done) return;
+    if (!solution) return;
     const g = current.toLowerCase();
     if (g.length !== WORD_LEN) {
       setMessage('Not enough letters.');
@@ -139,6 +146,68 @@ export default function WordlePage() {
     return () => window.removeEventListener('keydown', handler);
   });
 
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const cachedRaw = localStorage.getItem(WORDLIST_CACHE_KEY);
+        if (cachedRaw) {
+          const parsed = JSON.parse(cachedRaw);
+          if (
+            parsed &&
+            Array.isArray(parsed.answers) &&
+            Array.isArray(parsed.all) &&
+            typeof parsed.savedAt === 'number' &&
+            Date.now() - parsed.savedAt < WORDLIST_CACHE_MAX_AGE_MS
+          ) {
+            setLists({ status: 'ok', answers: parsed.answers, all: parsed.all });
+            return;
+          }
+        }
+      } catch {
+        // ignore
+      }
+
+      try {
+        const res = await fetch(WORDLIST_URL, { cache: 'force-cache' });
+        const text = await res.text();
+        if (cancelled) return;
+
+        const parseBlock = (name) => {
+          const start = text.indexOf(`export const ${name} = [`);
+          if (start < 0) return [];
+          const after = text.slice(start);
+          const end = after.indexOf('];');
+          if (end < 0) return [];
+          const block = after.slice(0, end);
+          const words = [];
+          block.split('\n').forEach((line) => {
+            const m = line.match(/\"([a-z]{5})\"/);
+            if (m) words.push(m[1]);
+          });
+          return words;
+        };
+
+        const answers = parseBlock('answers');
+        const rest = parseBlock('rest');
+        const all = [...answers, ...rest];
+        if (!answers.length || !all.length) throw new Error('wordlist_parse_failed');
+
+        setLists({ status: 'ok', answers, all });
+        try {
+          localStorage.setItem(WORDLIST_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), answers, all }));
+        } catch {
+          // ignore
+        }
+      } catch (e) {
+        if (cancelled) return;
+        setLists({ status: 'error', answers: [], all: [] });
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
   const rows = useMemo(() => {
     const out = [];
     for (let r = 0; r < MAX_GUESSES; r++) {
@@ -179,6 +248,12 @@ export default function WordlePage() {
         </div>
         <p style={{ marginTop: 0, marginBottom: 14, opacity: 0.8 }}>Daily puzzle</p>
       </div>
+
+      {lists.status !== 'ok' && (
+        <div style={{ width: '100%', maxWidth: 560, opacity: 0.8, marginBottom: 10, textAlign: 'center' }}>
+          {lists.status === 'loading' ? 'Loading word list…' : 'Failed to load word list. Please refresh.'}
+        </div>
+      )}
 
       <div style={{ width: '100%', maxWidth: 560, display: 'flex', justifyContent: 'center' }}>
         <div style={{ display: 'grid', gap: 8 }}>

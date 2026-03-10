@@ -22,8 +22,7 @@
     "siwe": "^3.0.0",
     "tailwindcss": "^4.2.1",
     "viem": "^2.46.1",
-    "wagmi": "^2.19.5",
-    "wordle-words": "^0.0.0"
+    "wagmi": "^2.19.5"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.2.1",
