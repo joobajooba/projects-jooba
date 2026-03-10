@@ -50,7 +50,7 @@ const PANEL_ITEMS = [
   { id: 'kodacams-6x6', type: 'kodacams', cols: 6, rows: 6, label: 'Kodacams | 6x6' },
   { id: 'bops-4x5', type: 'bops', cols: 4, rows: 5, label: 'Bop | 4x5' },
   { id: 'stats-4x2', type: 'stats', cols: 4, rows: 2, label: 'Stat Block | 4x2' },
-  { id: 'badges-6x2', type: 'badges', cols: 6, rows: 2, label: 'Badge Panel | 6x2' },
+  { id: 'badges-8x2', type: 'badges', cols: 8, rows: 2, label: 'Badge Panel | 8x2' },
   { id: 'sq-l', type: 'square-large', cols: 2, rows: 2 },
 ];
 
@@ -60,8 +60,13 @@ const WIDGET_CATEGORIES = [
   { id: 'kodacams', label: 'Kodacams', templateIds: ['kodacams-6x6'] },
   { id: 'bops', label: 'Bops', templateIds: ['bops-4x5'] },
   { id: 'stats', label: 'Stats', templateIds: ['stats-4x2'] },
-  { id: 'badges', label: 'Badges', templateIds: ['badges-6x2'] },
+  { id: 'badges', label: 'Badges', templateIds: ['badges-8x2'] },
 ];
+
+/** Backwards compatibility: old saved layouts may have badges-6x2; treat as 8x2. */
+function getTemplateIdForLookup(templateId) {
+  return templateId === 'badges-6x2' ? 'badges-8x2' : templateId;
+}
 
 function getGridCoords(clientX, clientY, containerRect, cols, rows) {
   const innerW = containerRect.width - 2 * PADDING;
@@ -92,7 +97,7 @@ function rectanglesOverlap(aCol, aRow, aCols, aRows, bCol, bRow, bCols, bRows) {
 function wouldOverlapPlacements(placements, excludeInstanceId, col, row, cols, rows) {
   for (const [instanceId, p] of Object.entries(placements)) {
     if (instanceId === excludeInstanceId) continue;
-    const template = PANEL_ITEMS.find((t) => t.id === p.templateId);
+    const template = PANEL_ITEMS.find((t) => t.id === getTemplateIdForLookup(p.templateId));
     if (!template) continue;
     if (rectanglesOverlap(col, row, cols, rows, p.col, p.row, template.cols, template.rows)) {
       return true;
@@ -110,7 +115,7 @@ function filterNonOverlappingPlacements(placements) {
   });
   const kept = {};
   for (const [instanceId, p] of rectFirst) {
-    const template = PANEL_ITEMS.find((t) => t.id === p.templateId);
+    const template = PANEL_ITEMS.find((t) => t.id === getTemplateIdForLookup(p.templateId));
     if (!template) continue;
     if (wouldOverlapPlacements(kept, null, p.col, p.row, template.cols, template.rows)) continue;
     kept[instanceId] = p;
@@ -845,7 +850,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
         setPlacements((prev) => {
           const existing = prev[draggedIdOrNew];
           if (!existing) return prev;
-          const template = PANEL_ITEMS.find((i) => i.id === existing.templateId);
+          const template = PANEL_ITEMS.find((i) => i.id === getTemplateIdForLookup(existing.templateId));
           if (!template) return prev;
           const { col: c, row: r } = clampCell(
             template,
@@ -935,7 +940,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
           gridSize.rows
         );
         const placement = placements[draggedId];
-        const item = PANEL_ITEMS.find((i) => i.id === placement.templateId);
+        const item = PANEL_ITEMS.find((i) => i.id === getTemplateIdForLookup(placement.templateId));
         if (item) {
           const { col: c, row: r } = clampCell(
             item,
@@ -965,7 +970,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
 
   const itemsOnGrid = Object.entries(placements)
     .map(([instanceId, p]) => {
-      const template = PANEL_ITEMS.find((t) => t.id === p.templateId);
+      const template = PANEL_ITEMS.find((t) => t.id === getTemplateIdForLookup(p.templateId));
       return template ? { instanceId, ...template, col: p.col, row: p.row } : null;
     })
     .filter(Boolean);
@@ -1422,17 +1427,41 @@ export default function ProfileBuilderPage({ staticView = false }) {
                     onFocusInstance={(id) => { setSelectedWidgetInstanceId(id); setSelectedCategory('textboxes'); }}
                   />
                 ) : item.type === 'badges' ? (
-                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap', padding: 8 }}>
-                    {profileBadgeUrl ? (
-                      <img
-                        src={profileBadgeUrl}
-                        alt="Holder badge"
-                        title="Not A Punks Cult / MineBoys holder"
-                        style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
-                      />
-                    ) : (
-                      <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)' }}>{item.label || 'Badges'}</span>
-                    )}
+                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexWrap: 'wrap', padding: 8, boxSizing: 'border-box' }}>
+                    {(() => {
+                      const badgeUrls = profileBadgeUrl ? [profileBadgeUrl] : [];
+                      const slots = 6;
+                      return Array.from({ length: slots }, (_, i) => (
+                        <div
+                          key={i}
+                          style={{
+                            width: 'calc((100% - 30px) / 6)',
+                            minWidth: 28,
+                            maxWidth: 48,
+                            aspectRatio: '1',
+                            borderRadius: 6,
+                            background: badgeUrls[i] ? 'transparent' : 'rgba(255,255,255,0.08)',
+                            border: '1px solid rgba(255,255,255,0.12)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            overflow: 'hidden',
+                            flexShrink: 0,
+                          }}
+                          title={badgeUrls[i] ? 'Holder badge' : 'Empty badge slot'}
+                        >
+                          {badgeUrls[i] ? (
+                            <img
+                              src={badgeUrls[i]}
+                              alt="Badge"
+                              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                            />
+                          ) : (
+                            <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.35)' }}>+</span>
+                          )}
+                        </div>
+                      ));
+                    })()}
                   </div>
                 ) : (
                   item.label || ''
