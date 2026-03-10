@@ -1649,46 +1649,6 @@ export default function ProfileBuilderPage({ staticView = false }) {
                       Image options (focus an image on the grid first):
                     </p>
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
-                      <button
-                        type="button"
-                        title="Rounded corners"
-                        onClick={() => {
-                          if (!selectedImageInstanceId) return;
-                          setImageWidgetOptions((prev) => ({
-                            ...prev,
-                            [selectedImageInstanceId]: {
-                              ...(prev[selectedImageInstanceId] || { corners: 'rounded', border: false }),
-                              corners: 'rounded',
-                            },
-                          }));
-                        }}
-                        style={{
-                          ...sidePanelFormatBtnStyle,
-                          background: (imageWidgetOptions[selectedImageInstanceId]?.corners !== 'square') ? 'rgba(255,255,255,0.2)' : sidePanelFormatBtnStyle.background,
-                        }}
-                      >
-                        Rounded
-                      </button>
-                      <button
-                        type="button"
-                        title="Square corners"
-                        onClick={() => {
-                          if (!selectedImageInstanceId) return;
-                          setImageWidgetOptions((prev) => ({
-                            ...prev,
-                            [selectedImageInstanceId]: {
-                              ...(prev[selectedImageInstanceId] || { corners: 'rounded', border: false }),
-                              corners: 'square',
-                            },
-                          }));
-                        }}
-                        style={{
-                          ...sidePanelFormatBtnStyle,
-                          background: imageWidgetOptions[selectedImageInstanceId]?.corners === 'square' ? 'rgba(255,255,255,0.2)' : sidePanelFormatBtnStyle.background,
-                        }}
-                      >
-                        Square
-                      </button>
                       <BorderDropdown
                         instanceId={selectedImageInstanceId}
                         value={selectedImageInstanceId ? widgetBorder[selectedImageInstanceId] : null}
