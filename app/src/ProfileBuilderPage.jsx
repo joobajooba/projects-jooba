@@ -124,7 +124,7 @@ function isOverElement(clientX, clientY, el) {
 
 const RICH_TEXT_MAX_LENGTH = 4000;
 
-function TextBoxContent({ editMode, instanceId, value, onValueChange, maxChars }) {
+function TextBoxContent({ editMode, instanceId, value, onValueChange, maxChars, onFocusInstance }) {
   const editableRef = useRef(null);
   const lastValueRef = useRef(value);
 
@@ -179,7 +179,8 @@ function TextBoxContent({ editMode, instanceId, value, onValueChange, maxChars }
           contentEditable
           suppressContentEditableWarning
           onInput={syncFromEditable}
-          onMouseDown={(e) => e.stopPropagation()}
+          onFocus={() => onFocusInstance?.(instanceId)}
+          onMouseDown={(e) => { onFocusInstance?.(instanceId); e.stopPropagation(); }}
           data-placeholder="Write something..."
           data-instance-id={instanceId}
           style={{
@@ -253,6 +254,8 @@ export default function ProfileBuilderPage({ staticView = false }) {
   const [textWidgetText, setTextWidgetText] = useState({});
   const [imageWidgetOptions, setImageWidgetOptions] = useState({}); // { [instanceId]: { corners: 'rounded'|'square', border: boolean } }
   const [selectedImageInstanceId, setSelectedImageInstanceId] = useState(null);
+  const [widgetOutline, setWidgetOutline] = useState({}); // { [instanceId]: boolean } white outline toggle for any widget
+  const [selectedWidgetInstanceId, setSelectedWidgetInstanceId] = useState(null);
   const [nftSelectorOpen, setNftSelectorOpen] = useState(false);
   const [nftSelectorForInstance, setNftSelectorForInstance] = useState(null);
   const [nftSelectorTarget, setNftSelectorTarget] = useState('profile'); // 'profile' | 'imageWidget'
@@ -336,6 +339,9 @@ export default function ProfileBuilderPage({ staticView = false }) {
       if (layout?.imageWidgetOptions && typeof layout.imageWidgetOptions === 'object') {
         setImageWidgetOptions(layout.imageWidgetOptions);
       }
+      if (layout?.widgetOutline && typeof layout.widgetOutline === 'object') {
+        setWidgetOutline(layout.widgetOutline);
+      }
     });
     return () => { cancelled = true; };
   }, [staticView, effectiveAddress, address]);
@@ -376,6 +382,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
           imageWidgetImages: persistableImageWidgetImages,
           textWidgetText: textToSave,
           imageWidgetOptions: { ...imageWidgetOptions },
+          widgetOutline: { ...widgetOutline },
         },
       });
       if (ok) {
@@ -389,7 +396,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
       setSaveStatus('error');
       setTimeout(() => setSaveStatus(null), 3000);
     }
-  }, [address, placements, profileBlockNftImages, imageWidgetImages, textWidgetText, imageWidgetOptions]);
+  }, [address, placements, profileBlockNftImages, imageWidgetImages, textWidgetText, imageWidgetOptions, widgetOutline]);
 
   const startUploadFor = useCallback((instanceId) => {
     if (!editMode) return;
@@ -758,6 +765,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
             const nftImage = profileBlockNftImages[item.instanceId];
             const isImageWidget = item.type === 'square-small' || item.type === 'image-3x5' || item.type === 'image-8x5' || item.type === 'image-12x10';
             const imageWidgetUrl = imageWidgetImages[item.instanceId];
+            const hasOutline = !!widgetOutline[item.instanceId] || isProfileBlock;
             return (
               <div
                 key={item.instanceId}
@@ -779,6 +787,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
                   borderRadius: '0.375rem',
                   boxSizing: 'border-box',
                   overflow: 'hidden',
+                  border: hasOutline ? '2px solid #fff' : undefined,
                   ...(item.type === 'rectangle' && {
                     background: '#1a1a1a',
                     color: '#e5e5e5',
@@ -808,6 +817,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
                   if (item.type === 'textbox' && e.target.closest('textarea')) return;
                   e.preventDefault();
                   setDraggedId(item.instanceId);
+                  setSelectedWidgetInstanceId(item.instanceId);
                   if (isImageWidget) setSelectedImageInstanceId(item.instanceId);
                 }}
               >
@@ -854,7 +864,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
                         maxHeight: w,
                         position: 'relative',
                         background: nftImage ? undefined : 'rgba(239,68,68,0.4)',
-                        borderRadius: '0.25rem 0.25rem 0 0',
+                        borderRadius: 0,
                         overflow: 'hidden',
                         display: 'flex',
                         alignItems: 'center',
@@ -957,7 +967,6 @@ export default function ProfileBuilderPage({ staticView = false }) {
                   (() => {
                     const opts = imageWidgetOptions[item.instanceId] || {};
                     const corners = opts.corners !== 'square' ? 'rounded' : 'square';
-                    const hasBorder = !!opts.border;
                     return (
                   <div
                     style={{
@@ -969,7 +978,6 @@ export default function ProfileBuilderPage({ staticView = false }) {
                       justifyContent: 'center',
                       overflow: 'hidden',
                       borderRadius: corners === 'square' ? 0 : '0.375rem',
-                      border: hasBorder ? '2px solid #fff' : undefined,
                       boxSizing: 'border-box',
                     }}
                   >
@@ -1083,6 +1091,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
                     value={textWidgetText[item.instanceId] ?? ''}
                     onValueChange={(v) => setTextWidgetText((prev) => ({ ...prev, [item.instanceId]: v }))}
                     maxChars={item.maxChars}
+                    onFocusInstance={(id) => setSelectedWidgetInstanceId(id)}
                   />
                 ) : (
                   item.label || ''
@@ -1370,24 +1379,21 @@ export default function ProfileBuilderPage({ staticView = false }) {
                       </button>
                       <button
                         type="button"
-                        title="White border"
+                        title="White outline"
                         onClick={() => {
                           if (!selectedImageInstanceId) return;
-                          setImageWidgetOptions((prev) => ({
+                          setWidgetOutline((prev) => ({
                             ...prev,
-                            [selectedImageInstanceId]: {
-                              ...(prev[selectedImageInstanceId] || { corners: 'rounded', border: false }),
-                              border: !prev[selectedImageInstanceId]?.border,
-                            },
+                            [selectedImageInstanceId]: !prev[selectedImageInstanceId],
                           }));
                         }}
                         style={{
                           ...sidePanelFormatBtnStyle,
-                          background: imageWidgetOptions[selectedImageInstanceId]?.border ? 'rgba(255,255,255,0.2)' : sidePanelFormatBtnStyle.background,
-                          border: imageWidgetOptions[selectedImageInstanceId]?.border ? '1px solid rgba(255,255,255,0.5)' : sidePanelFormatBtnStyle.border,
+                          background: widgetOutline[selectedImageInstanceId] ? 'rgba(255,255,255,0.2)' : sidePanelFormatBtnStyle.background,
+                          border: widgetOutline[selectedImageInstanceId] ? '1px solid rgba(255,255,255,0.5)' : sidePanelFormatBtnStyle.border,
                         }}
                       >
-                        Border
+                        Outline
                       </button>
                     </div>
                   </div>
@@ -1406,6 +1412,57 @@ export default function ProfileBuilderPage({ staticView = false }) {
                     <button type="button" title="Underline" onClick={() => { document.execCommand('underline', false, null); syncFocusedTextBoxFromPanel(); }} style={{ ...sidePanelFormatBtnStyle, textDecoration: 'underline' }}>U</button>
                     <button type="button" title="Bullet list" onClick={() => { document.execCommand('insertUnorderedList', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}>•</button>
                     <button type="button" title="Numbered list" onClick={() => { document.execCommand('insertOrderedList', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}>1.</button>
+                    </div>
+                    <div style={{ height: 10 }} />
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+                      <button
+                        type="button"
+                        title="White outline"
+                        onClick={() => {
+                          if (!selectedWidgetInstanceId) return;
+                          setWidgetOutline((prev) => ({
+                            ...prev,
+                            [selectedWidgetInstanceId]: !prev[selectedWidgetInstanceId],
+                          }));
+                        }}
+                        style={{
+                          ...sidePanelFormatBtnStyle,
+                          background: widgetOutline[selectedWidgetInstanceId] ? 'rgba(255,255,255,0.2)' : sidePanelFormatBtnStyle.background,
+                          border: widgetOutline[selectedWidgetInstanceId] ? '1px solid rgba(255,255,255,0.5)' : sidePanelFormatBtnStyle.border,
+                        }}
+                      >
+                        Outline
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+              {(selectedCategory === 'kodacams' || selectedCategory === 'bops' || selectedCategory === 'stats' || selectedCategory === 'badges') && (
+                <>
+                  <div style={{ borderTop: '1px solid rgba(0,0,0,0.3)' }} />
+                  <div style={{ paddingTop: 16, paddingBottom: 16, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', marginTop: 0, marginBottom: 6 }}>
+                      Widget options (focus a widget on the grid first):
+                    </p>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+                      <button
+                        type="button"
+                        title="White outline"
+                        onClick={() => {
+                          if (!selectedWidgetInstanceId) return;
+                          setWidgetOutline((prev) => ({
+                            ...prev,
+                            [selectedWidgetInstanceId]: !prev[selectedWidgetInstanceId],
+                          }));
+                        }}
+                        style={{
+                          ...sidePanelFormatBtnStyle,
+                          background: widgetOutline[selectedWidgetInstanceId] ? 'rgba(255,255,255,0.2)' : sidePanelFormatBtnStyle.background,
+                          border: widgetOutline[selectedWidgetInstanceId] ? '1px solid rgba(255,255,255,0.5)' : sidePanelFormatBtnStyle.border,
+                        }}
+                      >
+                        Outline
+                      </button>
                     </div>
                   </div>
                 </>
