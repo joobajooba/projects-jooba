@@ -1202,9 +1202,9 @@ export default function ProfileBuilderPage({ staticView = false }) {
                 key={i}
                 className="profile-builder-cell"
                 style={{
-                  border: '1px solid rgba(60,60,60,0.8)',
+                  border: '1px solid rgba(35,35,48,0.45)',
                   background:
-                    'radial-gradient(circle at 20% 20%, rgba(50,50,50,0.4), rgba(20,20,20,0.95))',
+                    'radial-gradient(circle at 20% 20%, rgba(40,38,55,0.35), rgba(18,18,22,0.98))',
                 }}
               />
             ))}
@@ -1249,7 +1249,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
                   borderRadius: effectiveShape === 'square' ? 0 : baseRadius,
                   boxSizing: 'border-box',
                   overflow: 'hidden',
-                  border: hasOutline ? '2px solid #fff' : undefined,
+                  border: hasOutline ? '1px solid rgba(255,255,255,0.14)' : undefined,
                   boxShadow: hasBorder ? 'inset 0 0 0 2px rgba(255,255,255,0.95)' : undefined,
                   ...(item.type === 'rectangle' && {
                     background: '#1a1a1a',
@@ -1340,6 +1340,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
                     >
                       {nftImage ? (
                         <img
+                          draggable={false}
                           src={nftImage}
                           alt="Profile"
                           style={{
@@ -1450,6 +1451,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
                   >
                     {imageWidgetUrl ? (
                       <img
+                        draggable={false}
                         src={imageWidgetUrl}
                         alt={item.label || 'Image'}
                         style={{
@@ -1558,7 +1560,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
                     value={textWidgetText[item.instanceId] ?? ''}
                     onValueChange={(v) => setTextWidgetText((prev) => ({ ...prev, [item.instanceId]: v }))}
                     maxChars={item.maxChars}
-                    onFocusInstance={(id) => { setSelectedWidgetInstanceId(id); setSelectedCategory('textboxes'); }}
+                    onFocusInstance={(id) => { setSelectedWidgetInstanceId(id); setRightPanelTab('style'); }}
                   />
                 ) : item.type === 'badges' ? (
                   <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexWrap: 'wrap', padding: 8, boxSizing: 'border-box' }}>
@@ -1597,14 +1599,14 @@ export default function ProfileBuilderPage({ staticView = false }) {
                 {effectiveEditMode && !isProfileBlock && (
                   <>
                     {[
-                      { handle: 'nw', cursor: 'nwse-resize', style: { left: 0, top: 0, width: 14, height: 14, borderRight: '2px solid rgba(255,255,255,0.5)', borderBottom: '2px solid rgba(255,255,255,0.5)', borderBottomRightRadius: 3 } },
-                      { handle: 'n', cursor: 'ns-resize', style: { left: 0, right: 0, top: 0, height: 14, borderBottom: '2px solid rgba(255,255,255,0.5)' } },
-                      { handle: 'ne', cursor: 'nesw-resize', style: { right: 0, top: 0, width: 14, height: 14, borderLeft: '2px solid rgba(255,255,255,0.5)', borderBottom: '2px solid rgba(255,255,255,0.5)', borderBottomLeftRadius: 3 } },
-                      { handle: 'e', cursor: 'ew-resize', style: { right: 0, top: 0, bottom: 0, width: 14, borderLeft: '2px solid rgba(255,255,255,0.5)' } },
-                      { handle: 'se', cursor: 'nwse-resize', style: { right: 0, bottom: 0, width: 14, height: 14, borderLeft: '2px solid rgba(255,255,255,0.5)', borderTop: '2px solid rgba(255,255,255,0.5)', borderTopLeftRadius: 3 } },
-                      { handle: 's', cursor: 'ns-resize', style: { left: 0, right: 0, bottom: 0, height: 14, borderTop: '2px solid rgba(255,255,255,0.5)' } },
-                      { handle: 'sw', cursor: 'nesw-resize', style: { left: 0, bottom: 0, width: 14, height: 14, borderRight: '2px solid rgba(255,255,255,0.5)', borderTop: '2px solid rgba(255,255,255,0.5)', borderTopRightRadius: 3 } },
-                      { handle: 'w', cursor: 'ew-resize', style: { left: 0, top: 0, bottom: 0, width: 14, borderRight: '2px solid rgba(255,255,255,0.5)' } },
+                      { handle: 'nw', cursor: 'nwse-resize', style: { left: 0, top: 0, width: 18, height: 18, borderRight: '2px solid rgba(255,255,255,0.4)', borderBottom: '2px solid rgba(255,255,255,0.4)', borderBottomRightRadius: 3 } },
+                      { handle: 'n', cursor: 'ns-resize', style: { left: 0, right: 0, top: 0, height: 14, borderBottom: '1px solid rgba(255,255,255,0.35)' } },
+                      { handle: 'ne', cursor: 'nesw-resize', style: { right: 0, top: 0, width: 18, height: 18, borderLeft: '2px solid rgba(255,255,255,0.4)', borderBottom: '2px solid rgba(255,255,255,0.4)', borderBottomLeftRadius: 3 } },
+                      { handle: 'e', cursor: 'ew-resize', style: { right: 0, top: 0, bottom: 0, width: 14, borderLeft: '1px solid rgba(255,255,255,0.35)' } },
+                      { handle: 'se', cursor: 'nwse-resize', style: { right: 0, bottom: 0, width: 18, height: 18, borderLeft: '2px solid rgba(255,255,255,0.4)', borderTop: '2px solid rgba(255,255,255,0.4)', borderTopLeftRadius: 3 } },
+                      { handle: 's', cursor: 'ns-resize', style: { left: 0, right: 0, bottom: 0, height: 14, borderTop: '1px solid rgba(255,255,255,0.35)' } },
+                      { handle: 'sw', cursor: 'nesw-resize', style: { left: 0, bottom: 0, width: 18, height: 18, borderRight: '2px solid rgba(255,255,255,0.4)', borderTop: '2px solid rgba(255,255,255,0.4)', borderTopRightRadius: 3 } },
+                      { handle: 'w', cursor: 'ew-resize', style: { left: 0, top: 0, bottom: 0, width: 14, borderRight: '1px solid rgba(255,255,255,0.35)' } },
                     ].map(({ handle, cursor, style }) => (
                       <div
                         key={handle}
@@ -1618,7 +1620,8 @@ export default function ProfileBuilderPage({ staticView = false }) {
                         }}
                         style={{
                           position: 'absolute',
-                          zIndex: 10,
+                          zIndex: 50,
+                          pointerEvents: 'auto',
                           cursor,
                           boxSizing: 'border-box',
                           ...style,
