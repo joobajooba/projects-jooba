@@ -145,3 +145,44 @@ export async function saveUserMosaic(walletAddress, { mosaicSize, mosaicUrls }) 
     }
   }
 }
+
+export async function searchProfilesByUsername(query, { limit = 20 } = {}) {
+  if (!supabase) return [];
+  const q = (query || '').trim();
+  if (!q) return [];
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select('wallet_address, username, profile_picture_url, first_logged_in_at')
+    .ilike('username', `%${q}%`)
+    .order('first_logged_in_at', { ascending: false })
+    .limit(limit);
+  if (error) {
+    console.warn('[userData] searchProfilesByUsername failed', error);
+    return [];
+  }
+  return (data || []).map((d) => ({
+    walletAddress: d.wallet_address,
+    username: d.username ?? '',
+    profilePictureUrl: d.profile_picture_url ?? '',
+    firstLoggedInAt: d.first_logged_in_at ?? null,
+  }));
+}
+
+export async function fetchNewestProfiles({ limit = 24 } = {}) {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select('wallet_address, username, profile_picture_url, first_logged_in_at')
+    .order('first_logged_in_at', { ascending: false })
+    .limit(limit);
+  if (error) {
+    console.warn('[userData] fetchNewestProfiles failed', error);
+    return [];
+  }
+  return (data || []).map((d) => ({
+    walletAddress: d.wallet_address,
+    username: d.username ?? '',
+    profilePictureUrl: d.profile_picture_url ?? '',
+    firstLoggedInAt: d.first_logged_in_at ?? null,
+  }));
+}

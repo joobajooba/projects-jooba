@@ -6,6 +6,7 @@ import { loadProfile, saveProfile } from './profileStorage';
 import { ensureUserRow, fetchUserProfile, updateUserProfile, isUsernameTaken } from './userData';
 import NFTSelector from './NFTSelector';
 import ProfileBuilderPage from './ProfileBuilderPage';
+import CommunityPage from './CommunityPage';
 
 function XAuthCallbackPage() {
   const [searchParams] = useSearchParams();
@@ -324,7 +325,7 @@ export default function App() {
             </div>
           } />
           <Route path="/games" element={<PlaceholderPage title="Games" />} />
-          <Route path="/community" element={<PlaceholderPage title="Community" />} />
+          <Route path="/community" element={<CommunityPage />} />
           <Route path="/projects" element={<PlaceholderPage title="Projects" />} />
           <Route path="/mint" element={<PlaceholderPage title="Mint" />} />
           <Route path="/profile" element={<ProfileBuilderPage staticView />} />
