@@ -6,6 +6,7 @@ import NFTSelector from './NFTSelector';
 import { getAlchemyApiKey } from './lib/alchemy';
 import { supabase } from './lib/supabase';
 import { fetchUserProfile } from './userData';
+import { fetchWalletBadge } from './badges';
 import { ensureProfile, fetchProfileByWallet, updateProfile } from './profileBuilderApi';
 
 const CELL_SIZE = 50;
@@ -523,6 +524,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
   const [nftSelectorForInstance, setNftSelectorForInstance] = useState(null);
   const [nftSelectorTarget, setNftSelectorTarget] = useState('profile'); // 'profile' | 'imageWidget'
   const [profile, setProfile] = useState({ username: null, xUsername: null });
+  const [profileBadgeUrl, setProfileBadgeUrl] = useState(null); // badge image URL for profile owner (NFT-holder badge)
   const [saveStatus, setSaveStatus] = useState(null); // null | 'saving' | 'success' | 'error'
   const [editMode, setEditMode] = useState(!staticView); // builder: true; static profile: always false
   const [selectedCategory, setSelectedCategory] = useState(null); // null | 'images' | 'textboxes' | 'all'
@@ -581,6 +583,10 @@ export default function ProfileBuilderPage({ staticView = false }) {
         }
       });
     }
+    fetchWalletBadge(walletToLoad).then((badge) => {
+      if (cancelled) return;
+      setProfileBadgeUrl(badge?.badgeImageUrl ?? null);
+    });
     fetchProfileByWallet(walletToLoad).then((data) => {
       if (cancelled) return;
       const layout = data?.layout_json;
@@ -1405,6 +1411,19 @@ export default function ProfileBuilderPage({ staticView = false }) {
                     maxChars={item.maxChars}
                     onFocusInstance={(id) => { setSelectedWidgetInstanceId(id); setSelectedCategory('textboxes'); }}
                   />
+                ) : item.type === 'badges' ? (
+                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap', padding: 8 }}>
+                    {profileBadgeUrl ? (
+                      <img
+                        src={profileBadgeUrl}
+                        alt="Holder badge"
+                        title="Not A Punks Cult holder"
+                        style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                      />
+                    ) : (
+                      <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)' }}>{item.label || 'Badges'}</span>
+                    )}
+                  </div>
                 ) : (
                   item.label || ''
                 )}

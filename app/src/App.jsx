@@ -4,6 +4,7 @@ import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { loadProfile, saveProfile } from './profileStorage';
 import { ensureUserRow, fetchUserProfile, updateUserProfile, isUsernameTaken } from './userData';
+import { checkAndAssignBadge, fetchWalletBadge } from './badges';
 import NFTSelector from './NFTSelector';
 import ProfileBuilderPage from './ProfileBuilderPage';
 import CommunityPage from './CommunityPage';
@@ -91,11 +92,15 @@ export default function App() {
   const [profileBio, setProfileBio] = useState('');
   const [profilePictureBorder, setProfilePictureBorder] = useState('');
   const [profileSaveError, setProfileSaveError] = useState('');
+  const [badgeImageUrl, setBadgeImageUrl] = useState('');
   const originalUsernameRef = useRef('');
   const usernameChangedAtRef = useRef(null);
 
   useEffect(() => {
-    if (!address) return;
+    if (!address) {
+      setBadgeImageUrl('');
+      return;
+    }
     let cancelled = false;
     (async () => {
       await ensureUserRow(address);
@@ -114,6 +119,12 @@ export default function App() {
       originalUsernameRef.current = username || '';
       usernameChangedAtRef.current = fromDb?.usernameChangedAt ?? null;
       saveProfile(address, { username, profilePictureUrl, profileBio, profilePictureBorder });
+
+      // NFT-holder badge: check OpenSea and assign badge if eligible, then fetch current badge
+      await checkAndAssignBadge(address);
+      if (cancelled) return;
+      const badge = await fetchWalletBadge(address);
+      if (!cancelled && badge) setBadgeImageUrl(badge.badgeImageUrl);
     })();
     return () => { cancelled = true; };
   }, [address]);
@@ -292,7 +303,17 @@ export default function App() {
             )}
           </div>
           <div className="app-sidebar-profile-user">
-            <div className="app-sidebar-username">{username || 'No username set'}</div>
+            <div className="app-sidebar-username" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              {username || 'No username set'}
+              {badgeImageUrl && (
+                <img
+                  src={badgeImageUrl}
+                  alt="Badge"
+                  title="Not A Punks Cult holder"
+                  style={{ width: 20, height: 20, objectFit: 'contain', flexShrink: 0 }}
+                />
+              )}
+            </div>
             <div className="app-sidebar-address" title={address || ''}>
               {address ? formatAddress(address) : 'Not connected'}
             </div>
