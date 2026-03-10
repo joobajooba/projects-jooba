@@ -68,6 +68,46 @@ function getTemplateIdForLookup(templateId) {
   return templateId === 'badges-6x2' ? 'badges-8x2' : templateId;
 }
 
+function BadgeSlot({ badgeUrl }) {
+  const [loadError, setLoadError] = useState(false);
+  const showImage = badgeUrl && !loadError;
+  return (
+    <div
+      style={{
+        width: 'calc((100% - 30px) / 6)',
+        minWidth: 28,
+        maxWidth: 48,
+        aspectRatio: '1',
+        borderRadius: 6,
+        background: showImage ? 'transparent' : 'rgba(255,255,255,0.08)',
+        border: '1px solid rgba(255,255,255,0.12)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden',
+        flexShrink: 0,
+      }}
+      title={showImage ? 'Holder badge' : 'Empty badge slot'}
+    >
+      {showImage ? (
+        <img
+          src={badgeUrl}
+          alt=""
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            pointerEvents: 'none',
+          }}
+          onError={() => setLoadError(true)}
+        />
+      ) : (
+        <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.35)' }}>+</span>
+      )}
+    </div>
+  );
+}
+
 function getGridCoords(clientX, clientY, containerRect, cols, rows) {
   const innerW = containerRect.width - 2 * PADDING;
   const innerH = containerRect.height - 2 * PADDING;
@@ -1434,43 +1474,25 @@ export default function ProfileBuilderPage({ staticView = false }) {
                         (url === NOT_A_PUNKS_CULT_BADGE_URL ||
                           String(url).startsWith('/badges/') ||
                           String(url).includes('/badges/'));
+                      const toAbsoluteUrl = (url) => {
+                        if (!url) return url;
+                        const s = String(url);
+                        if (s.startsWith('http://') || s.startsWith('https://')) return s;
+                        try {
+                          return new URL(s, typeof window !== 'undefined' ? window.location.origin : '').href;
+                        } catch {
+                          return s;
+                        }
+                      };
                       const badgeUrls = profileBadgeUrl && isBadgeUrl(profileBadgeUrl) ? [profileBadgeUrl] : [];
                       const slots = 6;
-                      return Array.from({ length: slots }, (_, i) => (
-                        <div
-                          key={i}
-                          style={{
-                            width: 'calc((100% - 30px) / 6)',
-                            minWidth: 28,
-                            maxWidth: 48,
-                            aspectRatio: '1',
-                            borderRadius: 6,
-                            background: badgeUrls[i] ? 'transparent' : 'rgba(255,255,255,0.08)',
-                            border: '1px solid rgba(255,255,255,0.12)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            overflow: 'hidden',
-                            flexShrink: 0,
-                          }}
-                          title={badgeUrls[i] ? 'Holder badge' : 'Empty badge slot'}
-                        >
-                          {badgeUrls[i] ? (
-                            <img
-                              src={badgeUrls[i]}
-                              alt="Badge"
-                              style={{
-                                width: '100%',
-                                height: '100%',
-                                objectFit: 'contain',
-                                pointerEvents: 'none',
-                              }}
-                            />
-                          ) : (
-                            <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.35)' }}>+</span>
-                          )}
-                        </div>
-                      ));
+                      return Array.from({ length: slots }, (_, i) => {
+                        const url = badgeUrls[i];
+                        const absUrl = url ? toAbsoluteUrl(url) : null;
+                        return (
+                          <BadgeSlot key={i} badgeUrl={absUrl} />
+                        );
+                      });
                     })()}
                   </div>
                 ) : (
