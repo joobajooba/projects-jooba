@@ -102,6 +102,7 @@ export default function App() {
       setBadgeImageUrl('');
       return;
     }
+    console.log('[badges] Wallet connected, starting profile + badge flow for', address.slice(0, 10) + '…');
     let cancelled = false;
     (async () => {
       await ensureUserRow(address);
@@ -121,11 +122,20 @@ export default function App() {
       usernameChangedAtRef.current = fromDb?.usernameChangedAt ?? null;
       saveProfile(address, { username, profilePictureUrl, profileBio, profilePictureBorder });
 
-      // NFT-holder badge: check Alchemy (ApeChain) and assign badge if eligible, then fetch current badge
-      const result = await checkAndAssignBadge(address, { log: true });
-      if (cancelled) return;
-      const badge = await fetchWalletBadge(address);
-      if (!cancelled && badge) setBadgeImageUrl(badge.badgeImageUrl);
+      // NFT-holder badge: run after a short delay so wallet is fully ready (avoids provider timing issues)
+      const runBadgeCheck = async () => {
+        if (cancelled) return;
+        console.log('[badges] Running badge check now…');
+        try {
+          const result = await checkAndAssignBadge(address, { log: true });
+          if (cancelled) return;
+          const badge = await fetchWalletBadge(address);
+          if (!cancelled && badge) setBadgeImageUrl(badge.badgeImageUrl);
+        } catch (e) {
+          console.warn('[badges] Badge check failed', e?.message || e);
+        }
+      };
+      runBadgeCheck();
     })();
     return () => { cancelled = true; };
   }, [address]);

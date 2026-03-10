@@ -68,6 +68,7 @@ export async function walletHoldsCollectionNft(walletAddress, chain, contractAdd
   let pageToken = undefined;
   let totalFetched = 0;
 
+  if (log) console.log('[badges] Fetching NFTs from Alchemy (ApeChain)…');
   try {
     do {
       const params = new URLSearchParams({
@@ -114,6 +115,7 @@ export async function walletHoldsCollectionNft(walletAddress, chain, contractAdd
  */
 export async function checkAndAssignBadge(walletAddress, opts = {}) {
   const log = opts.log ?? false;
+  console.log('[badges] checkAndAssignBadge called, wallet:', walletAddress ? `${walletAddress.slice(0, 10)}…` : 'none');
   if (!walletAddress) return { assigned: false, error: 'No wallet' };
   if (!supabase) return { assigned: false, error: 'Supabase not configured' };
   const normalized = walletAddress.toLowerCase().trim();
