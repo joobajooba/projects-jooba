@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAccount } from 'wagmi';
+import { fetchWordleStats, upsertWordleStats } from './userData';
 
 const WORD_LEN = 5;
 const MAX_GUESSES = 6;
@@ -48,6 +50,7 @@ function mergeKeyStatus(prev, next) {
 const KEY_ROWS = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
 
 export default function WordlePage() {
+  const { address } = useAccount();
   const idx = useMemo(() => dayIndexUtc(), []);
   const [lists, setLists] = useState({ status: 'loading', answers: [], all: [] }); // status: loading|ok|error
   const solution = useMemo(() => {
@@ -87,6 +90,67 @@ export default function WordlePage() {
       // ignore
     }
   }, [storageKey, guesses, statusRows]);
+
+  useEffect(() => {
+    if (!done) return;
+    if (!address) return;
+    if (!solution) return;
+    if (!guesses.length) return;
+    const normalized = address.toLowerCase();
+    const won = guesses[guesses.length - 1] === solution;
+    const guessesUsed = guesses.length;
+    const submitKey = `wordle:stats_submitted:${normalized}:${idx}`;
+    if (localStorage.getItem(submitKey) === '1') return;
+
+    let cancelled = false;
+    (async () => {
+      const existing = await fetchWordleStats(normalized);
+      if (cancelled) return;
+
+      // Prevent double-counting if DB already has this day recorded
+      if (existing?.last_played_day != null && Number(existing.last_played_day) === idx) {
+        try { localStorage.setItem(submitKey, '1'); } catch {}
+        return;
+      }
+
+      const prevStreak = Number(existing?.current_streak || 0);
+      const prevMax = Number(existing?.max_streak || 0);
+      const prevWins = Number(existing?.total_wins || 0);
+      const prevGames = Number(existing?.total_games || 0);
+      const prevGuesses = Number(existing?.total_guesses || 0);
+      const prevWinsInOne = Number(existing?.wins_in_one || 0);
+      const prevLastDay = existing?.last_played_day != null ? Number(existing.last_played_day) : null;
+
+      const nextGames = prevGames + 1;
+      const nextWins = prevWins + (won ? 1 : 0);
+      const nextGuesses = prevGuesses + (won ? guessesUsed : 0);
+      const nextWinsInOne = prevWinsInOne + (won && guessesUsed === 1 ? 1 : 0);
+
+      let nextStreak = 0;
+      if (won) {
+        nextStreak = prevLastDay != null && prevLastDay === idx - 1 ? prevStreak + 1 : 1;
+      }
+      const nextMax = Math.max(prevMax, nextStreak);
+      const avg = nextWins > 0 ? Number((nextGuesses / nextWins).toFixed(2)) : 0;
+
+      const { ok } = await upsertWordleStats(normalized, {
+        current_streak: nextStreak,
+        max_streak: nextMax,
+        total_wins: nextWins,
+        total_games: nextGames,
+        total_guesses: nextGuesses,
+        wins_in_one: nextWinsInOne,
+        avg_guesses: avg,
+        last_played_day: idx,
+        updated_at: new Date().toISOString(),
+      });
+      if (!cancelled && ok) {
+        try { localStorage.setItem(submitKey, '1'); } catch {}
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [done, address, solution, guesses, idx]);
 
   const keyStatus = useMemo(() => {
     const m = {};

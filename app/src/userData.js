@@ -186,3 +186,30 @@ export async function fetchNewestProfiles({ limit = 24 } = {}) {
     firstLoggedInAt: d.first_logged_in_at ?? null,
   }));
 }
+
+export async function fetchWordleStats(walletAddress) {
+  if (!supabase || !walletAddress) return null;
+  const normalized = walletAddress.toLowerCase();
+  const { data, error } = await supabase
+    .from('wordle_stats')
+    .select('wallet_address, current_streak, max_streak, total_wins, total_games, total_guesses, wins_in_one, avg_guesses, last_played_day, updated_at')
+    .eq('wallet_address', normalized)
+    .maybeSingle();
+  if (error) {
+    console.warn('[userData] fetchWordleStats failed', error);
+    return null;
+  }
+  return data || null;
+}
+
+export async function upsertWordleStats(walletAddress, row) {
+  if (!supabase || !walletAddress) return { ok: false };
+  const normalized = walletAddress.toLowerCase();
+  const payload = { wallet_address: normalized, ...row };
+  const { error } = await supabase.from('wordle_stats').upsert(payload, { onConflict: 'wallet_address' });
+  if (error) {
+    console.warn('[userData] upsertWordleStats failed', error);
+    return { ok: false, error };
+  }
+  return { ok: true };
+}
