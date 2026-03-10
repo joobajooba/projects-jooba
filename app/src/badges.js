@@ -89,9 +89,20 @@ export async function walletHoldsCollectionNft(walletAddress, chain, contractAdd
       pageToken = data?.nextPageToken ?? null;
       totalFetched += nfts.length;
 
-      const holds = nfts.some(
-        (n) => n?.contract?.address && n.contract.address.toLowerCase() === contractLower
-      );
+      // Debug: log sample of contract addresses Alchemy returned (first page only)
+      if (log && totalFetched === nfts.length && nfts.length > 0) {
+        const sample = [...new Set(nfts.map((n) => (n?.contract?.address || '').toLowerCase()).filter(Boolean))].slice(0, 8);
+        console.log('[badges] Alchemy returned', nfts.length, 'NFTs this page. Sample contract addresses:', sample);
+        console.log('[badges] Looking for contract:', contractLower);
+      }
+
+      const normalize = (addr) => (addr && typeof addr === 'string' ? addr.trim().toLowerCase().replace(/^0x/, '') : '');
+      const target = normalize(contractAddress);
+      const holds = nfts.some((n) => {
+        const a = (n?.contract?.address ?? n?.contractAddress ?? '').toString();
+        if (!a) return false;
+        return normalize(a) === target;
+      });
       if (holds) {
         if (log) console.log('[badges] Found qualifying NFT (contract', contractAddress, ') after', totalFetched, 'NFTs checked');
         return true;
