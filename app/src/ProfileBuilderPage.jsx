@@ -6,7 +6,7 @@ import NFTSelector from './NFTSelector';
 import { getAlchemyApiKey } from './lib/alchemy';
 import { supabase } from './lib/supabase';
 import { fetchUserProfile } from './userData';
-import { fetchWalletBadge } from './badges';
+import { checkAndAssignBadge, fetchWalletBadge } from './badges';
 import { ensureProfile, fetchProfileByWallet, updateProfile } from './profileBuilderApi';
 
 const CELL_SIZE = 50;
@@ -581,6 +581,16 @@ export default function ProfileBuilderPage({ staticView = false }) {
             xUsername: userData.xUsername ?? null,
           });
         }
+      });
+    }
+    // When viewing own profile (builder): re-run badge check so DB updates even if initial connect missed it
+    if (!staticView && address && walletToLoad === address) {
+      checkAndAssignBadge(address, { log: true }).then(() => {
+        if (cancelled) return;
+        return fetchWalletBadge(address);
+      }).then((badge) => {
+        if (cancelled) return;
+        if (badge) setProfileBadgeUrl(badge.badgeImageUrl);
       });
     }
     fetchWalletBadge(walletToLoad).then((badge) => {

@@ -133,7 +133,12 @@ export async function checkAndAssignBadge(walletAddress, opts = {}) {
         { onConflict: 'wallet_address' }
       );
       if (error) {
-        if (log) console.warn('[badges] Supabase upsert failed', error);
+        if (log) {
+          console.warn('[badges] Supabase upsert failed –', error.code, error.message, error.details || '');
+          if (error.code === '42P01' || (error.message && error.message.includes('does not exist'))) {
+            console.warn('[badges] Make sure the badges table exists: run supabase/migrations/create_badges.sql in Supabase Dashboard → SQL Editor.');
+          }
+        }
         return { assigned: false, error: error.message };
       }
       if (log) console.log('[badges] Badge assigned successfully');
