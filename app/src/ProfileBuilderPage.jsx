@@ -240,6 +240,67 @@ const sidePanelFormatBtnStyle = {
   fontWeight: 700,
 };
 
+function Icon({ children }) {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+      focusable="false"
+      style={{ display: 'block' }}
+    >
+      {children}
+    </svg>
+  );
+}
+const IconBold = () => (
+  <Icon>
+    <path d="M7 5h7a4 4 0 0 1 0 8H7V5zm0 10h8a4 4 0 0 1 0 8H7v-8zm3-7v3h4a1.5 1.5 0 0 0 0-3h-4zm0 7v4h5a2 2 0 0 0 0-4h-5z" />
+  </Icon>
+);
+const IconItalic = () => (
+  <Icon>
+    <path d="M10 5h10v2h-4l-4 10h4v2H6v-2h4l4-10h-4V5z" />
+  </Icon>
+);
+const IconUnderline = () => (
+  <Icon>
+    <path d="M7 3h2v8a3 3 0 0 0 6 0V3h2v8a5 5 0 0 1-10 0V3zm-1 18h12v2H6v-2z" />
+  </Icon>
+);
+const IconBullets = () => (
+  <Icon>
+    <path d="M4 7a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm0 7a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM8 8h14v2H8V8zm0 7h14v2H8v-2z" />
+  </Icon>
+);
+const IconNumbered = () => (
+  <Icon>
+    <path d="M3 6h2v1H4v1H3V6zm0 9h2v1H3v-1zm0 2h2v1H3v-1zM8 8h14v2H8V8zm0 7h14v2H8v-2z" />
+  </Icon>
+);
+const IconAlignLeft = () => (
+  <Icon>
+    <path d="M3 5h18v2H3V5zm0 4h12v2H3V9zm0 4h18v2H3v-2zm0 4h12v2H3v-2z" />
+  </Icon>
+);
+const IconAlignCenter = () => (
+  <Icon>
+    <path d="M3 5h18v2H3V5zm3 4h12v2H6V9zm-3 4h18v2H3v-2zm3 4h12v2H6v-2z" />
+  </Icon>
+);
+const IconAlignRight = () => (
+  <Icon>
+    <path d="M3 5h18v2H3V5zm6 4h12v2H9V9zM3 13h18v2H3v-2zm6 4h12v2H9v-2z" />
+  </Icon>
+);
+const IconJustify = () => (
+  <Icon>
+    <path d="M3 5h18v2H3V5zm0 4h18v2H3V9zm0 4h18v2H3v-2zm0 4h18v2H3v-2z" />
+  </Icon>
+);
+
 export default function ProfileBuilderPage({ staticView = false }) {
   const { walletAddress: paramWallet } = useParams();
   const { address } = useAccount();
@@ -1465,18 +1526,18 @@ export default function ProfileBuilderPage({ staticView = false }) {
                       Format text (focus a text box on the grid first):
                     </p>
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
-                    <button type="button" title="Bold" onClick={() => { document.execCommand('bold', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}>B</button>
-                    <button type="button" title="Italic" onClick={() => { document.execCommand('italic', false, null); syncFocusedTextBoxFromPanel(); }} style={{ ...sidePanelFormatBtnStyle, fontStyle: 'italic' }}>I</button>
-                    <button type="button" title="Underline" onClick={() => { document.execCommand('underline', false, null); syncFocusedTextBoxFromPanel(); }} style={{ ...sidePanelFormatBtnStyle, textDecoration: 'underline' }}>U</button>
-                    <button type="button" title="Bullet list" onClick={() => { document.execCommand('insertUnorderedList', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}>•</button>
-                    <button type="button" title="Numbered list" onClick={() => { document.execCommand('insertOrderedList', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}>1.</button>
+                    <button type="button" title="Bold" aria-label="Bold" onClick={() => { document.execCommand('bold', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}><IconBold /></button>
+                    <button type="button" title="Italic" aria-label="Italic" onClick={() => { document.execCommand('italic', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}><IconItalic /></button>
+                    <button type="button" title="Underline" aria-label="Underline" onClick={() => { document.execCommand('underline', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}><IconUnderline /></button>
+                    <button type="button" title="Bullet list" aria-label="Bullet list" onClick={() => { document.execCommand('insertUnorderedList', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}><IconBullets /></button>
+                    <button type="button" title="Numbered list" aria-label="Numbered list" onClick={() => { document.execCommand('insertOrderedList', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}><IconNumbered /></button>
                     </div>
                     <div style={{ height: 10 }} />
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
-                      <button type="button" title="Align left" onClick={() => { document.execCommand('justifyLeft', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}>L</button>
-                      <button type="button" title="Align center" onClick={() => { document.execCommand('justifyCenter', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}>C</button>
-                      <button type="button" title="Align right" onClick={() => { document.execCommand('justifyRight', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}>R</button>
-                      <button type="button" title="Justify" onClick={() => { document.execCommand('justifyFull', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}>J</button>
+                      <button type="button" title="Align left" aria-label="Align left" onClick={() => { document.execCommand('justifyLeft', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}><IconAlignLeft /></button>
+                      <button type="button" title="Align center" aria-label="Align center" onClick={() => { document.execCommand('justifyCenter', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}><IconAlignCenter /></button>
+                      <button type="button" title="Align right" aria-label="Align right" onClick={() => { document.execCommand('justifyRight', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}><IconAlignRight /></button>
+                      <button type="button" title="Justify" aria-label="Justify" onClick={() => { document.execCommand('justifyFull', false, null); syncFocusedTextBoxFromPanel(); }} style={sidePanelFormatBtnStyle}><IconJustify /></button>
                     </div>
                     <div style={{ height: 10 }} />
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
