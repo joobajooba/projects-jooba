@@ -6,7 +6,7 @@ import NFTSelector from './NFTSelector';
 import { getAlchemyApiKey } from './lib/alchemy';
 import { supabase } from './lib/supabase';
 import { fetchUserProfile } from './userData';
-import { checkAndAssignBadge, fetchWalletBadge } from './badges';
+import { checkAndAssignBadge, fetchWalletBadge, NOT_A_PUNKS_CULT_BADGE_URL } from './badges';
 import { ensureProfile, fetchProfileByWallet, updateProfile } from './profileBuilderApi';
 
 const CELL_SIZE = 50;
@@ -1429,7 +1429,12 @@ export default function ProfileBuilderPage({ staticView = false }) {
                 ) : item.type === 'badges' ? (
                   <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexWrap: 'wrap', padding: 8, boxSizing: 'border-box' }}>
                     {(() => {
-                      const badgeUrls = profileBadgeUrl ? [profileBadgeUrl] : [];
+                      const isBadgeUrl = (url) =>
+                        url &&
+                        (url === NOT_A_PUNKS_CULT_BADGE_URL ||
+                          String(url).startsWith('/badges/') ||
+                          String(url).includes('/badges/'));
+                      const badgeUrls = profileBadgeUrl && isBadgeUrl(profileBadgeUrl) ? [profileBadgeUrl] : [];
                       const slots = 6;
                       return Array.from({ length: slots }, (_, i) => (
                         <div
@@ -1454,7 +1459,12 @@ export default function ProfileBuilderPage({ staticView = false }) {
                             <img
                               src={badgeUrls[i]}
                               alt="Badge"
-                              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'contain',
+                                pointerEvents: 'none',
+                              }}
                             />
                           ) : (
                             <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.35)' }}>+</span>
