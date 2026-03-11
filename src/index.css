@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-gray-950 text-gray-100;
+}
+
+.studio-grid-canvas {
+  position: relative;
+  background-color: rgb(17 24 39);
+}
+
+.studio-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.studio-scrollbar::-webkit-scrollbar-track {
+  background: rgb(31 41 55);
+}
+
+.studio-scrollbar::-webkit-scrollbar-thumb {
+  background: rgb(75 85 99);
+  border-radius: 4px;
+}
+
+.studio-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgb(107 114 128);
+}

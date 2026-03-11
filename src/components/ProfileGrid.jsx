@@ -1,0 +1,349 @@
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { ChevronLeft, ChevronRight, LayoutGrid, Paintbrush } from 'lucide-react';
+import { WIDGET_TYPES, GRID_CONFIG } from './WidgetTypes';
+import WidgetRenderer from './WidgetRenderer';
+import WidgetPalette from './WidgetPalette';
+import WidgetEditor from './WidgetEditor';
+
+const { CELL_SIZE } = GRID_CONFIG;
+
+function createDefaultWidget(type, index, canvasSize, existingWidgets) {
+  const id = `${type}-${Date.now()}-${index}`;
+  const base = {
+    id,
+    type,
+    locked: false,
+    positionUnits: 'px',
+    data: {},
+  };
+
+  if (type === WIDGET_TYPES.USER_PANEL) {
+    const cw = canvasSize?.width ?? 800;
+    const ch = canvasSize?.height ?? 600;
+    return {
+      ...base,
+      id: 'user-panel',
+      x: 0,
+      y: 0,
+      w: 0,
+      h: 0,
+      locked: true,
+      fixedWidthPx: cw * 0.175,
+      fixedHeightPx: ch * 0.4,
+      data: { name: '', bio: '', avatarUrl: '' },
+    };
+  }
+
+  if (type === WIDGET_TYPES.TEXT) {
+    const stagger = existingWidgets.filter((w) => w.type === WIDGET_TYPES.TEXT).length;
+    return {
+      ...base,
+      x: 20 + stagger * 30,
+      y: 20 + stagger * 30,
+      w: 4,
+      h: 2,
+      data: { content: 'New text', fontSize: 14, color: '#e5e7eb', textAlign: 'left' },
+    };
+  }
+
+  if (type === WIDGET_TYPES.IMAGE) {
+    const stagger = existingWidgets.filter((w) => w.type === WIDGET_TYPES.IMAGE).length;
+    return {
+      ...base,
+      x: 40 + stagger * 40,
+      y: 80 + stagger * 40,
+      w: 4,
+      h: 4,
+      data: { url: '', borderWidth: 0, borderColor: '#6b7280' },
+    };
+  }
+
+  if (type === WIDGET_TYPES.BADGE) {
+    const stagger = existingWidgets.filter((w) => w.type === WIDGET_TYPES.BADGE).length;
+    return {
+      ...base,
+      x: 60 + stagger * 30,
+      y: 120 + stagger * 30,
+      w: 3,
+      h: 1,
+      data: { label: 'Badge', bgColor: '#4f46e5', textColor: '#fff' },
+    };
+  }
+
+  if (type === WIDGET_TYPES.DIVIDER) {
+    const stagger = existingWidgets.filter((w) => w.type === WIDGET_TYPES.DIVIDER).length;
+    return {
+      ...base,
+      x: 20 + stagger * 20,
+      y: 180 + stagger * 30,
+      w: 6,
+      h: 1,
+      data: { color: '#6b7280' },
+    };
+  }
+
+  return {
+    ...base,
+    x: 20,
+    y: 20,
+    w: 4,
+    h: 4,
+    data: {},
+  };
+}
+
+function ensureUserPanel(widgets, canvasSize) {
+  const has = widgets.some((w) => w.id === 'user-panel');
+  if (has) return widgets;
+  const userPanel = createDefaultWidget(WIDGET_TYPES.USER_PANEL, 0, canvasSize, []);
+  return [userPanel, ...widgets];
+}
+
+export default function ProfileGrid() {
+  const canvasRef = useRef(null);
+  const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
+  const [widgets, setWidgets] = useState([]);
+  const [selectedId, setSelectedId] = useState(null);
+  const [panelCollapsed, setPanelCollapsed] = useState(false);
+  const [rightTab, setRightTab] = useState('add'); // 'add' | 'style'
+
+  const [dragState, setDragState] = useState(null);
+  const [resizeState, setResizeState] = useState(null);
+
+  const measureCanvas = useCallback(() => {
+    const el = canvasRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    setCanvasSize({ width: rect.width, height: rect.height });
+  }, []);
+
+  useEffect(() => {
+    measureCanvas();
+    const ro = new ResizeObserver(measureCanvas);
+    if (canvasRef.current) ro.observe(canvasRef.current);
+    window.addEventListener('resize', measureCanvas);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', measureCanvas);
+    };
+  }, [measureCanvas]);
+
+  useEffect(() => {
+    setWidgets((prev) => ensureUserPanel(prev, canvasSize));
+  }, [canvasSize]);
+
+  useEffect(() => {
+    if (!canvasSize.width || !canvasSize.height) return;
+    const w = canvasSize.width * 0.175;
+    const h = canvasSize.height * 0.4;
+    setWidgets((prev) => {
+      if (!prev.some((widget) => widget.id === 'user-panel')) return prev;
+      return prev.map((widget) =>
+        widget.id === 'user-panel'
+          ? { ...widget, fixedWidthPx: w, fixedHeightPx: h }
+          : widget
+      );
+    });
+  }, [canvasSize.width, canvasSize.height]);
+
+  const selectedWidget = widgets.find((w) => w.id === selectedId);
+
+  const handleCanvasMouseDown = () => {
+    setSelectedId(null);
+  };
+
+  const handleWidgetMouseDown = (e, widget) => {
+    e.stopPropagation();
+    setSelectedId(widget.id);
+    if (resizeState) return;
+    setDragState({
+      id: widget.id,
+      offsetX: e.clientX - (widget.x ?? 0),
+      offsetY: e.clientY - (widget.y ?? 0),
+    });
+  };
+
+  const handleResizeHandleMouseDown = (e, widget) => {
+    e.stopPropagation();
+    const { CELL_SIZE: cs } = GRID_CONFIG;
+    const w = widget.fixedWidthPx ?? (widget.w ?? 4) * cs;
+    const h = widget.fixedHeightPx ?? (widget.h ?? 4) * cs;
+    setResizeState({
+      id: widget.id,
+      startX: e.clientX,
+      startY: e.clientY,
+      startWidthPx: w,
+      startHeightPx: h,
+    });
+  };
+
+  useEffect(() => {
+    if (!dragState) return;
+    const onMove = (e) => {
+      const cw = canvasSize.width ?? 1;
+      const ch = canvasSize.height ?? 1;
+      const widget = widgets.find((w) => w.id === dragState.id);
+      if (!widget) return;
+      const w = widget.fixedWidthPx ?? (widget.w ?? 4) * CELL_SIZE;
+      const h = widget.fixedHeightPx ?? (widget.h ?? 4) * CELL_SIZE;
+      let nx = e.clientX - dragState.offsetX;
+      let ny = e.clientY - dragState.offsetY;
+      nx = Math.max(0, Math.min(nx, cw - w));
+      ny = Math.max(0, Math.min(ny, ch - h));
+      setWidgets((prev) =>
+        prev.map((w) => (w.id === dragState.id ? { ...w, x: nx, y: ny } : w))
+      );
+    };
+    const onUp = () => setDragState(null);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+  }, [dragState, canvasSize, widgets]);
+
+  useEffect(() => {
+    if (!resizeState) return;
+    const onMove = (e) => {
+      const cw = canvasSize.width ?? 1;
+      const ch = canvasSize.height ?? 1;
+      const dx = e.clientX - resizeState.startX;
+      const dy = e.clientY - resizeState.startY;
+      const nw = Math.max(8, Math.min(resizeState.startWidthPx + dx, cw));
+      const nh = Math.max(8, Math.min(resizeState.startHeightPx + dy, ch));
+      setWidgets((prev) =>
+        prev.map((w) =>
+          w.id === resizeState.id
+            ? { ...w, fixedWidthPx: nw, fixedHeightPx: nh }
+            : w
+        )
+      );
+    };
+    const onUp = () => setResizeState(null);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+  }, [resizeState, canvasSize]);
+
+  const onChangeWidget = (updated) => {
+    setWidgets((prev) =>
+      prev.map((w) => (w.id === updated.id ? updated : w))
+    );
+  };
+
+  const onDeleteWidget = (id) => {
+    setWidgets((prev) => prev.filter((w) => w.id !== id));
+    if (selectedId === id) setSelectedId(null);
+  };
+
+  const onAddWidget = (type) => {
+    const count = widgets.length;
+    const newWidget = createDefaultWidget(type, count, canvasSize, widgets);
+    setWidgets((prev) => [...prev, newWidget]);
+    setSelectedId(newWidget.id);
+    setRightTab('style');
+  };
+
+  return (
+    <div className="flex flex-row h-full gap-[1%] p-[1%]">
+      <div className="flex flex-col flex-1 min-w-0 min-h-0">
+        <h2 className="text-lg font-semibold text-gray-200 mb-2">Profile Canvas</h2>
+        <div
+          ref={canvasRef}
+          className="flex-1 min-h-0 studio-grid-canvas studio-scrollbar overflow-auto rounded-none"
+          onMouseDown={handleCanvasMouseDown}
+        >
+          {widgets.map((widget) => (
+            <WidgetRenderer
+              key={widget.id}
+              widget={widget}
+              canvasSize={canvasSize}
+              isSelected={selectedId === widget.id}
+              onMouseDown={(e) => handleWidgetMouseDown(e, widget)}
+              onResizeHandleMouseDown={
+                widget.locked
+                  ? undefined
+                  : (e) => handleResizeHandleMouseDown(e, widget)
+              }
+            />
+          ))}
+        </div>
+      </div>
+
+      <aside
+        className={`flex flex-col border-l border-gray-800 bg-gray-900/80 transition-[width] ${
+          panelCollapsed ? 'w-10' : 'w-[15%] min-w-[200px]'
+        }`}
+      >
+        <header className="flex items-center justify-between gap-2 p-2 border-b border-gray-800 shrink-0">
+          {!panelCollapsed && (
+            <span className="text-sm font-medium text-gray-300 truncate">
+              Widgets / Add & style
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => setPanelCollapsed((c) => !c)}
+            className="p-1.5 rounded hover:bg-gray-700 text-gray-400 hover:text-gray-200"
+            aria-label={panelCollapsed ? 'Expand panel' : 'Collapse panel'}
+          >
+            {panelCollapsed ? (
+              <ChevronLeft className="w-4 h-4" />
+            ) : (
+              <ChevronRight className="w-4 h-4" />
+            )}
+          </button>
+        </header>
+
+        {!panelCollapsed && (
+          <>
+            <div className="flex border-b border-gray-800 shrink-0">
+              <button
+                type="button"
+                onClick={() => setRightTab('add')}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs ${
+                  rightTab === 'add'
+                    ? 'bg-indigo-600 text-white'
+                    : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'
+                }`}
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                Add Widget
+              </button>
+              <button
+                type="button"
+                onClick={() => setRightTab('style')}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs ${
+                  rightTab === 'style'
+                    ? 'bg-indigo-600 text-white'
+                    : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'
+                }`}
+              >
+                <Paintbrush className="w-3.5 h-3.5" />
+                Style
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-auto p-3 studio-scrollbar">
+              {rightTab === 'add' && (
+                <WidgetPalette onAddWidget={onAddWidget} />
+              )}
+              {rightTab === 'style' && (
+                <WidgetEditor
+                  widget={selectedWidget}
+                  canvasSize={canvasSize}
+                  onChangeWidget={onChangeWidget}
+                  onDeleteWidget={onDeleteWidget}
+                />
+              )}
+            </div>
+          </>
+        )}
+      </aside>
+    </div>
+  );
+}
