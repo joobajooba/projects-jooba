@@ -6,7 +6,7 @@ const { CELL_SIZE } = GRID_CONFIG;
 
 function pxToPercent(px, total) {
   if (!total || total <= 0) return 0;
-  return Math.round((px / total) * 1000) / 10;
+  return Math.round((px / total) * 10000) / 100;
 }
 
 function percentToPx(percent, total) {
@@ -144,7 +144,7 @@ export default function WidgetEditor({ widget, canvasSize, onChangeWidget, onDel
                 onChange={(e) => onCh(e.target.value)}
                 disabled={locked}
                 className="w-full px-2 py-1 rounded border border-gray-600 bg-gray-800 text-gray-200 disabled:opacity-50"
-                step="0.1"
+                step="0.01"
               />
             </label>
           ))}
