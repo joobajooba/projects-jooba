@@ -193,6 +193,26 @@ export default function ProfileBuilderPage() {
     }
   };
 
+  const getWidgetTypeFromEvent = (e) => {
+    const dt = e?.dataTransfer;
+    const fromCustom = dt?.getData?.('application/x-jooba-widget') || '';
+    const fromText = dt?.getData?.('text/plain') || '';
+    const type = (fromCustom || fromText || '').trim();
+    return WIDGET_TEMPLATES.some((t) => t.type === type) ? type : null;
+  };
+
+  const dropToGridCoords = useCallback((clientX, clientY) => {
+    const el = gridWrapRef.current;
+    if (!el) return { x: 0, y: 0 };
+    const r = el.getBoundingClientRect();
+    const relX = clientX - r.left;
+    const relY = clientY - r.top;
+    const cellW = r.width / Math.max(1, cols);
+    const x = clampInt(relX / cellW, 0, Math.max(0, cols - 1));
+    const y = clampInt(relY / CELL_SIZE_PX, 0, 9999);
+    return { x, y };
+  }, [cols]);
+
   const addWidgetAt = useCallback((type, x, y) => {
     const id = uid(type);
     const defaults =
@@ -447,10 +467,15 @@ export default function ProfileBuilderPage() {
         onDragOver={(e) => {
           // Allow the browser drop; react-grid-layout handles placement.
           e.preventDefault();
+          try { e.dataTransfer.dropEffect = 'copy'; } catch {}
         }}
         onDrop={(e) => {
           // Prevent the browser from navigating/opening dragged content.
           e.preventDefault();
+          const type = getWidgetTypeFromEvent(e);
+          if (!type) return;
+          const { x, y } = dropToGridCoords(e.clientX, e.clientY);
+          addWidgetAt(type, x, y);
         }}
         style={{
           flex: 1,
@@ -468,18 +493,10 @@ export default function ProfileBuilderPage() {
           width={gridWrapRef.current?.clientWidth || 1200}
           margin={[0, 0]}
           containerPadding={[0, 0]}
-          isDroppable
-          droppingItem={{ i: '__dropping__', w: 6, h: 6 }}
           compactType={null}
           preventCollision={false}
           draggableHandle=".widget-drag-handle"
           onLayoutChange={(next) => setLayout(next)}
-          onDrop={(nextLayout, item, e) => {
-            const type = e?.dataTransfer?.getData?.('application/x-jooba-widget') || '';
-            const safeType = WIDGET_TEMPLATES.some((t) => t.type === type) ? type : null;
-            if (!safeType) return;
-            addWidgetAt(safeType, item.x, item.y);
-          }}
           onDragStop={(_, __, newItem) => {
             setSelectedId(newItem?.i || null);
           }}

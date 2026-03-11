@@ -328,37 +328,6 @@ export default function App() {
             <div className="app-sidebar-address" title={address || ''}>
               {address ? formatAddress(address) : 'Not connected'}
             </div>
-            {address && (
-              <button
-                type="button"
-                onClick={async () => {
-                  setBadgeCheckStatus('checking');
-                  const result = await checkAndAssignBadge(address, { log: true });
-                  const badge = await fetchWalletBadge(address);
-                  if (badge) {
-                    setBadgeImageUrl(badge.badgeImageUrl);
-                    setBadgeCheckStatus(result.assigned ? 'ok' : 'no_badge');
-                  } else {
-                    setBadgeCheckStatus(result.error ? 'error' : 'no_badge');
-                  }
-                  setTimeout(() => setBadgeCheckStatus(null), 4000);
-                }}
-                disabled={badgeCheckStatus === 'checking'}
-                title="Re-check if this wallet has a Not A Punks Cult or MineBoys NFT and update badge. Check console for details."
-                style={{
-                  marginTop: 4,
-                  padding: '2px 6px',
-                  fontSize: 10,
-                  color: 'rgba(255,255,255,0.7)',
-                  background: 'transparent',
-                  border: '1px solid rgba(255,255,255,0.25)',
-                  borderRadius: 4,
-                  cursor: badgeCheckStatus === 'checking' ? 'wait' : 'pointer',
-                }}
-              >
-                {badgeCheckStatus === 'checking' ? 'Checking…' : badgeCheckStatus === 'ok' ? 'Badge updated' : badgeCheckStatus === 'error' ? 'Error (see console)' : 'Check for badge'}
-              </button>
-            )}
           </div>
         </div>
         <nav className="app-sidebar-nav" aria-label="Main">
