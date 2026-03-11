@@ -80,7 +80,7 @@ function ImageWidget({ id, widget, setWidgets, removeWidget, isSelected }) {
         }}
         onMouseDown={(e) => e.stopPropagation()}
       >
-        <span style={{ fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>image</span>
+        <span />
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); removeWidget(id); }}
@@ -159,6 +159,7 @@ function FieldLabel({ children }) {
 
 export default function ProfileBuilderPage() {
   const gridWrapRef = useRef(null);
+  const activeTextElRef = useRef(null);
   const [cols, setCols] = useState(24);
   const [layout, setLayout] = useState([]);
   const [widgets, setWidgets] = useState({}); // { [id]: { type, props } }
@@ -219,7 +220,7 @@ export default function ProfileBuilderPage() {
     const id = uid(type);
     const defaults =
       type === 'textbox'
-        ? { text: 'Write something…', fontSize: 14, align: 'left' }
+        ? { html: 'Write something…', defaultFontSize: 14, align: 'left' }
         : type === 'image'
           ? { fit: 'cover', border: true, radius: 10, file: null }
           : type === 'divider'
@@ -290,6 +291,23 @@ export default function ProfileBuilderPage() {
     backgroundPosition: '0 0',
   }), []);
 
+  const applyToSelectedText = useCallback((fn) => {
+    // Apply formatting to selection inside the active text widget.
+    // Requires the contentEditable to be focused; otherwise focus it.
+    const el = activeTextElRef.current;
+    if (el && document.activeElement !== el) {
+      el.focus();
+    }
+    fn?.();
+    if (selectedId && widgets[selectedId]?.type === 'textbox') {
+      const html = activeTextElRef.current?.innerHTML ?? widgets[selectedId]?.props?.html ?? '';
+      setWidgets((prev) => ({
+        ...prev,
+        [selectedId]: { ...prev[selectedId], props: { ...prev[selectedId].props, html } },
+      }));
+    }
+  }, [selectedId, widgets]);
+
   const renderWidget = (id) => {
     const w = widgets[id];
     if (!w) return null;
@@ -332,7 +350,7 @@ export default function ProfileBuilderPage() {
         }}
         onMouseDown={(e) => e.stopPropagation()}
       >
-        <span style={{ fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{w.type}</span>
+        <span />
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); removeWidget(id); }}
@@ -357,25 +375,40 @@ export default function ProfileBuilderPage() {
       return (
         <div style={baseWrapStyle}>
           {header}
-          <textarea
-            value={w.props.text || ''}
-            onChange={(e) => setWidgets((prev) => ({ ...prev, [id]: { ...prev[id], props: { ...prev[id].props, text: e.target.value } } }))}
+          <div
+            contentEditable
+            suppressContentEditableWarning
+            ref={(el) => {
+              if (id === selectedId) activeTextElRef.current = el;
+            }}
+            onFocus={() => {
+              setSelectedId(id);
+              setActiveTab('style');
+            }}
+            onInput={(e) => {
+              const html = e.currentTarget.innerHTML;
+              setWidgets((prev) => ({ ...prev, [id]: { ...prev[id], props: { ...prev[id].props, html } } }));
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
             style={{
               marginTop: 24,
               flex: 1,
               width: '100%',
               height: 'calc(100% - 24px)',
-              resize: 'none',
               border: 'none',
               outline: 'none',
               padding: 10,
               background: 'transparent',
               color: '#e5e7eb',
-              fontSize: w.props.fontSize || 14,
+              fontSize: w.props.defaultFontSize || 14,
               lineHeight: 1.35,
               textAlign: w.props.align || 'left',
               boxSizing: 'border-box',
+              overflow: 'auto',
+              userSelect: 'text',
+              whiteSpace: 'pre-wrap',
             }}
+            dangerouslySetInnerHTML={{ __html: w.props.html || '' }}
           />
         </div>
       );
@@ -456,12 +489,13 @@ export default function ProfileBuilderPage() {
       className="profile-builder-page"
       style={{
         width: '100%',
-        height: '100%',
-        minHeight: '100%',
+        height: '100vh',
+        minHeight: '100vh',
         display: 'flex',
         alignItems: 'stretch',
         justifyContent: 'stretch',
         background: '#000',
+        overflow: 'hidden',
       }}
     >
       <div
@@ -485,6 +519,7 @@ export default function ProfileBuilderPage() {
           minHeight: 0,
           position: 'relative',
           ...gridBgStyle,
+          overflow: 'auto',
         }}
       >
         <GridLayout
@@ -497,6 +532,8 @@ export default function ProfileBuilderPage() {
           containerPadding={[0, 0]}
           compactType={null}
           preventCollision={false}
+          autoSize={false}
+          maxRows={400}
           isResizable
           resizeHandles={['se']}
           draggableHandle=".widget-drag-handle"
@@ -643,25 +680,61 @@ export default function ProfileBuilderPage() {
 
                   {selected.type === 'textbox' && (
                     <>
-                      <FieldLabel>Font size</FieldLabel>
+                      <FieldLabel>Selection font size</FieldLabel>
                       <input
                         type="range"
                         min={12}
-                        max={22}
-                        value={selected.props.fontSize ?? 14}
-                        onChange={(e) =>
+                        max={28}
+                        value={selected.props.defaultFontSize ?? 14}
+                        onChange={(e) => {
+                          const px = Number(e.target.value);
+                          // Use execCommand fontSize (1-7) with CSS enabled.
+                          const toLevel = (v) => (v <= 12 ? 2 : v <= 14 ? 3 : v <= 16 ? 4 : v <= 20 ? 5 : v <= 24 ? 6 : 7);
+                          applyToSelectedText(() => {
+                            try { document.execCommand('styleWithCSS', false, true); } catch {}
+                            document.execCommand('fontSize', false, String(toLevel(px)));
+                          });
+                          // Keep default font size updated for new typing.
                           setWidgets((prev) => ({
                             ...prev,
                             [selectedId]: {
                               ...prev[selectedId],
-                              props: { ...prev[selectedId].props, fontSize: Number(e.target.value) },
+                              props: { ...prev[selectedId].props, defaultFontSize: px },
                             },
-                          }))
-                        }
+                          }));
+                        }}
                       />
+
+                      <FieldLabel>Selection style</FieldLabel>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        {[
+                          { key: 'bold', label: 'Bold', cmd: 'bold' },
+                          { key: 'italic', label: 'Italic', cmd: 'italic' },
+                          { key: 'underline', label: 'Underline', cmd: 'underline' },
+                        ].map((b) => (
+                          <button
+                            key={b.key}
+                            type="button"
+                            onClick={() => applyToSelectedText(() => document.execCommand(b.cmd, false, null))}
+                            style={{
+                              flex: 1,
+                              padding: '10px 8px',
+                              borderRadius: 10,
+                              border: '1px solid rgba(255,255,255,0.14)',
+                              background: 'rgba(255,255,255,0.06)',
+                              color: '#fff',
+                              cursor: 'pointer',
+                              fontWeight: 800,
+                            }}
+                          >
+                            {b.label}
+                          </button>
+                        ))}
+                      </div>
+
                       <FieldLabel>Text align</FieldLabel>
                       <div style={{ display: 'flex', gap: 8 }}>
-                        {['left', 'center', 'right'].map((a) => (
+                        {['left', 'center', 'right', 'justify'].map((a) => (
                           <button
                             key={a}
                             type="button"
