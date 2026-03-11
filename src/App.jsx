@@ -7,36 +7,40 @@ import {
   Gamepad2,
   Coins,
   User,
+  CreditCard,
+  Clipboard,
+  Settings,
 } from 'lucide-react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import ProfileGrid from './components/ProfileGrid';
 
-function WalletSection() {
+function SidebarActions() {
   return (
     <ConnectButton.Custom>
       {({ account, openConnectModal, openAccountModal }) => (
-        <div className="flex flex-col items-center gap-2 w-full">
-          {account ? (
-            <>
-              <button
-                type="button"
-                onClick={openAccountModal}
-                className="w-full text-center text-xs text-gray-400 hover:text-gray-300 truncate px-1"
-                title={account.address}
-              >
-                {`${account.address.slice(0, 6)}…${account.address.slice(-4)}`}
-              </button>
-            </>
-          ) : (
-            <button
-              type="button"
-              onClick={openConnectModal}
-              className="w-10 h-10 flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-xl"
-              aria-label="Connect wallet"
-            >
-              👛
-            </button>
-          )}
+        <div className="flex gap-1 w-full">
+          <button
+            type="button"
+            onClick={account ? openAccountModal : openConnectModal}
+            className="flex-1 aspect-square flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-gray-100"
+            aria-label={account ? 'Account' : 'Connect wallet'}
+          >
+            <CreditCard className="w-5 h-5" />
+          </button>
+          <button
+            type="button"
+            className="flex-1 aspect-square flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-gray-100"
+            aria-label="Clipboard"
+          >
+            <Clipboard className="w-5 h-5" />
+          </button>
+          <button
+            type="button"
+            className="flex-1 aspect-square flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-gray-100"
+            aria-label="Settings"
+          >
+            <Settings className="w-5 h-5" />
+          </button>
         </div>
       )}
     </ConnectButton.Custom>
@@ -91,6 +95,8 @@ export default function App() {
           </div>
         </header>
         <div className="p-4 flex flex-col items-center gap-3 border-b border-gray-800 shrink-0">
+          <SidebarActions />
+          <hr className="w-full border-gray-700" />
           <div className="aspect-square w-full rounded-lg overflow-hidden bg-gray-800 border border-gray-700">
             {profileAvatarUrl ? (
               <img
@@ -104,7 +110,20 @@ export default function App() {
               </div>
             )}
           </div>
-          <WalletSection />
+          <ConnectButton.Custom>
+            {({ account, openAccountModal }) =>
+              account ? (
+                <button
+                  type="button"
+                  onClick={openAccountModal}
+                  className="w-full text-center text-xs text-gray-400 hover:text-gray-300 truncate px-1"
+                  title={account.address}
+                >
+                  {`${account.address.slice(0, 6)}…${account.address.slice(-4)}`}
+                </button>
+              ) : null
+            }
+          </ConnectButton.Custom>
         </div>
         <nav className="flex-1 py-2 min-h-0 overflow-auto">
           {navItems.map(({ key, icon: Icon, label }) => (
