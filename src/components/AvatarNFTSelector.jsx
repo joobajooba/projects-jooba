@@ -41,7 +41,8 @@ async function fetchNFTsForOwner(owner, network) {
   }
 }
 
-export default function AvatarNFTSelector({ value, onChange }) {
+export default function AvatarNFTSelector({ value, onChange, variant = 'inline' }) {
+  const isModal = variant === 'modal';
   const { address, isConnected } = useAccount();
   const [loading, setLoading] = useState(false);
   const [nfts, setNfts] = useState([]);
@@ -111,8 +112,14 @@ export default function AvatarNFTSelector({ value, onChange }) {
 
   return (
     <div className="space-y-2">
-      <p className="text-xs text-gray-400">Select an NFT from your wallet:</p>
-      <div className="grid grid-cols-3 gap-1.5 max-h-48 overflow-auto rounded border border-gray-700 p-1.5 bg-gray-800/50">
+      <p className={isModal ? 'text-sm text-gray-300' : 'text-xs text-gray-400'}>
+        Select an NFT from your wallet:
+      </p>
+      <div
+        className={`grid overflow-auto rounded-lg border border-gray-700 bg-gray-800/50 ${
+          isModal ? 'grid-cols-4 gap-2 max-h-[60vh] p-2' : 'grid-cols-3 gap-1.5 max-h-48 p-1.5'
+        }`}
+      >
         {nfts.map((nft) => (
           <button
             key={nft.id}

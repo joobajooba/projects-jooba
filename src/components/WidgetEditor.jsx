@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { WIDGET_TYPES, GRID_CONFIG } from './WidgetTypes';
-import AvatarNFTSelector from './AvatarNFTSelector';
+import AvatarNFTModal from './AvatarNFTModal';
 
 const { CELL_SIZE } = GRID_CONFIG;
 
@@ -69,6 +70,8 @@ function ImageUploadInput({ value, onChange }) {
 }
 
 export default function WidgetEditor({ widget, canvasSize, onChangeWidget, onDeleteWidget }) {
+  const [avatarModalOpen, setAvatarModalOpen] = useState(false);
+
   if (!widget) {
     return (
       <div className="text-sm text-gray-500 p-4">Select a widget...</div>
@@ -181,11 +184,31 @@ export default function WidgetEditor({ widget, canvasSize, onChangeWidget, onDel
           </label>
           <label className="flex flex-col gap-1">
             <span className="text-gray-400">Avatar</span>
-            <AvatarNFTSelector
-              value={widget.data?.avatarUrl}
-              onChange={(url) => updateData({ avatarUrl: url })}
-            />
+            <div className="flex flex-col gap-2">
+              {widget.data?.avatarUrl && (
+                <div className="w-14 h-14 rounded-lg overflow-hidden border border-gray-700 bg-gray-800 shrink-0">
+                  <img
+                    src={widget.data.avatarUrl}
+                    alt="Avatar"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => setAvatarModalOpen(true)}
+                className="w-full px-3 py-2 rounded-lg border border-gray-600 bg-gray-800 text-gray-200 text-sm hover:bg-gray-700 hover:border-indigo-600/50 transition-colors"
+              >
+                {widget.data?.avatarUrl ? 'Change NFT avatar' : 'Select NFT avatar'}
+              </button>
+            </div>
           </label>
+          <AvatarNFTModal
+            isOpen={avatarModalOpen}
+            onClose={() => setAvatarModalOpen(false)}
+            value={widget.data?.avatarUrl}
+            onSelect={(url) => updateData({ avatarUrl: url })}
+          />
         </div>
       )}
 
