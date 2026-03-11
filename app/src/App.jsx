@@ -387,6 +387,28 @@ export default function App() {
             <div className="app-main-inner">
               <h1>J00BA</h1>
               <p>Start from here.</p>
+              <div style={{ marginTop: 16, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <Link
+                  to="/profile/builder"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '10px 14px',
+                    borderRadius: 8,
+                    border: '1px solid rgba(255,255,255,0.18)',
+                    background: 'rgba(255,255,255,0.08)',
+                    color: '#fff',
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                    textDecoration: 'none',
+                    cursor: 'pointer',
+                  }}
+                  title="Open the profile grid builder"
+                >
+                  Open Profile Builder
+                </Link>
+              </div>
             </div>
           } />
           <Route path="/games" element={<GamesPage />} />
