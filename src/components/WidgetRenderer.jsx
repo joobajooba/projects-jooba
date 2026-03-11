@@ -113,12 +113,16 @@ export default function WidgetRenderer({
 
       {widget.type === WIDGET_TYPES.NFT && (
         <div className="h-full flex flex-col overflow-hidden rounded-xl">
-          <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden rounded-xl bg-gray-800/50">
+          <div
+            className={`flex-1 min-h-0 flex items-center justify-center overflow-hidden bg-gray-800/50 ${
+              widget.data?.corners === 'square' ? 'rounded-none' : 'rounded-xl'
+            }`}
+          >
             {widget.data?.imageUrl ? (
               <img
                 src={widget.data.imageUrl}
                 alt=""
-                className="w-full h-full rounded-xl"
+                className={`w-full h-full ${widget.data?.corners === 'square' ? 'rounded-none' : 'rounded-xl'}`}
                 style={{
                   objectFit: widget.data?.objectFit ?? 'contain',
                 }}

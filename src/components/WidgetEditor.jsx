@@ -388,6 +388,17 @@ export default function WidgetEditor({ widget, canvasSize, onChangeWidget, onDel
               <option value="cover">Fill panel (stretch/crop)</option>
             </select>
           </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-gray-500 text-xs">Corners</span>
+            <select
+              value={widget.data?.corners ?? 'rounded'}
+              onChange={(e) => updateData({ corners: e.target.value })}
+              className="px-2 py-1 rounded border border-gray-600 bg-gray-800 text-gray-200"
+            >
+              <option value="rounded">Rounded</option>
+              <option value="square">Square</option>
+            </select>
+          </label>
           <hr className="border-gray-700" />
           <h4 className="text-gray-400 font-medium">Border</h4>
           <label className="flex flex-col gap-1">
