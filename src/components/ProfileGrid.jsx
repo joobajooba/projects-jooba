@@ -137,6 +137,7 @@ export default function ProfileGrid({ onProfileChange }) {
 
   const [dragState, setDragState] = useState(null);
   const [resizeState, setResizeState] = useState(null);
+  const prevCanvasSizeRef = useRef(null);
 
   const measureCanvas = useCallback(() => {
     const el = canvasRef.current;
@@ -212,6 +213,42 @@ export default function ProfileGrid({ onProfileChange }) {
     setTimeout(() => setSaveStatus(null), 2000);
   }, [address, widgets]);
 
+  // When canvas size changes (e.g. panel collapse), scale all widgets proportionally
+  useEffect(() => {
+    const cw = canvasSize.width ?? 0;
+    const ch = canvasSize.height ?? 0;
+    if (!cw || !ch) return;
+
+    const prev = prevCanvasSizeRef.current;
+    prevCanvasSizeRef.current = { width: cw, height: ch };
+
+    if (prev && prev.width > 0 && prev.height > 0 && (prev.width !== cw || prev.height !== ch)) {
+      const scaleX = cw / prev.width;
+      const scaleY = ch / prev.height;
+      setWidgets((prevWidgets) =>
+        prevWidgets.map((widget) => {
+          const currW = widget.fixedWidthPx ?? (widget.w ?? 4) * CELL_SIZE;
+          const currH = widget.fixedHeightPx ?? (widget.h ?? 4) * CELL_SIZE;
+          const newX = Math.round((widget.x ?? 0) * scaleX);
+          const newY = Math.round((widget.y ?? 0) * scaleY);
+          const newW = Math.max(8, Math.round(currW * scaleX));
+          const newH = Math.max(8, Math.round(currH * scaleY));
+          const updated = {
+            ...widget,
+            x: newX,
+            y: newY,
+            fixedWidthPx: newW,
+            fixedHeightPx: newH,
+          };
+          // User panel keeps percentage-based size; overwrite in next effect
+          if (widget.id === 'user-panel') return updated;
+          return updated;
+        })
+      );
+    }
+  }, [canvasSize.width, canvasSize.height]);
+
+  // User panel: keep fixed percentage of canvas
   useEffect(() => {
     if (!canvasSize.width || !canvasSize.height) return;
     const w = canvasSize.width * 0.175;
