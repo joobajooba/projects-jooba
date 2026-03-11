@@ -23,18 +23,24 @@ export default function WidgetRenderer({
 
   const handleClick = (e) => e.stopPropagation();
 
+  const userPanelBorder =
+    isUserPanel && widget.data?.borderEnabled
+      ? { borderWidth: 2, borderStyle: 'solid', borderColor: widget.data?.borderColor ?? '#4f46e5' }
+      : {};
+
   return (
     <div
       role="button"
       tabIndex={0}
       className={`absolute rounded-xl border bg-gray-900/90 cursor-move ${
         isSelected ? 'ring-2 ring-indigo-500/80' : 'border-gray-700'
-      } ${isUserPanel ? 'border-0' : ''}`}
+      } ${isUserPanel && !widget.data?.borderEnabled ? 'border-0' : ''}`}
       style={{
         left: x,
         top: y,
         width: w,
         height: h,
+        ...userPanelBorder,
       }}
       onMouseDown={(e) => {
         handleClick(e);

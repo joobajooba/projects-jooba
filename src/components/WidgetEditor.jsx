@@ -173,6 +173,7 @@ export default function WidgetEditor({ widget, canvasSize, onChangeWidget, onDel
               className="px-2 py-1 rounded border border-gray-600 bg-gray-800 text-gray-200"
             />
           </label>
+          <hr className="border-gray-700" />
           <label className="flex flex-col gap-1">
             <span className="text-gray-400">Avatar</span>
             <div className="flex flex-col gap-2">
@@ -190,10 +191,34 @@ export default function WidgetEditor({ widget, canvasSize, onChangeWidget, onDel
                 onClick={() => setAvatarModalOpen(true)}
                 className="w-full px-3 py-2 rounded-lg border border-gray-600 bg-gray-800 text-gray-200 text-sm hover:bg-gray-700 hover:border-indigo-600/50 transition-colors"
               >
-                {widget.data?.avatarUrl ? 'Change NFT avatar' : 'Select NFT avatar'}
+                Select NFT
               </button>
             </div>
           </label>
+          <hr className="border-gray-700" />
+          <div className="space-y-2">
+            <span className="text-gray-400 text-sm">Border</span>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={!!widget.data?.borderEnabled}
+                onChange={(e) => updateData({ borderEnabled: e.target.checked })}
+                className="rounded border-gray-600 bg-gray-800 text-indigo-600"
+              />
+              <span className="text-xs text-gray-400">Show border</span>
+            </label>
+            {widget.data?.borderEnabled && (
+              <label className="flex flex-col gap-1">
+                <span className="text-gray-500 text-xs">Border colour</span>
+                <input
+                  type="color"
+                  value={widget.data?.borderColor ?? '#4f46e5'}
+                  onChange={(e) => updateData({ borderColor: e.target.value })}
+                  className="w-full h-8 rounded border border-gray-600 bg-gray-800 cursor-pointer"
+                />
+              </label>
+            )}
+          </div>
           <AvatarNFTModal
             isOpen={avatarModalOpen}
             onClose={() => setAvatarModalOpen(false)}
