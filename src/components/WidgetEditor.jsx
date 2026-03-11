@@ -32,6 +32,8 @@ function getWidgetSizeAndPosition(widget, canvasSize) {
   };
 }
 
+const MAX_DATA_URL_SIZE = 2 * 1024 * 1024; // 2MB – over this we keep blob and warn
+
 function ImageUploadInput({ value, onChange }) {
   const hasBase44 = typeof window !== 'undefined' && window.base44?.integrations?.Core?.UploadFile;
   if (hasBase44) {
@@ -53,19 +55,35 @@ function ImageUploadInput({ value, onChange }) {
     );
   }
   return (
-    <input
-      type="file"
-      accept="image/*"
-      onChange={(e) => {
-        const file = e.target.files?.[0];
-        if (file) {
-          const url = URL.createObjectURL(file);
-          onChange(url);
-        }
-        e.target.value = '';
-      }}
-      className="w-full text-sm text-gray-300 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-indigo-600 file:text-white"
-    />
+    <>
+      <input
+        type="file"
+        accept="image/*"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          if (file.size <= MAX_DATA_URL_SIZE) {
+            const reader = new FileReader();
+            reader.onload = () => {
+              const dataUrl = reader.result;
+              if (typeof dataUrl === 'string') onChange(dataUrl);
+            };
+            reader.readAsDataURL(file);
+          } else {
+            const url = URL.createObjectURL(file);
+            onChange(url);
+            console.warn(
+              'Image is over 2MB; using temporary link. It will not persist after refresh. Use Image URL with a permanent link for large images.'
+            );
+          }
+          e.target.value = '';
+        }}
+        className="w-full text-sm text-gray-300 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-indigo-600 file:text-white"
+      />
+      <p className="text-xs text-gray-500 mt-1">
+        Images under 2MB are stored so they persist after refresh. For larger images, use a permanent Image URL.
+      </p>
+    </>
   );
 }
 
