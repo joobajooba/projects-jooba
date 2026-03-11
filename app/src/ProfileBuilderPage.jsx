@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import GridLayout from 'react-grid-layout';
+import 'react-grid-layout/css/styles.css';
+import 'react-resizable/css/styles.css';
 
 const CELL_SIZE_PX = 46;
 const GRID_LINE = 'rgba(255,255,255,0.08)';
@@ -495,6 +497,8 @@ export default function ProfileBuilderPage() {
           containerPadding={[0, 0]}
           compactType={null}
           preventCollision={false}
+          isResizable
+          resizeHandles={['se']}
           draggableHandle=".widget-drag-handle"
           onLayoutChange={(next) => setLayout(next)}
           onDragStop={(_, __, newItem) => {
