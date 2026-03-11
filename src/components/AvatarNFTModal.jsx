@@ -2,11 +2,15 @@ import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import AvatarNFTSelector from './AvatarNFTSelector';
 
-export default function AvatarNFTModal({ isOpen, onClose, value, onSelect }) {
+export default function AvatarNFTModal({ isOpen, onClose, value, onSelect, onSelectNft }) {
   if (!isOpen) return null;
 
-  const handleSelect = (url) => {
-    onSelect(url);
+  const handleSelect = (nft) => {
+    if (onSelectNft) {
+      onSelectNft(nft);
+    } else {
+      onSelect(nft?.image);
+    }
     onClose();
   };
 
@@ -37,7 +41,7 @@ export default function AvatarNFTModal({ isOpen, onClose, value, onSelect }) {
         </div>
         <div className="p-4 overflow-auto min-h-0">
           <AvatarNFTSelector
-            value={value}
+            value={typeof value === 'string' ? value : value?.image}
             onChange={handleSelect}
             variant="modal"
           />

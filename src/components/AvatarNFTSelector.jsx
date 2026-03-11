@@ -58,6 +58,7 @@ async function fetchAllNFTsForOwner(owner, network) {
           id: `${nft.contract?.address ?? ''}-${nft.tokenId ?? ''}-${network}`,
           image,
           name: nft?.title ?? nft?.raw?.metadata?.name ?? `#${nft?.tokenId ?? ''}`,
+          collection: nft?.contract?.name ?? nft?.collection?.name ?? '',
           network,
         });
       }
@@ -152,7 +153,7 @@ export default function AvatarNFTSelector({ value, onChange, variant = 'inline' 
           <button
             key={nft.id}
             type="button"
-            onClick={() => nft.image && onChange(nft.image)}
+            onClick={() => nft.image && onChange(nft)}
             disabled={!nft.image}
             className={`aspect-square rounded overflow-hidden border-2 bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
               value === nft.image ? 'border-indigo-500' : 'border-transparent hover:border-gray-600'

@@ -71,6 +71,7 @@ function ImageUploadInput({ value, onChange }) {
 
 export default function WidgetEditor({ widget, canvasSize, onChangeWidget, onDeleteWidget }) {
   const [avatarModalOpen, setAvatarModalOpen] = useState(false);
+  const [nftModalOpen, setNftModalOpen] = useState(false);
 
   if (!widget) {
     return (
@@ -336,14 +337,25 @@ export default function WidgetEditor({ widget, canvasSize, onChangeWidget, onDel
       {widget.type === WIDGET_TYPES.NFT && (
         <div className="space-y-3">
           <label className="flex flex-col gap-1">
-            <span className="text-gray-400">Image URL</span>
-            <input
-              type="text"
-              value={widget.data?.imageUrl ?? ''}
-              onChange={(e) => updateData({ imageUrl: e.target.value })}
-              placeholder="https://..."
-              className="px-2 py-1 rounded border border-gray-600 bg-gray-800 text-gray-200"
-            />
+            <span className="text-gray-400">NFT</span>
+            <div className="flex flex-col gap-2">
+              {widget.data?.imageUrl && (
+                <div className="w-14 h-14 rounded-lg overflow-hidden border border-gray-700 bg-gray-800 shrink-0">
+                  <img
+                    src={widget.data.imageUrl}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => setNftModalOpen(true)}
+                className="w-full px-3 py-2 rounded-lg border border-gray-600 bg-gray-800 text-gray-200 text-sm hover:bg-gray-700 hover:border-indigo-600/50 transition-colors"
+              >
+                Select NFT
+              </button>
+            </div>
           </label>
           <label className="flex flex-col gap-1">
             <span className="text-gray-400">Name</span>
@@ -351,6 +363,7 @@ export default function WidgetEditor({ widget, canvasSize, onChangeWidget, onDel
               type="text"
               value={widget.data?.name ?? ''}
               onChange={(e) => updateData({ name: e.target.value })}
+              placeholder="Auto-filled when NFT selected"
               className="px-2 py-1 rounded border border-gray-600 bg-gray-800 text-gray-200"
             />
           </label>
@@ -360,9 +373,55 @@ export default function WidgetEditor({ widget, canvasSize, onChangeWidget, onDel
               type="text"
               value={widget.data?.collection ?? ''}
               onChange={(e) => updateData({ collection: e.target.value })}
+              placeholder="Auto-filled when NFT selected"
               className="px-2 py-1 rounded border border-gray-600 bg-gray-800 text-gray-200"
             />
           </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-gray-500 text-xs">Image fit</span>
+            <select
+              value={widget.data?.objectFit ?? 'contain'}
+              onChange={(e) => updateData({ objectFit: e.target.value })}
+              className="px-2 py-1 rounded border border-gray-600 bg-gray-800 text-gray-200"
+            >
+              <option value="contain">Fit inside (no crop)</option>
+              <option value="cover">Fill panel (stretch/crop)</option>
+            </select>
+          </label>
+          <hr className="border-gray-700" />
+          <h4 className="text-gray-400 font-medium">Border</h4>
+          <label className="flex flex-col gap-1">
+            <span className="text-gray-500 text-xs">Border Width (px)</span>
+            <input
+              type="number"
+              min={0}
+              value={widget.data?.borderWidth ?? 0}
+              onChange={(e) => updateData({ borderWidth: Number(e.target.value) || 0 })}
+              className="px-2 py-1 rounded border border-gray-600 bg-gray-800 text-gray-200"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-gray-500 text-xs">Border Color</span>
+            <input
+              type="color"
+              value={widget.data?.borderColor ?? '#6b7280'}
+              onChange={(e) => updateData({ borderColor: e.target.value })}
+              className="w-full h-8 rounded border border-gray-600 bg-gray-800 cursor-pointer"
+            />
+          </label>
+          <AvatarNFTModal
+            isOpen={nftModalOpen}
+            onClose={() => setNftModalOpen(false)}
+            value={widget.data?.imageUrl}
+            onSelectNft={(nft) => {
+              updateData({
+                imageUrl: nft?.image ?? '',
+                name: nft?.name ?? '',
+                collection: nft?.collection ?? '',
+              });
+              setNftModalOpen(false);
+            }}
+          />
         </div>
       )}
 
