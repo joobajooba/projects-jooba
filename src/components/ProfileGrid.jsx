@@ -32,7 +32,7 @@ function createDefaultWidget(type, index, canvasSize, existingWidgets) {
       locked: true,
       fixedWidthPx: cw * 0.175,
       fixedHeightPx: ch * 0.4,
-      data: { name: '', bio: '', avatarUrl: '' },
+      data: { name: '', avatarUrl: '' },
     };
   }
 
@@ -190,12 +190,16 @@ export default function ProfileGrid({ onProfileChange }) {
       return;
     }
     setSaveStatus('saving');
+    const userPanel = widgets.find((w) => w.id === 'user-panel');
+    const payload = {
+      owner_wallet: address.toLowerCase(),
+      layout_json: widgets,
+      username: userPanel?.data?.name?.trim() || null,
+      avatar_url: userPanel?.data?.avatarUrl || null,
+    };
     const { error } = await supabase
       .from('profiles')
-      .upsert(
-        { owner_wallet: address.toLowerCase(), layout_json: widgets },
-        { onConflict: 'owner_wallet' }
-      );
+      .upsert(payload, { onConflict: 'owner_wallet' });
     if (error) {
       console.warn('Profile save failed:', error);
       setSaveStatus('error');

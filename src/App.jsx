@@ -13,36 +13,48 @@ import {
 } from 'lucide-react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import ProfileGrid from './components/ProfileGrid';
+import { startXAuth } from './lib/xAuth';
 
 function SidebarActions() {
   return (
     <ConnectButton.Custom>
-      {({ account, openConnectModal, openAccountModal }) => (
-        <div className="flex gap-1 w-full">
-          <button
-            type="button"
-            onClick={account ? openAccountModal : openConnectModal}
-            className="flex-1 aspect-square flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-gray-100"
-            aria-label={account ? 'Account' : 'Connect wallet'}
-          >
-            <CreditCard className="w-5 h-5" />
-          </button>
-          <button
-            type="button"
-            className="flex-1 aspect-square flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-gray-100"
-            aria-label="Clipboard"
-          >
-            <Clipboard className="w-5 h-5" />
-          </button>
-          <button
-            type="button"
-            className="flex-1 aspect-square flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-gray-100"
-            aria-label="Settings"
-          >
-            <Settings className="w-5 h-5" />
-          </button>
-        </div>
-      )}
+      {({ account, openConnectModal, openAccountModal }) => {
+        const handleConnectX = () => {
+          if (account?.address) {
+            startXAuth(account.address);
+          } else {
+            openConnectModal?.();
+          }
+        };
+        return (
+          <div className="flex gap-1 w-full">
+            <button
+              type="button"
+              onClick={account ? openAccountModal : openConnectModal}
+              className="flex-1 aspect-square flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-gray-100"
+              aria-label={account ? 'Account' : 'Connect wallet'}
+            >
+              <CreditCard className="w-5 h-5" />
+            </button>
+            <button
+              type="button"
+              onClick={handleConnectX}
+              className="flex-1 aspect-square flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-gray-100"
+              aria-label="Connect X (Twitter)"
+              title="Connect X profile"
+            >
+              <Clipboard className="w-5 h-5" />
+            </button>
+            <button
+              type="button"
+              className="flex-1 aspect-square flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-gray-100"
+              aria-label="Settings"
+            >
+              <Settings className="w-5 h-5" />
+            </button>
+          </div>
+        );
+      }}
     </ConnectButton.Custom>
   );
 }

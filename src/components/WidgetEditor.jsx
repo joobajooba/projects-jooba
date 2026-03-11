@@ -174,15 +174,6 @@ export default function WidgetEditor({ widget, canvasSize, onChangeWidget, onDel
             />
           </label>
           <label className="flex flex-col gap-1">
-            <span className="text-gray-400">Bio</span>
-            <textarea
-              value={widget.data?.bio ?? ''}
-              onChange={(e) => updateData({ bio: e.target.value })}
-              rows={3}
-              className="px-2 py-1 rounded border border-gray-600 bg-gray-800 text-gray-200 resize-y"
-            />
-          </label>
-          <label className="flex flex-col gap-1">
             <span className="text-gray-400">Avatar</span>
             <div className="flex flex-col gap-2">
               {widget.data?.avatarUrl && (

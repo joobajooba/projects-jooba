@@ -86,6 +86,7 @@ export async function POST(request) {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
     const normalizedWallet = String(wallet).toLowerCase();
+
     const { error: updateError } = await supabase
       .from('user_data')
       .upsert(
@@ -98,6 +99,17 @@ export async function POST(request) {
         JSON.stringify({ error: 'Failed to save X link', details: updateError.message }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
+    }
+
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .upsert(
+        { owner_wallet: normalizedWallet, x_username: xUsername },
+        { onConflict: 'owner_wallet' }
+      );
+
+    if (profileError) {
+      console.warn('Profiles x_username update failed:', profileError.message);
     }
 
     return new Response(

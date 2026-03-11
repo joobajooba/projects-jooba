@@ -54,9 +54,6 @@ export default function WidgetRenderer({
           <div className="font-medium text-gray-200 truncate w-full mt-2 text-center">
             {widget.data?.name || 'Name'}
           </div>
-          <div className="text-sm text-gray-400 line-clamp-2 w-full text-center">
-            {widget.data?.bio || 'Bio'}
-          </div>
           <div className="text-xs text-gray-500 mt-1 text-center">Drag this panel...</div>
         </div>
       )}

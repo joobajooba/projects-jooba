@@ -6,8 +6,16 @@ import { defineChain } from 'viem';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { getDefaultConfig, RainbowKitProvider } from '@rainbow-me/rainbowkit';
 import App from './App';
+import AuthXCallback from './pages/AuthXCallback';
 import './index.css';
 import '@rainbow-me/rainbowkit/styles.css';
+
+function Root() {
+  if (typeof window !== 'undefined' && window.location.pathname === '/auth/x/callback') {
+    return <AuthXCallback />;
+  }
+  return <App />;
+}
 
 const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || 'YOUR_PROJECT_ID';
 
@@ -33,7 +41,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider modalSize="compact">
-          <App />
+          <Root />
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
