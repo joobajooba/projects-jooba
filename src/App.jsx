@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
   Sparkles,
   Home,
@@ -8,6 +8,7 @@ import {
   Coins,
   User,
 } from 'lucide-react';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import ProfileGrid from './components/ProfileGrid';
 
 const PLACEHOLDER_PAGES = {
@@ -30,6 +31,11 @@ function PlaceholderPage({ pageKey }) {
 
 export default function App() {
   const [activePage, setActivePage] = useState('profile');
+  const [profileAvatarUrl, setProfileAvatarUrl] = useState('');
+
+  const handleProfileChange = useCallback((data) => {
+    if (data?.avatarUrl !== undefined) setProfileAvatarUrl(data.avatarUrl ?? '');
+  }, []);
 
   const navItems = [
     { key: 'home', icon: Home, label: 'Home' },
@@ -52,6 +58,24 @@ export default function App() {
             </div>
           </div>
         </header>
+        <div className="p-4 flex flex-col items-center gap-3 border-b border-gray-800">
+          <div className="aspect-square w-full max-w-[88px] rounded-lg overflow-hidden bg-gray-800 border border-gray-700 shrink-0">
+            {profileAvatarUrl ? (
+              <img
+                src={profileAvatarUrl}
+                alt="Profile"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-gray-500">
+                <User className="w-8 h-8" />
+              </div>
+            )}
+          </div>
+          <div className="w-full flex justify-center">
+            <ConnectButton showBalance={false} />
+          </div>
+        </div>
         <nav className="flex-1 py-2">
           {navItems.map(({ key, icon: Icon, label }) => (
             <button
@@ -76,7 +100,7 @@ export default function App() {
       </aside>
       <main className="flex-1 flex flex-col min-w-0">
         {activePage === 'profile' ? (
-          <ProfileGrid />
+          <ProfileGrid onProfileChange={handleProfileChange} />
         ) : (
           <PlaceholderPage pageKey={activePage} />
         )}

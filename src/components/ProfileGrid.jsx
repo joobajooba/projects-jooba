@@ -123,7 +123,7 @@ function ensureUserPanel(widgets, canvasSize) {
   return [userPanel, ...widgets];
 }
 
-export default function ProfileGrid() {
+export default function ProfileGrid({ onProfileChange }) {
   const canvasRef = useRef(null);
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
   const [widgets, setWidgets] = useState([]);
@@ -253,10 +253,20 @@ export default function ProfileGrid() {
     };
   }, [resizeState, canvasSize]);
 
+  useEffect(() => {
+    const userPanel = widgets.find((w) => w.id === 'user-panel');
+    if (userPanel?.data && onProfileChange) {
+      onProfileChange(userPanel.data);
+    }
+  }, [widgets.length, onProfileChange]);
+
   const onChangeWidget = (updated) => {
     setWidgets((prev) =>
       prev.map((w) => (w.id === updated.id ? updated : w))
     );
+    if (updated.id === 'user-panel' && updated.data && onProfileChange) {
+      onProfileChange(updated.data);
+    }
   };
 
   const onDeleteWidget = (id) => {
