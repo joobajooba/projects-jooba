@@ -479,7 +479,6 @@ export default function ProfileBuilderPage() {
             const safeType = WIDGET_TEMPLATES.some((t) => t.type === type) ? type : null;
             if (!safeType) return;
             addWidgetAt(safeType, item.x, item.y);
-            setLayout(nextLayout.filter((l) => l.i !== '__dropping__'));
           }}
           onDragStop={(_, __, newItem) => {
             setSelectedId(newItem?.i || null);
