@@ -1250,7 +1250,7 @@ export default function ProfileBuilderPage({ staticView = false }) {
                   boxSizing: 'border-box',
                   overflow: 'hidden',
                   border: hasOutline ? '1px solid rgba(255,255,255,0.14)' : undefined,
-                  boxShadow: hasBorder ? 'inset 0 0 0 2px rgba(255,255,255,0.95)' : undefined,
+                  boxShadow: hasBorder ? 'inset 0 0 0 1px rgba(255,255,255,0.18)' : undefined,
                   ...(item.type === 'rectangle' && {
                     background: '#1a1a1a',
                     color: '#e5e5e5',
@@ -1596,35 +1596,35 @@ export default function ProfileBuilderPage({ staticView = false }) {
                 ) : (
                   item.label || ''
                 )}
-                {effectiveEditMode && !isProfileBlock && (
+                {effectiveEditMode && !isProfileBlock && selectedWidgetInstanceId === item.instanceId && (
                   <>
                     {[
-                      { handle: 'nw', cursor: 'nwse-resize', style: { left: 0, top: 0, width: 18, height: 18, borderRight: '2px solid rgba(255,255,255,0.4)', borderBottom: '2px solid rgba(255,255,255,0.4)', borderBottomRightRadius: 3 } },
-                      { handle: 'n', cursor: 'ns-resize', style: { left: 0, right: 0, top: 0, height: 14, borderBottom: '1px solid rgba(255,255,255,0.35)' } },
-                      { handle: 'ne', cursor: 'nesw-resize', style: { right: 0, top: 0, width: 18, height: 18, borderLeft: '2px solid rgba(255,255,255,0.4)', borderBottom: '2px solid rgba(255,255,255,0.4)', borderBottomLeftRadius: 3 } },
-                      { handle: 'e', cursor: 'ew-resize', style: { right: 0, top: 0, bottom: 0, width: 14, borderLeft: '1px solid rgba(255,255,255,0.35)' } },
-                      { handle: 'se', cursor: 'nwse-resize', style: { right: 0, bottom: 0, width: 18, height: 18, borderLeft: '2px solid rgba(255,255,255,0.4)', borderTop: '2px solid rgba(255,255,255,0.4)', borderTopLeftRadius: 3 } },
-                      { handle: 's', cursor: 'ns-resize', style: { left: 0, right: 0, bottom: 0, height: 14, borderTop: '1px solid rgba(255,255,255,0.35)' } },
-                      { handle: 'sw', cursor: 'nesw-resize', style: { left: 0, bottom: 0, width: 18, height: 18, borderRight: '2px solid rgba(255,255,255,0.4)', borderTop: '2px solid rgba(255,255,255,0.4)', borderTopRightRadius: 3 } },
-                      { handle: 'w', cursor: 'ew-resize', style: { left: 0, top: 0, bottom: 0, width: 14, borderRight: '1px solid rgba(255,255,255,0.35)' } },
-                    ].map(({ handle, cursor, style }) => (
+                      { handle: 'nw', cursor: 'nwse-resize', pos: { left: 4, top: 4 } },
+                      { handle: 'ne', cursor: 'nesw-resize', pos: { right: 4, top: 4 } },
+                      { handle: 'sw', cursor: 'nesw-resize', pos: { left: 4, bottom: 4 } },
+                      { handle: 'se', cursor: 'nwse-resize', pos: { right: 4, bottom: 4 } },
+                    ].map(({ handle, cursor, pos }) => (
                       <div
                         key={handle}
                         role="button"
-                        tabIndex={0}
                         title="Resize"
-                        onMouseDown={(e) => {
+                        onMouseDownCapture={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
                           handleResizeStart(item.instanceId, e.clientX, e.clientY, handle);
                         }}
                         style={{
                           position: 'absolute',
-                          zIndex: 50,
-                          pointerEvents: 'auto',
+                          zIndex: 60,
+                          width: 12,
+                          height: 12,
+                          borderRadius: 3,
+                          background: 'rgba(255,255,255,0.65)',
+                          boxShadow: '0 2px 10px rgba(0,0,0,0.35)',
                           cursor,
-                          boxSizing: 'border-box',
-                          ...style,
+                          pointerEvents: 'auto',
+                          outline: 'none',
+                          ...pos,
                         }}
                       />
                     ))}
