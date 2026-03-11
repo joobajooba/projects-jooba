@@ -4,6 +4,8 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 const ALCHEMY_ETH_BASE = 'https://eth-mainnet.g.alchemy.com/nft/v3';
 const ALCHEMY_APECHAIN_BASE = 'https://apechain-mainnet.g.alchemy.com/nft/v3';
+const PAGE_SIZE = 100;
+const IPFS_GATEWAY = 'https://ipfs.io/ipfs/';
 
 function getAlchemyKey(network) {
   const key = import.meta.env.VITE_ALCHEMY_API_KEY;
@@ -12,33 +14,59 @@ function getAlchemyKey(network) {
   return network === 'apechain' ? apeKey : ethKey;
 }
 
-async function fetchNFTsForOwner(owner, network) {
+function toGatewayUrl(url) {
+  if (!url || typeof url !== 'string') return null;
+  const t = url.trim();
+  if (t.startsWith('ipfs://')) return IPFS_GATEWAY + t.slice(7);
+  if (t.startsWith('Qm') && t.length === 46) return IPFS_GATEWAY + t;
+  if (t.startsWith('ba')) return IPFS_GATEWAY + t;
+  return t;
+}
+
+function getNftImageUrl(nft) {
+  const raw =
+    nft?.image?.cachedUrl ??
+    nft?.image?.thumbnailUrl ??
+    nft?.image?.pngUrl ??
+    nft?.image?.originalUrl ??
+    nft?.media?.[0]?.gateway ??
+    nft?.media?.[0]?.raw ??
+    nft?.raw?.metadata?.image;
+  const url = typeof raw === 'string' ? raw : null;
+  return url ? toGatewayUrl(url) : null;
+}
+
+async function fetchAllNFTsForOwner(owner, network) {
   const base = network === 'apechain' ? ALCHEMY_APECHAIN_BASE : ALCHEMY_ETH_BASE;
   const key = getAlchemyKey(network);
   if (!key || key === 'your_alchemy_api_key_here') return [];
-  const url = `${base}/${key}/getNFTsForOwner?owner=${owner}&pageSize=30`;
+  const all = [];
+  let pageKey = null;
   try {
-    const res = await fetch(url);
-    const data = await res.json();
-    const list = data?.ownedNfts ?? [];
-    return list.map((nft) => {
-      const img =
-        nft?.image?.cachedUrl ??
-        nft?.image?.pngUrl ??
-        nft?.image?.originalUrl ??
-        nft?.raw?.metadata?.image ??
-        (typeof nft?.raw?.metadata?.image === 'string' ? nft.raw.metadata.image : null);
-      return {
-        id: `${nft.contract?.address ?? ''}-${nft.tokenId ?? ''}-${network}`,
-        image: img,
-        name: nft?.title ?? nft?.raw?.metadata?.name ?? `#${nft?.tokenId ?? ''}`,
-        network,
-      };
-    }).filter((n) => n.image);
+    do {
+      const params = new URLSearchParams({
+        owner,
+        pageSize: String(PAGE_SIZE),
+      });
+      if (pageKey) params.set('pageKey', pageKey);
+      const res = await fetch(`${base}/${key}/getNFTsForOwner?${params}`);
+      const data = await res.json();
+      const list = data?.ownedNfts ?? [];
+      for (const nft of list) {
+        const image = getNftImageUrl(nft);
+        all.push({
+          id: `${nft.contract?.address ?? ''}-${nft.tokenId ?? ''}-${network}`,
+          image,
+          name: nft?.title ?? nft?.raw?.metadata?.name ?? `#${nft?.tokenId ?? ''}`,
+          network,
+        });
+      }
+      pageKey = data?.pageKey ?? null;
+    } while (pageKey);
   } catch (e) {
     console.warn(`Alchemy NFT fetch (${network}) failed:`, e);
-    return [];
   }
+  return all;
 }
 
 export default function AvatarNFTSelector({ value, onChange, variant = 'inline' }) {
@@ -56,8 +84,8 @@ export default function AvatarNFTSelector({ value, onChange, variant = 'inline' 
     setLoading(true);
     setError(null);
     Promise.all([
-      fetchNFTsForOwner(address, 'ethereum'),
-      fetchNFTsForOwner(address, 'apechain'),
+      fetchAllNFTsForOwner(address, 'ethereum'),
+      fetchAllNFTsForOwner(address, 'apechain'),
     ])
       .then(([eth, ape]) => {
         setNfts([...eth, ...ape]);
@@ -124,17 +152,31 @@ export default function AvatarNFTSelector({ value, onChange, variant = 'inline' 
           <button
             key={nft.id}
             type="button"
-            onClick={() => onChange(nft.image)}
+            onClick={() => nft.image && onChange(nft.image)}
+            disabled={!nft.image}
             className={`aspect-square rounded overflow-hidden border-2 bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
               value === nft.image ? 'border-indigo-500' : 'border-transparent hover:border-gray-600'
-            }`}
+            } ${!nft.image ? 'opacity-60 cursor-not-allowed' : ''}`}
           >
-            <img
-              src={nft.image}
-              alt={nft.name}
-              className="w-full h-full object-cover"
-              onError={(e) => { e.target.style.display = 'none'; }}
-            />
+            {nft.image ? (
+              <img
+                src={nft.image}
+                alt={nft.name}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  const place = e.target.nextElementSibling;
+                  if (place) place.classList.remove('hidden');
+                }}
+              />
+            ) : null}
+            <span
+              className={`w-full h-full flex items-center justify-center text-xs text-gray-500 p-1 text-center ${
+                nft.image ? 'hidden' : ''
+              }`}
+            >
+              No image
+            </span>
           </button>
         ))}
       </div>
