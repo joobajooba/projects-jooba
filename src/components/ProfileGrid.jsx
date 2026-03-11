@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, LayoutGrid, Paintbrush } from 'lucide-react';
+import { ChevronLeft, ChevronRight, LayoutGrid, Paintbrush, Save } from 'lucide-react';
+import { useAccount } from 'wagmi';
 import { WIDGET_TYPES, GRID_CONFIG } from './WidgetTypes';
 import WidgetRenderer from './WidgetRenderer';
 import WidgetPalette from './WidgetPalette';
 import WidgetEditor from './WidgetEditor';
+import { supabase } from '../lib/supabase';
 
 const { CELL_SIZE } = GRID_CONFIG;
 
@@ -125,11 +127,13 @@ function ensureUserPanel(widgets, canvasSize) {
 
 export default function ProfileGrid({ onProfileChange }) {
   const canvasRef = useRef(null);
+  const { address } = useAccount();
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
   const [widgets, setWidgets] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [panelCollapsed, setPanelCollapsed] = useState(false);
   const [rightTab, setRightTab] = useState('add'); // 'add' | 'style'
+  const [saveStatus, setSaveStatus] = useState(null); // null | 'saving' | 'saved' | 'error'
 
   const [dragState, setDragState] = useState(null);
   const [resizeState, setResizeState] = useState(null);
@@ -155,6 +159,46 @@ export default function ProfileGrid({ onProfileChange }) {
   useEffect(() => {
     setWidgets((prev) => ensureUserPanel(prev, canvasSize));
   }, [canvasSize]);
+
+  // Load saved profile from Supabase when wallet is connected
+  useEffect(() => {
+    if (!address || !supabase) return;
+    (async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('layout_json')
+        .eq('owner_wallet', address.toLowerCase())
+        .maybeSingle();
+      if (error) {
+        console.warn('Profile load failed:', error);
+        return;
+      }
+      if (data?.layout_json && Array.isArray(data.layout_json) && data.layout_json.length > 0) {
+        setWidgets((prev) => ensureUserPanel(data.layout_json, canvasSize));
+      }
+    })();
+  }, [address]);
+
+  const handleSave = useCallback(async () => {
+    if (!address || !supabase) {
+      setSaveStatus('error');
+      return;
+    }
+    setSaveStatus('saving');
+    const { error } = await supabase
+      .from('profiles')
+      .upsert(
+        { owner_wallet: address.toLowerCase(), layout_json: widgets },
+        { onConflict: 'owner_wallet' }
+      );
+    if (error) {
+      console.warn('Profile save failed:', error);
+      setSaveStatus('error');
+      return;
+    }
+    setSaveStatus('saved');
+    setTimeout(() => setSaveStatus(null), 2000);
+  }, [address, widgets]);
 
   useEffect(() => {
     if (!canvasSize.width || !canvasSize.height) return;
@@ -373,6 +417,27 @@ export default function ProfileGrid({ onProfileChange }) {
                   onChangeWidget={onChangeWidget}
                   onDeleteWidget={onDeleteWidget}
                 />
+              )}
+            </div>
+
+            <div className="p-3 border-t border-gray-800 shrink-0">
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={!address || saveStatus === 'saving' || !supabase}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors"
+              >
+                <Save className="w-4 h-4 shrink-0" />
+                {saveStatus === 'saving'
+                  ? 'Saving…'
+                  : saveStatus === 'saved'
+                    ? 'Saved'
+                    : saveStatus === 'error'
+                      ? 'Error'
+                      : 'Save profile'}
+              </button>
+              {!address && (
+                <p className="text-xs text-gray-500 mt-1.5 text-center">Connect wallet to save</p>
               )}
             </div>
           </>
