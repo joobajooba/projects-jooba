@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import ProfileGrid from './components/ProfileGrid';
+import CommunityPage from './pages/CommunityPage';
 import { startXAuth } from './lib/xAuth';
 
 function SidebarActions() {
@@ -162,6 +163,8 @@ export default function App() {
       <main className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
         {activePage === 'profile' ? (
           <ProfileGrid onProfileChange={handleProfileChange} />
+        ) : activePage === 'community' ? (
+          <CommunityPage />
         ) : (
           <PlaceholderPage pageKey={activePage} />
         )}
