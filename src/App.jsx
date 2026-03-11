@@ -89,8 +89,8 @@ export default function App() {
           <div className="flex items-center gap-2 text-indigo-400">
             <Sparkles className="w-5 h-5 shrink-0" />
             <div className="flex flex-col leading-tight">
-              <span className="font-semibold text-gray-100">Studio</span>
-              <span className="text-xs text-gray-400">Profile Builder</span>
+              <span className="font-semibold text-gray-100">SOJ</span>
+              <span className="text-xs text-gray-400">Apechain Communities</span>
             </div>
           </div>
         </header>

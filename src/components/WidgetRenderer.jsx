@@ -43,21 +43,21 @@ export default function WidgetRenderer({
       onClick={handleClick}
     >
       {widget.type === WIDGET_TYPES.USER_PANEL && (
-        <div className="h-full flex flex-col items-center justify-center p-4 text-center">
-          <div className="w-16 h-16 rounded-full bg-gray-700 flex items-center justify-center text-2xl text-gray-400 mb-2 overflow-hidden">
+        <div className="h-full flex flex-col p-4">
+          <div className="w-full h-[70%] shrink-0 rounded-lg bg-gray-700 flex items-center justify-center text-2xl text-gray-400 overflow-hidden">
             {widget.data?.avatarUrl ? (
               <img src={widget.data.avatarUrl} alt="" className="w-full h-full object-cover" />
             ) : (
               <span>?</span>
             )}
           </div>
-          <div className="font-medium text-gray-200 truncate w-full">
+          <div className="font-medium text-gray-200 truncate w-full mt-2 text-center">
             {widget.data?.name || 'Name'}
           </div>
-          <div className="text-sm text-gray-400 line-clamp-2 w-full">
+          <div className="text-sm text-gray-400 line-clamp-2 w-full text-center">
             {widget.data?.bio || 'Bio'}
           </div>
-          <div className="text-xs text-gray-500 mt-1">Drag this panel...</div>
+          <div className="text-xs text-gray-500 mt-1 text-center">Drag this panel...</div>
         </div>
       )}
 
