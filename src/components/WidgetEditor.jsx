@@ -1,4 +1,5 @@
 import { WIDGET_TYPES, GRID_CONFIG } from './WidgetTypes';
+import AvatarNFTSelector from './AvatarNFTSelector';
 
 const { CELL_SIZE } = GRID_CONFIG;
 
@@ -180,7 +181,7 @@ export default function WidgetEditor({ widget, canvasSize, onChangeWidget, onDel
           </label>
           <label className="flex flex-col gap-1">
             <span className="text-gray-400">Avatar</span>
-            <ImageUploadInput
+            <AvatarNFTSelector
               value={widget.data?.avatarUrl}
               onChange={(url) => updateData({ avatarUrl: url })}
             />

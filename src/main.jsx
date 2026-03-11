@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { WagmiProvider } from 'wagmi';
 import { mainnet } from 'wagmi/chains';
+import { defineChain } from 'viem';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { getDefaultConfig, RainbowKitProvider } from '@rainbow-me/rainbowkit';
 import App from './App';
@@ -10,10 +11,18 @@ import '@rainbow-me/rainbowkit/styles.css';
 
 const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || 'YOUR_PROJECT_ID';
 
+const apeChain = defineChain({
+  id: 33139,
+  name: 'ApeChain',
+  nativeCurrency: { name: 'APE', symbol: 'APE', decimals: 18 },
+  rpcUrls: { default: { http: ['https://rpc.apechain.com'] } },
+  blockExplorers: { default: { name: 'Explorer', url: 'https://explorer.apechain.com' } },
+});
+
 const config = getDefaultConfig({
   appName: 'Studio Profile Builder',
   projectId,
-  chains: [mainnet],
+  chains: [mainnet, apeChain],
   ssr: false,
 });
 
