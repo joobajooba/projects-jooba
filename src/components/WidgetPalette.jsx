@@ -1,9 +1,11 @@
-import { Type, Image, Award, Minus } from 'lucide-react';
+import { Type, Image, Layers, BarChart2, Award, Minus } from 'lucide-react';
 import { WIDGET_TYPES } from './WidgetTypes';
 
 const WIDGET_BUTTONS = [
   { type: WIDGET_TYPES.TEXT, icon: Type, label: 'Text' },
   { type: WIDGET_TYPES.IMAGE, icon: Image, label: 'Image' },
+  { type: WIDGET_TYPES.NFT, icon: Layers, label: 'NFT' },
+  { type: WIDGET_TYPES.STATISTIC, icon: BarChart2, label: 'Statistic' },
   { type: WIDGET_TYPES.BADGE, icon: Award, label: 'Badge' },
   { type: WIDGET_TYPES.DIVIDER, icon: Minus, label: 'Divider' },
 ];

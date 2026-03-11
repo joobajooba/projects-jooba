@@ -58,6 +58,30 @@ function createDefaultWidget(type, index, canvasSize, existingWidgets) {
     };
   }
 
+  if (type === WIDGET_TYPES.NFT) {
+    const stagger = existingWidgets.filter((w) => w.type === WIDGET_TYPES.NFT).length;
+    return {
+      ...base,
+      x: 50 + stagger * 45,
+      y: 90 + stagger * 45,
+      w: 4,
+      h: 5,
+      data: { imageUrl: '', name: '', collection: '' },
+    };
+  }
+
+  if (type === WIDGET_TYPES.STATISTIC) {
+    const stagger = existingWidgets.filter((w) => w.type === WIDGET_TYPES.STATISTIC).length;
+    return {
+      ...base,
+      x: 30 + stagger * 35,
+      y: 140 + stagger * 35,
+      w: 3,
+      h: 2,
+      data: { label: 'Statistic', value: '0', valueColor: '#e5e7eb', labelColor: '#9ca3af' },
+    };
+  }
+
   if (type === WIDGET_TYPES.BADGE) {
     const stagger = existingWidgets.filter((w) => w.type === WIDGET_TYPES.BADGE).length;
     return {

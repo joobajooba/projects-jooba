@@ -101,11 +101,15 @@ export default function WidgetEditor({ widget, canvasSize, onChangeWidget, onDel
         ? 'Text'
         : widget.type === WIDGET_TYPES.IMAGE
           ? 'Image'
-          : widget.type === WIDGET_TYPES.BADGE
-            ? 'Badge'
-            : widget.type === WIDGET_TYPES.DIVIDER
-              ? 'Divider'
-              : widget.type;
+          : widget.type === WIDGET_TYPES.NFT
+            ? 'NFT'
+            : widget.type === WIDGET_TYPES.STATISTIC
+              ? 'Statistic'
+              : widget.type === WIDGET_TYPES.BADGE
+                ? 'Badge'
+                : widget.type === WIDGET_TYPES.DIVIDER
+                  ? 'Divider'
+                  : widget.type;
 
   return (
     <div className="flex flex-col gap-4 text-sm">
@@ -272,6 +276,80 @@ export default function WidgetEditor({ widget, canvasSize, onChangeWidget, onDel
               type="color"
               value={widget.data?.borderColor ?? '#6b7280'}
               onChange={(e) => updateData({ borderColor: e.target.value })}
+              className="w-full h-8 rounded border border-gray-600 bg-gray-800 cursor-pointer"
+            />
+          </label>
+        </div>
+      )}
+
+      {widget.type === WIDGET_TYPES.NFT && (
+        <div className="space-y-3">
+          <label className="flex flex-col gap-1">
+            <span className="text-gray-400">Image URL</span>
+            <input
+              type="text"
+              value={widget.data?.imageUrl ?? ''}
+              onChange={(e) => updateData({ imageUrl: e.target.value })}
+              placeholder="https://..."
+              className="px-2 py-1 rounded border border-gray-600 bg-gray-800 text-gray-200"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-gray-400">Name</span>
+            <input
+              type="text"
+              value={widget.data?.name ?? ''}
+              onChange={(e) => updateData({ name: e.target.value })}
+              className="px-2 py-1 rounded border border-gray-600 bg-gray-800 text-gray-200"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-gray-400">Collection</span>
+            <input
+              type="text"
+              value={widget.data?.collection ?? ''}
+              onChange={(e) => updateData({ collection: e.target.value })}
+              className="px-2 py-1 rounded border border-gray-600 bg-gray-800 text-gray-200"
+            />
+          </label>
+        </div>
+      )}
+
+      {widget.type === WIDGET_TYPES.STATISTIC && (
+        <div className="space-y-3">
+          <label className="flex flex-col gap-1">
+            <span className="text-gray-400">Label</span>
+            <input
+              type="text"
+              value={widget.data?.label ?? ''}
+              onChange={(e) => updateData({ label: e.target.value })}
+              className="px-2 py-1 rounded border border-gray-600 bg-gray-800 text-gray-200"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-gray-400">Value</span>
+            <input
+              type="text"
+              value={widget.data?.value ?? ''}
+              onChange={(e) => updateData({ value: e.target.value })}
+              className="px-2 py-1 rounded border border-gray-600 bg-gray-800 text-gray-200"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-gray-400">Value color</span>
+            <input
+              type="color"
+              value={widget.data?.valueColor ?? '#e5e7eb'}
+              onChange={(e) => updateData({ valueColor: e.target.value })}
+              className="w-full h-8 rounded border border-gray-600 bg-gray-800 cursor-pointer"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-gray-400">Label color</span>
+            <input
+              type="color"
+              value={widget.data?.labelColor ?? '#9ca3af'}
+              onChange={(e) => updateData({ labelColor: e.target.value })}
               className="w-full h-8 rounded border border-gray-600 bg-gray-800 cursor-pointer"
             />
           </label>

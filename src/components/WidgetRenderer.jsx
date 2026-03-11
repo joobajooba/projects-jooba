@@ -93,6 +93,47 @@ export default function WidgetRenderer({
         </div>
       )}
 
+      {widget.type === WIDGET_TYPES.NFT && (
+        <div className="h-full flex flex-col overflow-hidden rounded-xl">
+          <div className="flex-1 min-h-0 flex items-center justify-center bg-gray-800/50">
+            {widget.data?.imageUrl ? (
+              <img
+                src={widget.data.imageUrl}
+                alt=""
+                className="max-w-full max-h-full object-contain"
+              />
+            ) : (
+              <span className="text-gray-500 text-sm">NFT</span>
+            )}
+          </div>
+          <div className="p-1.5 border-t border-gray-700 shrink-0">
+            <div className="text-xs font-medium text-gray-200 truncate">
+              {widget.data?.name || 'NFT name'}
+            </div>
+            <div className="text-xs text-gray-500 truncate">
+              {widget.data?.collection || 'Collection'}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {widget.type === WIDGET_TYPES.STATISTIC && (
+        <div className="h-full flex flex-col items-center justify-center p-3">
+          <div
+            className="text-2xl font-bold tabular-nums"
+            style={{ color: widget.data?.valueColor ?? '#e5e7eb' }}
+          >
+            {widget.data?.value ?? '0'}
+          </div>
+          <div
+            className="text-sm mt-0.5"
+            style={{ color: widget.data?.labelColor ?? '#9ca3af' }}
+          >
+            {widget.data?.label ?? 'Label'}
+          </div>
+        </div>
+      )}
+
       {widget.type === WIDGET_TYPES.BADGE && (
         <div className="h-full flex items-center justify-center p-2">
           <span
