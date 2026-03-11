@@ -99,6 +99,28 @@ function ImageWidget({ id, widget, setWidgets, removeWidget, isSelected }) {
           ×
         </button>
       </div>
+      {/* Edge-only drag handles (so interior remains interactive) */}
+      <div className="widget-move-handle" style={{ position: 'absolute', left: 0, top: 24, bottom: 0, width: 10, cursor: 'grab', zIndex: 20 }} />
+      <div className="widget-move-handle" style={{ position: 'absolute', right: 0, top: 24, bottom: 0, width: 10, cursor: 'grab', zIndex: 20 }} />
+      <div className="widget-move-handle" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 10, cursor: 'grab', zIndex: 20 }} />
+      <div className="widget-move-handle" style={{ position: 'absolute', left: 0, right: 0, top: 24, height: 10, cursor: 'grab', zIndex: 20 }} />
+      {/* Resize indicator (visual) */}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          left: 8,
+          bottom: 8,
+          width: 12,
+          height: 12,
+          borderLeft: '2px solid rgba(167,139,250,0.95)',
+          borderBottom: '2px solid rgba(167,139,250,0.95)',
+          borderBottomLeftRadius: 3,
+          opacity: 0.9,
+          zIndex: 21,
+          pointerEvents: 'none',
+        }}
+      />
       <div style={{ marginTop: 24, width: '100%', height: 'calc(100% - 24px)', position: 'relative' }}>
         {src ? (
           <img
@@ -303,6 +325,35 @@ export default function ProfileBuilderPage() {
     const w = widgets[id];
     if (!w) return null;
 
+    const MoveHandles = (
+      <>
+        {/* Edge-only drag handles (so interior remains interactive) */}
+        <div className="widget-move-handle" style={{ position: 'absolute', left: 0, top: 24, bottom: 0, width: 10, cursor: 'grab', zIndex: 20 }} />
+        <div className="widget-move-handle" style={{ position: 'absolute', right: 0, top: 24, bottom: 0, width: 10, cursor: 'grab', zIndex: 20 }} />
+        <div className="widget-move-handle" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 10, cursor: 'grab', zIndex: 20 }} />
+        <div className="widget-move-handle" style={{ position: 'absolute', left: 0, right: 0, top: 24, height: 10, cursor: 'grab', zIndex: 20 }} />
+      </>
+    );
+
+    const ResizeIndicator = (
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          left: 8,
+          bottom: 8,
+          width: 12,
+          height: 12,
+          borderLeft: '2px solid rgba(167,139,250,0.95)',
+          borderBottom: '2px solid rgba(167,139,250,0.95)',
+          borderBottomLeftRadius: 3,
+          opacity: 0.9,
+          zIndex: 21,
+          pointerEvents: 'none',
+        }}
+      />
+    );
+
     const baseWrapStyle = {
       width: '100%',
       height: '100%',
@@ -366,6 +417,8 @@ export default function ProfileBuilderPage() {
       return (
         <div style={baseWrapStyle}>
           {header}
+          {MoveHandles}
+          {ResizeIndicator}
           <div
             contentEditable
             suppressContentEditableWarning
@@ -422,6 +475,8 @@ export default function ProfileBuilderPage() {
       return (
         <div style={{ ...baseWrapStyle, background: 'transparent', border: '1px solid transparent' }}>
           {header}
+          {MoveHandles}
+          {ResizeIndicator}
           <div style={{ marginTop: 24, width: '100%', height: 'calc(100% - 24px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div style={{ width: '100%', height: 0, borderTop: `${w.props.thickness || 2}px solid rgba(255,255,255,0.35)` }} />
           </div>
@@ -433,6 +488,8 @@ export default function ProfileBuilderPage() {
       return (
         <div style={baseWrapStyle}>
           {header}
+          {MoveHandles}
+          {ResizeIndicator}
           <div style={{ marginTop: 24, padding: 12, display: 'flex', flexDirection: 'column', gap: 6, width: '100%' }}>
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', letterSpacing: '0.08em' }}>{w.props.title || 'STAT'}</div>
             <div style={{ fontSize: 24, fontWeight: 800, color: '#fff' }}>{w.props.value || '0'}</div>
@@ -446,6 +503,8 @@ export default function ProfileBuilderPage() {
       return (
         <div style={baseWrapStyle}>
           {header}
+          {MoveHandles}
+          {ResizeIndicator}
           <div style={{ marginTop: 24, padding: 10, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
             {Array.from({ length: slots }, (_, i) => (
               <div
@@ -469,6 +528,8 @@ export default function ProfileBuilderPage() {
     return (
       <div style={baseWrapStyle}>
         {header}
+        {MoveHandles}
+        {ResizeIndicator}
         <div style={{ marginTop: 24, width: '100%', height: 'calc(100% - 24px)', display: 'grid', placeItems: 'center', color: 'rgba(255,255,255,0.7)', fontSize: 12 }}>
           NFT widget (placeholder)
         </div>
@@ -528,7 +589,7 @@ export default function ProfileBuilderPage() {
           maxRows={400}
           isResizable
           resizeHandles={['se']}
-          draggableHandle=".widget-drag-handle"
+          draggableHandle=".widget-move-handle"
           draggableCancel=".text-widget-editor"
           onLayoutChange={(next) => setLayout(next)}
           onDragStop={(_, __, newItem) => {
@@ -548,9 +609,10 @@ export default function ProfileBuilderPage() {
                 setActiveTab('style');
               }}
               style={{
-                outline: selectedId === l.i ? '2px solid rgba(124,58,237,0.7)' : '2px solid transparent',
+                borderRadius: 14,
+                outline: selectedId === l.i ? '2px solid rgba(167,139,250,0.95)' : '2px solid transparent',
                 outlineOffset: -2,
-                borderRadius: 12,
+                boxShadow: selectedId === l.i ? '0 0 0 2px rgba(167,139,250,0.18), 0 16px 45px rgba(0,0,0,0.45)' : 'none',
               }}
             >
               {renderWidget(l.i)}
