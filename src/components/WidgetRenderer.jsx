@@ -28,19 +28,31 @@ export default function WidgetRenderer({
       ? { borderWidth: 2, borderStyle: 'solid', borderColor: widget.data?.borderColor ?? '#4f46e5' }
       : {};
 
+  const isNft = widget.type === WIDGET_TYPES.NFT;
+  const nftBorderWidth = isNft && widget.data?.borderWidth ? Number(widget.data.borderWidth) : 0;
+  const nftWidgetBorder =
+    isNft && nftBorderWidth > 0
+      ? {
+          borderWidth: nftBorderWidth,
+          borderStyle: 'solid',
+          borderColor: widget.data?.borderColor ?? '#6b7280',
+        }
+      : {};
+
   return (
     <div
       role="button"
       tabIndex={0}
       className={`absolute rounded-xl border bg-gray-900/90 cursor-move ${
         isSelected ? 'ring-2 ring-indigo-500/80' : 'border-gray-700'
-      } ${isUserPanel && !widget.data?.borderEnabled ? 'border-0' : ''}`}
+      } ${isUserPanel && !widget.data?.borderEnabled ? 'border-0' : ''} ${isNft && nftBorderWidth > 0 ? 'border-0' : ''}`}
       style={{
         left: x,
         top: y,
         width: w,
         height: h,
         ...userPanelBorder,
+        ...nftWidgetBorder,
       }}
       onMouseDown={(e) => {
         handleClick(e);
@@ -109,9 +121,6 @@ export default function WidgetRenderer({
                 className="w-full h-full rounded-xl"
                 style={{
                   objectFit: widget.data?.objectFit ?? 'contain',
-                  borderWidth: widget.data?.borderWidth ? `${widget.data.borderWidth}px` : 0,
-                  borderStyle: 'solid',
-                  borderColor: widget.data?.borderColor ?? 'transparent',
                 }}
               />
             ) : (
