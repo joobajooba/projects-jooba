@@ -298,6 +298,17 @@ export default function WidgetEditor({ widget, canvasSize, onChangeWidget, onDel
               className="px-2 py-1 rounded border border-gray-600 bg-gray-800 text-gray-200"
             />
           </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-gray-500 text-xs">Image fit</span>
+            <select
+              value={widget.data?.objectFit ?? 'contain'}
+              onChange={(e) => updateData({ objectFit: e.target.value })}
+              className="px-2 py-1 rounded border border-gray-600 bg-gray-800 text-gray-200"
+            >
+              <option value="contain">Fit inside (no crop)</option>
+              <option value="cover">Fill panel (stretch/crop)</option>
+            </select>
+          </label>
           <hr className="border-gray-700" />
           <h4 className="text-gray-400 font-medium">Border</h4>
           <label className="flex flex-col gap-1">

@@ -85,8 +85,9 @@ export default function WidgetRenderer({
             <img
               src={widget.data.url}
               alt=""
-              className="w-full h-full object-contain rounded-xl"
+              className="w-full h-full rounded-xl"
               style={{
+                objectFit: widget.data?.objectFit ?? 'contain',
                 borderWidth: widget.data?.borderWidth ? `${widget.data.borderWidth}px` : 0,
                 borderStyle: 'solid',
                 borderColor: widget.data?.borderColor ?? 'transparent',
