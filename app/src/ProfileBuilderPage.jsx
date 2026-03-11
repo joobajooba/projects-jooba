@@ -185,6 +185,8 @@ export default function ProfileBuilderPage() {
   const onDragStartTemplate = (e, type) => {
     try {
       e.dataTransfer.setData('application/x-jooba-widget', type);
+      // Some browsers require a "text/*" payload for dropping to be allowed.
+      e.dataTransfer.setData('text/plain', type);
       e.dataTransfer.effectAllowed = 'copy';
     } catch {
       // ignore
@@ -257,7 +259,7 @@ export default function ProfileBuilderPage() {
   }, []);
 
   const gridBgStyle = useMemo(() => ({
-    backgroundColor: '#000',
+    backgroundColor: '#111',
     backgroundImage: `
       linear-gradient(${GRID_LINE} 1px, transparent 1px),
       linear-gradient(90deg, ${GRID_LINE} 1px, transparent 1px)
@@ -442,6 +444,14 @@ export default function ProfileBuilderPage() {
     >
       <div
         ref={gridWrapRef}
+        onDragOver={(e) => {
+          // Allow the browser drop; react-grid-layout handles placement.
+          e.preventDefault();
+        }}
+        onDrop={(e) => {
+          // Prevent the browser from navigating/opening dragged content.
+          e.preventDefault();
+        }}
         style={{
           flex: 1,
           minWidth: 0,
@@ -504,7 +514,7 @@ export default function ProfileBuilderPage() {
           width: 260,
           minWidth: 260,
           height: '100%',
-          background: '#0b1220',
+          background: 'linear-gradient(180deg, #2a2a2a 0%, #1e1e1e 50%, #151515 100%)',
           borderLeft: '1px solid rgba(255,255,255,0.08)',
           color: '#e5e7eb',
           display: 'flex',
