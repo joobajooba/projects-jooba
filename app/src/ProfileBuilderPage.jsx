@@ -208,8 +208,9 @@ export default function ProfileBuilderPage() {
     const el = gridWrapRef.current;
     if (!el) return { x: 0, y: 0 };
     const r = el.getBoundingClientRect();
-    const relX = clientX - r.left;
-    const relY = clientY - r.top;
+    // IMPORTANT: el is scrollable; include scroll offsets or drops will "snap" to top/left.
+    const relX = clientX - r.left + (el.scrollLeft || 0);
+    const relY = clientY - r.top + (el.scrollTop || 0);
     const cellW = r.width / Math.max(1, cols);
     const x = clampInt(relX / cellW, 0, Math.max(0, cols - 1));
     const y = clampInt(relY / CELL_SIZE_PX, 0, 9999);
@@ -243,18 +244,8 @@ export default function ProfileBuilderPage() {
       },
     }));
 
-    const size =
-      type === 'divider'
-        ? { w: Math.min(8, cols), h: 1 }
-        : type === 'stat'
-          ? { w: 6, h: 3 }
-          : type === 'badges'
-            ? { w: 10, h: 3 }
-            : type === 'textbox'
-              ? { w: 8, h: 6 }
-              : type === 'image'
-                ? { w: 6, h: 6 }
-                : { w: 8, h: 6 };
+    // All widgets start at 6×6 when first added.
+    const size = { w: 6, h: 6 };
 
     setLayout((prev) => [
       ...prev,
@@ -378,6 +369,7 @@ export default function ProfileBuilderPage() {
           <div
             contentEditable
             suppressContentEditableWarning
+            className="text-widget-editor"
             ref={(el) => {
               if (id === selectedId) activeTextElRef.current = el;
             }}
@@ -537,6 +529,7 @@ export default function ProfileBuilderPage() {
           isResizable
           resizeHandles={['se']}
           draggableHandle=".widget-drag-handle"
+          draggableCancel=".text-widget-editor"
           onLayoutChange={(next) => setLayout(next)}
           onDragStop={(_, __, newItem) => {
             setSelectedId(newItem?.i || null);
@@ -738,15 +731,21 @@ export default function ProfileBuilderPage() {
                           <button
                             key={a}
                             type="button"
-                            onClick={() =>
+                            onClick={() => {
+                              // Apply to widget default alignment
                               setWidgets((prev) => ({
                                 ...prev,
                                 [selectedId]: {
                                   ...prev[selectedId],
                                   props: { ...prev[selectedId].props, align: a },
                                 },
-                              }))
-                            }
+                              }));
+                              // Also apply to current selection/caret if focused.
+                              if (a === 'justify') applyToSelectedText(() => document.execCommand('justifyFull', false, null));
+                              else if (a === 'center') applyToSelectedText(() => document.execCommand('justifyCenter', false, null));
+                              else if (a === 'right') applyToSelectedText(() => document.execCommand('justifyRight', false, null));
+                              else applyToSelectedText(() => document.execCommand('justifyLeft', false, null));
+                            }}
                             style={{
                               flex: 1,
                               padding: '10px 8px',
