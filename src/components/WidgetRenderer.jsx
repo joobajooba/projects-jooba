@@ -60,7 +60,9 @@ export default function WidgetRenderer({
           <div className="font-medium text-gray-200 truncate w-full mt-2 text-center">
             {widget.data?.name || 'Name'}
           </div>
-          <div className="text-xs text-gray-500 mt-1 text-center">Drag this panel...</div>
+          <div className="text-xs text-gray-500 mt-0.5 text-center">
+            {widget.data?.x_username ? `X | @${widget.data.x_username}` : 'X | Not Connected'}
+          </div>
         </div>
       )}
 
@@ -78,12 +80,12 @@ export default function WidgetRenderer({
       )}
 
       {widget.type === WIDGET_TYPES.IMAGE && (
-        <div className="h-full w-full flex items-center justify-center overflow-hidden rounded-xl">
+        <div className="h-full w-full flex items-center justify-center overflow-hidden rounded-xl bg-gray-800/30">
           {widget.data?.url ? (
             <img
               src={widget.data.url}
               alt=""
-              className="max-w-full max-h-full object-contain"
+              className="w-full h-full object-contain"
               style={{
                 borderWidth: widget.data?.borderWidth ? `${widget.data.borderWidth}px` : 0,
                 borderStyle: 'solid',

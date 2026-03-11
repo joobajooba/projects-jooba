@@ -166,7 +166,7 @@ export default function ProfileGrid({ onProfileChange }) {
     (async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('layout_json')
+        .select('layout_json, x_username')
         .eq('owner_wallet', address.toLowerCase())
         .maybeSingle();
       if (error) {
@@ -175,8 +175,11 @@ export default function ProfileGrid({ onProfileChange }) {
       }
       if (data?.layout_json && Array.isArray(data.layout_json) && data.layout_json.length > 0) {
         const nextWidgets = ensureUserPanel(data.layout_json, canvasSize);
-        setWidgets(nextWidgets);
         const userPanel = nextWidgets.find((w) => w.id === 'user-panel');
+        if (userPanel) {
+          userPanel.data = { ...userPanel.data, x_username: data.x_username ?? null };
+        }
+        setWidgets(nextWidgets);
         if (userPanel?.data && typeof userPanel.data === 'object') {
           onProfileChange(userPanel.data);
         }
