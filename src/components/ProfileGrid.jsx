@@ -162,7 +162,7 @@ export default function ProfileGrid({ onProfileChange }) {
 
   // Load saved profile from Supabase when wallet is connected
   useEffect(() => {
-    if (!address || !supabase) return;
+    if (!address || !supabase || !onProfileChange) return;
     (async () => {
       const { data, error } = await supabase
         .from('profiles')
@@ -174,10 +174,15 @@ export default function ProfileGrid({ onProfileChange }) {
         return;
       }
       if (data?.layout_json && Array.isArray(data.layout_json) && data.layout_json.length > 0) {
-        setWidgets((prev) => ensureUserPanel(data.layout_json, canvasSize));
+        const nextWidgets = ensureUserPanel(data.layout_json, canvasSize);
+        setWidgets(nextWidgets);
+        const userPanel = nextWidgets.find((w) => w.id === 'user-panel');
+        if (userPanel?.data && typeof userPanel.data === 'object') {
+          onProfileChange(userPanel.data);
+        }
       }
     })();
-  }, [address]);
+  }, [address, onProfileChange]);
 
   const handleSave = useCallback(async () => {
     if (!address || !supabase) {
@@ -297,12 +302,13 @@ export default function ProfileGrid({ onProfileChange }) {
     };
   }, [resizeState, canvasSize]);
 
+  const userPanelAvatarUrl = widgets.find((w) => w.id === 'user-panel')?.data?.avatarUrl ?? '';
   useEffect(() => {
     const userPanel = widgets.find((w) => w.id === 'user-panel');
     if (userPanel?.data && onProfileChange) {
       onProfileChange(userPanel.data);
     }
-  }, [widgets.length, onProfileChange]);
+  }, [widgets.length, onProfileChange, userPanelAvatarUrl]);
 
   const onChangeWidget = (updated) => {
     setWidgets((prev) =>
