@@ -283,7 +283,7 @@ export default function ProfileGrid({ onProfileChange }) {
   };
 
   return (
-    <div className="flex flex-row h-full gap-[1%] p-[1%]">
+    <div className="flex flex-row h-full min-h-0 gap-[1%] p-[1%]">
       <div className="flex flex-col flex-1 min-w-0 min-h-0">
         <h2 className="text-lg font-semibold text-gray-200 mb-2">Profile Canvas</h2>
         <div
@@ -309,7 +309,7 @@ export default function ProfileGrid({ onProfileChange }) {
       </div>
 
       <aside
-        className={`flex flex-col border-l border-gray-800 bg-gray-900/80 transition-[width] ${
+        className={`flex flex-col min-h-0 border-l border-gray-800 bg-gray-900/80 transition-[width] ${
           panelCollapsed ? 'w-10' : 'w-[15%] min-w-[200px]'
         }`}
       >

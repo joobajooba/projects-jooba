@@ -11,6 +11,38 @@ import {
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import ProfileGrid from './components/ProfileGrid';
 
+function WalletSection() {
+  return (
+    <ConnectButton.Custom>
+      {({ account, openConnectModal, openAccountModal }) => (
+        <div className="flex flex-col items-center gap-2 w-full">
+          {account ? (
+            <>
+              <button
+                type="button"
+                onClick={openAccountModal}
+                className="w-full text-center text-xs text-gray-400 hover:text-gray-300 truncate px-1"
+                title={account.address}
+              >
+                {`${account.address.slice(0, 6)}…${account.address.slice(-4)}`}
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={openConnectModal}
+              className="w-10 h-10 flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-xl"
+              aria-label="Connect wallet"
+            >
+              👛
+            </button>
+          )}
+        </div>
+      )}
+    </ConnectButton.Custom>
+  );
+}
+
 const PLACEHOLDER_PAGES = {
   home: { title: 'Home', description: 'Welcome to Studio. Use the sidebar to open Profile.' },
   community: { title: 'Community', description: 'Community features coming soon.' },
@@ -47,9 +79,9 @@ export default function App() {
   ];
 
   return (
-    <div className="flex h-full flex-row">
-      <aside className="w-[10%] min-w-[140px] flex flex-col bg-gray-900/80 border-r border-gray-800">
-        <header className="p-4 border-b border-gray-800">
+    <div className="flex h-screen flex-row min-h-0 overflow-hidden">
+      <aside className="w-[10%] min-w-[140px] flex flex-col shrink-0 bg-gray-900/80 border-r border-gray-800 min-h-0">
+        <header className="p-4 border-b border-gray-800 shrink-0">
           <div className="flex items-center gap-2 text-indigo-400">
             <Sparkles className="w-5 h-5 shrink-0" />
             <div className="flex flex-col leading-tight">
@@ -58,8 +90,8 @@ export default function App() {
             </div>
           </div>
         </header>
-        <div className="p-4 flex flex-col items-center gap-3 border-b border-gray-800">
-          <div className="aspect-square w-full max-w-[88px] rounded-lg overflow-hidden bg-gray-800 border border-gray-700 shrink-0">
+        <div className="p-4 flex flex-col items-center gap-3 border-b border-gray-800 shrink-0">
+          <div className="aspect-square w-full rounded-lg overflow-hidden bg-gray-800 border border-gray-700">
             {profileAvatarUrl ? (
               <img
                 src={profileAvatarUrl}
@@ -72,11 +104,9 @@ export default function App() {
               </div>
             )}
           </div>
-          <div className="w-full flex justify-center">
-            <ConnectButton showBalance={false} />
-          </div>
+          <WalletSection />
         </div>
-        <nav className="flex-1 py-2">
+        <nav className="flex-1 py-2 min-h-0 overflow-auto">
           {navItems.map(({ key, icon: Icon, label }) => (
             <button
               key={key}
@@ -93,12 +123,12 @@ export default function App() {
             </button>
           ))}
         </nav>
-        <footer className="p-4 border-t border-gray-800 text-xs text-gray-500 flex items-center gap-2">
+        <footer className="p-4 border-t border-gray-800 text-xs text-gray-500 flex items-center gap-2 shrink-0">
           <span>Dark Theme</span>
           <span className="px-1.5 py-0.5 rounded bg-gray-800 text-gray-400">Studio</span>
         </footer>
       </aside>
-      <main className="flex-1 flex flex-col min-w-0">
+      <main className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
         {activePage === 'profile' ? (
           <ProfileGrid onProfileChange={handleProfileChange} />
         ) : (
