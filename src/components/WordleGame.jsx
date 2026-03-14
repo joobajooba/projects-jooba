@@ -270,9 +270,9 @@ export default function WordleGame({ isOpen = true, asPage = false, onClose }) {
                 <div className="flex justify-center gap-1 flex-nowrap">
                   {KEYS_ROW1.split('').map((k) => {
                     const s = keyStatus[k];
-                    const bg = s === 'correct' ? 'bg-green-600' : s === 'present' ? 'bg-yellow-500' : s === 'absent' ? 'bg-gray-600' : 'bg-gray-700 hover:bg-gray-600';
+                    const bg = s === 'correct' ? 'bg-green-600 text-white' : s === 'present' ? 'bg-yellow-500 text-white' : s === 'absent' ? 'bg-gray-800 text-gray-400' : 'bg-gray-500 hover:bg-gray-400 text-white';
                     return (
-                      <button key={k} type="button" onClick={() => handleKey(k)} className={`${keyClass} ${bg} text-white font-bold rounded shrink-0`}>
+                      <button key={k} type="button" onClick={() => handleKey(k)} className={`${keyClass} ${bg} font-bold rounded shrink-0`}>
                         {k}
                       </button>
                     );
@@ -281,7 +281,7 @@ export default function WordleGame({ isOpen = true, asPage = false, onClose }) {
                 <div className="flex justify-center gap-1 flex-nowrap">
                   {KEYS_ROW2.split('').map((k) => {
                     const s = keyStatus[k];
-                    const bg = s === 'correct' ? 'bg-green-600' : s === 'present' ? 'bg-yellow-500' : s === 'absent' ? 'bg-gray-600' : 'bg-gray-700 hover:bg-gray-600';
+                    const bg = s === 'correct' ? 'bg-green-600 text-white' : s === 'present' ? 'bg-yellow-500 text-white' : s === 'absent' ? 'bg-gray-800 text-gray-400' : 'bg-gray-500 hover:bg-gray-400 text-white';
                     return (
                       <button key={k} type="button" onClick={() => handleKey(k)} className={`${keyClass} ${bg} text-white font-bold rounded shrink-0`}>
                         {k}
@@ -295,9 +295,9 @@ export default function WordleGame({ isOpen = true, asPage = false, onClose }) {
                   </button>
                   {KEYS_ROW3.split('').map((k) => {
                     const s = keyStatus[k];
-                    const bg = s === 'correct' ? 'bg-green-600' : s === 'present' ? 'bg-yellow-500' : s === 'absent' ? 'bg-gray-600' : 'bg-gray-700 hover:bg-gray-600';
+                    const bg = s === 'correct' ? 'bg-green-600 text-white' : s === 'present' ? 'bg-yellow-500 text-white' : s === 'absent' ? 'bg-gray-800 text-gray-400' : 'bg-gray-500 hover:bg-gray-400 text-white';
                     return (
-                      <button key={k} type="button" onClick={() => handleKey(k)} className={`${keyClass} ${bg} text-white font-bold rounded shrink-0`}>
+                      <button key={k} type="button" onClick={() => handleKey(k)} className={`${keyClass} ${bg} font-bold rounded shrink-0`}>
                         {k}
                       </button>
                     );
