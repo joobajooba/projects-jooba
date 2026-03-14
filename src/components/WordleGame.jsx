@@ -37,6 +37,7 @@ export default function WordleGame({ isOpen = true, asPage = false, onClose }) {
   const [current, setCurrent] = useState('');
   const [status, setStatus] = useState('playing'); // 'playing' | 'won' | 'lost'
   const [loading, setLoading] = useState(true);
+  const [invalidWordMessage, setInvalidWordMessage] = useState(null);
 
   const dayIndex = getDailyWordIndex();
   const show = asPage || isOpen;
@@ -164,7 +165,11 @@ export default function WordleGame({ isOpen = true, asPage = false, onClose }) {
     if (key === 'ENTER') {
       if (current.length !== 5) return;
       const word = current.toLowerCase();
-      if (!words.includes(word)) return;
+      if (!words.includes(word)) {
+        setInvalidWordMessage('Invalid word');
+        return;
+      }
+      setInvalidWordMessage(null);
       const newGuesses = [...guesses, current];
       setGuesses(newGuesses);
       setCurrent('');
@@ -178,10 +183,12 @@ export default function WordleGame({ isOpen = true, asPage = false, onClose }) {
       return;
     }
     if (key === 'BACK') {
+      setInvalidWordMessage(null);
       setCurrent((c) => c.slice(0, -1));
       return;
     }
     if (current.length < 5 && /^[A-Za-z]$/.test(key)) {
+      setInvalidWordMessage(null);
       setCurrent((c) => (c + key).toUpperCase().slice(0, 5));
     }
   };
@@ -208,7 +215,7 @@ export default function WordleGame({ isOpen = true, asPage = false, onClose }) {
 
   const header = (
     <div className="flex items-center justify-between p-4 border-b border-gray-800">
-      <h2 className="text-xl font-bold text-gray-100">Wordle</h2>
+      <h2 className="text-xl font-bold text-gray-100">J00BA&apos;s Wordle</h2>
       <button
         type="button"
         onClick={onClose}
@@ -264,6 +271,11 @@ export default function WordleGame({ isOpen = true, asPage = false, onClose }) {
               {status === 'lost' && (
                 <p className="text-gray-300 text-center">
                   The word was <span className="font-bold text-white uppercase">{target}</span>
+                </p>
+              )}
+              {invalidWordMessage && (
+                <p className="text-amber-400 text-center text-sm font-medium" role="alert">
+                  {invalidWordMessage}
                 </p>
               )}
               <div className="flex flex-col gap-2 w-full max-w-[min(100%,28rem)] shrink-0">
