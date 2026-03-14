@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { X } from 'lucide-react';
+import { X, ArrowLeft } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { getWordleWords, getDailyWord, getDailyWordIndex } from '../lib/wordleWords';
 import { supabase } from '../lib/supabase';
@@ -28,7 +28,7 @@ function Cell({ letter, status }) {
   );
 }
 
-export default function WordleGame({ isOpen, onClose }) {
+export default function WordleGame({ isOpen = true, asPage = false, onClose }) {
   const { address } = useAccount();
   const [words, setWords] = useState([]);
   const [target, setTarget] = useState(null);
@@ -38,9 +38,10 @@ export default function WordleGame({ isOpen, onClose }) {
   const [loading, setLoading] = useState(true);
 
   const dayIndex = getDailyWordIndex();
+  const show = asPage || isOpen;
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!show) return;
     let cancelled = false;
     setLoading(true);
     getWordleWords().then((list) => {
@@ -51,7 +52,7 @@ export default function WordleGame({ isOpen, onClose }) {
       setLoading(false);
     });
     return () => { cancelled = true; };
-  }, [isOpen]);
+  }, [show]);
 
   const resetIfNewDay = useCallback(() => {
     const stored = sessionStorage.getItem('wordle_state');
@@ -185,7 +186,7 @@ export default function WordleGame({ isOpen, onClose }) {
   };
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!show) return;
     const onKey = (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
@@ -200,29 +201,34 @@ export default function WordleGame({ isOpen, onClose }) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [isOpen, current, guesses, status, target, words]);
+  }, [show, current, guesses, status, target, words]);
 
-  if (!isOpen) return null;
+  if (!show) return null;
 
-  return (
-    <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Wordle game"
-    >
-      <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-auto">
-        <div className="flex items-center justify-between p-4 border-b border-gray-800">
-          <h2 className="text-xl font-bold text-gray-100">Wordle</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800"
-            aria-label="Close"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+  const header = (
+    <div className="flex items-center justify-between p-4 border-b border-gray-800">
+      <h2 className="text-xl font-bold text-gray-100">Wordle</h2>
+      <button
+        type="button"
+        onClick={onClose}
+        className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800"
+        aria-label={asPage ? 'Back to games' : 'Close'}
+      >
+        {asPage ? (
+          <>
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-sm">Back</span>
+          </>
+        ) : (
+          <X className="w-5 h-5" />
+        )}
+      </button>
+    </div>
+  );
+
+  const content = (
+    <>
+      {header}
         <div className="p-4 flex flex-col items-center gap-4">
           {loading ? (
             <p className="text-gray-400 py-8">Loading…</p>
@@ -300,6 +306,28 @@ export default function WordleGame({ isOpen, onClose }) {
             </>
           )}
         </div>
+    </>
+  );
+
+  if (asPage) {
+    return (
+      <div className="flex flex-col h-full min-h-0 overflow-auto">
+        <div className="bg-gray-900 border-b border-gray-800 max-w-lg w-full mx-auto flex-1 min-h-0 flex flex-col">
+          {content}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Wordle game"
+    >
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-auto">
+        {content}
       </div>
     </div>
   );

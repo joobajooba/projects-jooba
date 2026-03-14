@@ -2,7 +2,16 @@ import { useState } from 'react';
 import WordleGame from '../components/WordleGame';
 
 export default function GamesPage() {
-  const [wordleOpen, setWordleOpen] = useState(false);
+  const [view, setView] = useState('list'); // 'list' | 'wordle'
+
+  if (view === 'wordle') {
+    return (
+      <WordleGame
+        asPage
+        onClose={() => setView('list')}
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col h-full min-h-0 overflow-auto">
@@ -11,7 +20,7 @@ export default function GamesPage() {
         <div className="flex flex-wrap gap-4">
           <button
             type="button"
-            onClick={() => setWordleOpen(true)}
+            onClick={() => setView('wordle')}
             className="aspect-square w-32 sm:w-40 rounded-xl border-2 border-gray-600 bg-gray-800 hover:border-indigo-500 hover:bg-gray-700 text-gray-100 font-bold text-lg flex items-center justify-center transition-colors"
             aria-label="Play Wordle"
           >
@@ -19,7 +28,6 @@ export default function GamesPage() {
           </button>
         </div>
       </div>
-      <WordleGame isOpen={wordleOpen} onClose={() => setWordleOpen(false)} />
     </div>
   );
 }
