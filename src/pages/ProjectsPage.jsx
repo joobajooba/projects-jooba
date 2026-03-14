@@ -29,9 +29,9 @@ export default function ProjectsPage() {
             />
           </div>
           <div className="flex flex-col justify-center gap-1 min-w-0">
-            <h2 className="text-lg font-semibold text-gray-100">Bops</h2>
-            <p className="text-sm text-gray-400">Apechain</p>
-            <p className="text-sm text-amber-400/90">ETA: Coming Soon</p>
+            <h2 className="text-lg font-semibold text-gray-100">Project Name | Bops</h2>
+            <p className="text-sm text-gray-400">Network | Apechain</p>
+            <p className="text-sm text-amber-400/90">ETA | Coming Soon</p>
           </div>
         </div>
       </div>
