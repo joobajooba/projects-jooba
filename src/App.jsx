@@ -8,7 +8,7 @@ import {
   Coins,
   User,
   CreditCard,
-  Clipboard,
+  AtSign,
   Settings,
 } from 'lucide-react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
@@ -46,7 +46,7 @@ function SidebarActions() {
               aria-label="Connect X (Twitter)"
               title="Connect X profile"
             >
-              <Clipboard className="w-5 h-5" />
+              <AtSign className="w-5 h-5" />
             </button>
             <button
               type="button"

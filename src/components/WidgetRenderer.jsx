@@ -41,13 +41,25 @@ export default function WidgetRenderer({
         }
       : {};
 
+  const isStatistic = widget.type === WIDGET_TYPES.STATISTIC;
+  const statisticBorderWidth =
+    isStatistic && widget.data?.borderWidth ? Number(widget.data.borderWidth) : 0;
+  const statisticWidgetBorder =
+    isStatistic && statisticBorderWidth > 0
+      ? {
+          borderWidth: statisticBorderWidth,
+          borderStyle: 'solid',
+          borderColor: widget.data?.borderColor ?? '#6b7280',
+        }
+      : {};
+
   return (
     <div
       role="button"
       tabIndex={0}
       className={`absolute rounded-xl border bg-gray-900/90 cursor-move ${
         isSelected ? 'ring-2 ring-indigo-500/80' : 'border-gray-700'
-      } ${isUserPanel && !widget.data?.borderEnabled ? 'border-0' : ''} ${isNft && nftBorderWidth > 0 ? 'border-0' : ''}`}
+      } ${isUserPanel && !widget.data?.borderEnabled ? 'border-0' : ''} ${isNft && nftBorderWidth > 0 ? 'border-0' : ''} ${isStatistic && statisticBorderWidth > 0 ? 'border-0' : ''}`}
       style={{
         left: x,
         top: y,
@@ -55,6 +67,7 @@ export default function WidgetRenderer({
         height: h,
         ...userPanelBorder,
         ...nftWidgetBorder,
+        ...statisticWidgetBorder,
       }}
       onMouseDown={(e) => {
         handleClick(e);

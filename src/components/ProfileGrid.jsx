@@ -80,7 +80,14 @@ function createDefaultWidget(type, index, canvasSize, existingWidgets) {
       y: 140 + stagger * 35,
       w: 3,
       h: 2,
-      data: { statType: 'wordle_streak', label: 'Wordle Streak', valueColor: '#e5e7eb', labelColor: '#9ca3af' },
+      data: {
+        statType: 'wordle_streak',
+        label: 'Wordle Streak',
+        valueColor: '#e5e7eb',
+        labelColor: '#9ca3af',
+        borderWidth: 0,
+        borderColor: '#6b7280',
+      },
     };
   }
 
