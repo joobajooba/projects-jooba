@@ -9,6 +9,13 @@ const PROJECTS = [
     releaseDate: 'Coming Soon',
     image: '/bops.png',
   },
+  {
+    id: 'not-a-punks-cult',
+    name: 'Not a Punks Cult',
+    network: 'Apechain',
+    releaseDate: '2025',
+    image: '/notapunkscult.png',
+  },
 ];
 
 const FILTER_OPTIONS = [
