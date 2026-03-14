@@ -23,17 +23,51 @@ function toGatewayUrl(url) {
   return t;
 }
 
+// Prefer URLs that are 2D images (for NFTs that also have 3D model / animation_url).
+function isImageUrl(url) {
+  if (!url || typeof url !== 'string') return false;
+  const u = url.toLowerCase().split('?')[0];
+  return /\.(png|jpe?g|gif|webp|svg|bmp|ico)(\b|$)/i.test(u) || u.includes('image');
+}
+
 function getNftImageUrl(nft) {
-  const raw =
-    nft?.image?.cachedUrl ??
-    nft?.image?.thumbnailUrl ??
-    nft?.image?.pngUrl ??
-    nft?.image?.originalUrl ??
-    nft?.media?.[0]?.gateway ??
-    nft?.media?.[0]?.raw ??
-    nft?.raw?.metadata?.image;
-  const url = typeof raw === 'string' ? raw : null;
-  return url ? toGatewayUrl(url) : null;
+  const meta = nft?.raw?.metadata ?? {};
+  const imageFromMeta = typeof meta.image === 'string' ? meta.image : null;
+  const animationFromMeta = typeof meta.animation_url === 'string' ? meta.animation_url : null;
+
+  // Prefer standard 2D image from metadata (so NFTs with both image + 3D model show the image).
+  if (imageFromMeta && isImageUrl(imageFromMeta)) {
+    const url = toGatewayUrl(imageFromMeta);
+    if (url) return url;
+  }
+
+  const candidates = [
+    nft?.image?.cachedUrl,
+    nft?.image?.thumbnailUrl,
+    nft?.image?.pngUrl,
+    nft?.image?.originalUrl,
+    imageFromMeta,
+    nft?.media?.[0]?.gateway,
+    nft?.media?.[0]?.raw,
+  ].filter(Boolean);
+
+  // If Alchemy put the 3D model first, prefer an image-type URL.
+  for (const raw of candidates) {
+    const url = toGatewayUrl(raw);
+    if (url && isImageUrl(url)) return url;
+  }
+  for (const raw of candidates) {
+    const url = toGatewayUrl(raw);
+    if (url) return url;
+  }
+
+  // Last resort: animation_url only if it looks like an image (e.g. some use GIF for animation_url).
+  if (animationFromMeta && isImageUrl(animationFromMeta)) {
+    const url = toGatewayUrl(animationFromMeta);
+    if (url) return url;
+  }
+
+  return null;
 }
 
 async function fetchAllNFTsForOwner(owner, network) {
