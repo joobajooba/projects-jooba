@@ -122,14 +122,31 @@ export default function TypeRacerGame({ asPage = false, onClose }) {
           ) : (
             <>
               <div className="w-full max-w-2xl">
-                <p className="text-gray-300 text-lg leading-relaxed mb-4 font-mono whitespace-pre-wrap">
-                  {passage}
+                <p
+                  className="text-lg leading-relaxed mb-4 font-mono whitespace-pre-wrap select-none"
+                  aria-label="Passage to type"
+                >
+                  {passage.split('').map((char, i) => {
+                    if (i >= input.length) {
+                      return <span key={i} className="text-gray-500">{char}</span>;
+                    }
+                    const correct = passage[i] === input[i];
+                    return (
+                      <span
+                        key={i}
+                        className={correct ? 'text-green-400' : 'text-red-400 bg-red-400/20'}
+                      >
+                        {char}
+                      </span>
+                    );
+                  })}
                 </p>
                 <textarea
                   ref={inputRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Start typing here..."
+                  onPaste={(e) => e.preventDefault()}
+                  placeholder="Start typing here... (paste disabled)"
                   className="w-full min-h-[120px] p-4 rounded-lg border-2 border-gray-600 bg-gray-800 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono text-lg leading-relaxed resize-none"
                   spellCheck={false}
                   autoFocus
