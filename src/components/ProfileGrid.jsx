@@ -80,7 +80,7 @@ function createDefaultWidget(type, index, canvasSize, existingWidgets) {
       y: 140 + stagger * 35,
       w: 3,
       h: 2,
-      data: { label: 'Statistic', value: '0', valueColor: '#e5e7eb', labelColor: '#9ca3af' },
+      data: { statType: 'wordle_streak', label: 'Wordle Streak', valueColor: '#e5e7eb', labelColor: '#9ca3af' },
     };
   }
 
@@ -139,6 +139,7 @@ export default function ProfileGrid({ onProfileChange }) {
   const [resizeState, setResizeState] = useState(null);
   const prevCanvasSizeRef = useRef(null);
   const [wordleStats, setWordleStats] = useState(null);
+  const [typeRacerStats, setTypeRacerStats] = useState(null);
 
   const measureCanvas = useCallback(() => {
     const el = canvasRef.current;
@@ -201,6 +202,21 @@ export default function ProfileGrid({ onProfileChange }) {
         .eq('wallet_address', address.toLowerCase())
         .maybeSingle();
       setWordleStats(data ?? null);
+    })();
+  }, [address]);
+
+  useEffect(() => {
+    if (!address || !supabase) {
+      setTypeRacerStats(null);
+      return;
+    }
+    (async () => {
+      const { data } = await supabase
+        .from('type_racer_stats')
+        .select('current_streak, last_wpm')
+        .eq('wallet_address', address.toLowerCase())
+        .maybeSingle();
+      setTypeRacerStats(data ?? null);
     })();
   }, [address]);
 
@@ -407,6 +423,7 @@ export default function ProfileGrid({ onProfileChange }) {
               widget={widget}
               canvasSize={canvasSize}
               wordleStats={wordleStats}
+              typeRacerStats={typeRacerStats}
               isSelected={selectedId === widget.id}
               onMouseDown={(e) => handleWidgetMouseDown(e, widget)}
               onResizeHandleMouseDown={

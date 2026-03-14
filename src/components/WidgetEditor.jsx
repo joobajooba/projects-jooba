@@ -459,44 +459,26 @@ export default function WidgetEditor({ widget, canvasSize, onChangeWidget, onDel
           <label className="flex flex-col gap-1">
             <span className="text-gray-400">Statistic</span>
             <select
-              value={widget.data?.statType ?? 'custom'}
+              value={widget.data?.statType ?? 'wordle_streak'}
               onChange={(e) => {
                 const v = e.target.value;
-                const label = v === 'wordle_streak' ? 'Wordle Streak' : v === 'wordle_avg_guesses' ? 'Wordle Average Guesses' : (widget.data?.label ?? 'Statistic');
-                updateData({ statType: v, label });
+                const labels = {
+                  wordle_streak: 'Wordle Streak',
+                  wordle_avg_guesses: 'Wordle Average Guesses',
+                  typeracer_streak: 'Type Racer Streak',
+                  typeracer_last_wpm: 'Type Racer Last WPM',
+                };
+                updateData({ statType: v, label: labels[v] ?? 'Statistic' });
               }}
               className="px-2 py-1 rounded border border-gray-600 bg-gray-800 text-gray-200"
             >
-              <option value="custom">Custom</option>
               <option value="wordle_streak">Wordle Streak</option>
               <option value="wordle_avg_guesses">Wordle Average Guesses</option>
+              <option value="typeracer_streak">Type Racer Streak</option>
+              <option value="typeracer_last_wpm">Type Racer Last WPM</option>
             </select>
           </label>
-          {(widget.data?.statType ?? 'custom') === 'custom' && (
-            <>
-              <label className="flex flex-col gap-1">
-                <span className="text-gray-400">Label</span>
-                <input
-                  type="text"
-                  value={widget.data?.label ?? ''}
-                  onChange={(e) => updateData({ label: e.target.value })}
-                  className="px-2 py-1 rounded border border-gray-600 bg-gray-800 text-gray-200"
-                />
-              </label>
-              <label className="flex flex-col gap-1">
-                <span className="text-gray-400">Value</span>
-                <input
-                  type="text"
-                  value={widget.data?.value ?? ''}
-                  onChange={(e) => updateData({ value: e.target.value })}
-                  className="px-2 py-1 rounded border border-gray-600 bg-gray-800 text-gray-200"
-                />
-              </label>
-            </>
-          )}
-          {(widget.data?.statType === 'wordle_streak' || widget.data?.statType === 'wordle_avg_guesses') && (
-            <p className="text-xs text-gray-500">Value is loaded from your wallet&apos;s Wordle stats.</p>
-          )}
+          <p className="text-xs text-gray-500">Value is loaded from your wallet&apos;s game stats.</p>
           <label className="flex flex-col gap-1">
             <span className="text-gray-400">Value color</span>
             <input

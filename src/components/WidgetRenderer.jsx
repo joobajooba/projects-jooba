@@ -14,6 +14,7 @@ export default function WidgetRenderer({
   widget,
   canvasSize,
   wordleStats,
+  typeRacerStats,
   isSelected,
   onMouseDown,
   onResizeHandleMouseDown,
@@ -144,19 +145,29 @@ export default function WidgetRenderer({
       )}
 
       {widget.type === WIDGET_TYPES.STATISTIC && (() => {
-        const statType = widget.data?.statType ?? 'custom';
+        const statType = widget.data?.statType ?? 'wordle_streak';
         const isWordleStreak = statType === 'wordle_streak';
         const isWordleAvg = statType === 'wordle_avg_guesses';
+        const isTypeRacerStreak = statType === 'typeracer_streak';
+        const isTypeRacerWpm = statType === 'typeracer_last_wpm';
         const displayValue = isWordleStreak
-          ? String(wordleStats?.current_streak ?? widget.data?.value ?? '0')
+          ? String(wordleStats?.current_streak ?? '0')
           : isWordleAvg
-            ? String(wordleStats?.avg_guesses ?? widget.data?.value ?? '0')
-            : (widget.data?.value ?? '0');
+            ? String(wordleStats?.avg_guesses ?? '0')
+            : isTypeRacerStreak
+              ? String(typeRacerStats?.current_streak ?? '0')
+              : isTypeRacerWpm
+                ? String(typeRacerStats?.last_wpm ?? '0')
+                : '0';
         const displayLabel = isWordleStreak
           ? 'Wordle Streak'
           : isWordleAvg
             ? 'Wordle Average Guesses'
-            : (widget.data?.label ?? 'Label');
+            : isTypeRacerStreak
+              ? 'Type Racer Streak'
+              : isTypeRacerWpm
+                ? 'Type Racer Last WPM'
+                : 'Statistic';
         return (
           <div className="h-full flex flex-col items-center justify-center p-3">
             <div
