@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Search } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Search, ChevronDown } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 const LATEST_LIMIT = 24;
@@ -12,6 +12,18 @@ export default function CommunityPage() {
   const [loading, setLoading] = useState(false);
   const [latestLoading, setLatestLoading] = useState(true);
   const [viewMode, setViewMode] = useState('medium');
+  const [viewModeOpen, setViewModeOpen] = useState(false);
+  const viewModeRef = useRef(null);
+
+  useEffect(() => {
+    const onOutside = (e) => {
+      if (viewModeRef.current && !viewModeRef.current.contains(e.target)) setViewModeOpen(false);
+    };
+    if (viewModeOpen) {
+      document.addEventListener('click', onOutside);
+      return () => document.removeEventListener('click', onOutside);
+    }
+  }, [viewModeOpen]);
 
   const fetchLatest = useCallback(async () => {
     if (!supabase) {
@@ -100,18 +112,42 @@ export default function CommunityPage() {
               aria-label="Search profiles by username"
             />
           </div>
-          <select
-            value={viewMode}
-            onChange={(e) => setViewMode(e.target.value)}
-            className="px-3 py-2.5 rounded-lg border border-gray-600 bg-gray-800 text-gray-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer"
-            aria-label="View mode"
-          >
-            {VIEW_MODES.map((mode) => (
-              <option key={mode} value={mode}>
-                {mode.charAt(0).toUpperCase() + mode.slice(1)}
-              </option>
-            ))}
-          </select>
+          <div className="relative" ref={viewModeRef}>
+            <button
+              type="button"
+              onClick={() => setViewModeOpen((o) => !o)}
+              className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-gray-600 bg-gray-800 text-gray-200 text-sm font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer"
+              aria-label="View mode"
+              aria-expanded={viewModeOpen}
+              aria-haspopup="listbox"
+            >
+              View Mode
+              <ChevronDown className={`w-4 h-4 transition-transform ${viewModeOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {viewModeOpen && (
+              <ul
+                role="listbox"
+                className="absolute right-0 top-full mt-1 py-1 min-w-[120px] rounded-lg border border-gray-600 bg-gray-800 shadow-xl z-10"
+              >
+                {VIEW_MODES.map((mode) => (
+                  <li key={mode} role="option" aria-selected={viewMode === mode}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setViewMode(mode);
+                        setViewModeOpen(false);
+                      }}
+                      className={`w-full px-3 py-2 text-left text-sm capitalize ${
+                        viewMode === mode ? 'bg-indigo-600 text-white' : 'text-gray-200 hover:bg-gray-700'
+                      }`}
+                    >
+                      {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       </div>
 
