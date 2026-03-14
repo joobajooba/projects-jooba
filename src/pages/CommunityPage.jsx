@@ -73,16 +73,16 @@ export default function CommunityPage() {
 
   const gridClass =
     viewMode === 'small'
-      ? 'grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2'
+      ? 'grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 xl:grid-cols-16 gap-1'
       : viewMode === 'large'
-        ? 'grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'
-        : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4';
+        ? 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3'
+        : 'grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2';
 
   const cardTextClass =
-    viewMode === 'small' ? 'text-xs' : viewMode === 'large' ? 'text-base' : 'text-sm';
+    viewMode === 'small' ? 'text-[10px]' : viewMode === 'large' ? 'text-sm' : 'text-xs';
 
   const placeholderTextClass =
-    viewMode === 'small' ? 'text-xl' : viewMode === 'large' ? 'text-4xl' : 'text-2xl';
+    viewMode === 'small' ? 'text-lg' : viewMode === 'large' ? 'text-2xl' : 'text-xl';
 
   return (
     <div className="flex flex-col h-full min-h-0 overflow-auto">
@@ -100,24 +100,18 @@ export default function CommunityPage() {
               aria-label="Search profiles by username"
             />
           </div>
-          <div className="flex items-center gap-1 rounded-lg border border-gray-600 bg-gray-800 p-1">
+          <select
+            value={viewMode}
+            onChange={(e) => setViewMode(e.target.value)}
+            className="px-3 py-2.5 rounded-lg border border-gray-600 bg-gray-800 text-gray-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer"
+            aria-label="View mode"
+          >
             {VIEW_MODES.map((mode) => (
-              <button
-                key={mode}
-                type="button"
-                onClick={() => setViewMode(mode)}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium capitalize transition-colors ${
-                  viewMode === mode
-                    ? 'bg-indigo-600 text-white'
-                    : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700'
-                }`}
-                aria-label={`View mode: ${mode}`}
-                aria-pressed={viewMode === mode}
-              >
-                {mode}
-              </button>
+              <option key={mode} value={mode}>
+                {mode.charAt(0).toUpperCase() + mode.slice(1)}
+              </option>
             ))}
-          </div>
+          </select>
         </div>
       </div>
 
