@@ -13,6 +13,7 @@ function getWidgetDimensions(widget, canvasSize) {
 export default function WidgetRenderer({
   widget,
   canvasSize,
+  wordleStats,
   isSelected,
   onMouseDown,
   onResizeHandleMouseDown,
@@ -142,22 +143,37 @@ export default function WidgetRenderer({
         </div>
       )}
 
-      {widget.type === WIDGET_TYPES.STATISTIC && (
-        <div className="h-full flex flex-col items-center justify-center p-3">
-          <div
-            className="text-2xl font-bold tabular-nums"
-            style={{ color: widget.data?.valueColor ?? '#e5e7eb' }}
-          >
-            {widget.data?.value ?? '0'}
+      {widget.type === WIDGET_TYPES.STATISTIC && (() => {
+        const statType = widget.data?.statType ?? 'custom';
+        const isWordleStreak = statType === 'wordle_streak';
+        const isWordleAvg = statType === 'wordle_avg_guesses';
+        const displayValue = isWordleStreak
+          ? String(wordleStats?.current_streak ?? widget.data?.value ?? '0')
+          : isWordleAvg
+            ? String(wordleStats?.avg_guesses ?? widget.data?.value ?? '0')
+            : (widget.data?.value ?? '0');
+        const displayLabel = isWordleStreak
+          ? 'Wordle Streak'
+          : isWordleAvg
+            ? 'Wordle Average Guesses'
+            : (widget.data?.label ?? 'Label');
+        return (
+          <div className="h-full flex flex-col items-center justify-center p-3">
+            <div
+              className="text-2xl font-bold tabular-nums"
+              style={{ color: widget.data?.valueColor ?? '#e5e7eb' }}
+            >
+              {displayValue}
+            </div>
+            <div
+              className="text-sm mt-0.5"
+              style={{ color: widget.data?.labelColor ?? '#9ca3af' }}
+            >
+              {displayLabel}
+            </div>
           </div>
-          <div
-            className="text-sm mt-0.5"
-            style={{ color: widget.data?.labelColor ?? '#9ca3af' }}
-          >
-            {widget.data?.label ?? 'Label'}
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {widget.type === WIDGET_TYPES.BADGE && (
         <div className="h-full flex items-center justify-center p-2">

@@ -138,6 +138,7 @@ export default function ProfileGrid({ onProfileChange }) {
   const [dragState, setDragState] = useState(null);
   const [resizeState, setResizeState] = useState(null);
   const prevCanvasSizeRef = useRef(null);
+  const [wordleStats, setWordleStats] = useState(null);
 
   const measureCanvas = useCallback(() => {
     const el = canvasRef.current;
@@ -187,6 +188,21 @@ export default function ProfileGrid({ onProfileChange }) {
       }
     })();
   }, [address, onProfileChange]);
+
+  useEffect(() => {
+    if (!address || !supabase) {
+      setWordleStats(null);
+      return;
+    }
+    (async () => {
+      const { data } = await supabase
+        .from('wordle_stats')
+        .select('current_streak, avg_guesses')
+        .eq('wallet_address', address.toLowerCase())
+        .maybeSingle();
+      setWordleStats(data ?? null);
+    })();
+  }, [address]);
 
   const handleSave = useCallback(async () => {
     if (!address || !supabase) {
@@ -390,6 +406,7 @@ export default function ProfileGrid({ onProfileChange }) {
               key={widget.id}
               widget={widget}
               canvasSize={canvasSize}
+              wordleStats={wordleStats}
               isSelected={selectedId === widget.id}
               onMouseDown={(e) => handleWidgetMouseDown(e, widget)}
               onResizeHandleMouseDown={
