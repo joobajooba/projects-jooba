@@ -99,9 +99,9 @@ export default function CommunityPage() {
             {list.map((profile) => (
               <div
                 key={profile.owner_wallet}
-                className="flex flex-col items-center gap-2 p-3 rounded-xl bg-gray-800/60 border border-gray-700 hover:border-gray-600 transition-colors"
+                className="flex flex-col gap-2 rounded-xl bg-gray-800/60 border border-gray-700 hover:border-gray-600 transition-colors overflow-hidden"
               >
-                <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-700 border-2 border-gray-600 shrink-0">
+                <div className="w-full aspect-square overflow-hidden bg-gray-700">
                   {profile.avatar_url ? (
                     <img
                       src={profile.avatar_url}
@@ -114,7 +114,7 @@ export default function CommunityPage() {
                     </div>
                   )}
                 </div>
-                <span className="text-sm font-medium text-gray-200 truncate w-full text-center">
+                <span className="text-sm font-medium text-gray-200 truncate w-full text-center px-2 pb-2">
                   {profile.username || 'Unnamed'}
                 </span>
               </div>
