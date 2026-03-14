@@ -15,6 +15,7 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import ProfileGrid from './components/ProfileGrid';
 import CommunityPage from './pages/CommunityPage';
 import GamesPage from './pages/GamesPage';
+import ProjectsPage from './pages/ProjectsPage';
 import { startXAuth } from './lib/xAuth';
 
 function SidebarActions() {
@@ -166,6 +167,8 @@ export default function App() {
           <ProfileGrid onProfileChange={handleProfileChange} />
         ) : activePage === 'community' ? (
           <CommunityPage />
+        ) : activePage === 'projects' ? (
+          <ProjectsPage />
         ) : activePage === 'games' ? (
           <GamesPage />
         ) : (
