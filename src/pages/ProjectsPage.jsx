@@ -18,18 +18,14 @@ const PROJECTS = [
   },
 ];
 
-const FILTER_OPTIONS = [
-  { value: 'coming-soon', label: 'Coming Soon' },
-  { value: 'released', label: 'Released' },
-];
-
 function isComingSoon(project) {
   return (project.releaseDate || '').includes('Coming Soon');
 }
 
 export default function ProjectsPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [filter, setFilter] = useState('coming-soon');
+  const [showComingSoon, setShowComingSoon] = useState(true);
+  const [showReleased, setShowReleased] = useState(true);
   const [filterOpen, setFilterOpen] = useState(false);
   const filterRef = useRef(null);
 
@@ -45,14 +41,17 @@ export default function ProjectsPage() {
 
   const filteredProjects = PROJECTS.filter((p) => {
     const matchesFilter =
-      filter === 'coming-soon' ? isComingSoon(p) : !isComingSoon(p);
+      (isComingSoon(p) && showComingSoon) || (!isComingSoon(p) && showReleased);
     const matchesSearch =
       !searchQuery.trim() ||
       p.name.toLowerCase().includes(searchQuery.trim().toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
-  const currentFilterLabel = FILTER_OPTIONS.find((o) => o.value === filter)?.label ?? 'Filter';
+  const filterLabel =
+    showComingSoon && showReleased
+      ? 'All'
+      : [showComingSoon && 'Coming Soon', showReleased && 'Released'].filter(Boolean).join(', ');
 
   return (
     <div className="flex flex-col h-full min-h-0 overflow-auto">
@@ -78,26 +77,34 @@ export default function ProjectsPage() {
               aria-expanded={filterOpen}
               aria-haspopup="listbox"
             >
-              <span>{currentFilterLabel}</span>
+              <span>{filterLabel}</span>
               <ChevronDown className={`w-4 h-4 transition-transform ${filterOpen ? 'rotate-180' : ''}`} />
             </button>
             {filterOpen && (
-              <ul
-                className="absolute top-full left-0 mt-1 min-w-[140px] py-1 rounded-lg border border-gray-600 bg-gray-800 shadow-lg z-10"
+              <div
+                className="absolute top-full left-0 mt-1 min-w-[180px] py-2 px-2 rounded-lg border border-gray-600 bg-gray-800 shadow-lg z-10"
                 role="listbox"
+                aria-label="Filter by release status"
               >
-                {FILTER_OPTIONS.map((opt) => (
-                  <li key={opt.value} role="option" aria-selected={filter === opt.value}>
-                    <button
-                      type="button"
-                      onClick={() => { setFilter(opt.value); setFilterOpen(false); }}
-                      className={`w-full text-left px-4 py-2 text-sm ${filter === opt.value ? 'bg-indigo-600 text-white' : 'text-gray-200 hover:bg-gray-700'}`}
-                    >
-                      {opt.label}
-                    </button>
-                  </li>
-                ))}
-              </ul>
+                <label className="flex items-center gap-2 px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 rounded cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={showComingSoon}
+                    onChange={(e) => setShowComingSoon(e.target.checked)}
+                    className="rounded border-gray-500 bg-gray-700 text-indigo-500 focus:ring-indigo-500"
+                  />
+                  Coming Soon
+                </label>
+                <label className="flex items-center gap-2 px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 rounded cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={showReleased}
+                    onChange={(e) => setShowReleased(e.target.checked)}
+                    className="rounded border-gray-500 bg-gray-700 text-indigo-500 focus:ring-indigo-500"
+                  />
+                  Released
+                </label>
+              </div>
             )}
           </div>
         </div>
