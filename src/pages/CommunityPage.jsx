@@ -3,6 +3,7 @@ import { Search } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 const LATEST_LIMIT = 24;
+const VIEW_MODES = ['small', 'medium', 'large'];
 
 export default function CommunityPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -10,6 +11,7 @@ export default function CommunityPage() {
   const [latestProfiles, setLatestProfiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [latestLoading, setLatestLoading] = useState(true);
+  const [viewMode, setViewMode] = useState('medium');
 
   const fetchLatest = useCallback(async () => {
     if (!supabase) {
@@ -69,20 +71,53 @@ export default function CommunityPage() {
   const listLoading = showSearch ? loading : latestLoading;
   const listLabel = showSearch ? 'Search results' : 'Latest profiles';
 
+  const gridClass =
+    viewMode === 'small'
+      ? 'grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2'
+      : viewMode === 'large'
+        ? 'grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'
+        : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4';
+
+  const cardTextClass =
+    viewMode === 'small' ? 'text-xs' : viewMode === 'large' ? 'text-base' : 'text-sm';
+
+  const placeholderTextClass =
+    viewMode === 'small' ? 'text-xl' : viewMode === 'large' ? 'text-4xl' : 'text-2xl';
+
   return (
     <div className="flex flex-col h-full min-h-0 overflow-auto">
       <div className="p-6 pb-4">
         <h1 className="text-xl font-semibold text-gray-100 mb-4">Community</h1>
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by profile username..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-600 bg-gray-800 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            aria-label="Search profiles by username"
-          />
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 min-w-[200px] max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by profile username..."
+              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-600 bg-gray-800 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              aria-label="Search profiles by username"
+            />
+          </div>
+          <div className="flex items-center gap-1 rounded-lg border border-gray-600 bg-gray-800 p-1">
+            {VIEW_MODES.map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setViewMode(mode)}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium capitalize transition-colors ${
+                  viewMode === mode
+                    ? 'bg-indigo-600 text-white'
+                    : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700'
+                }`}
+                aria-label={`View mode: ${mode}`}
+                aria-pressed={viewMode === mode}
+              >
+                {mode}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -95,7 +130,7 @@ export default function CommunityPage() {
             {showSearch ? 'No profiles match that username.' : 'No profiles yet.'}
           </p>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          <div className={gridClass}>
             {list.map((profile) => (
               <div
                 key={profile.owner_wallet}
@@ -109,12 +144,16 @@ export default function CommunityPage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-500 text-2xl font-medium">
+                    <div
+                      className={`w-full h-full flex items-center justify-center text-gray-500 font-medium ${placeholderTextClass}`}
+                    >
                       {(profile.username || '?').charAt(0).toUpperCase()}
                     </div>
                   )}
                 </div>
-                <span className="text-sm font-medium text-gray-200 truncate w-full text-center px-2 pb-2">
+                <span
+                  className={`font-medium text-gray-200 truncate w-full text-center px-2 pb-2 ${cardTextClass}`}
+                >
                   {profile.username || 'Unnamed'}
                 </span>
               </div>
