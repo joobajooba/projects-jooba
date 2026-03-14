@@ -126,7 +126,7 @@ export default function ProjectsPage() {
                   />
                 </div>
                 <div className="flex flex-col justify-center gap-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-100">Project Name | {project.name}</p>
+                  <p className="text-sm font-semibold text-gray-100">{project.name}</p>
                   <p className="text-sm text-gray-400">Network | {project.network}</p>
                   <p className="text-sm text-amber-400/90">Release Date | {project.releaseDate}</p>
                 </div>
