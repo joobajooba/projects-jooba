@@ -10,7 +10,7 @@ const KEYS_ROW1 = 'QWERTYUIOP';
 const KEYS_ROW2 = 'ASDFGHJKL';
 const KEYS_ROW3 = 'ZXCVBNM';
 
-function Cell({ letter, status }) {
+function Cell({ letter, status, large }) {
   const c =
     status === 'correct'
       ? 'bg-green-600 border-green-600'
@@ -19,9 +19,10 @@ function Cell({ letter, status }) {
         : status === 'absent'
           ? 'bg-gray-600 border-gray-600'
           : 'bg-gray-800 border-gray-600';
+  const size = large ? 'w-14 h-14 sm:w-16 sm:h-16 text-xl' : 'w-12 h-12 sm:w-14 sm:h-14 text-lg';
   return (
     <div
-      className={`flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 border-2 font-bold text-lg uppercase ${c} text-white`}
+      className={`flex items-center justify-center border-2 font-bold uppercase ${size} ${c} text-white`}
     >
       {letter || ''}
     </div>
@@ -226,82 +227,85 @@ export default function WordleGame({ isOpen = true, asPage = false, onClose }) {
     </div>
   );
 
+  const keyClass = asPage
+    ? 'w-10 h-12 sm:w-12 sm:h-14 text-sm'
+    : 'w-8 h-10 sm:w-9 sm:h-11 text-sm';
+  const specialKeyClass = asPage
+    ? 'px-4 py-2.5 text-xs min-w-[3rem] sm:min-w-[3.5rem]'
+    : 'px-3 py-2 text-xs min-w-[2.5rem]';
+
   const content = (
     <>
       {header}
-        <div className="p-4 flex flex-col items-center gap-4">
+        <div className={`flex-1 min-h-0 flex flex-col items-center justify-center gap-6 ${asPage ? 'p-6 py-8' : 'p-4'}`}>
           {loading ? (
             <p className="text-gray-400 py-8">Loading…</p>
           ) : (
             <>
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1.5 shrink-0">
                 {Array.from({ length: ROWS }, (_, row) => (
-                  <div key={row} className="flex gap-1 justify-center">
+                  <div key={row} className="flex gap-1 sm:gap-1.5 justify-center">
                     {Array.from({ length: COLS }, (_, col) => {
                       const guess = guesses[row];
                       const letter = guess ? guess[col] : row === guesses.length ? current[col] : '';
                       const status = guess
                         ? getLetterStatus(guess[col], col, guess)
                         : null;
-                      return <Cell key={col} letter={letter} status={status} />;
+                      return <Cell key={col} letter={letter} status={status} large={asPage} />;
                     })}
                   </div>
                 ))}
               </div>
               {status === 'won' && (
-                <p className="text-green-400 font-semibold">
+                <p className="text-green-400 font-semibold text-center">
                   You won in {guesses.length} {guesses.length === 1 ? 'guess' : 'guesses'}!
                 </p>
               )}
               {status === 'lost' && (
-                <p className="text-gray-300">
+                <p className="text-gray-300 text-center">
                   The word was <span className="font-bold text-white uppercase">{target}</span>
                 </p>
               )}
-              <div className="flex flex-col gap-1.5 w-full max-w-sm">
-                {[KEYS_ROW1, KEYS_ROW2, KEYS_ROW3].map((row, i) => (
-                  <div key={i} className="flex justify-center gap-1 flex-wrap">
-                    {i === 2 && (
-                      <button
-                        type="button"
-                        onClick={() => handleKey('ENTER')}
-                        className="px-3 py-2 text-xs font-semibold bg-gray-600 hover:bg-gray-500 text-gray-200 rounded"
-                      >
-                        ENTER
+              <div className="flex flex-col gap-2 w-full max-w-[min(100%,28rem)] shrink-0">
+                <div className="flex justify-center gap-1 flex-nowrap">
+                  {KEYS_ROW1.split('').map((k) => {
+                    const s = keyStatus[k];
+                    const bg = s === 'correct' ? 'bg-green-600' : s === 'present' ? 'bg-yellow-500' : s === 'absent' ? 'bg-gray-600' : 'bg-gray-700 hover:bg-gray-600';
+                    return (
+                      <button key={k} type="button" onClick={() => handleKey(k)} className={`${keyClass} ${bg} text-white font-bold rounded shrink-0`}>
+                        {k}
                       </button>
-                    )}
-                    {row.split('').map((k) => {
-                      const s = keyStatus[k];
-                      const bg =
-                        s === 'correct'
-                          ? 'bg-green-600'
-                          : s === 'present'
-                            ? 'bg-yellow-500'
-                            : s === 'absent'
-                              ? 'bg-gray-600'
-                              : 'bg-gray-700 hover:bg-gray-600';
-                      return (
-                        <button
-                          key={k}
-                          type="button"
-                          onClick={() => handleKey(k)}
-                          className={`w-8 h-10 sm:w-9 sm:h-11 ${bg} text-white font-bold text-sm rounded`}
-                        >
-                          {k}
-                        </button>
-                      );
-                    })}
-                    {i === 2 && (
-                      <button
-                        type="button"
-                        onClick={() => handleKey('BACK')}
-                        className="px-3 py-2 text-xs font-semibold bg-gray-600 hover:bg-gray-500 text-gray-200 rounded"
-                      >
-                        ⌫
+                    );
+                  })}
+                </div>
+                <div className="flex justify-center gap-1 flex-nowrap">
+                  {KEYS_ROW2.split('').map((k) => {
+                    const s = keyStatus[k];
+                    const bg = s === 'correct' ? 'bg-green-600' : s === 'present' ? 'bg-yellow-500' : s === 'absent' ? 'bg-gray-600' : 'bg-gray-700 hover:bg-gray-600';
+                    return (
+                      <button key={k} type="button" onClick={() => handleKey(k)} className={`${keyClass} ${bg} text-white font-bold rounded shrink-0`}>
+                        {k}
                       </button>
-                    )}
-                  </div>
-                ))}
+                    );
+                  })}
+                </div>
+                <div className="flex justify-center gap-1 flex-nowrap">
+                  <button type="button" onClick={() => handleKey('ENTER')} className={`${specialKeyClass} h-12 sm:h-14 bg-gray-600 hover:bg-gray-500 text-gray-200 font-semibold rounded shrink-0`}>
+                    ENTER
+                  </button>
+                  {KEYS_ROW3.split('').map((k) => {
+                    const s = keyStatus[k];
+                    const bg = s === 'correct' ? 'bg-green-600' : s === 'present' ? 'bg-yellow-500' : s === 'absent' ? 'bg-gray-600' : 'bg-gray-700 hover:bg-gray-600';
+                    return (
+                      <button key={k} type="button" onClick={() => handleKey(k)} className={`${keyClass} ${bg} text-white font-bold rounded shrink-0`}>
+                        {k}
+                      </button>
+                    );
+                  })}
+                  <button type="button" onClick={() => handleKey('BACK')} className={`${specialKeyClass} h-12 sm:h-14 bg-gray-600 hover:bg-gray-500 text-gray-200 font-semibold rounded shrink-0`}>
+                    ⌫
+                  </button>
+                </div>
               </div>
             </>
           )}
@@ -312,7 +316,7 @@ export default function WordleGame({ isOpen = true, asPage = false, onClose }) {
   if (asPage) {
     return (
       <div className="flex flex-col h-full min-h-0 overflow-auto">
-        <div className="bg-gray-900 border-b border-gray-800 max-w-lg w-full mx-auto flex-1 min-h-0 flex flex-col">
+        <div className="bg-gray-900 border-b border-gray-800 w-full max-w-3xl mx-auto flex-1 min-h-0 flex flex-col">
           {content}
         </div>
       </div>
