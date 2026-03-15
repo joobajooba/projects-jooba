@@ -3,6 +3,7 @@ import { X, ArrowLeft } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { getWordleWords, getDailyWord, getDailyWordIndex } from '../lib/wordleWords';
 import { supabase } from '../lib/supabase';
+import AdvertPanel from './AdvertPanel';
 
 const ROWS = 6;
 const COLS = 5;
@@ -297,10 +298,13 @@ export default function WordleGame({ isOpen = true, asPage = false, onClose }) {
 
   if (asPage) {
     return (
-      <div className="flex flex-col h-full min-h-0 overflow-auto">
-        <div className="bg-gray-900 border-b border-gray-800 w-full max-w-3xl mx-auto flex-1 min-h-0 flex flex-col">
-          {content}
+      <div className="flex h-full min-h-0 w-full gap-0">
+        <div className="flex-1 min-w-0 flex flex-col h-full min-h-0 overflow-auto bg-gray-900">
+          <div className="bg-gray-900 border-b border-gray-800 w-full max-w-3xl mx-auto flex-1 min-h-0 flex flex-col">
+            {content}
+          </div>
         </div>
+        <AdvertPanel />
       </div>
     );
   }
