@@ -170,12 +170,12 @@ export default function TypeRacerGame({ asPage = false, onClose }) {
   }
 
   return (
-    <div className="flex h-full min-h-0 w-full">
-      <div className="flex-1 min-w-0 flex flex-col h-full min-h-0 overflow-auto">
+    <div className="flex h-full min-h-0 w-full gap-0">
+      <div className="flex-1 min-w-0 flex flex-col h-full min-h-0 overflow-auto bg-gray-900">
         {gameContent}
       </div>
       <aside
-        className="flex-shrink-0 h-full bg-gray-900/80 border-l-2 border-gray-800 overflow-hidden flex flex-col"
+        className="flex-shrink-0 h-full bg-gray-900/80 border-l-2 border-gray-800 overflow-hidden flex flex-col -ml-px"
         style={{ width: '15%' }}
         aria-label="Advert"
       >
