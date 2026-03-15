@@ -34,40 +34,24 @@ export default function TypeRacerGame({ asPage = false, onClose }) {
     async (finalWpm) => {
       if (!address || !supabase) return;
       const wallet = address.toLowerCase();
-      const { data: row } = await supabase
+      const { error } = await supabase.from('type_racer_game_results').insert({
+        wallet_address: wallet,
+        played_day: dayIndex,
+        wpm: finalWpm,
+      });
+
+      if (error) {
+        console.warn('Failed to save Type Racer game result', error);
+        return;
+      }
+
+      const { data: statsRow } = await supabase
         .from('type_racer_stats')
-        .select('*')
+        .select('current_streak')
         .eq('wallet_address', wallet)
         .maybeSingle();
 
-      let currentStreak = row?.current_streak ?? 0;
-      const maxStreak = row?.max_streak ?? 0;
-      const lastPlayedDay = row?.last_played_day;
-
-      if (lastPlayedDay == null || lastPlayedDay === dayIndex - 1) {
-        currentStreak = (lastPlayedDay === dayIndex - 1 ? currentStreak : 0) + 1;
-      } else if (lastPlayedDay !== dayIndex) {
-        currentStreak = 1;
-      }
-
-      const totalGames = (row?.total_games ?? 0) + 1;
-      const totalWpmSum = (row?.total_wpm_sum ?? 0) + finalWpm;
-
-      setLastStreak(currentStreak);
-
-      await supabase.from('type_racer_stats').upsert(
-        {
-          wallet_address: wallet,
-          current_streak: currentStreak,
-          max_streak: Math.max(maxStreak, currentStreak),
-          last_played_day: dayIndex,
-          last_wpm: finalWpm,
-          total_games: totalGames,
-          total_wpm_sum: totalWpmSum,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'wallet_address' }
-      );
+      setLastStreak(statsRow?.current_streak ?? null);
     },
     [address, dayIndex]
   );

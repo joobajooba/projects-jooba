@@ -90,46 +90,16 @@ export default function WordleGame({ isOpen = true, asPage = false, onClose }) {
     async (won, numGuesses) => {
       if (!address || !supabase) return;
       const wallet = address.toLowerCase();
-      const { data: row } = await supabase
-        .from('wordle_stats')
-        .select('*')
-        .eq('wallet_address', wallet)
-        .maybeSingle();
+      const { error } = await supabase.from('wordle_game_results').insert({
+        wallet_address: wallet,
+        played_day: dayIndex,
+        won,
+        guesses_count: numGuesses,
+      });
 
-      const totalGames = (row?.total_games ?? 0) + 1;
-      const totalWins = (row?.total_wins ?? 0) + (won ? 1 : 0);
-      const totalGuesses = (row?.total_guesses ?? 0) + numGuesses;
-      const avgGuesses = totalWins > 0 ? totalGuesses / totalWins : 0;
-
-      let currentStreak = row?.current_streak ?? 0;
-      const maxStreak = row?.max_streak ?? 0;
-      const lastPlayedDay = row?.last_played_day;
-
-      if (won) {
-        if (lastPlayedDay == null || lastPlayedDay === dayIndex - 1) {
-          currentStreak = (lastPlayedDay === dayIndex - 1 ? currentStreak : 0) + 1;
-        } else if (lastPlayedDay !== dayIndex) {
-          currentStreak = 1;
-        }
-      } else {
-        currentStreak = 0;
+      if (error) {
+        console.warn('Failed to save Wordle game result', error);
       }
-
-      await supabase.from('wordle_stats').upsert(
-        {
-          wallet_address: wallet,
-          current_streak: currentStreak,
-          max_streak: Math.max(maxStreak, currentStreak),
-          total_wins: totalWins,
-          total_games: totalGames,
-          total_guesses: totalGuesses,
-          wins_in_one: (row?.wins_in_one ?? 0) + (won && numGuesses === 1 ? 1 : 0),
-          avg_guesses: Math.round(avgGuesses * 100) / 100,
-          last_played_day: dayIndex,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'wallet_address' }
-      );
     },
     [address, dayIndex]
   );
