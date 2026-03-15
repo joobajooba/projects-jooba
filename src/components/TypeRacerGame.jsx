@@ -5,6 +5,8 @@ import { getDailyPassage } from '../lib/typeRacerPassages';
 import { getDailyWordIndex } from '../lib/wordleWords';
 import { supabase } from '../lib/supabase';
 
+const TYPE_RACER_SLIDES = ['/typeracer-slideshow-1.png'];
+
 function wordCount(text) {
   return text.trim() ? text.trim().split(/\s+/).length : 0;
 }
@@ -17,12 +19,21 @@ export default function TypeRacerGame({ asPage = false, onClose }) {
   const [endTime, setEndTime] = useState(null);
   const [completed, setCompleted] = useState(false);
   const [lastStreak, setLastStreak] = useState(null);
+  const [slideIndex, setSlideIndex] = useState(0);
   const inputRef = useRef(null);
   const dayIndex = getDailyWordIndex();
 
   useEffect(() => {
     setPassage(getDailyPassage());
   }, []);
+
+  useEffect(() => {
+    if (!asPage || TYPE_RACER_SLIDES.length <= 1) return undefined;
+    const interval = window.setInterval(() => {
+      setSlideIndex((current) => (current + 1) % TYPE_RACER_SLIDES.length);
+    }, 4500);
+    return () => window.clearInterval(interval);
+  }, [asPage]);
 
   const elapsedSeconds = startTime && (endTime || Date.now())
     ? ((endTime || Date.now()) - startTime) / 1000
@@ -88,62 +99,73 @@ export default function TypeRacerGame({ asPage = false, onClose }) {
   );
 
   return (
-    <div className="flex flex-col h-full min-h-0 overflow-auto">
-      <div className="bg-gray-900 border-b border-gray-800 w-full max-w-3xl mx-auto flex-1 min-h-0 flex flex-col">
-        {header}
-        <div className={`flex-1 min-h-0 flex flex-col items-center justify-center gap-6 ${asPage ? 'p-6 py-8' : 'p-4'}`}>
-          {!passage ? (
-            <p className="text-gray-400">Loading…</p>
-          ) : completed ? (
-            <div className="text-center space-y-2">
-              <p className="text-green-400 font-semibold text-lg">Done!</p>
-              <p className="text-gray-300">Speed: <span className="font-bold text-white">{wpm} WPM</span></p>
-              <p className="text-gray-400 text-sm">Words: {words} · Time: {(elapsedSeconds).toFixed(1)}s</p>
-              {lastStreak != null && (
-                <p className="text-indigo-400 text-sm">Streak: {lastStreak} day{lastStreak !== 1 ? 's' : ''}</p>
-              )}
-            </div>
-          ) : (
-            <>
-              <div className="w-full max-w-2xl">
-                <p
-                  className="text-lg leading-relaxed mb-4 font-mono whitespace-pre-wrap select-none"
-                  aria-label="Passage to type"
-                >
-                  {passage.split('').map((char, i) => {
-                    if (i >= input.length) {
-                      return <span key={i} className="text-gray-500">{char}</span>;
-                    }
-                    const correct = passage[i] === input[i];
-                    return (
-                      <span
-                        key={i}
-                        className={correct ? 'text-green-400' : 'text-red-400 bg-red-400/20'}
-                      >
-                        {char}
-                      </span>
-                    );
-                  })}
-                </p>
-                <textarea
-                  ref={inputRef}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onPaste={(e) => e.preventDefault()}
-                  placeholder="Start typing here... (paste disabled)"
-                  className="w-full min-h-[120px] p-4 rounded-lg border-2 border-gray-600 bg-gray-800 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono text-lg leading-relaxed resize-none"
-                  spellCheck={false}
-                  autoFocus
-                  disabled={completed}
-                />
+    <div className={`flex flex-col h-full min-h-0 ${asPage ? 'overflow-hidden' : 'overflow-auto'}`}>
+      <div className={`relative flex-1 min-h-0 ${asPage ? 'overflow-hidden' : ''}`}>
+        {asPage && (
+          <aside className="hidden xl:block absolute top-0 right-0 h-full w-[360px] overflow-hidden border-l border-gray-800 bg-gray-900/70">
+            <img
+              src={TYPE_RACER_SLIDES[slideIndex]}
+              alt="Type Racer slideshow artwork"
+              className="w-full h-full object-cover"
+            />
+          </aside>
+        )}
+        <div className="bg-gray-900 border-b border-gray-800 w-full max-w-3xl mx-auto flex-1 min-h-0 flex flex-col relative z-10">
+          {header}
+          <div className={`flex-1 min-h-0 flex flex-col items-center justify-center gap-6 ${asPage ? 'p-6 py-8' : 'p-4'}`}>
+            {!passage ? (
+              <p className="text-gray-400">Loading…</p>
+            ) : completed ? (
+              <div className="text-center space-y-2">
+                <p className="text-green-400 font-semibold text-lg">Done!</p>
+                <p className="text-gray-300">Speed: <span className="font-bold text-white">{wpm} WPM</span></p>
+                <p className="text-gray-400 text-sm">Words: {words} · Time: {(elapsedSeconds).toFixed(1)}s</p>
+                {lastStreak != null && (
+                  <p className="text-indigo-400 text-sm">Streak: {lastStreak} day{lastStreak !== 1 ? 's' : ''}</p>
+                )}
               </div>
-              {startTime && !completed && (
-                <p className="text-gray-400 text-sm">
-                  Time: {((Date.now() - startTime) / 1000).toFixed(1)}s
-                </p>
-              )}
-            </>
-          )}
+            ) : (
+              <>
+                <div className="w-full max-w-2xl">
+                  <p
+                    className="text-lg leading-relaxed mb-4 font-mono whitespace-pre-wrap select-none"
+                    aria-label="Passage to type"
+                  >
+                    {passage.split('').map((char, i) => {
+                      if (i >= input.length) {
+                        return <span key={i} className="text-gray-500">{char}</span>;
+                      }
+                      const correct = passage[i] === input[i];
+                      return (
+                        <span
+                          key={i}
+                          className={correct ? 'text-green-400' : 'text-red-400 bg-red-400/20'}
+                        >
+                          {char}
+                        </span>
+                      );
+                    })}
+                  </p>
+                  <textarea
+                    ref={inputRef}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onPaste={(e) => e.preventDefault()}
+                    placeholder="Start typing here... (paste disabled)"
+                    className="w-full min-h-[120px] p-4 rounded-lg border-2 border-gray-600 bg-gray-800 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono text-lg leading-relaxed resize-none"
+                    spellCheck={false}
+                    autoFocus
+                    disabled={completed}
+                  />
+                </div>
+                {startTime && !completed && (
+                  <p className="text-gray-400 text-sm">
+                    Time: {((Date.now() - startTime) / 1000).toFixed(1)}s
+                  </p>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>
