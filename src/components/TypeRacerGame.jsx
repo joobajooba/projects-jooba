@@ -10,7 +10,7 @@ function wordCount(text) {
 }
 
 const ADVERT_SLIDES = [
-  { src: '/advert-banner.png', alt: 'Advert' },
+  { src: '/advert-notapunkscult.png', alt: 'Not a Punks Cult', href: 'https://opensea.io/collection/not-a-punks-cult' },
   { src: '/advert-demon-bros.png', alt: 'Demon Bros Gang', href: 'https://opensea.io/collection/demon-bros-gang' },
 ];
 
@@ -34,7 +34,7 @@ export default function TypeRacerGame({ asPage = false, onClose }) {
     if (!asPage || ADVERT_SLIDES.length <= 1) return;
     const id = setInterval(() => {
       setAdvertSlideIndex((i) => (i + 1) % ADVERT_SLIDES.length);
-    }, 5000);
+    }, 3000);
     return () => clearInterval(id);
   }, [asPage]);
 
@@ -179,35 +179,40 @@ export default function TypeRacerGame({ asPage = false, onClose }) {
         style={{ width: '15%' }}
         aria-label="Advert"
       >
-        <div className="relative w-full h-full min-h-0">
-          {ADVERT_SLIDES.map((slide, i) => (
-            <div
-              key={slide.src}
-              className="absolute inset-0 w-full h-full flex items-center justify-center"
-              style={{ opacity: i === advertSlideIndex ? 1 : 0, transition: 'opacity 0.4s ease', pointerEvents: i === advertSlideIndex ? 'auto' : 'none' }}
-            >
-              {slide.href ? (
-                <a
-                  href={slide.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full h-full flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-inset"
-                >
+        <div className="relative w-full h-full min-h-0 overflow-hidden">
+          <div
+            className="flex h-full transition-transform duration-500 ease-in-out"
+            style={{ width: `${ADVERT_SLIDES.length * 100}%`, transform: `translateX(-${(100 / ADVERT_SLIDES.length) * advertSlideIndex}%)` }}
+          >
+            {ADVERT_SLIDES.map((slide) => (
+              <div
+                key={slide.src}
+                className="flex-shrink-0 flex items-center justify-center h-full"
+                style={{ width: `${100 / ADVERT_SLIDES.length}%` }}
+              >
+                {slide.href ? (
+                  <a
+                    href={slide.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full h-full flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-inset"
+                  >
+                    <img
+                      src={slide.src}
+                      alt={slide.alt}
+                      className="w-full h-full object-contain object-center"
+                    />
+                  </a>
+                ) : (
                   <img
                     src={slide.src}
                     alt={slide.alt}
                     className="w-full h-full object-contain object-center"
                   />
-                </a>
-              ) : (
-                <img
-                  src={slide.src}
-                  alt={slide.alt}
-                  className="w-full h-full object-contain object-center"
-                />
-              )}
-            </div>
-          ))}
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </aside>
     </div>
