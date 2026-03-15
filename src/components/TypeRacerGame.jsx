@@ -25,6 +25,7 @@ export default function TypeRacerGame({ asPage = false, onClose }) {
   const inputRef = useRef(null);
   const dayIndex = getDailyWordIndex();
   const [advertSlideIndex, setAdvertSlideIndex] = useState(0);
+  const [pendingAdvertUrl, setPendingAdvertUrl] = useState(null);
 
   useEffect(() => {
     setPassage(getDailyPassage());
@@ -191,18 +192,20 @@ export default function TypeRacerGame({ asPage = false, onClose }) {
                 style={{ width: `${100 / ADVERT_SLIDES.length}%` }}
               >
                 {slide.href ? (
-                  <a
-                    href={slide.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full h-full flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-inset"
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setPendingAdvertUrl(slide.href);
+                    }}
+                    className="w-full h-full flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-inset cursor-pointer border-0 bg-transparent p-0"
                   >
                     <img
                       src={slide.src}
                       alt={slide.alt}
-                      className="w-full h-full object-contain object-center"
+                      className="w-full h-full object-contain object-center pointer-events-none"
                     />
-                  </a>
+                  </button>
                 ) : (
                   <img
                     src={slide.src}
@@ -215,6 +218,33 @@ export default function TypeRacerGame({ asPage = false, onClose }) {
           </div>
         </div>
       </aside>
+      {pendingAdvertUrl && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" aria-modal="true" role="dialog" onClick={() => setPendingAdvertUrl(null)}>
+          <div className="bg-gray-800 border border-gray-600 rounded-lg shadow-xl p-6 max-w-md mx-4 text-center" onClick={(e) => e.stopPropagation()}>
+            <p className="text-gray-100 font-medium mb-2">This URL will take you to OpenSea</p>
+            <p className="text-indigo-400 text-sm break-all mb-6">{pendingAdvertUrl}</p>
+            <div className="flex gap-3 justify-center">
+              <button
+                type="button"
+                onClick={() => {
+                  window.open(pendingAdvertUrl, '_blank', 'noopener,noreferrer');
+                  setPendingAdvertUrl(null);
+                }}
+                className="px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              >
+                Accept
+              </button>
+              <button
+                type="button"
+                onClick={() => setPendingAdvertUrl(null)}
+                className="px-4 py-2 rounded-lg bg-gray-600 text-gray-100 font-medium hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500"
+              >
+                Decline
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
