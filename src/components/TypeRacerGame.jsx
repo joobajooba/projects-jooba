@@ -175,7 +175,7 @@ export default function TypeRacerGame({ asPage = false, onClose }) {
         {gameContent}
       </div>
       <aside
-        className="flex-shrink-0 h-full bg-gray-900/80 border-l border-gray-800 overflow-hidden flex flex-col"
+        className="flex-shrink-0 h-full bg-gray-900/80 border-l-2 border-gray-800 overflow-hidden flex flex-col"
         style={{ width: '15%' }}
         aria-label="Advert"
       >
