@@ -15,6 +15,11 @@ const PROJECTS = [
     network: 'Apechain',
     releaseDate: '2025',
     image: '/notapunkscult.png',
+    links: [
+      { label: 'OpenSea', url: 'https://opensea.io/collection/not-a-punks-cult' },
+      { label: 'X', url: 'https://x.com/notapunkscult' },
+      { label: 'Discord', url: 'https://discord.gg/jFKwU8KrR4' },
+    ],
   },
 ];
 
@@ -27,6 +32,7 @@ export default function ProjectsPage() {
   const [showComingSoon, setShowComingSoon] = useState(true);
   const [showReleased, setShowReleased] = useState(true);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [linksModalProject, setLinksModalProject] = useState(null);
   const filterRef = useRef(null);
 
   useEffect(() => {
@@ -116,7 +122,11 @@ export default function ProjectsPage() {
             filteredProjects.map((project) => (
               <div
                 key={project.id}
-                className="flex flex-col sm:flex-row gap-4 p-4 rounded-xl border border-gray-700 bg-gray-800/60"
+                role={project.links ? 'button' : undefined}
+                tabIndex={project.links ? 0 : undefined}
+                onClick={project.links ? () => setLinksModalProject(project) : undefined}
+                onKeyDown={project.links ? (e) => e.key === 'Enter' && setLinksModalProject(project) : undefined}
+                className={`flex flex-col sm:flex-row gap-4 p-4 rounded-xl border border-gray-700 bg-gray-800/60 ${project.links ? 'cursor-pointer hover:bg-gray-800/80 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-inset' : ''}`}
               >
                 <div className="w-full sm:w-32 h-32 shrink-0 rounded-lg overflow-hidden bg-gray-700">
                   <img
@@ -135,6 +145,47 @@ export default function ProjectsPage() {
           )}
         </div>
       </div>
+
+      {linksModalProject?.links && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+          aria-modal="true"
+          role="dialog"
+          aria-labelledby="project-links-title"
+          onClick={() => setLinksModalProject(null)}
+        >
+          <div
+            className="bg-gray-800 border border-gray-600 rounded-lg shadow-xl p-6 max-w-md mx-4 w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="project-links-title" className="text-lg font-semibold text-gray-100 mb-4">
+              {linksModalProject.name}
+            </h2>
+            <ul className="space-y-3">
+              {linksModalProject.links.map(({ label, url }) => (
+                <li key={url}>
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between gap-4 py-2 px-3 rounded-lg bg-gray-700/80 hover:bg-gray-700 text-gray-200 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <span className="font-medium">{label}</span>
+                    <span className="text-sm text-indigo-400 truncate max-w-[220px]">{url}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <button
+              type="button"
+              onClick={() => setLinksModalProject(null)}
+              className="mt-4 w-full py-2 rounded-lg bg-gray-600 text-gray-100 font-medium hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
