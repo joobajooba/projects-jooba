@@ -156,7 +156,7 @@ function PlaceholderPage({ pageKey }) {
 }
 
 export default function App() {
-  const [activePage, setActivePage] = useState('profile');
+  const [activePage, setActivePage] = useState('home');
   const [profileAvatarUrl, setProfileAvatarUrl] = useState('');
 
   const handleProfileChange = useCallback((data) => {

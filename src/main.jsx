@@ -28,7 +28,7 @@ const apeChain = defineChain({
 });
 
 const config = getDefaultConfig({
-  appName: 'Studio Profile Builder',
+  appName: 'SOJ - Apechain Communities',
   projectId,
   chains: [mainnet, apeChain],
   ssr: false,
