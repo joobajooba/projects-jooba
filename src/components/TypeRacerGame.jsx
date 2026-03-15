@@ -162,7 +162,7 @@ export default function TypeRacerGame({ asPage = false, onClose }) {
       </div>
       <aside
         className="flex-shrink-0 h-full bg-gray-900/80 border-l border-gray-800"
-        style={{ width: '5%' }}
+        style={{ width: '15%' }}
         aria-label="Advert"
       >
         <div className="h-full flex items-center justify-center text-gray-500 text-sm">
