@@ -77,7 +77,7 @@ function HomePage() {
         <div className="max-w-7xl">
           <h1 className="text-3xl font-semibold text-gray-100 mb-8">J00BA&apos;s ApeChain Sanctuary</h1>
 
-          <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_420px] gap-10 items-start">
+          <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_520px] gap-10 items-stretch">
             <div className="space-y-8 text-gray-300 leading-7">
               <section>
                 <h2 className="text-lg font-semibold text-gray-100 mb-2">What:</h2>
@@ -113,12 +113,12 @@ function HomePage() {
               </section>
             </div>
 
-            <div className="xl:sticky xl:top-8 xl:mt-14">
-              <div className="overflow-hidden rounded-2xl border border-gray-700 bg-gray-900/60 shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
+            <div className="xl:mt-14 h-full">
+              <div className="overflow-hidden rounded-2xl border border-gray-700 bg-gray-900/60 shadow-[0_20px_50px_rgba(0,0,0,0.35)] h-full min-h-[520px]">
                 <img
                   src="/home-sanctuary-art.png"
                   alt="J00BA's ApeChain Sanctuary artwork"
-                  className="w-full h-auto object-cover"
+                  className="w-full h-full object-cover"
                 />
               </div>
             </div>
