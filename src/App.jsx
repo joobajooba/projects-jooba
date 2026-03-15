@@ -88,6 +88,11 @@ function HomePage() {
                   games featured on the site. It&apos;s designed as a place where projects and individuals
                   can present what they&apos;re building and express their creativity.
                 </p>
+                <p className="text-justify mt-3">
+                  In addition, ApeChain projects will be able to advertise and promote their projects
+                  on the site for free, giving teams another way to share updates, highlight releases,
+                  and reach members of the wider ecosystem.
+                </p>
               </section>
 
               <section>
@@ -95,7 +100,9 @@ function HomePage() {
                 <p className="text-justify">
                   By bringing these elements together, the goal is to strengthen connections within the
                   ApeChain ecosystem and help highlight smaller or lesser-known projects that people
-                  might otherwise miss. Giving communities a space to display their work and engage
+                  might otherwise miss. Providing a space for free project promotion alongside community
+                  content helps new builders gain visibility without needing large marketing budgets.
+                  Giving communities a place to display their work, advertise their projects, and engage
                   with others can help those projects gain traction, grow their audiences, and
                   contribute to making ApeChain a more creative and active network.
                 </p>
@@ -108,7 +115,8 @@ function HomePage() {
                   improve. I also created it as a unique way to showcase my upcoming BOPS project while
                   engaging with others in the ecosystem. With feedback from the community and continued
                   development, the hope is to grow this sanctuary into a more engaging, collaborative
-                  space where projects, and the ApeChain community as a whole can thrive.
+                  space where projects can share updates, promote their work, and connect with new
+                  supporters, helping the ApeChain community as a whole continue to thrive.
                 </p>
               </section>
             </div>
@@ -122,6 +130,14 @@ function HomePage() {
                 />
               </div>
             </div>
+          </div>
+
+          <div className="mt-16 flex justify-center">
+            <img
+              src="/bops_timeline.png"
+              alt="BOPS project timeline and roadmap"
+              className="max-w-full h-auto object-contain"
+            />
           </div>
         </div>
       </div>
