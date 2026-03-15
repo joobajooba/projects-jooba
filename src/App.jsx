@@ -70,6 +70,51 @@ const PLACEHOLDER_PAGES = {
   mint: { title: 'Mint', description: 'Mint assets.' },
 };
 
+function HomePage() {
+  return (
+    <div className="flex-1 overflow-auto">
+      <div className="max-w-4xl mx-auto px-8 py-10">
+        <h1 className="text-3xl font-semibold text-gray-100 mb-8">J00BA&apos;s ApeChain Sanctuary</h1>
+
+        <div className="space-y-8 text-gray-300 leading-7">
+          <section>
+            <h2 className="text-lg font-semibold text-gray-100 mb-2">What:</h2>
+            <p>
+              Welcome to J00BA&apos;s ApeChain Sanctuary, a community hub built to help ApeChain
+              communities connect and showcase what they&apos;re creating. Here, users can explore
+              profiles, view NFTs, check out artwork from project members, and see game stats from
+              games featured on the site. It&apos;s designed as a place where projects and individuals
+              can present what they&apos;re building and express their creativity.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-semibold text-gray-100 mb-2">So What:</h2>
+            <p>
+              By bringing these elements together, the goal is to strengthen connections within the
+              ApeChain ecosystem and help highlight smaller or lesser-known projects that people
+              might otherwise miss. Giving communities a space to display their work and engage
+              with others can help those projects gain traction, grow their audiences, and
+              contribute to making ApeChain a more creative and active network.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-semibold text-gray-100 mb-2">Now What:</h2>
+            <p>
+              This site is still in its early stages, and there&apos;s plenty more to build and
+              improve. I also created it as a unique way to showcase my upcoming BOPS project while
+              engaging with others in the ecosystem. With feedback from the community and continued
+              development, the hope is to grow this sanctuary into a more engaging, collaborative
+              space where projects, and the ApeChain community as a whole can thrive.
+            </p>
+          </section>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PlaceholderPage({ pageKey }) {
   const { title, description } = PLACEHOLDER_PAGES[pageKey] || PLACEHOLDER_PAGES.home;
   return (
@@ -163,7 +208,9 @@ export default function App() {
         </footer>
       </aside>
       <main className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
-        {activePage === 'profile' ? (
+        {activePage === 'home' ? (
+          <HomePage />
+        ) : activePage === 'profile' ? (
           <ProfileGrid onProfileChange={handleProfileChange} />
         ) : activePage === 'community' ? (
           <CommunityPage />
