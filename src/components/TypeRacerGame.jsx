@@ -102,7 +102,7 @@ export default function TypeRacerGame({ asPage = false, onClose }) {
   );
 
   const gameContent = (
-    <div className={`bg-gray-900 border-b border-gray-800 w-full max-w-3xl flex-1 min-h-0 flex flex-col ${asPage ? 'ml-auto mr-0' : 'mx-auto'}`}>
+    <div className="bg-gray-900 border-b border-gray-800 w-full max-w-3xl mx-auto flex-1 min-h-0 flex flex-col">
       {header}
       <div className={`flex-1 min-h-0 flex flex-col items-center justify-center gap-6 ${asPage ? 'p-6 py-8' : 'p-4'}`}>
             {!passage ? (
