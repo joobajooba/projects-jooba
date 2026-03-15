@@ -87,11 +87,10 @@ export default function TypeRacerGame({ asPage = false, onClose }) {
     </div>
   );
 
-  return (
-    <div className="flex flex-col h-full min-h-0 overflow-auto">
-      <div className="bg-gray-900 border-b border-gray-800 w-full max-w-3xl mx-auto flex-1 min-h-0 flex flex-col">
-          {header}
-          <div className={`flex-1 min-h-0 flex flex-col items-center justify-center gap-6 ${asPage ? 'p-6 py-8' : 'p-4'}`}>
+  const gameContent = (
+    <div className="bg-gray-900 border-b border-gray-800 w-full max-w-3xl mx-auto flex-1 min-h-0 flex flex-col">
+      {header}
+      <div className={`flex-1 min-h-0 flex flex-col items-center justify-center gap-6 ${asPage ? 'p-6 py-8' : 'p-4'}`}>
             {!passage ? (
               <p className="text-gray-400">Loading…</p>
             ) : completed ? (
@@ -145,7 +144,31 @@ export default function TypeRacerGame({ asPage = false, onClose }) {
               </>
             )}
           </div>
+    </div>
+  );
+
+  if (!asPage) {
+    return (
+      <div className="flex flex-col h-full min-h-0 overflow-auto">
+        {gameContent}
       </div>
+    );
+  }
+
+  return (
+    <div className="flex h-full min-h-0 w-full">
+      <div className="flex-1 min-w-0 flex flex-col h-full min-h-0 overflow-auto">
+        {gameContent}
+      </div>
+      <aside
+        className="flex-shrink-0 h-full bg-gray-900/80 border-l border-gray-800"
+        style={{ width: '5%' }}
+        aria-label="Advert"
+      >
+        <div className="h-full flex items-center justify-center text-gray-500 text-sm">
+          Advert
+        </div>
+      </aside>
     </div>
   );
 }
