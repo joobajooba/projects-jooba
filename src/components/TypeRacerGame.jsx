@@ -5,8 +5,6 @@ import { getDailyPassage } from '../lib/typeRacerPassages';
 import { getDailyWordIndex } from '../lib/wordleWords';
 import { supabase } from '../lib/supabase';
 
-const TYPE_RACER_SLIDES = ['/typeracer-slideshow-1.png'];
-
 function wordCount(text) {
   return text.trim() ? text.trim().split(/\s+/).length : 0;
 }
@@ -19,21 +17,12 @@ export default function TypeRacerGame({ asPage = false, onClose }) {
   const [endTime, setEndTime] = useState(null);
   const [completed, setCompleted] = useState(false);
   const [lastStreak, setLastStreak] = useState(null);
-  const [slideIndex, setSlideIndex] = useState(0);
   const inputRef = useRef(null);
   const dayIndex = getDailyWordIndex();
 
   useEffect(() => {
     setPassage(getDailyPassage());
   }, []);
-
-  useEffect(() => {
-    if (!asPage || TYPE_RACER_SLIDES.length <= 1) return undefined;
-    const interval = window.setInterval(() => {
-      setSlideIndex((current) => (current + 1) % TYPE_RACER_SLIDES.length);
-    }, 4500);
-    return () => window.clearInterval(interval);
-  }, [asPage]);
 
   const elapsedSeconds = startTime && (endTime || Date.now())
     ? ((endTime || Date.now()) - startTime) / 1000
@@ -99,18 +88,8 @@ export default function TypeRacerGame({ asPage = false, onClose }) {
   );
 
   return (
-    <div className={`flex flex-col h-full min-h-0 ${asPage ? 'overflow-hidden' : 'overflow-auto'}`}>
-      <div className={`relative flex-1 min-h-0 ${asPage ? 'overflow-hidden' : ''}`}>
-        {asPage && (
-          <aside className="hidden xl:block absolute top-0 right-0 h-full w-[360px] overflow-hidden border-l border-gray-800 bg-gray-900/70">
-            <img
-              src={TYPE_RACER_SLIDES[slideIndex]}
-              alt="Type Racer slideshow artwork"
-              className="w-full h-full object-cover"
-            />
-          </aside>
-        )}
-        <div className="bg-gray-900 border-b border-gray-800 w-full max-w-3xl mx-auto flex-1 min-h-0 flex flex-col relative z-10">
+    <div className="flex flex-col h-full min-h-0 overflow-auto">
+      <div className="bg-gray-900 border-b border-gray-800 w-full max-w-3xl mx-auto flex-1 min-h-0 flex flex-col">
           {header}
           <div className={`flex-1 min-h-0 flex flex-col items-center justify-center gap-6 ${asPage ? 'p-6 py-8' : 'p-4'}`}>
             {!passage ? (
@@ -166,7 +145,6 @@ export default function TypeRacerGame({ asPage = false, onClose }) {
               </>
             )}
           </div>
-        </div>
       </div>
     </div>
   );
