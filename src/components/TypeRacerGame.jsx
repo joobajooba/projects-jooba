@@ -9,6 +9,11 @@ function wordCount(text) {
   return text.trim() ? text.trim().split(/\s+/).length : 0;
 }
 
+const ADVERT_SLIDES = [
+  { src: '/advert-banner.png', alt: 'Advert' },
+  { src: '/advert-demon-bros.png', alt: 'Demon Bros Gang', href: 'https://opensea.io/collection/demon-bros-gang' },
+];
+
 export default function TypeRacerGame({ asPage = false, onClose }) {
   const { address } = useAccount();
   const [passage, setPassage] = useState('');
@@ -19,10 +24,19 @@ export default function TypeRacerGame({ asPage = false, onClose }) {
   const [lastStreak, setLastStreak] = useState(null);
   const inputRef = useRef(null);
   const dayIndex = getDailyWordIndex();
+  const [advertSlideIndex, setAdvertSlideIndex] = useState(0);
 
   useEffect(() => {
     setPassage(getDailyPassage());
   }, []);
+
+  useEffect(() => {
+    if (!asPage || ADVERT_SLIDES.length <= 1) return;
+    const id = setInterval(() => {
+      setAdvertSlideIndex((i) => (i + 1) % ADVERT_SLIDES.length);
+    }, 5000);
+    return () => clearInterval(id);
+  }, [asPage]);
 
   const elapsedSeconds = startTime && (endTime || Date.now())
     ? ((endTime || Date.now()) - startTime) / 1000
@@ -165,11 +179,36 @@ export default function TypeRacerGame({ asPage = false, onClose }) {
         style={{ width: '15%' }}
         aria-label="Advert"
       >
-        <img
-          src="/advert-banner.png"
-          alt="Advert"
-          className="w-full h-full object-contain object-center"
-        />
+        <div className="relative w-full h-full min-h-0">
+          {ADVERT_SLIDES.map((slide, i) => (
+            <div
+              key={slide.src}
+              className="absolute inset-0 w-full h-full flex items-center justify-center"
+              style={{ opacity: i === advertSlideIndex ? 1 : 0, transition: 'opacity 0.4s ease', pointerEvents: i === advertSlideIndex ? 'auto' : 'none' }}
+            >
+              {slide.href ? (
+                <a
+                  href={slide.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full h-full flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-inset"
+                >
+                  <img
+                    src={slide.src}
+                    alt={slide.alt}
+                    className="w-full h-full object-contain object-center"
+                  />
+                </a>
+              ) : (
+                <img
+                  src={slide.src}
+                  alt={slide.alt}
+                  className="w-full h-full object-contain object-center"
+                />
+              )}
+            </div>
+          ))}
+        </div>
       </aside>
     </div>
   );
