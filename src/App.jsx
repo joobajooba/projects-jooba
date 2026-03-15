@@ -74,10 +74,10 @@ function HomePage() {
   return (
     <div className="flex-1 overflow-auto">
       <div className="w-full px-6 lg:px-8 py-10">
-        <div className="max-w-7xl">
+        <div className="w-full">
           <h1 className="text-3xl font-semibold text-gray-100 mb-8">J00BA&apos;s ApeChain Sanctuary</h1>
 
-          <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_520px] gap-10 items-stretch">
+          <div className="grid grid-cols-1 xl:grid-cols-[minmax(320px,0.85fr)_minmax(0,1.15fr)] gap-10 items-stretch">
             <div className="space-y-8 text-gray-300 leading-7">
               <section>
                 <h2 className="text-lg font-semibold text-gray-100 mb-2">What:</h2>
