@@ -211,6 +211,7 @@ function PlaceholderPage({ pageKey }) {
 export default function App() {
   const [activePage, setActivePage] = useState('home');
   const [profileAvatarUrl, setProfileAvatarUrl] = useState('');
+  const [viewProfileWallet, setViewProfileWallet] = useState(null);
 
   const handleProfileChange = useCallback((data) => {
     if (data?.avatarUrl !== undefined) setProfileAvatarUrl(data.avatarUrl ?? '');
@@ -273,7 +274,12 @@ export default function App() {
             <button
               key={key}
               type="button"
-              onClick={() => setActivePage(key)}
+              onClick={() => {
+                setActivePage(key);
+                if (key === 'profile') {
+                  setViewProfileWallet(null);
+                }
+              }}
               className={`w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm transition-colors ${
                 activePage === key
                   ? 'bg-indigo-600 text-white'
@@ -294,9 +300,14 @@ export default function App() {
         {activePage === 'home' ? (
           <HomePage />
         ) : activePage === 'profile' ? (
-          <ProfileGrid onProfileChange={handleProfileChange} />
+          <ProfileGrid onProfileChange={handleProfileChange} viewWallet={viewProfileWallet} />
         ) : activePage === 'community' ? (
-          <CommunityPage />
+          <CommunityPage
+            onOpenProfile={(wallet) => {
+              setViewProfileWallet(wallet);
+              setActivePage('profile');
+            }}
+          />
         ) : activePage === 'projects' ? (
           <ProjectsPage />
         ) : activePage === 'games' ? (

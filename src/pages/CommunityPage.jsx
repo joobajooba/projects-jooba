@@ -5,7 +5,8 @@ import { supabase } from '../lib/supabase';
 const LATEST_LIMIT = 24;
 const VIEW_MODES = ['small', 'medium', 'large'];
 
-export default function CommunityPage() {
+export default function CommunityPage({ onOpenProfile }) {
+  const handleOpenProfile = onOpenProfile || (() => {});
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [latestProfiles, setLatestProfiles] = useState([]);
@@ -162,9 +163,11 @@ export default function CommunityPage() {
         ) : (
           <div className={gridClass}>
             {list.map((profile) => (
-              <div
+              <button
                 key={profile.owner_wallet}
-                className="flex flex-col gap-2 rounded-xl bg-gray-800/60 border border-gray-700 hover:border-gray-600 transition-colors overflow-hidden"
+                type="button"
+                onClick={() => handleOpenProfile(profile.owner_wallet)}
+                className="flex flex-col gap-2 rounded-xl bg-gray-800/60 border border-gray-700 hover:border-gray-600 transition-colors overflow-hidden cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-900"
               >
                 <div className="w-full aspect-square overflow-hidden bg-gray-700">
                   {profile.avatar_url ? (
@@ -186,7 +189,7 @@ export default function CommunityPage() {
                 >
                   {profile.username || 'Unnamed'}
                 </span>
-              </div>
+              </button>
             ))}
           </div>
         )}

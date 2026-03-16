@@ -132,7 +132,7 @@ function ensureUserPanel(widgets, canvasSize) {
   return [userPanel, ...widgets];
 }
 
-export default function ProfileGrid({ onProfileChange }) {
+export default function ProfileGrid({ onProfileChange, viewWallet = null }) {
   const canvasRef = useRef(null);
   const { address } = useAccount();
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
@@ -141,6 +141,10 @@ export default function ProfileGrid({ onProfileChange }) {
   const [panelCollapsed, setPanelCollapsed] = useState(false);
   const [rightTab, setRightTab] = useState('add'); // 'add' | 'style'
   const [saveStatus, setSaveStatus] = useState(null); // null | 'saving' | 'saved' | 'error'
+
+  const effectiveWallet = (viewWallet || address || '').toLowerCase() || null;
+  const isPublicView = !!viewWallet;
+  const canEdit = !!address && !isPublicView;
 
   const [dragState, setDragState] = useState(null);
   const [resizeState, setResizeState] = useState(null);
@@ -170,14 +174,14 @@ export default function ProfileGrid({ onProfileChange }) {
     setWidgets((prev) => ensureUserPanel(prev, canvasSize));
   }, [canvasSize]);
 
-  // Load saved profile from Supabase when wallet is connected
+  // Load saved profile from Supabase
   useEffect(() => {
-    if (!address || !supabase || !onProfileChange) return;
+    if (!effectiveWallet || !supabase) return;
     (async () => {
       const { data, error } = await supabase
         .from('profiles')
         .select('layout_json, x_username')
-        .eq('owner_wallet', address.toLowerCase())
+        .eq('owner_wallet', effectiveWallet)
         .maybeSingle();
       if (error) {
         console.warn('Profile load failed:', error);
@@ -195,10 +199,10 @@ export default function ProfileGrid({ onProfileChange }) {
         }
       }
     })();
-  }, [address, onProfileChange]);
+  }, [effectiveWallet, onProfileChange, canvasSize]);
 
   useEffect(() => {
-    if (!address || !supabase) {
+    if (!effectiveWallet || !supabase) {
       setWordleStats(null);
       return;
     }
@@ -206,14 +210,14 @@ export default function ProfileGrid({ onProfileChange }) {
       const { data } = await supabase
         .from('wordle_stats')
         .select('current_streak, avg_guesses')
-        .eq('wallet_address', address.toLowerCase())
+        .eq('wallet_address', effectiveWallet)
         .maybeSingle();
       setWordleStats(data ?? null);
     })();
-  }, [address]);
+  }, [effectiveWallet]);
 
   useEffect(() => {
-    if (!address || !supabase) {
+    if (!effectiveWallet || !supabase) {
       setTypeRacerStats(null);
       return;
     }
@@ -221,14 +225,14 @@ export default function ProfileGrid({ onProfileChange }) {
       const { data } = await supabase
         .from('type_racer_stats')
         .select('current_streak, last_wpm')
-        .eq('wallet_address', address.toLowerCase())
+        .eq('wallet_address', effectiveWallet)
         .maybeSingle();
       setTypeRacerStats(data ?? null);
     })();
-  }, [address]);
+  }, [effectiveWallet]);
 
   const handleSave = useCallback(async () => {
-    if (!address || !supabase) {
+    if (!canEdit || !address || !supabase) {
       setSaveStatus('error');
       return;
     }
@@ -305,10 +309,12 @@ export default function ProfileGrid({ onProfileChange }) {
   const selectedWidget = widgets.find((w) => w.id === selectedId);
 
   const handleCanvasMouseDown = () => {
+    if (!canEdit) return;
     setSelectedId(null);
   };
 
   const handleWidgetMouseDown = (e, widget) => {
+    if (!canEdit) return;
     e.stopPropagation();
     setSelectedId(widget.id);
     if (resizeState) return;
@@ -320,6 +326,7 @@ export default function ProfileGrid({ onProfileChange }) {
   };
 
   const handleResizeHandleMouseDown = (e, widget) => {
+    if (!canEdit) return;
     e.stopPropagation();
     const { CELL_SIZE: cs } = GRID_CONFIG;
     const w = widget.fixedWidthPx ?? (widget.w ?? 4) * cs;
@@ -334,6 +341,7 @@ export default function ProfileGrid({ onProfileChange }) {
   };
 
   useEffect(() => {
+    if (!canEdit) return;
     if (!dragState) return;
     const onMove = (e) => {
       const cw = canvasSize.width ?? 1;
@@ -360,6 +368,7 @@ export default function ProfileGrid({ onProfileChange }) {
   }, [dragState, canvasSize, widgets]);
 
   useEffect(() => {
+    if (!canEdit) return;
     if (!resizeState) return;
     const onMove = (e) => {
       const cw = canvasSize.width ?? 1;
@@ -394,6 +403,7 @@ export default function ProfileGrid({ onProfileChange }) {
   }, [widgets.length, onProfileChange, userPanelAvatarUrl]);
 
   const onChangeWidget = (updated) => {
+    if (!canEdit) return;
     setWidgets((prev) =>
       prev.map((w) => (w.id === updated.id ? updated : w))
     );
@@ -403,11 +413,13 @@ export default function ProfileGrid({ onProfileChange }) {
   };
 
   const onDeleteWidget = (id) => {
+    if (!canEdit) return;
     setWidgets((prev) => prev.filter((w) => w.id !== id));
     if (selectedId === id) setSelectedId(null);
   };
 
   const onAddWidget = (type) => {
+    if (!canEdit) return;
     const count = widgets.length;
     const newWidget = createDefaultWidget(type, count, canvasSize, widgets);
     setWidgets((prev) => [...prev, newWidget]);
@@ -443,6 +455,7 @@ export default function ProfileGrid({ onProfileChange }) {
         </div>
       </div>
 
+      {canEdit && (
       <aside
         className={`flex flex-col min-h-0 border-l border-gray-800 bg-gray-900/80 transition-[width] ${
           panelCollapsed ? 'w-10' : 'w-[15%] min-w-[200px]'
@@ -534,6 +547,7 @@ export default function ProfileGrid({ onProfileChange }) {
           </>
         )}
       </aside>
+      )}
     </div>
   );
 }
