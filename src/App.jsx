@@ -9,7 +9,7 @@ import {
   User,
   CreditCard,
   AtSign,
-  Settings,
+  MessageCircle,
 } from 'lucide-react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import ProfileGrid from './components/ProfileGrid';
@@ -61,7 +61,7 @@ function SidebarActions() {
                 aria-label="SOJ Discord invite"
                 title="Open SOJ Discord invite"
               >
-                <Settings className="w-5 h-5" />
+                <MessageCircle className="w-5 h-5" />
               </button>
             </div>
           );
