@@ -19,46 +19,99 @@ import ProjectsPage from './pages/ProjectsPage';
 import { startXAuth } from './lib/xAuth';
 
 function SidebarActions() {
+  const [showDiscordModal, setShowDiscordModal] = useState(false);
+
   return (
-    <ConnectButton.Custom>
-      {({ account, openConnectModal, openAccountModal }) => {
-        const handleConnectX = () => {
-          if (account?.address) {
-            startXAuth(account.address);
-          } else {
-            openConnectModal?.();
-          }
-        };
-        return (
-          <div className="flex gap-1 w-full">
-            <button
-              type="button"
-              onClick={account ? openAccountModal : openConnectModal}
-              className="flex-1 aspect-square flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-gray-100"
-              aria-label={account ? 'Account' : 'Connect wallet'}
-            >
-              <CreditCard className="w-5 h-5" />
-            </button>
-            <button
-              type="button"
-              onClick={handleConnectX}
-              className="flex-1 aspect-square flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-gray-100"
-              aria-label="Connect X (Twitter)"
-              title="Connect X profile"
-            >
-              <AtSign className="w-5 h-5" />
-            </button>
-            <button
-              type="button"
-              className="flex-1 aspect-square flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-gray-100"
-              aria-label="Settings"
-            >
-              <Settings className="w-5 h-5" />
-            </button>
+    <>
+      <ConnectButton.Custom>
+        {({ account, openConnectModal, openAccountModal }) => {
+          const handleConnectX = () => {
+            if (account?.address) {
+              startXAuth(account.address);
+            } else {
+              openConnectModal?.();
+            }
+          };
+          const handleOpenDiscord = () => {
+            setShowDiscordModal(true);
+          };
+          return (
+            <div className="flex gap-1 w-full">
+              <button
+                type="button"
+                onClick={account ? openAccountModal : openConnectModal}
+                className="flex-1 aspect-square flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-gray-100"
+                aria-label={account ? 'Account' : 'Connect wallet'}
+              >
+                <CreditCard className="w-5 h-5" />
+              </button>
+              <button
+                type="button"
+                onClick={handleConnectX}
+                className="flex-1 aspect-square flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-gray-100"
+                aria-label="Connect X (Twitter)"
+                title="Connect X profile"
+              >
+                <AtSign className="w-5 h-5" />
+              </button>
+              <button
+                type="button"
+                onClick={handleOpenDiscord}
+                className="flex-1 aspect-square flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-gray-100"
+                aria-label="SOJ Discord invite"
+                title="Open SOJ Discord invite"
+              >
+                <Settings className="w-5 h-5" />
+              </button>
+            </div>
+          );
+        }}
+      </ConnectButton.Custom>
+
+      {showDiscordModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+          aria-modal="true"
+          role="dialog"
+          aria-labelledby="soj-discord-modal-title"
+          onClick={() => setShowDiscordModal(false)}
+        >
+          <div
+            className="bg-gray-800 border border-gray-600 rounded-lg shadow-xl p-6 max-w-md mx-4 text-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="soj-discord-modal-title" className="text-lg font-semibold text-gray-100 mb-3">
+              SOJ Discord invite
+            </h2>
+            <p className="text-gray-200 mb-2">
+              This link will take you to the SOJ Discord server:
+            </p>
+            <p className="text-indigo-400 text-sm break-all mb-6">
+              https://discord.gg/qhayVsuwjr
+            </p>
+            <div className="flex gap-3 justify-center">
+              <button
+                type="button"
+                onClick={() => {
+                  window.open('https://discord.gg/qhayVsuwjr', '_blank', 'noopener,noreferrer');
+                  setShowDiscordModal(false);
+                }}
+                className="px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              >
+                Accept
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowDiscordModal(false)}
+                className="px-4 py-2 rounded-lg bg-gray-600 text-gray-100 font-medium hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500"
+              >
+                Decline
+              </button>
+            </div>
           </div>
-        );
-      }}
-    </ConnectButton.Custom>
+        </div>
+      )}
+    </>
   );
 }
 
