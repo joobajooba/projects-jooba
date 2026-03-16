@@ -9,7 +9,6 @@ import {
   User,
   CreditCard,
   AtSign,
-  MessageCircle,
 } from 'lucide-react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import ProfileGrid from './components/ProfileGrid';
@@ -61,7 +60,23 @@ function SidebarActions() {
                 aria-label="SOJ Discord invite"
                 title="Open SOJ Discord invite"
               >
-                <MessageCircle className="w-5 h-5" />
+                <svg
+                  viewBox="0 0 245 240"
+                  width="20"
+                  height="20"
+                  aria-hidden="true"
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="16"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M104.4 104.8c-5.7 0-10.2 5-10.2 11.2s4.6 11.2 10.2 11.2c5.7 0 10.2-5 10.2-11.2s-4.6-11.2-10.2-11.2Z" />
+                  <path d="M140.6 104.8c-5.7 0-10.2 5-10.2 11.2s4.6 11.2 10.2 11.2c5.7 0 10.2-5 10.2-11.2s-4.6-11.2-10.2-11.2Z" />
+                  <path d="M189.5 20h-134C34.1 20 17 37.2 17 58.7v122.8c0 21.5 17.1 38.7 38.5 38.7h113l-5.3-18.4 12.8 11.9 12.1 11.2 21.5 19V58.7C209.6 37.2 210.9 20 189.5 20Z" />
+                  <path d="M163.3 162.9c-11.2 8.3-24.3 12.7-38.9 12.7-14.6 0-27.7-4.4-38.9-12.7" />
+                </svg>
               </button>
             </div>
           );
