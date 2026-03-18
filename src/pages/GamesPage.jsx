@@ -31,10 +31,15 @@ export default function GamesPage() {
           <button
             type="button"
             onClick={() => setView('wordle')}
-            className="aspect-square w-32 sm:w-40 rounded-xl border-2 border-gray-600 bg-gray-800 hover:border-indigo-500 hover:bg-gray-700 text-gray-100 font-bold text-lg flex items-center justify-center transition-colors"
+            className="aspect-square w-32 sm:w-40 rounded-xl border-2 border-gray-600 bg-gray-800 hover:border-indigo-500 hover:bg-gray-700 text-gray-100 font-bold text-lg flex items-center justify-center transition-colors overflow-hidden relative"
             aria-label="Play Wordle"
           >
-            Wordle
+            <img
+              src="/wordle-splash.png"
+              alt="Wordle splash art"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            <span className="relative">Wordle</span>
           </button>
           <button
             type="button"
