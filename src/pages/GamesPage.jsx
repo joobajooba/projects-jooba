@@ -32,7 +32,7 @@ export default function GamesPage() {
           <button
             type="button"
             onClick={() => setView('wordle')}
-            className="aspect-square w-[26rem] sm:w-[32rem] rounded-xl border-2 border-gray-600 bg-gray-800 hover:border-indigo-500 hover:bg-gray-700 flex items-center justify-center transition-colors overflow-hidden relative"
+            className="aspect-[2/3] w-[26rem] sm:w-[32rem] rounded-xl border-2 border-gray-600 bg-gray-800 hover:border-indigo-500 hover:bg-gray-700 flex items-center justify-center transition-colors overflow-hidden relative"
             aria-label="Play Wordle"
           >
             <img
@@ -44,7 +44,7 @@ export default function GamesPage() {
           <button
             type="button"
             onClick={() => setView('typeracer')}
-            className="aspect-square w-[26rem] sm:w-[32rem] rounded-xl border-2 border-gray-600 bg-gray-800 hover:border-indigo-500 hover:bg-gray-700 flex items-center justify-center transition-colors overflow-hidden relative"
+            className="aspect-[2/3] w-[26rem] sm:w-[32rem] rounded-xl border-2 border-gray-600 bg-gray-800 hover:border-indigo-500 hover:bg-gray-700 flex items-center justify-center transition-colors overflow-hidden relative"
             aria-label="Play Type Racer"
           >
             <img
