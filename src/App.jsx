@@ -15,6 +15,7 @@ import ProfileGrid from './components/ProfileGrid';
 import CommunityPage from './pages/CommunityPage';
 import GamesPage from './pages/GamesPage';
 import ProjectsPage from './pages/ProjectsPage';
+import MintPage from './pages/MintPage';
 import { startXAuth } from './lib/xAuth';
 
 function SidebarActions() {
@@ -311,6 +312,8 @@ export default function App() {
           <ProjectsPage />
         ) : activePage === 'games' ? (
           <GamesPage />
+        ) : activePage === 'mint' ? (
+          <MintPage />
         ) : (
           <PlaceholderPage pageKey={activePage} />
         )}
