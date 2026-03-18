@@ -49,7 +49,7 @@ export default function MintPage() {
             spinning={isSpinning}
             targets={traitTargets}
             spinId={spinId}
-            durationMs={2600}
+            durationMs={5600}
             onComplete={() => {
               setIsSpinning(false);
               setStatusMessage('Done! (Mock) Your traits landed.');

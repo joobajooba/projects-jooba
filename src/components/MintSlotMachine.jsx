@@ -13,7 +13,7 @@ function TraitPlaceholder({ label, variant }) {
             : 'bg-sky-900/30';
   return (
     <div className={`w-full h-full flex items-center justify-center ${bg} text-gray-200`}>
-      <span className="text-xs sm:text-sm font-semibold tracking-wide">{label}</span>
+      <span className="text-sm sm:text-base font-semibold tracking-wide">{label}</span>
     </div>
   );
 }
@@ -86,7 +86,7 @@ function SlotReel({
 
   return (
     <div
-      className="relative w-14 sm:w-16 flex-shrink-0 rounded-xl border border-gray-700 bg-gray-800/40 overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
+      className="relative w-16 sm:w-20 flex-shrink-0 rounded-xl border border-gray-700 bg-gray-800/40 overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
       style={{ height: viewportHeightPx }}
       aria-label={`Trait reel ${reelIndex + 1}`}
     >
@@ -163,7 +163,7 @@ export default function MintSlotMachine({
   }, [settledCount, reelCount, spinning, onComplete, targets, spinId]);
 
   return (
-    <div className="flex gap-4 items-center justify-center w-full overflow-x-auto">
+    <div className="flex gap-6 items-center justify-center w-full overflow-x-auto">
       {reels.map((items, reelIndex) => (
         <SlotReel
           key={reelIndex}
@@ -173,6 +173,8 @@ export default function MintSlotMachine({
           targetIndex={targets?.[reelIndex] ?? null}
           spinId={spinId}
           onReelSettled={handleReelSettled}
+          itemHeightPx={110}
+          visibleItems={3}
           durationMs={durationMs}
         />
       ))}
