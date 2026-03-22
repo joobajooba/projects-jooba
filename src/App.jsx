@@ -4,6 +4,7 @@ import {
   Home,
   Users,
   FolderKanban,
+  Building2,
   Gamepad2,
   Coins,
   User,
@@ -119,6 +120,8 @@ const PLACEHOLDER_PAGES = {
   home: { title: 'Home', description: 'Welcome to Studio. Use the sidebar to open Profile.' },
   community: { title: 'Community', description: 'Community features coming soon.' },
   projects: { title: 'Projects', description: 'Projects overview.' },
+  theTeam: { title: 'The Team', description: '' },
+  studio: { title: 'Studio', description: '' },
   games: { title: 'Games', description: 'Games hub.' },
   mint: { title: 'Mint', description: 'Mint assets.' },
 };
@@ -203,7 +206,7 @@ function PlaceholderPage({ pageKey }) {
   return (
     <div className="flex flex-col items-center justify-center flex-1 p-8 text-center">
       <h1 className="text-2xl font-semibold text-gray-100 mb-2">{title}</h1>
-      <p className="text-gray-400">{description}</p>
+      {description ? <p className="text-gray-400">{description}</p> : null}
     </div>
   );
 }
@@ -221,6 +224,8 @@ export default function App() {
     { key: 'home', icon: Home, label: 'Home' },
     { key: 'community', icon: Users, label: 'Community' },
     { key: 'projects', icon: FolderKanban, label: 'Projects' },
+    { key: 'theTeam', icon: Users, label: 'The Team' },
+    { key: 'studio', icon: Building2, label: 'Studio' },
     { key: 'games', icon: Gamepad2, label: 'Games' },
     { key: 'mint', icon: Coins, label: 'Mint' },
     { key: 'profile', icon: User, label: 'Profile' },
