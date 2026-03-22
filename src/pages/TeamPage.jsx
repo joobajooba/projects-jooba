@@ -1,7 +1,7 @@
 const TEAM_MEMBERS = [
   {
     name: 'J00BA',
-    role: 'Founder',
+    role: 'Founder / Artist / Dev',
     imageSrc: '/team-j00ba.png',
     imageAlt: 'J00BA profile artwork',
   },
@@ -39,13 +39,18 @@ function TeamCard({ member }) {
 }
 
 export default function TeamPage() {
+  const [featuredMember, ...otherMembers] = TEAM_MEMBERS;
+
   return (
     <div className="flex-1 overflow-auto">
       <div className="min-h-full px-6 py-10 lg:px-8 flex items-center justify-center">
-        <div className="w-full max-w-7xl flex flex-wrap items-start justify-center gap-10 xl:gap-16">
-          {TEAM_MEMBERS.map((member) => (
-            <TeamCard key={member.name} member={member} />
-          ))}
+        <div className="w-full max-w-7xl flex flex-col items-center gap-12">
+          <TeamCard member={featuredMember} />
+          <div className="w-full flex flex-wrap items-start justify-center gap-10 xl:gap-16">
+            {otherMembers.map((member) => (
+              <TeamCard key={member.name} member={member} />
+            ))}
+          </div>
         </div>
       </div>
     </div>
