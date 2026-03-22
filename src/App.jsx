@@ -17,6 +17,7 @@ import CommunityPage from './pages/CommunityPage';
 import GamesPage from './pages/GamesPage';
 import ProjectsPage from './pages/ProjectsPage';
 import MintPage from './pages/MintPage';
+import TeamPage from './pages/TeamPage';
 import { startXAuth } from './lib/xAuth';
 
 function SidebarActions() {
@@ -315,6 +316,8 @@ export default function App() {
           />
         ) : activePage === 'projects' ? (
           <ProjectsPage />
+        ) : activePage === 'theTeam' ? (
+          <TeamPage />
         ) : activePage === 'games' ? (
           <GamesPage />
         ) : activePage === 'mint' ? (
