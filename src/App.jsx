@@ -140,7 +140,11 @@ function HomePage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 justify-items-center">
         {boxes.map((box) => (
           <div key={box.heading} className="w-full max-w-[270px] flex flex-col">
-            <div className="w-full aspect-[736/1024] rounded-xl border border-gray-700 bg-gray-800/60 overflow-hidden">
+            <div
+              className={`w-full aspect-[736/1024] rounded-xl border border-gray-700 overflow-hidden ${
+                box.imageSrc ? 'bg-gray-800/60' : 'bg-gray-800/50'
+              }`}
+            >
               {box.imageSrc ? (
                 <img
                   src={box.imageSrc}
