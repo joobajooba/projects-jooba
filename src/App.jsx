@@ -183,6 +183,17 @@ function HomePage() {
                   our nfts enable the use of widget based audio packs to create music.
                 </p>
               </>
+            ) : section === 2 ? (
+              <>
+                <h3 className="text-xl font-bold text-gray-100 mb-3">Whats the Plan?</h3>
+                <p className="text-base leading-6">
+                  This projects will be delivered in 5 phases. With each phase delivering a different
+                  NFT enabling the band to grow overtime. As the band grows, our community grows, the
+                  main aim is to create a fun music studio as a fun way to support the growth of the
+                  wider ApeChain community. The final phase is a secret. It&apos;s someting to look
+                  forward to.
+                </p>
+              </>
             ) : null}
           </div>
         ))}
