@@ -139,11 +139,11 @@ function HomePage() {
     <div className="flex-1 overflow-auto px-6 lg:px-8 py-8">
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 justify-items-center">
         {boxes.map((box) => (
-          <div key={box.heading} className="w-full max-w-[270px]">
+          <div key={box.heading} className="w-full max-w-[270px] flex flex-col">
             <div className="h-[22rem] rounded-xl border border-gray-700 bg-gray-800/60" />
-            <div className="mt-3 text-center">
-              <p className="text-gray-100 font-medium">{box.heading}</p>
-              <p className="text-gray-400">{box.subtitle}</p>
+            <div className="mt-3 rounded-lg border border-gray-700 bg-gray-900/80 px-3 py-2 text-center">
+              <p className="text-gray-100 font-semibold leading-tight">{box.heading}</p>
+              <p className="text-indigo-300 leading-tight">{box.subtitle}</p>
             </div>
           </div>
         ))}
