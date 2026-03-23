@@ -129,74 +129,14 @@ const PLACEHOLDER_PAGES = {
 
 function HomePage() {
   return (
-    <div className="flex-1 overflow-auto">
-      <div className="w-full px-6 lg:px-8 py-10">
-        <div className="w-full">
-          <h1 className="text-3xl font-semibold text-gray-100 mb-8">J00BA&apos;s ApeChain Sanctuary</h1>
-
-          <div className="grid grid-cols-1 xl:grid-cols-[minmax(320px,0.85fr)_minmax(0,1.15fr)] gap-10 items-stretch">
-            <div className="space-y-8 text-gray-300 leading-7">
-              <section>
-                <h2 className="text-lg font-semibold text-gray-100 mb-2">What:</h2>
-                <p className="text-justify">
-                  Welcome to J00BA&apos;s ApeChain Sanctuary, a community hub built to help ApeChain
-                  communities connect and showcase what they&apos;re creating. Here, users can explore
-                  profiles, view NFTs, check out artwork from project members, and see game stats from
-                  games featured on the site. It&apos;s designed as a place where projects and individuals
-                  can present what they&apos;re building and express their creativity.
-                </p>
-                <p className="text-justify mt-3">
-                  In addition, ApeChain projects will be able to advertise and promote their projects
-                  on the site for free, giving teams another way to share updates, highlight releases,
-                  and reach members of the wider ecosystem.
-                </p>
-              </section>
-
-              <section>
-                <h2 className="text-lg font-semibold text-gray-100 mb-2">So What:</h2>
-                <p className="text-justify">
-                  By bringing these elements together, the goal is to strengthen connections within the
-                  ApeChain ecosystem and help highlight smaller or lesser-known projects that people
-                  might otherwise miss. Providing a space for free project promotion alongside community
-                  content helps new builders gain visibility without needing large marketing budgets.
-                  Giving communities a place to display their work, advertise their projects, and engage
-                  with others can help those projects gain traction, grow their audiences, and
-                  contribute to making ApeChain a more creative and active network.
-                </p>
-              </section>
-
-              <section>
-                <h2 className="text-lg font-semibold text-gray-100 mb-2">Now What:</h2>
-                <p className="text-justify">
-                  This site is still in its early stages, and there&apos;s plenty more to build and
-                  improve. I also created it as a unique way to showcase my upcoming BOPS project while
-                  engaging with others in the ecosystem. With feedback from the community and continued
-                  development, the hope is to grow this sanctuary into a more engaging, collaborative
-                  space where projects can share updates, promote their work, and connect with new
-                  supporters, helping the ApeChain community as a whole continue to thrive.
-                </p>
-              </section>
-            </div>
-
-            <div className="xl:mt-14 h-full">
-              <div className="overflow-hidden rounded-2xl border border-gray-700 bg-gray-900/60 shadow-[0_20px_50px_rgba(0,0,0,0.35)] h-full min-h-[520px]">
-                <img
-                  src="/home-sanctuary-art.png"
-                  alt="J00BA's ApeChain Sanctuary artwork"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-16 flex justify-center">
-            <img
-              src="/bops_timeline.png"
-              alt="BOPS project timeline and roadmap"
-              className="max-w-full h-auto object-contain"
-            />
-          </div>
-        </div>
+    <div className="flex-1 overflow-auto px-6 lg:px-8 py-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((box) => (
+          <div
+            key={box}
+            className="h-28 rounded-xl border border-gray-700 bg-gray-800/60"
+          />
+        ))}
       </div>
     </div>
   );
