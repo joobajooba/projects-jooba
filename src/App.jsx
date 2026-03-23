@@ -165,7 +165,7 @@ function HomePage() {
         {[1, 2, 3].map((section) => (
           <div
             key={section}
-            className={`h-72 rounded-xl bg-gray-800/50 p-6 text-gray-200 overflow-auto border ${
+            className={`h-72 rounded-xl bg-gray-800/50 p-6 text-gray-200 overflow-hidden border ${
               section === 1
                 ? 'border-red-400 shadow-[0_0_18px_rgba(248,113,113,0.55),inset_0_0_14px_rgba(248,113,113,0.2)]'
                 : section === 2
@@ -176,7 +176,7 @@ function HomePage() {
             {section === 1 ? (
               <>
                 <h3 className="text-xl font-bold text-gray-100 mb-3">What is Ape Studio</h3>
-                <p className="text-base leading-6 text-justify">
+                <p className="text-xs leading-5 text-justify">
                   ApeStudio is a music studio built by apes to enable users to create fun music on
                   Apechain using &lt;Band Name&gt; to create your digital on chain band. Sound packs from
                   our nfts enable the use of widget based audio packs to create music.
@@ -185,12 +185,12 @@ function HomePage() {
             ) : section === 2 ? (
               <>
                 <h3 className="text-xl font-bold text-gray-100 mb-3">Whats the Plan?</h3>
-                <p className="text-sm leading-5 text-justify">
+                <p className="text-xs leading-5 text-justify">
                   This project will roll out in five phases, each introducing a new NFT that evolves
                   the band over time. As the band grows, so will the community, creating a shared and
                   engaging journey.
                 </p>
-                <p className="mt-3 text-sm leading-5 text-justify">
+                <p className="mt-3 text-xs leading-5 text-justify">
                   The goal is to build a fun, interactive music studio that supports the growth of the
                   wider ApeChain community. The final phase remains a secret, something exciting for the
                   community to look forward to.
@@ -199,7 +199,7 @@ function HomePage() {
             ) : section === 3 ? (
               <>
                 <h3 className="text-xl font-bold text-gray-100 mb-3">The Reasoning</h3>
-                <p className="text-sm leading-5 text-justify">
+                <p className="text-xs leading-5 text-justify">
                   I started this as a fun hobby project to deepen my understanding of Web3 while
                   developing my technical skills and creating engaging, original art. Being an Ape and
                   supporting ApeChain projects has been a genuinely enjoyable experience, and it
