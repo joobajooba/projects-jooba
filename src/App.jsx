@@ -159,6 +159,14 @@ function HomePage() {
         ))}
       </div>
       <div className="mt-14 mx-auto w-full max-w-6xl h-72 rounded-xl border border-gray-700 bg-gray-800/50" />
+      <div className="mt-14 mx-auto w-full max-w-xl space-y-8">
+        {[1, 2, 3].map((square) => (
+          <div
+            key={square}
+            className="w-full aspect-square rounded-xl border border-gray-700 bg-gray-800/50"
+          />
+        ))}
+      </div>
     </div>
   );
 }
