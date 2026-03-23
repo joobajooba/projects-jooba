@@ -164,7 +164,16 @@ function HomePage() {
       </div>
       <div className="mt-14 mx-auto w-full max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-6">
         {[1, 2, 3].map((section) => (
-          <div key={section} className="h-72 rounded-xl bg-gray-800/50 p-6 text-gray-200 overflow-auto">
+          <div
+            key={section}
+            className={`h-72 rounded-xl bg-gray-800/50 p-6 text-gray-200 overflow-auto border ${
+              section === 1
+                ? 'border-red-400 shadow-[0_0_18px_rgba(248,113,113,0.55),inset_0_0_14px_rgba(248,113,113,0.2)]'
+                : section === 2
+                  ? 'border-blue-400 shadow-[0_0_18px_rgba(96,165,250,0.55),inset_0_0_14px_rgba(96,165,250,0.2)]'
+                  : 'border-green-400 shadow-[0_0_18px_rgba(74,222,128,0.55),inset_0_0_14px_rgba(74,222,128,0.2)]'
+            }`}
+          >
             {section === 1 ? (
               <>
                 <h3 className="text-xl font-bold text-gray-100 mb-3">What is Ape Studio</h3>
