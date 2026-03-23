@@ -268,7 +268,6 @@ export default function App() {
             </div>
             <div className="flex flex-col leading-tight text-right items-end">
               <span className="font-semibold text-gray-100">StudioApe</span>
-              <span className="text-xs text-gray-400">ApeChain Communities</span>
             </div>
           </div>
         </header>
