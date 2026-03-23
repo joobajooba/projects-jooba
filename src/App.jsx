@@ -141,7 +141,7 @@ function HomePage() {
         {boxes.map((box) => (
           <div key={box.heading} className="w-full max-w-[270px] flex flex-col">
             <div
-              className={`w-full aspect-[736/1024] rounded-xl border border-gray-700 overflow-hidden ${
+              className={`w-full aspect-[736/1024] rounded-xl overflow-hidden ${
                 box.imageSrc ? 'bg-gray-800/60' : 'bg-gray-800/50'
               }`}
             >
@@ -155,19 +155,19 @@ function HomePage() {
                 />
               ) : null}
             </div>
-            <div className="mt-3 rounded-lg border border-gray-700 bg-gray-900/80 px-3 py-2 text-center">
+            <div className="mt-3 rounded-lg bg-gray-900/80 px-3 py-2 text-center">
               <p className="text-gray-100 font-semibold leading-tight">{box.heading}</p>
               <p className="text-indigo-300 leading-tight">{box.subtitle}</p>
             </div>
           </div>
         ))}
       </div>
-      <div className="mt-14 mx-auto w-full max-w-6xl h-72 rounded-xl border border-gray-700 bg-gray-800/50" />
+      <div className="mt-14 mx-auto w-full max-w-6xl h-72 rounded-xl bg-gray-800/50" />
       <div className="mt-14 mx-auto w-full max-w-xl space-y-8">
         {[1, 2, 3].map((square) => (
           <div
             key={square}
-            className="w-full aspect-square rounded-xl border border-gray-700 bg-gray-800/50"
+            className="w-full aspect-square rounded-xl bg-gray-800/50"
           />
         ))}
       </div>
