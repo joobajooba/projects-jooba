@@ -266,8 +266,8 @@ export default function App() {
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="flex flex-col leading-tight text-right items-end">
-              <span className="font-semibold text-gray-100">StudioApe</span>
+            <div className="flex-1 flex flex-col leading-tight text-right">
+              <span className="font-semibold text-gray-100 block w-full text-right">StudioApe</span>
             </div>
           </div>
         </header>
