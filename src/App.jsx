@@ -186,21 +186,14 @@ function HomePage() {
               <>
                 <h3 className="text-xl font-bold text-gray-100 mb-3">Whats the Plan?</h3>
                 <p className="text-sm leading-5 text-justify">
-                  This project will be delivered across five distinct phases, with each phase
-                  introducing a new NFT that contributes to the band&apos;s evolution over time. As the
-                  band develops, so too will the surrounding community, creating a shared journey of
-                  growth and engagement.
+                  This project will roll out in five phases, each introducing a new NFT that evolves
+                  the band over time. As the band grows, so will the community, creating a shared and
+                  engaging journey.
                 </p>
                 <p className="mt-3 text-sm leading-5 text-justify">
-                  At its core, the project aims to build an interactive and enjoyable music studio
-                  experience, one that not only entertains but also supports and amplifies the growth
-                  of the wider ApeChain community.
-                </p>
-                <p className="mt-3 text-sm leading-5 text-justify">
-                  Each phase is designed to add value, deepen participation, and strengthen the
-                  connection between holders and the project. The final phase will remain undisclosed
-                  for now, serving as an exciting milestone and something for the community to
-                  anticipate as the journey unfolds.
+                  The goal is to build a fun, interactive music studio that supports the growth of the
+                  wider ApeChain community. The final phase remains a secret, something exciting for the
+                  community to look forward to.
                 </p>
               </>
             ) : null}
