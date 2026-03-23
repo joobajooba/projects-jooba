@@ -130,11 +130,11 @@ const PLACEHOLDER_PAGES = {
 function HomePage() {
   return (
     <div className="flex-1 overflow-auto px-6 lg:px-8 py-8">
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 justify-items-center">
         {[1, 2, 3, 4].map((box) => (
           <div
             key={box}
-            className="h-28 rounded-xl border border-gray-700 bg-gray-800/60"
+            className="h-44 w-full max-w-[180px] rounded-xl border border-gray-700 bg-gray-800/60"
           />
         ))}
       </div>
