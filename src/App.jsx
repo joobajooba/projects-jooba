@@ -136,7 +136,7 @@ function HomePage() {
   ];
 
   return (
-    <div className="flex-1 overflow-y-auto overflow-x-hidden px-6 lg:px-8 py-8 pb-24">
+    <div className="flex-1 min-h-[300vh] overflow-y-auto overflow-x-hidden px-6 lg:px-8 py-8 pb-24">
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 justify-items-center">
         {boxes.map((box) => (
           <div key={box.heading} className="w-full max-w-[270px] flex flex-col">
