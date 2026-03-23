@@ -129,7 +129,7 @@ const PLACEHOLDER_PAGES = {
 
 function HomePage() {
   const boxes = [
-    { heading: 'Phase 1 | Guitarist', subtitle: 'Bops' },
+    { heading: 'Phase 1 | Guitarist', subtitle: 'Bops', imageSrc: '/phase1-guitarist.png' },
     { heading: 'Phase 2 | Bass', subtitle: 'TBC' },
     { heading: 'Phase 3 | Drummer', subtitle: 'TBC' },
     { heading: 'Phase 4 | Vocals', subtitle: 'TBC' },
@@ -140,7 +140,17 @@ function HomePage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 justify-items-center">
         {boxes.map((box) => (
           <div key={box.heading} className="w-full max-w-[270px] flex flex-col">
-            <div className="h-[22rem] rounded-xl border border-gray-700 bg-gray-800/60" />
+            <div className="h-[22rem] rounded-xl border border-gray-700 bg-gray-800/60 overflow-hidden">
+              {box.imageSrc ? (
+                <img
+                  src={box.imageSrc}
+                  alt={box.heading}
+                  className="w-full h-full object-contain"
+                  loading="eager"
+                  decoding="sync"
+                />
+              ) : null}
+            </div>
             <div className="mt-3 rounded-lg border border-gray-700 bg-gray-900/80 px-3 py-2 text-center">
               <p className="text-gray-100 font-semibold leading-tight">{box.heading}</p>
               <p className="text-indigo-300 leading-tight">{box.subtitle}</p>
