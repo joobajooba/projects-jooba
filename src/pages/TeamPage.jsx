@@ -6,10 +6,10 @@ const TEAM_MEMBERS = [
     imageAlt: 'J00BA profile artwork',
   },
   {
-    name: 'OkiDokie',
+    name: 'OkiDoki',
     role: 'Sound Engineer',
     imageSrc: '/team-okidokie.png',
-    imageAlt: 'OkiDokie profile artwork',
+    imageAlt: 'OkiDoki profile artwork',
   },
   {
     name: 'IBEKS',
