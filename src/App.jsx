@@ -158,14 +158,7 @@ function HomePage() {
           </div>
         ))}
       </div>
-      <div className="mt-14 -mx-6 lg:-mx-8 h-20 relative">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute left-0 top-8 w-[130%] border-t-2 border-cyan-400/90 origin-left rotate-[8deg]"
-        />
-      </div>
-
-      <div className="mt-8 mx-auto w-full max-w-6xl h-72 rounded-xl border border-gray-700 bg-gray-800/50" />
+      <div className="mt-14 mx-auto w-full max-w-6xl h-72 rounded-xl border border-gray-700 bg-gray-800/50" />
     </div>
   );
 }
