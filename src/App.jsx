@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import {
-  Sparkles,
   Home,
   Users,
   FolderKanban,
@@ -186,12 +185,22 @@ function HomePage() {
             ) : section === 2 ? (
               <>
                 <h3 className="text-xl font-bold text-gray-100 mb-3">Whats the Plan?</h3>
-                <p className="text-base leading-6">
-                  This projects will be delivered in 5 phases. With each phase delivering a different
-                  NFT enabling the band to grow overtime. As the band grows, our community grows, the
-                  main aim is to create a fun music studio as a fun way to support the growth of the
-                  wider ApeChain community. The final phase is a secret. It&apos;s someting to look
-                  forward to.
+                <p className="text-sm leading-5 text-justify">
+                  This project will be delivered across five distinct phases, with each phase
+                  introducing a new NFT that contributes to the band&apos;s evolution over time. As the
+                  band develops, so too will the surrounding community, creating a shared journey of
+                  growth and engagement.
+                </p>
+                <p className="mt-3 text-sm leading-5 text-justify">
+                  At its core, the project aims to build an interactive and enjoyable music studio
+                  experience, one that not only entertains but also supports and amplifies the growth
+                  of the wider ApeChain community.
+                </p>
+                <p className="mt-3 text-sm leading-5 text-justify">
+                  Each phase is designed to add value, deepen participation, and strengthen the
+                  connection between holders and the project. The final phase will remain undisclosed
+                  for now, serving as an exciting milestone and something for the community to
+                  anticipate as the journey unfolds.
                 </p>
               </>
             ) : null}
@@ -245,7 +254,13 @@ export default function App() {
       <aside className="w-[10%] min-w-[140px] flex flex-col shrink-0 bg-gray-900/80 border-r border-gray-800 min-h-0">
         <header className="p-4 border-b border-gray-800 shrink-0">
           <div className="flex items-center gap-2 text-indigo-400">
-            <Sparkles className="w-5 h-5 shrink-0" />
+            <div className="w-5 h-5 shrink-0 overflow-hidden rounded-sm">
+              <img
+                src="/sidebar-logo.png"
+                alt="SOJ logo"
+                className="w-full h-full object-cover"
+              />
+            </div>
             <div className="flex flex-col leading-tight">
               <span className="font-semibold text-gray-100">SOJ</span>
               <span className="text-xs text-gray-400">Apechain Communities</span>
