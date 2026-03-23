@@ -162,7 +162,14 @@ function HomePage() {
           </div>
         ))}
       </div>
-      <div className="mt-14 mx-auto w-full max-w-6xl h-72 rounded-xl bg-gray-800/50" />
+      <div className="mt-14 mx-auto w-full max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-6">
+        {[1, 2, 3].map((section) => (
+          <div
+            key={section}
+            className="h-72 rounded-xl bg-gray-800/50"
+          />
+        ))}
+      </div>
       <div className="mt-14 mx-auto w-full max-w-xl space-y-8">
         {[1, 2, 3].map((square) => (
           <div
