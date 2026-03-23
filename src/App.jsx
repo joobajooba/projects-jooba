@@ -134,7 +134,7 @@ function HomePage() {
         {[1, 2, 3, 4].map((box) => (
           <div
             key={box}
-            className="h-44 w-full max-w-[180px] rounded-xl border border-gray-700 bg-gray-800/60"
+            className="h-[22rem] w-full max-w-[270px] rounded-xl border border-gray-700 bg-gray-800/60"
           />
         ))}
       </div>
