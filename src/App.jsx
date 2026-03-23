@@ -167,8 +167,8 @@ function HomePage() {
           <div key={section} className="h-72 rounded-xl bg-gray-800/50 p-6 text-gray-200 overflow-auto">
             {section === 1 ? (
               <>
-                <h3 className="text-lg font-bold text-gray-100 mb-3">What is Ape Studio</h3>
-                <p className="text-sm leading-6">
+                <h3 className="text-xl font-bold text-gray-100 mb-3">What is Ape Studio</h3>
+                <p className="text-base leading-6">
                   ApeStudio is a music studio built by apes to enable users to create fun music on
                   Apechain using &lt;Band Name&gt; to create your digital on chain band. Sound packs from
                   our nfts enable the use of widget based audio packs to create music.
