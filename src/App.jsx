@@ -176,7 +176,7 @@ function HomePage() {
             {section === 1 ? (
               <>
                 <h3 className="text-xl font-bold text-gray-100 mb-3">What is Ape Studio</h3>
-                <p className="text-base leading-6">
+                <p className="text-base leading-6 text-justify">
                   ApeStudio is a music studio built by apes to enable users to create fun music on
                   Apechain using &lt;Band Name&gt; to create your digital on chain band. Sound packs from
                   our nfts enable the use of widget based audio packs to create music.
@@ -194,6 +194,19 @@ function HomePage() {
                   The goal is to build a fun, interactive music studio that supports the growth of the
                   wider ApeChain community. The final phase remains a secret, something exciting for the
                   community to look forward to.
+                </p>
+              </>
+            ) : section === 3 ? (
+              <>
+                <h3 className="text-xl font-bold text-gray-100 mb-3">The Reasoning</h3>
+                <p className="text-sm leading-5 text-justify">
+                  I started this as a fun hobby project to deepen my understanding of Web3 while
+                  developing my technical skills and creating engaging, original art. Being an Ape and
+                  supporting ApeChain projects has been a genuinely enjoyable experience, and it
+                  inspired me to build something of my own within the ecosystem. Alongside my friend, I
+                  wanted to create a small but vibrant community centred around a fun and creative
+                  concept, something that others could enjoy, engage with, and grow over time just as I
+                  have.
                 </p>
               </>
             ) : null}
