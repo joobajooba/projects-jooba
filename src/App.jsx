@@ -204,9 +204,8 @@ function HomePage() {
                   developing my technical skills and creating engaging, original art. Being an Ape and
                   supporting ApeChain projects has been a genuinely enjoyable experience, and it
                   inspired me to build something of my own within the ecosystem. Alongside my friend, I
-                  wanted to create a small but vibrant community centred around a fun and creative
-                  concept, something that others could enjoy, engage with, and grow over time just as I
-                  have.
+                  wanted to create a vibrant community centred around a fun and creative concept,
+                  something that others could enjoy, engage with, and grow over time.
                 </p>
               </>
             ) : null}
