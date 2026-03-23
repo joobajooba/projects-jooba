@@ -136,7 +136,7 @@ function HomePage() {
   ];
 
   return (
-    <div className="relative flex-1 overflow-auto px-6 lg:px-8 py-8">
+    <div className="flex-1 overflow-auto px-6 lg:px-8 py-8">
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 justify-items-center">
         {boxes.map((box) => (
           <div key={box.heading} className="w-full max-w-[270px] flex flex-col">
@@ -158,10 +158,14 @@ function HomePage() {
           </div>
         ))}
       </div>
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute bottom-4 left-8 w-[120%] border-t-2 border-cyan-400/90 origin-left rotate-[8deg]"
-      />
+      <div className="mt-14 -mx-6 lg:-mx-8">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none w-[130%] border-t-2 border-cyan-400/90 origin-left rotate-[8deg]"
+        />
+      </div>
+
+      <div className="mt-14 mx-auto w-full max-w-6xl h-72 rounded-xl border border-gray-700 bg-gray-800/50" />
     </div>
   );
 }
