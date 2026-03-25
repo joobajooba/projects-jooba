@@ -2,10 +2,8 @@ import { useState, useCallback } from 'react';
 import {
   Home,
   Users,
-  FolderKanban,
   Building2,
   Gamepad2,
-  Coins,
   User,
   CreditCard,
 } from 'lucide-react';
@@ -14,8 +12,6 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import ProfileGrid from './components/ProfileGrid';
 import CommunityPage from './pages/CommunityPage';
 import GamesPage from './pages/GamesPage';
-import ProjectsPage from './pages/ProjectsPage';
-import MintPage from './pages/MintPage';
 import TeamPage from './pages/TeamPage';
 import { startXAuth } from './lib/xAuth';
 
@@ -119,11 +115,9 @@ function SidebarActions() {
 const PLACEHOLDER_PAGES = {
   home: { title: 'Home', description: 'Welcome to Studio. Use the sidebar to open Profile.' },
   community: { title: 'Community', description: 'Community features coming soon.' },
-  projects: { title: 'Projects', description: 'Projects overview.' },
   theTeam: { title: 'The Team', description: '' },
   studio: { title: 'Studio', description: '' },
   games: { title: 'Games', description: 'Games hub.' },
-  mint: { title: 'Mint', description: 'Mint assets.' },
 };
 
 function HomePage() {
@@ -246,11 +240,9 @@ export default function App() {
   const navItems = [
     { key: 'home', icon: Home, label: 'Home' },
     { key: 'community', icon: Users, label: 'Community' },
-    { key: 'projects', icon: FolderKanban, label: 'Projects' },
     { key: 'theTeam', icon: Users, label: 'The Team' },
     { key: 'studio', icon: Building2, label: 'Studio' },
     { key: 'games', icon: Gamepad2, label: 'Games' },
-    { key: 'mint', icon: Coins, label: 'Mint' },
     { key: 'profile', icon: User, label: 'Profile' },
   ];
 
@@ -341,14 +333,10 @@ export default function App() {
               setActivePage('profile');
             }}
           />
-        ) : activePage === 'projects' ? (
-          <ProjectsPage />
         ) : activePage === 'theTeam' ? (
           <TeamPage />
         ) : activePage === 'games' ? (
           <GamesPage />
-        ) : activePage === 'mint' ? (
-          <MintPage />
         ) : (
           <PlaceholderPage pageKey={activePage} />
         )}
