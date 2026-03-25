@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-function TraitPlaceholder({ label, theme }) {
+function TraitPlaceholder({ label, optionIndex, optionThemeByIndex }) {
+  const theme = optionThemeByIndex[optionIndex] ?? optionThemeByIndex[0];
   return (
     <div
       className={`w-full h-full flex items-center justify-center ${theme.placeholderBg} ${theme.placeholderText}`}
@@ -17,7 +18,6 @@ function SlotReel({
   targetIndex,
   spinId,
   onReelSettled,
-  theme,
   itemHeightPx = 84,
   visibleItems = 3,
   cycles = 7,
@@ -28,6 +28,31 @@ function SlotReel({
 
   const [posIndex, setPosIndex] = useState(0);
   const [animate, setAnimate] = useState(false);
+
+  const optionThemeByIndex = useMemo(() => {
+    // Option colors inside each column:
+    // option 0 (T*-1) -> light blue, option 1 (T*-2) -> purple, option 2 (T*-3) -> gold.
+    return [
+      {
+        placeholderBg: 'bg-sky-900/40',
+        placeholderText: 'text-sky-100',
+        borderRgba: 'rgba(56,189,248,0.85)',
+        ringInsetRgba: 'rgba(56,189,248,0.18)',
+      },
+      {
+        placeholderBg: 'bg-purple-900/40',
+        placeholderText: 'text-purple-100',
+        borderRgba: 'rgba(168,85,247,0.88)',
+        ringInsetRgba: 'rgba(168,85,247,0.18)',
+      },
+      {
+        placeholderBg: 'bg-amber-900/40',
+        placeholderText: 'text-amber-100',
+        borderRgba: 'rgba(245,158,11,0.92)',
+        ringInsetRgba: 'rgba(245,158,11,0.2)',
+      },
+    ];
+  }, []);
 
   const extendedItems = useMemo(() => {
     // Enough repeats so we never run out while spinning.
@@ -92,7 +117,11 @@ function SlotReel({
       >
         {extendedItems.map((item, idx) => (
           <div key={`${item.label}-${idx}`} style={{ height: itemHeightPx }}>
-            <TraitPlaceholder label={item.label} theme={theme} />
+            <TraitPlaceholder
+              label={item.label}
+              optionIndex={item.optionIndex}
+              optionThemeByIndex={optionThemeByIndex}
+            />
           </div>
         ))}
       </div>
@@ -105,9 +134,17 @@ function SlotReel({
           right: 0,
           top: itemHeightPx * Math.floor(visibleItems / 2),
           height: itemHeightPx,
-          borderTop: `1px solid ${theme.borderRgba}`,
-          borderBottom: `1px solid ${theme.borderRgba}`,
-          boxShadow: `0 0 0 1px ${theme.ringInsetRgba} inset`,
+          ...(() => {
+            const centerOffset = Math.floor(visibleItems / 2);
+            const centerItem = extendedItems[posIndex + centerOffset];
+            const centerOptionIndex = centerItem?.optionIndex ?? 0;
+            const centerTheme = optionThemeByIndex[centerOptionIndex] ?? optionThemeByIndex[0];
+            return {
+              borderTop: `1px solid ${centerTheme.borderRgba}`,
+              borderBottom: `1px solid ${centerTheme.borderRgba}`,
+              boxShadow: `0 0 0 1px ${centerTheme.ringInsetRgba} inset`,
+            };
+          })(),
         }}
       />
     </div>
@@ -128,12 +165,13 @@ export default function MintSlotMachine({
     return Array.from({ length: reelCount }, (_, reelIndex) =>
       Array.from({ length: itemCount }, (_, i) => ({
         label: `T${reelIndex + 1}-${i + 1}`,
+        optionIndex: i % 3,
       }))
     );
   }, [reelCount, itemCount]);
 
   const columnLabels = useMemo(
-    () => ['BG', 'Fur', 'Eyes', 'Mouth', 'Head', 'Clothes', 'MP'],
+    () => ['Background', 'Fur', 'Eyes', 'Mouth', 'Head', 'Clothes', 'Music Pack'],
     []
   );
 
@@ -213,7 +251,6 @@ export default function MintSlotMachine({
               targetIndex={targets?.[reelIndex] ?? null}
               spinId={spinId}
               onReelSettled={handleReelSettled}
-              theme={theme}
               itemHeightPx={110}
               visibleItems={3}
               durationMs={durationMs}
