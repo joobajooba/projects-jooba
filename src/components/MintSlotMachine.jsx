@@ -195,7 +195,8 @@ export default function MintSlotMachine({
     const gold = {
       placeholderBg: 'bg-amber-900/40',
       placeholderText: 'text-amber-100',
-      headerText: 'text-amber-200',
+      // Eyes/Clothes header should use the same font color as other columns.
+      headerText: 'text-sky-200',
       borderRgba: 'rgba(245,158,11,0.92)',
       ringInsetRgba: 'rgba(245,158,11,0.2)',
     };
@@ -251,6 +252,7 @@ export default function MintSlotMachine({
               targetIndex={targets?.[reelIndex] ?? null}
               spinId={spinId}
               onReelSettled={handleReelSettled}
+              cycles={1}
               itemHeightPx={110}
               visibleItems={3}
               durationMs={durationMs}
