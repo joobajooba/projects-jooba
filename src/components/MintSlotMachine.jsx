@@ -1,18 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-function TraitPlaceholder({ label, variant }) {
-  const bg =
-    variant % 5 === 0
-      ? 'bg-indigo-900/40'
-      : variant % 5 === 1
-        ? 'bg-emerald-900/30'
-        : variant % 5 === 2
-          ? 'bg-amber-900/30'
-          : variant % 5 === 3
-            ? 'bg-rose-900/30'
-            : 'bg-sky-900/30';
+function TraitPlaceholder({ label, theme }) {
   return (
-    <div className={`w-full h-full flex items-center justify-center ${bg} text-gray-200`}>
+    <div
+      className={`w-full h-full flex items-center justify-center ${theme.placeholderBg} ${theme.placeholderText}`}
+    >
       <span className="text-sm sm:text-base font-semibold tracking-wide">{label}</span>
     </div>
   );
@@ -25,6 +17,7 @@ function SlotReel({
   targetIndex,
   spinId,
   onReelSettled,
+  theme,
   itemHeightPx = 84,
   visibleItems = 3,
   cycles = 7,
@@ -99,7 +92,7 @@ function SlotReel({
       >
         {extendedItems.map((item, idx) => (
           <div key={`${item.label}-${idx}`} style={{ height: itemHeightPx }}>
-            <TraitPlaceholder label={item.label} variant={idx} />
+            <TraitPlaceholder label={item.label} theme={theme} />
           </div>
         ))}
       </div>
@@ -112,9 +105,9 @@ function SlotReel({
           right: 0,
           top: itemHeightPx * Math.floor(visibleItems / 2),
           height: itemHeightPx,
-          borderTop: '1px solid rgba(79,70,229,0.8)',
-          borderBottom: '1px solid rgba(79,70,229,0.8)',
-          boxShadow: '0 0 0 1px rgba(79,70,229,0.12) inset',
+          borderTop: `1px solid ${theme.borderRgba}`,
+          borderBottom: `1px solid ${theme.borderRgba}`,
+          boxShadow: `0 0 0 1px ${theme.ringInsetRgba} inset`,
         }}
       />
     </div>
@@ -138,6 +131,44 @@ export default function MintSlotMachine({
       }))
     );
   }, [reelCount, itemCount]);
+
+  const columnLabels = useMemo(
+    () => ['BG', 'Fur', 'Eyes', 'Mouth', 'Head', 'Clothes', 'MP'],
+    []
+  );
+
+  const themeByReelIndex = useMemo(() => {
+    // Color scheme you requested:
+    // 1 -> light blue, 2 -> purple, 3 -> gold (repeats every 3 reels).
+    const lightBlue = {
+      placeholderBg: 'bg-sky-900/40',
+      placeholderText: 'text-sky-100',
+      headerText: 'text-sky-200',
+      borderRgba: 'rgba(56,189,248,0.85)',
+      ringInsetRgba: 'rgba(56,189,248,0.18)',
+    };
+    const purple = {
+      placeholderBg: 'bg-purple-900/40',
+      placeholderText: 'text-purple-100',
+      headerText: 'text-purple-200',
+      borderRgba: 'rgba(168,85,247,0.88)',
+      ringInsetRgba: 'rgba(168,85,247,0.18)',
+    };
+    const gold = {
+      placeholderBg: 'bg-amber-900/40',
+      placeholderText: 'text-amber-100',
+      headerText: 'text-amber-200',
+      borderRgba: 'rgba(245,158,11,0.92)',
+      ringInsetRgba: 'rgba(245,158,11,0.2)',
+    };
+
+    return (reelIndex) => {
+      const group = reelIndex % 3;
+      if (group === 0) return lightBlue;
+      if (group === 1) return purple;
+      return gold;
+    };
+  }, []);
 
   const [settledCount, setSettledCount] = useState(0);
   const didCompleteSpinIdRef = useRef(null);
@@ -164,20 +195,32 @@ export default function MintSlotMachine({
 
   return (
     <div className="flex gap-6 items-center justify-center w-full overflow-x-auto">
-      {reels.map((items, reelIndex) => (
-        <SlotReel
-          key={reelIndex}
-          reelIndex={reelIndex}
-          items={items}
-          spinning={spinning}
-          targetIndex={targets?.[reelIndex] ?? null}
-          spinId={spinId}
-          onReelSettled={handleReelSettled}
-          itemHeightPx={110}
-          visibleItems={3}
-          durationMs={durationMs}
-        />
-      ))}
+      {reels.map((items, reelIndex) => {
+        const label = columnLabels[reelIndex] ?? `T${reelIndex + 1}`;
+        const theme = themeByReelIndex(reelIndex);
+
+        return (
+          <div key={reelIndex} className="flex flex-col items-center flex-shrink-0">
+            <div
+              className={`text-xs sm:text-sm font-semibold tracking-wide mb-2 text-center ${theme.headerText}`}
+            >
+              {label}
+            </div>
+            <SlotReel
+              reelIndex={reelIndex}
+              items={items}
+              spinning={spinning}
+              targetIndex={targets?.[reelIndex] ?? null}
+              spinId={spinId}
+              onReelSettled={handleReelSettled}
+              theme={theme}
+              itemHeightPx={110}
+              visibleItems={3}
+              durationMs={durationMs}
+            />
+          </div>
+        );
+      })}
     </div>
   );
 }
