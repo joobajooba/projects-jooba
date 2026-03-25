@@ -1,20 +1,35 @@
 const TEAM_MEMBERS = [
   {
+    id: 'j00ba',
     name: 'J00BA',
     role: 'Founder / Artist / Dev',
     imageSrc: '/team-j00ba.png',
     imageAlt: 'J00BA profile artwork',
   },
   {
-    name: 'OkiDoki',
+    id: 'okidokie',
+    name: 'OkiDokie',
     role: 'Sound Engineer',
     imageSrc: '/team-okidokie.png',
-    imageAlt: 'OkiDoki profile artwork',
+    imageAlt: 'OkiDokie profile artwork',
   },
   {
-    name: 'IBEKS',
-    role: 'Community Manager',
+    id: 'insert-1',
+    name: 'Insert Name',
+    role: 'Insert Name',
     colorClass: 'bg-cyan-400',
+  },
+  {
+    id: 'insert-2',
+    name: 'Insert Name',
+    role: 'Insert Name',
+    colorClass: 'bg-indigo-400',
+  },
+  {
+    id: 'insert-3',
+    name: 'Insert Name',
+    role: 'Insert Name',
+    colorClass: 'bg-amber-400',
   },
 ];
 
@@ -39,16 +54,21 @@ function TeamCard({ member }) {
 }
 
 export default function TeamPage() {
-  const [featuredMember, ...otherMembers] = TEAM_MEMBERS;
+  const topRowMembers = TEAM_MEMBERS.slice(0, 2);
+  const bottomRowMembers = TEAM_MEMBERS.slice(2);
 
   return (
     <div className="flex-1 overflow-auto">
       <div className="min-h-full px-6 py-10 lg:px-8 flex items-center justify-center">
         <div className="w-full max-w-7xl flex flex-col items-center gap-12">
-          <TeamCard member={featuredMember} />
-          <div className="w-full flex flex-wrap items-start justify-center gap-10 xl:gap-16">
-            {otherMembers.map((member) => (
-              <TeamCard key={member.name} member={member} />
+          <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-10 xl:gap-16 justify-items-center">
+            {topRowMembers.map((member) => (
+              <TeamCard key={member.id} member={member} />
+            ))}
+          </div>
+          <div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-10 xl:gap-16 justify-items-center">
+            {bottomRowMembers.map((member) => (
+              <TeamCard key={member.id} member={member} />
             ))}
           </div>
         </div>
