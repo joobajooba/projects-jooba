@@ -1,11 +1,13 @@
-import { useState } from 'react';
-import { Home, CreditCard } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Home, CreditCard, User } from 'lucide-react';
 import { DiscordLogo, XLogo } from '@phosphor-icons/react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { startXAuth } from './lib/xAuth';
+import ProfileAuthModal from './components/ProfileAuthModal';
 
-function SidebarActions() {
+function SidebarActions({ onProfileAvatarUrl }) {
   const [showDiscordModal, setShowDiscordModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   return (
     <>
@@ -22,11 +24,11 @@ function SidebarActions() {
             setShowDiscordModal(true);
           };
           return (
-            <div className="flex gap-1 w-full">
+            <div className="flex flex-wrap gap-1 w-full">
               <button
                 type="button"
                 onClick={account ? openAccountModal : openConnectModal}
-                className="flex-1 aspect-square flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-gray-100"
+                className="flex-1 min-w-[2.5rem] aspect-square flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-gray-100"
                 aria-label={account ? 'Account' : 'Connect wallet'}
               >
                 <CreditCard className="w-5 h-5" />
@@ -34,7 +36,7 @@ function SidebarActions() {
               <button
                 type="button"
                 onClick={handleConnectX}
-                className="flex-1 aspect-square flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-gray-100"
+                className="flex-1 min-w-[2.5rem] aspect-square flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-gray-100"
                 aria-label="Connect X (Twitter)"
                 title="Connect X profile"
               >
@@ -43,16 +45,33 @@ function SidebarActions() {
               <button
                 type="button"
                 onClick={handleOpenDiscord}
-                className="flex-1 aspect-square flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-gray-100"
+                className="flex-1 min-w-[2.5rem] aspect-square flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-gray-100"
                 aria-label="SOJ Discord invite"
                 title="Open SOJ Discord invite"
               >
                 <DiscordLogo className="w-5 h-5" weight="regular" />
               </button>
+              <button
+                type="button"
+                onClick={() => setShowProfileModal(true)}
+                className="flex-1 min-w-[2.5rem] aspect-square flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-gray-100"
+                aria-label="Profile: sign up or log in"
+                title="Profile"
+              >
+                <User className="w-5 h-5" />
+              </button>
             </div>
           );
         }}
       </ConnectButton.Custom>
+
+      <ProfileAuthModal
+        open={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        onSignupComplete={(payload) => {
+          if (payload?.avatarUrl) onProfileAvatarUrl?.(payload.avatarUrl);
+        }}
+      />
 
       {showDiscordModal && (
         <div
@@ -200,6 +219,19 @@ function HomePage() {
 }
 
 export default function App() {
+  const [profileAvatarUrl, setProfileAvatarUrl] = useState('');
+
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem('studioape_profile');
+      if (!raw) return;
+      const p = JSON.parse(raw);
+      if (typeof p?.avatarUrl === 'string' && p.avatarUrl) setProfileAvatarUrl(p.avatarUrl);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
   return (
     <div className="flex h-screen flex-row min-h-0 overflow-hidden">
       <aside className="w-[10%] min-w-[140px] flex flex-col shrink-0 bg-gray-900/80 border-r border-gray-800 min-h-0">
@@ -218,7 +250,16 @@ export default function App() {
           </div>
         </header>
         <div className="p-4 flex flex-col items-center gap-3 border-b border-gray-800 shrink-0">
-          <SidebarActions />
+          <SidebarActions onProfileAvatarUrl={setProfileAvatarUrl} />
+          {profileAvatarUrl ? (
+            <div className="w-full max-w-[5.5rem] aspect-square rounded-lg overflow-hidden bg-gray-800 border border-gray-700 shrink-0">
+              <img
+                src={profileAvatarUrl}
+                alt=""
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ) : null}
         </div>
         <nav className="flex-1 py-2 min-h-0 overflow-auto" aria-label="Main">
           <div
