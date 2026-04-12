@@ -289,11 +289,37 @@ code {
   object-fit: cover;
 }
 
-.app-wallet-pill-chevron {
-  width: 0.625rem;
-  height: 0.625rem;
+/* Scoped to the pill button so RainbowKit / global button svg rules cannot resize it */
+button.app-wallet-pill > .app-wallet-pill-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  min-width: 7px;
+  min-height: 7px;
+  max-width: 7px;
+  max-height: 7px;
+  margin-left: 1px;
+  line-height: 0;
+  color: #8b8b95;
+}
+
+button.app-wallet-pill:hover > .app-wallet-pill-chevron {
+  color: #a1a1aa;
+}
+
+button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
+  display: block;
+  width: 7px !important;
+  height: 7px !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: 7px !important;
+  max-height: 7px !important;
   flex-shrink: 0;
-  color: #9ca3af;
+  vertical-align: middle;
 }
 
 .app-footer {

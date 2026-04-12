@@ -9,9 +9,18 @@ import WalletUsernameModal from './WalletUsernameModal';
 
 function IconChevronDown() {
   return (
-    <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-      <path d="M3 4.5L6 7.5L9 4.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+    <span className="app-wallet-pill-chevron" aria-hidden>
+      <svg
+        className="app-wallet-pill-chevron-svg"
+        viewBox="0 0 10 10"
+        width="7"
+        height="7"
+        aria-hidden
+        focusable="false"
+      >
+        <path d="M2 3.25L5 6.75L8 3.25H2Z" fill="currentColor" />
+      </svg>
+    </span>
   );
 }
 
