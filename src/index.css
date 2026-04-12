@@ -846,6 +846,8 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
 
 .app-content-inner {
   min-height: 100%;
+  /* Main column: Quantico even if a provider sets a different default on an ancestor */
+  font-family: var(--app-font);
 }
 
 .app-message {
