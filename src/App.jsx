@@ -149,6 +149,15 @@ function Shell({ children, previewMode, onTogglePreview, activeStudioPage, onSel
                 <IconX />
               </a>
             </div>
+            <a
+              className="app-footer-apechain"
+              href="https://apechain.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Apechain"
+            >
+              <img src="/apechain-logo.png" alt="" width={120} height={40} decoding="async" />
+            </a>
           </footer>
         </div>
       </div>
