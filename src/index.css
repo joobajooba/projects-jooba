@@ -1409,3 +1409,130 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   background: var(--jooba-surface-2);
   color: var(--jooba-text-primary);
 }
+
+/* Home panel popups (portal, centered) */
+.studio-home-modal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.studio-home-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: rgba(0, 0, 0, 0.68);
+  cursor: pointer;
+}
+
+.studio-home-modal-dialog {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 28rem;
+  max-height: min(85vh, 32rem);
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  border: 1px solid var(--jooba-ui-border);
+  background: var(--jooba-panel);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.65);
+}
+
+.studio-home-modal-head {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1.1rem 1.1rem 0.65rem 1.25rem;
+  border-bottom: 1px solid var(--jooba-ui-border-muted);
+}
+
+.studio-home-modal-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--jooba-gold-bright);
+  line-height: 1.2;
+}
+
+.studio-home-modal-close {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: -0.25rem -0.15rem 0 0;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--jooba-text-tertiary);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.studio-home-modal-close:hover {
+  color: var(--jooba-gold-bright);
+  background: rgba(172, 198, 142, 0.08);
+}
+
+.studio-home-modal-close:focus-visible {
+  outline: 2px solid var(--jooba-gold-2);
+  outline-offset: 2px;
+}
+
+.studio-home-modal-body {
+  padding: 1rem 1.25rem 1.25rem;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.studio-home-modal-section {
+  margin: 0 0 1.25rem;
+}
+
+.studio-home-modal-section:last-child {
+  margin-bottom: 0;
+}
+
+.studio-home-modal-section-title {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-display);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--jooba-gold);
+}
+
+.studio-home-modal-section p {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.62;
+  color: var(--jooba-text-secondary);
+}
+
+.studio-home-modal-section p:last-child {
+  margin-bottom: 0;
+}
+
+.studio-home-modal-lead {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--jooba-text-secondary);
+}

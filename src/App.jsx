@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from './lib/supabaseClient';
 import WalletTopBarButton from './components/WalletTopBarButton';
+import StudioHomeModal from './components/StudioHomeModal';
 
 function IconMonitor() {
   return (
@@ -165,10 +166,45 @@ function Shell({ children, previewMode, onTogglePreview, activeStudioPage, onSel
   );
 }
 
+function StudioHomeInformationBody() {
+  return (
+    <>
+      <section className="studio-home-modal-section">
+        <h3 className="studio-home-modal-section-title">Backstory</h3>
+        <p>
+          Our team is made up of a group of friends who wanted to learn new skills while enjoying the
+          journey. Each of us brings different skill sets and perspectives, including scripting, art,
+          music + sound engineering, and data analytics, which allows us to approach projects creatively
+          and collaboratively. We came together to combine our strengths, stay focused, and build
+          something meaningful.
+        </p>
+      </section>
+      <section className="studio-home-modal-section">
+        <h3 className="studio-home-modal-section-title">Our Goal</h3>
+        <p>
+          We set out to develop a unique, engaging, and challenging project that would strengthen our
+          abilities while contributing to the growth and support of the ApeChain ecosystem and its
+          communities.
+        </p>
+        <p>
+          Our first project will unfold in four phases of NFT releases, all connected under a single
+          concept with a shared purpose. Each phase ties back to the ApeChain ecosystem and the Otherside
+          experience. More details will be revealed in the coming months.
+        </p>
+      </section>
+    </>
+  );
+}
+
 export default function App() {
   const [status, setStatus] = useState('checking');
   const [previewMode, setPreviewMode] = useState('desktop');
   const [studioPage, setStudioPage] = useState('home');
+  const [homeModal, setHomeModal] = useState(null);
+
+  useEffect(() => {
+    if (studioPage !== 'home') setHomeModal(null);
+  }, [studioPage]);
 
   useEffect(() => {
     if (!supabase) {
@@ -248,13 +284,17 @@ export default function App() {
           <h1 className="studio-home-hero-title">Studio JOOBA</h1>
         </header>
         <nav className="studio-home-panels" aria-label="Studio sections">
-          <button type="button" className="studio-home-panel">
+          <button
+            type="button"
+            className="studio-home-panel"
+            onClick={() => setHomeModal('information')}
+          >
             Information
           </button>
-          <button type="button" className="studio-home-panel">
+          <button type="button" className="studio-home-panel" onClick={() => setHomeModal('team')}>
             The Team
           </button>
-          <button type="button" className="studio-home-panel">
+          <button type="button" className="studio-home-panel" onClick={() => setHomeModal('yuga')}>
             Yuga Assets
           </button>
         </nav>
@@ -301,5 +341,35 @@ export default function App() {
       </div>
     );
 
-  return <Shell {...shellProps}>{studioMain}</Shell>;
+  const homeModalTitle =
+    homeModal === 'information'
+      ? 'Information'
+      : homeModal === 'team'
+        ? 'The Team'
+        : homeModal === 'yuga'
+          ? 'Yuga Assets'
+          : '';
+
+  return (
+    <>
+      <Shell {...shellProps}>{studioMain}</Shell>
+      <StudioHomeModal
+        open={homeModal != null}
+        title={homeModalTitle}
+        onClose={() => setHomeModal(null)}
+      >
+        {homeModal === 'information' ? (
+          <StudioHomeInformationBody />
+        ) : homeModal === 'team' ? (
+          <p className="studio-home-modal-lead">
+            Meet the Studio JOOBA crew — team bios, roles, and links are coming soon.
+          </p>
+        ) : homeModal === 'yuga' ? (
+          <p className="studio-home-modal-lead">
+            How we work with Yuga Labs IP and on-chain assets — details to be announced.
+          </p>
+        ) : null}
+      </StudioHomeModal>
+    </>
+  );
 }
