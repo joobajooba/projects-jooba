@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
 const LS_KEY = 'jooba_wallet_usernames';
+const SESSION_SKIP_KEY = 'jooba_skip_supabase_user_data';
 
 function readLocalMap() {
   try {
@@ -18,8 +19,43 @@ function writeLocalUsername(address, username) {
   localStorage.setItem(LS_KEY, JSON.stringify(map));
 }
 
+function skipSupabaseUserDataReads() {
+  try {
+    return sessionStorage.getItem(SESSION_SKIP_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function markSkipSupabaseUserData() {
+  try {
+    sessionStorage.setItem(SESSION_SKIP_KEY, '1');
+  } catch {
+    /* ignore */
+  }
+}
+
+/** PostgREST / Postgres when `user_data` was never migrated in the Supabase project. */
+function isUserDataTableMissing(error) {
+  if (!error) return false;
+  const msg = String(error.message ?? error.details ?? '');
+  const code = error.code;
+  return (
+    code === 'PGRST205' ||
+    code === '42P01' ||
+    /schema cache|could not find.*table|does not exist/i.test(msg)
+  );
+}
+
+function isUsernameUniqueViolation(error) {
+  if (!error) return false;
+  if (error.code === '23505') return true;
+  return /unique|duplicate/i.test(String(error.message ?? ''));
+}
+
 /**
- * Loads / saves display username for a connected wallet (Supabase user_data when configured).
+ * Loads / saves display username for a connected wallet (Supabase user_data when available).
+ * Falls back to localStorage if the table is missing or Supabase is not configured.
  */
 export function useWalletProfile(address) {
   const normalized = address?.toLowerCase() ?? null;
@@ -36,20 +72,24 @@ export function useWalletProfile(address) {
     setLoading(true);
     setSaveError(null);
     try {
-      if (supabase) {
+      if (supabase && !skipSupabaseUserDataReads()) {
         const { data, error } = await supabase
           .from('user_data')
           .select('username')
           .eq('wallet_address', normalized)
           .maybeSingle();
-        if (error) throw error;
-        const u = data?.username?.trim() ?? '';
-        setUsernameState(u);
-        if (u) writeLocalUsername(normalized, u);
-      } else {
-        const map = readLocalMap();
-        setUsernameState(map[normalized]?.trim() ?? '');
+        if (!error) {
+          const u = data?.username?.trim() ?? '';
+          setUsernameState(u);
+          if (u) writeLocalUsername(normalized, u);
+          return;
+        }
+        if (isUserDataTableMissing(error)) {
+          markSkipSupabaseUserData();
+        }
       }
+      const map = readLocalMap();
+      setUsernameState(map[normalized]?.trim() ?? '');
     } catch {
       const map = readLocalMap();
       setUsernameState(map[normalized]?.trim() ?? '');
@@ -81,7 +121,7 @@ export function useWalletProfile(address) {
       }
       setSaveError(null);
       try {
-        if (supabase) {
+        if (supabase && !skipSupabaseUserDataReads()) {
           const { error } = await supabase.from('user_data').upsert(
             {
               wallet_address: normalized,
@@ -89,12 +129,19 @@ export function useWalletProfile(address) {
             },
             { onConflict: 'wallet_address' }
           );
-          if (error) {
-            if (error.code === '23505' || /unique|duplicate/i.test(error.message ?? '')) {
-              setSaveError('That username is already taken');
-            } else {
-              setSaveError(error.message || 'Could not save');
-            }
+          if (!error) {
+            writeLocalUsername(normalized, trimmed);
+            setUsernameState(trimmed);
+            return true;
+          }
+          if (isUsernameUniqueViolation(error)) {
+            setSaveError('That username is already taken');
+            return false;
+          }
+          if (isUserDataTableMissing(error)) {
+            markSkipSupabaseUserData();
+          } else {
+            setSaveError(error.message || 'Could not save');
             return false;
           }
         }
