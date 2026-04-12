@@ -18,6 +18,18 @@ function pickNftImage(nft) {
   return null;
 }
 
+function formatAlchemyErrorBody(text) {
+  const raw = (text || '').trim();
+  if (!raw) return null;
+  try {
+    const j = JSON.parse(raw);
+    if (typeof j?.message === 'string' && j.message.trim()) return j.message.trim();
+  } catch {
+    /* plain text */
+  }
+  return raw.length > 280 ? `${raw.slice(0, 280)}…` : raw;
+}
+
 async function fetchPage(baseUrl, owner, pageKey) {
   const params = new URLSearchParams({
     owner,
@@ -27,7 +39,8 @@ async function fetchPage(baseUrl, owner, pageKey) {
   const res = await fetch(`${baseUrl}/getNFTsForOwner?${params}`);
   if (!res.ok) {
     const t = await res.text();
-    throw new Error(t || res.statusText);
+    const msg = formatAlchemyErrorBody(t) || res.statusText;
+    throw new Error(msg);
   }
   return res.json();
 }
@@ -88,10 +101,12 @@ export function useNftsForWallet(address) {
     setLoading(true);
     setError(null);
     try {
-      const [eth, ape] = await Promise.all([
+      const [ethResult, apeResult] = await Promise.allSettled([
         fetchChainNfts('eth-mainnet', address),
         fetchChainNfts('apechain-mainnet', address),
       ]);
+      const eth = ethResult.status === 'fulfilled' ? ethResult.value : [];
+      const ape = apeResult.status === 'fulfilled' ? apeResult.value : [];
       const merged = [...eth, ...ape];
       const seen = new Set();
       const deduped = [];
@@ -101,6 +116,20 @@ export function useNftsForWallet(address) {
         deduped.push(n);
       }
       setNfts(deduped);
+
+      const ethErr = ethResult.status === 'rejected' ? ethResult.reason?.message : null;
+      const apeErr = apeResult.status === 'rejected' ? apeResult.reason?.message : null;
+      if (deduped.length === 0) {
+        const msgs = [ethErr, apeErr].filter(Boolean);
+        setError(msgs.length ? msgs.join(' · ') : null);
+      } else if (ethErr || apeErr) {
+        const parts = [];
+        if (ethErr) parts.push(`Ethereum: ${ethErr}`);
+        if (apeErr) parts.push(`ApeChain: ${apeErr}`);
+        setError(parts.join(' '));
+      } else {
+        setError(null);
+      }
     } catch (e) {
       setNfts([]);
       setError(e?.message || 'Could not load NFTs');
