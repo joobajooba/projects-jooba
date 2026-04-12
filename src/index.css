@@ -394,8 +394,8 @@ code {
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--jooba-gold-bright);
-  text-shadow: 0 0 18px rgba(255, 200, 120, 0.35);
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -620,7 +620,7 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
 }
 
 .studio-home-hero-label {
-  font-size: 1.76rem;
+  font-size: 0.88rem;
   letter-spacing: 0.28em;
   text-transform: uppercase;
   color: var(--jooba-text-tertiary);
@@ -638,7 +638,7 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   text-shadow:
     0 0 36px rgba(255, 200, 120, 0.55),
     0 0 96px rgba(255, 160, 60, 0.28);
-  font-size: clamp(5.3rem, 22vw, 9.3rem);
+  font-size: clamp(5rem, 21vw, 9rem);
   animation: studio-hero-title-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
 }
 
