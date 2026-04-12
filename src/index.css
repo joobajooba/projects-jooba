@@ -60,18 +60,18 @@ code {
   align-items: center;
   justify-content: center;
   width: 100%;
-  aspect-ratio: 1;
-  max-height: var(--sidebar-w);
+  height: var(--chrome-h);
+  min-height: var(--chrome-h);
   padding: 0;
   border: none;
   border-top: 1px solid #3d3d42;
-  background: #222225;
+  background: #2a2a2e;
   color: #b0b0b8;
   cursor: pointer;
 }
 
 .app-sidebar-toggle:hover {
-  background: #2e2e32;
+  background: #323236;
   color: #e8e8ec;
 }
 
