@@ -466,6 +466,7 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
 .studio-phase-card--one {
   width: 100%;
   max-width: 100%;
+  min-height: 0;
 }
 
 .studio-phase-pair {
@@ -475,12 +476,14 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   align-items: stretch;
   gap: clamp(0.75rem, 2vw, 1.25rem);
   width: 100%;
+  min-height: 0;
 }
 
 .studio-phase-pair-left {
   flex: 0 0 auto;
   width: min(100%, clamp(7rem, 26vw, 13rem));
   min-width: 0;
+  min-height: 0;
 }
 
 .studio-phase-pair-right {
@@ -491,14 +494,23 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   min-height: 0;
   border-radius: 12px;
   overflow: hidden;
-  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+}
+
+.studio-phase-landscape-frame {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  position: relative;
 }
 
 .studio-phase-landscape {
-  display: block;
+  position: absolute;
+  left: 0;
+  top: 0;
   width: 100%;
   height: 100%;
-  min-height: 100%;
   object-fit: cover;
   object-position: center;
 }
@@ -518,11 +530,13 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
     align-self: stretch;
   }
 
-  .studio-phase-landscape {
+  .studio-phase-landscape-frame {
+    flex: 0 0 auto;
     width: 100%;
-    height: auto;
-    min-height: 0;
     aspect-ratio: 3 / 2;
+  }
+
+  .studio-phase-landscape {
     object-fit: cover;
   }
 }

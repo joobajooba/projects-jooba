@@ -230,11 +230,13 @@ export default function App() {
                 </div>
               </div>
               <div className="studio-phase-pair-right">
-                <img
-                  className="studio-phase-landscape"
-                  src="/phase1-cave-wide.png"
-                  alt="Bops in a bioluminescent cave"
-                />
+                <div className="studio-phase-landscape-frame">
+                  <img
+                    className="studio-phase-landscape"
+                    src="/phase1-cave-wide.png"
+                    alt="Bops in a bioluminescent cave"
+                  />
+                </div>
               </div>
             </div>
             <PhaseCaption number={1} suffix="Bops" />
