@@ -72,6 +72,13 @@ function Shell({ children, previewMode, onTogglePreview, activeStudioPage, onSel
   const nextIsMobile = previewMode === 'desktop';
   return (
     <div className="app-shell" data-preview={previewMode}>
+      <div className="overlay-scanlines" aria-hidden="true" />
+      <div className="overlay-vignette" aria-hidden="true" />
+      <div className="overlay-glow-sweep" aria-hidden="true" />
+      <div className="corner-frames" aria-hidden="true">
+        <div className="corner-frame-br" />
+        <div className="corner-frame-bl" />
+      </div>
       <aside className="app-sidebar" aria-label="Sidebar">
         <div className="app-sidebar-brand">
           <img src="/mayc-outline.png" alt="MAYC outline" />
@@ -222,22 +229,9 @@ export default function App() {
     studioPage === 'home' ? (
       <div className="studio-page studio-page--home">
         <div className="studio-phase-row">
-          <figure className="studio-phase-card studio-phase-card--one">
-            <div className="studio-phase-pair">
-              <div className="studio-phase-pair-left">
-                <div className="studio-phase-thumb">
-                  <img className="studio-phase-img" src="/phase1-bops.png" alt="Phase 1 Bops" />
-                </div>
-              </div>
-              <div className="studio-phase-pair-right">
-                <div className="studio-phase-landscape-frame">
-                  <img
-                    className="studio-phase-landscape"
-                    src="/phase1-cave-wide.png"
-                    alt="Bops in a bioluminescent cave"
-                  />
-                </div>
-              </div>
+          <figure className="studio-phase-card">
+            <div className="studio-phase-thumb">
+              <img className="studio-phase-img" src="/phase1-bops.png" alt="Phase 1 Bops" />
             </div>
             <PhaseCaption number={1} suffix="Bops" />
           </figure>
