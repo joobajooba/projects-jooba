@@ -12,20 +12,34 @@
 
 html {
   height: 100%;
+  min-height: 100dvh;
   overflow: hidden;
 }
 
 body {
   height: 100%;
+  min-height: 100dvh;
   margin: 0;
   overflow: hidden;
   font-family: system-ui, sans-serif;
   color: #e5e5e5;
+  background: #0c0c0e;
 }
 
 #root {
   height: 100%;
+  min-height: 100dvh;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-viewport-root {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
 }
 
 code {
@@ -37,7 +51,9 @@ code {
 
 .app-shell {
   display: flex;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
   max-height: 100dvh;
   overflow: hidden;
 }
@@ -140,6 +156,7 @@ code {
 .app-topbar,
 .app-footer {
   height: var(--chrome-h);
+  min-height: var(--chrome-h);
   flex-shrink: 0;
   background: #2a2a2e;
   border-color: #3d3d42;
@@ -158,12 +175,15 @@ code {
   align-items: center;
   justify-content: flex-end;
   min-width: 0;
+  flex-shrink: 0;
+  max-width: 100%;
 }
 
 .app-wallet-pill {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
+  flex-shrink: 0;
   height: calc(var(--chrome-h) - 6px);
   max-height: calc(var(--chrome-h) - 6px);
   padding: 0 0.5rem 0 0.4rem;
