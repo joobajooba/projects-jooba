@@ -577,6 +577,41 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   padding: 1.25rem 1rem;
 }
 
+.studio-page--other {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 48rem;
+  margin-inline: auto;
+  box-sizing: border-box;
+}
+
+.studio-page--other .studio-page-title {
+  text-align: center;
+  width: 100%;
+  margin-bottom: 0.25rem;
+}
+
+.studio-lorem {
+  width: 100%;
+  max-width: 38rem;
+  margin-top: 1.25rem;
+  text-align: justify;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  color: var(--jooba-text-secondary);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.studio-lorem p {
+  margin: 0 0 1.1rem;
+}
+
+.studio-lorem p:last-child {
+  margin-bottom: 0;
+}
+
 .studio-page-title {
   margin: 0;
   font-family: var(--font-display);
