@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useDisconnect } from 'wagmi';
+import { useWalletDisplayCurrency } from '../hooks/useWalletDisplayCurrency';
+import { useWalletMenuBalance } from '../hooks/useWalletMenuBalance';
 import { useWalletProfile } from '../hooks/useWalletProfile';
 import WalletAccountMenu from './WalletAccountMenu';
 import WalletNftAvatarModal from './WalletNftAvatarModal';
@@ -37,6 +39,9 @@ function WalletTopBarInner({ account, chain, mounted, openConnectModal, openChai
     setSaveError,
     refresh,
   } = useWalletProfile(account?.address);
+
+  const { currencyId, setCurrencyId } = useWalletDisplayCurrency();
+  const { text: menuBalanceText } = useWalletMenuBalance(account?.address, chain?.id, currencyId);
 
   const avatarSrc =
     profilePictureUrl ||
@@ -88,7 +93,7 @@ function WalletTopBarInner({ account, chain, mounted, openConnectModal, openChai
     );
   }
 
-  const balanceText = account.displayBalance ?? '—';
+  const balanceText = menuBalanceText;
 
   return (
     <>
@@ -150,6 +155,8 @@ function WalletTopBarInner({ account, chain, mounted, openConnectModal, openChai
           setMenuOpen(false);
           setNftPickerOpen(true);
         }}
+        currencyId={currencyId}
+        onCurrencyChange={setCurrencyId}
       />
       <WalletNftAvatarModal
         open={nftPickerOpen}

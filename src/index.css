@@ -425,6 +425,7 @@ code {
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
+  flex: 1;
   min-width: 0;
 }
 
@@ -440,6 +441,105 @@ code {
   font-size: 1.05rem;
   font-weight: 600;
   color: #fafafa;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wallet-menu-currency {
+  position: relative;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 0.1rem;
+}
+
+.wallet-menu-currency-trigger {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.05rem;
+  padding: 0.35rem 0.45rem;
+  border: 1px solid #3f3f46;
+  border-radius: 8px;
+  background: #1a1a1d;
+  color: #e4e4e7;
+  font-size: 0.65rem;
+  font-family: inherit;
+  cursor: pointer;
+  line-height: 1.2;
+}
+
+.wallet-menu-currency-trigger:hover {
+  border-color: #52525b;
+  background: #222226;
+}
+
+.wallet-menu-currency-trigger-label {
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #71717a;
+}
+
+.wallet-menu-currency-trigger-row {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.wallet-menu-currency-trigger-symbol {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #fafafa;
+}
+
+.wallet-menu-currency-chevron {
+  width: 0.65rem;
+  height: 0.65rem;
+  flex-shrink: 0;
+  color: #a1a1aa;
+}
+
+.wallet-menu-currency-chevron--open {
+  transform: rotate(180deg);
+}
+
+.wallet-menu-currency-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 3;
+  margin: 0;
+  padding: 0.35rem 0;
+  list-style: none;
+  min-width: 12.5rem;
+  max-width: min(16rem, calc(100vw - 2rem));
+  border-radius: 10px;
+  border: 1px solid #3f3f46;
+  background: #1c1c1f;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+.wallet-menu-currency-option {
+  display: block;
+  width: 100%;
+  padding: 0.45rem 0.75rem;
+  border: none;
+  background: transparent;
+  color: #e4e4e7;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.wallet-menu-currency-option:hover {
+  background: #27272a;
+}
+
+.wallet-menu-currency-option--active {
+  color: #fafafa;
+  background: #27272a;
 }
 
 .wallet-menu-icon {
