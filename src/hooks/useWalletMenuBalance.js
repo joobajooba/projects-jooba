@@ -1,24 +1,10 @@
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { formatUnits } from 'viem';
-import { useBalance, useReadContract } from 'wagmi';
+import { useChainId, useConfig } from 'wagmi';
+import { getBalance, readContract } from 'wagmi/actions';
 
 const MAINNET = 1;
 const APECHAIN = 33139;
-
-/** Rainbow/wagmi may expose chain id as number, string, or bigint. */
-function normalizeChainId(chainId) {
-  if (chainId == null) return undefined;
-  if (typeof chainId === 'bigint') return Number(chainId);
-  const n = Number(chainId);
-  return Number.isFinite(n) ? n : undefined;
-}
-
-/** v5: `isLoading` can stay true in edge cases; use fetch + data for UI. */
-function queryResolving(result) {
-  if (result.data !== undefined) return false;
-  if (result.isError) return false;
-  return result.isFetching;
-}
 
 const WETH_MAINNET = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
 const APE_MAINNET = '0x4d224452801ACEd8B2F0aebE155379bb5D594381';
@@ -53,143 +39,112 @@ function formatTokenAmount(raw, decimals = 18, symbol) {
   }
 }
 
+function normalizeChainId(chainId) {
+  if (chainId == null) return undefined;
+  if (typeof chainId === 'bigint') return Number(chainId);
+  const n = Number(chainId);
+  return Number.isFinite(n) ? n : undefined;
+}
+
 /**
- * Formatted balance for the wallet menu / pill for the selected display currency on the **connected** chain.
+ * On-chain balance for the connected chain (wagmi `useChainId`), via core actions — avoids TanStack
+ * `useBalance` / `useReadContract` getting stuck in `isFetching` in some browser/extension setups.
  */
-export function useWalletMenuBalance(address, chainId, currencyId) {
-  const addr = address ?? undefined;
-  const cid = normalizeChainId(chainId);
+export function useWalletMenuBalance(address, currencyId) {
+  const config = useConfig();
+  const wagmiChainId = useChainId();
+  const cid = normalizeChainId(wagmiChainId);
+  const [text, setText] = useState('—');
 
-  const ethMainnet = useBalance({
-    address: addr,
-    chainId: MAINNET,
-    query: { enabled: Boolean(addr && cid === MAINNET && currencyId === 'eth') },
-  });
-
-  const apeNative = useBalance({
-    address: addr,
-    chainId: APECHAIN,
-    query: { enabled: Boolean(addr && cid === APECHAIN && currencyId === 'apecoin') },
-  });
-
-  const wethMainnet = useReadContract({
-    chainId: MAINNET,
-    address: WETH_MAINNET,
-    abi: erc20Abi,
-    functionName: 'balanceOf',
-    args: addr ? [addr] : undefined,
-    query: { enabled: Boolean(addr && cid === MAINNET && currencyId === 'weth') },
-  });
-
-  const apeMainnet = useReadContract({
-    chainId: MAINNET,
-    address: APE_MAINNET,
-    abi: erc20Abi,
-    functionName: 'balanceOf',
-    args: addr ? [addr] : undefined,
-    query: { enabled: Boolean(addr && cid === MAINNET && currencyId === 'apecoin') },
-  });
-
-  const wapeMainnet = useReadContract({
-    chainId: MAINNET,
-    address: WAPE_MAINNET,
-    abi: erc20Abi,
-    functionName: 'balanceOf',
-    args: addr ? [addr] : undefined,
-    query: { enabled: Boolean(addr && cid === MAINNET && currencyId === 'wape') },
-  });
-
-  const wapeApechain = useReadContract({
-    chainId: APECHAIN,
-    address: WAPE_APECHAIN,
-    abi: erc20Abi,
-    functionName: 'balanceOf',
-    args: addr ? [addr] : undefined,
-    query: { enabled: Boolean(addr && cid === APECHAIN && currencyId === 'wape') },
-  });
-
-  return useMemo(() => {
+  useEffect(() => {
+    const addr = typeof address === 'string' ? address.trim() : '';
     if (!addr || cid == null) {
-      return { text: '—', isLoading: false };
+      setText('—');
+      return undefined;
     }
 
-    const loading =
-      (cid === MAINNET && currencyId === 'eth' && queryResolving(ethMainnet)) ||
-      (cid === APECHAIN && currencyId === 'apecoin' && queryResolving(apeNative)) ||
-      (cid === MAINNET && currencyId === 'weth' && queryResolving(wethMainnet)) ||
-      (cid === MAINNET && currencyId === 'apecoin' && queryResolving(apeMainnet)) ||
-      (cid === MAINNET && currencyId === 'wape' && queryResolving(wapeMainnet)) ||
-      (cid === APECHAIN && currencyId === 'wape' && queryResolving(wapeApechain));
+    let cancelled = false;
 
-    if (loading) {
-      return { text: '…', isLoading: true };
-    }
+    (async () => {
+      try {
+        let out = '—';
 
-    if (cid === MAINNET) {
-      if (currencyId === 'eth') {
-        const d = ethMainnet.data;
-        if (!d) return { text: '—', isLoading: false };
-        const n = Number(d.formatted);
-        const formatted = Number.isFinite(n)
-          ? n.toLocaleString(undefined, { maximumFractionDigits: 6 })
-          : d.formatted;
-        return { text: `${formatted} ${d.symbol}`, isLoading: false };
-      }
-      if (currencyId === 'weth') {
-        const t = formatTokenAmount(wethMainnet.data, 18, 'WETH');
-        return { text: t ?? '—', isLoading: false };
-      }
-      if (currencyId === 'apecoin') {
-        const t = formatTokenAmount(apeMainnet.data, 18, 'APE');
-        return { text: t ?? '—', isLoading: false };
-      }
-      if (currencyId === 'wape') {
-        const t = formatTokenAmount(wapeMainnet.data, 18, 'WAPE');
-        return { text: t ?? '—', isLoading: false };
-      }
-    }
+        if (cid === MAINNET) {
+          if (currencyId === 'eth') {
+            const b = await getBalance(config, { address: addr, chainId: MAINNET });
+            if (cancelled) return;
+            const n = Number(b.formatted);
+            const formatted = Number.isFinite(n)
+              ? n.toLocaleString(undefined, { maximumFractionDigits: 6 })
+              : b.formatted;
+            out = `${formatted} ${b.symbol}`;
+          } else if (currencyId === 'weth') {
+            const v = await readContract(config, {
+              chainId: MAINNET,
+              address: WETH_MAINNET,
+              abi: erc20Abi,
+              functionName: 'balanceOf',
+              args: [addr],
+            });
+            if (cancelled) return;
+            out = formatTokenAmount(v, 18, 'WETH') ?? '—';
+          } else if (currencyId === 'apecoin') {
+            const v = await readContract(config, {
+              chainId: MAINNET,
+              address: APE_MAINNET,
+              abi: erc20Abi,
+              functionName: 'balanceOf',
+              args: [addr],
+            });
+            if (cancelled) return;
+            out = formatTokenAmount(v, 18, 'APE') ?? '—';
+          } else if (currencyId === 'wape') {
+            const v = await readContract(config, {
+              chainId: MAINNET,
+              address: WAPE_MAINNET,
+              abi: erc20Abi,
+              functionName: 'balanceOf',
+              args: [addr],
+            });
+            if (cancelled) return;
+            out = formatTokenAmount(v, 18, 'WAPE') ?? '—';
+          }
+        } else if (cid === APECHAIN) {
+          if (currencyId === 'apecoin') {
+            const b = await getBalance(config, { address: addr, chainId: APECHAIN });
+            if (cancelled) return;
+            const n = Number(b.formatted);
+            const formatted = Number.isFinite(n)
+              ? n.toLocaleString(undefined, { maximumFractionDigits: 6 })
+              : b.formatted;
+            out = `${formatted} ${b.symbol}`;
+          } else if (currencyId === 'wape') {
+            const v = await readContract(config, {
+              chainId: APECHAIN,
+              address: WAPE_APECHAIN,
+              abi: erc20Abi,
+              functionName: 'balanceOf',
+              args: [addr],
+            });
+            if (cancelled) return;
+            out = formatTokenAmount(v, 18, 'WAPE') ?? '—';
+          } else if (currencyId === 'eth' || currencyId === 'weth') {
+            out = '—';
+          }
+        } else {
+          out = '—';
+        }
 
-    if (cid === APECHAIN) {
-      if (currencyId === 'apecoin') {
-        const d = apeNative.data;
-        if (!d) return { text: '—', isLoading: false };
-        const n = Number(d.formatted);
-        const formatted = Number.isFinite(n)
-          ? n.toLocaleString(undefined, { maximumFractionDigits: 6 })
-          : d.formatted;
-        return { text: `${formatted} ${d.symbol}`, isLoading: false };
+        if (!cancelled) setText(out);
+      } catch {
+        if (!cancelled) setText('—');
       }
-      if (currencyId === 'wape') {
-        const t = formatTokenAmount(wapeApechain.data, 18, 'WAPE');
-        return { text: t ?? '—', isLoading: false };
-      }
-      if (currencyId === 'eth' || currencyId === 'weth') {
-        return { text: '—', isLoading: false };
-      }
-    }
+    })();
 
-    return { text: '—', isLoading: false };
-  }, [
-    addr,
-    cid,
-    currencyId,
-    ethMainnet.data,
-    ethMainnet.isError,
-    ethMainnet.isFetching,
-    apeNative.data,
-    apeNative.isError,
-    apeNative.isFetching,
-    wethMainnet.data,
-    wethMainnet.isError,
-    wethMainnet.isFetching,
-    apeMainnet.data,
-    apeMainnet.isError,
-    apeMainnet.isFetching,
-    wapeMainnet.data,
-    wapeMainnet.isError,
-    wapeMainnet.isFetching,
-    wapeApechain.data,
-    wapeApechain.isError,
-    wapeApechain.isFetching,
-  ]);
+    return () => {
+      cancelled = true;
+    };
+  }, [config, address, cid, currencyId]);
+
+  return { text };
 }

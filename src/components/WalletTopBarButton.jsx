@@ -41,7 +41,12 @@ function WalletTopBarInner({ account, chain, mounted, openConnectModal, openChai
   } = useWalletProfile(account?.address);
 
   const { currencyId, setCurrencyId } = useWalletDisplayCurrency();
-  const { text: menuBalanceText } = useWalletMenuBalance(account?.address, chain?.id, currencyId);
+  const { text: rpcBalanceText } = useWalletMenuBalance(account?.address, currencyId);
+  const hasNativeDisplay =
+    currencyId === 'eth' &&
+    typeof account?.displayBalance === 'string' &&
+    account.displayBalance.trim().length > 0;
+  const menuBalanceText = hasNativeDisplay ? account.displayBalance : rpcBalanceText;
 
   const avatarSrc =
     profilePictureUrl ||
