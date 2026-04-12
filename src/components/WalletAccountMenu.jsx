@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useDisconnect } from 'wagmi';
-import { WALLET_CURRENCIES } from '../constants/walletCurrencies';
 
 function formatAddress(addr) {
   if (!addr) return '';
@@ -25,21 +24,6 @@ function IconLogout() {
   );
 }
 
-function IconChevronMenu({ open }) {
-  return (
-    <svg
-      className={`wallet-menu-currency-chevron${open ? ' wallet-menu-currency-chevron--open' : ''}`}
-      viewBox="0 0 12 12"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      aria-hidden
-    >
-      <path d="M3 4.5L6 7.5L9 4.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 export default function WalletAccountMenu({
   open,
   anchorRef,
@@ -48,18 +32,15 @@ export default function WalletAccountMenu({
   avatarUrl,
   username,
   displayBalance,
+  balanceHint,
   chainIconUrl,
   chainIconBg,
   onSignIn,
   onAvatarClick,
-  currencyId,
-  onCurrencyChange,
 }) {
   const { disconnect } = useDisconnect();
   const menuRef = useRef(null);
-  const currencyWrapRef = useRef(null);
   const [pos, setPos] = useState({ top: 0, right: 0 });
-  const [currencyOpen, setCurrencyOpen] = useState(false);
 
   const updatePosition = useCallback(() => {
     const el = anchorRef?.current;
@@ -110,23 +91,7 @@ export default function WalletAccountMenu({
     };
   }, [open, onClose, anchorRef]);
 
-  useEffect(() => {
-    if (!currencyOpen) return;
-    const onDown = (e) => {
-      if (currencyWrapRef.current?.contains(e.target)) return;
-      setCurrencyOpen(false);
-    };
-    document.addEventListener('mousedown', onDown);
-    return () => document.removeEventListener('mousedown', onDown);
-  }, [currencyOpen]);
-
-  useEffect(() => {
-    if (!open) setCurrencyOpen(false);
-  }, [open]);
-
   if (!open || typeof document === 'undefined') return null;
-
-  const selectedCurrency = WALLET_CURRENCIES.find((c) => c.id === currencyId) ?? WALLET_CURRENCIES[0];
 
   const handleDisconnect = () => {
     disconnect();
@@ -190,44 +155,10 @@ export default function WalletAccountMenu({
                   <div className="wallet-menu-chain-fallback" />
                 )}
                 <div className="wallet-menu-balance-text">
-                  <span className="wallet-menu-balance-label">Balance</span>
-                  <span className="wallet-menu-balance-value">{displayBalance ?? '—'}</span>
-                </div>
-                <div className="wallet-menu-currency" ref={currencyWrapRef}>
-                  <button
-                    type="button"
-                    className="wallet-menu-currency-trigger"
-                    aria-haspopup="listbox"
-                    aria-expanded={currencyOpen}
-                    aria-label="Switch display currency"
-                    onClick={() => setCurrencyOpen((v) => !v)}
-                  >
-                    <span className="wallet-menu-currency-trigger-label">Currency</span>
-                    <span className="wallet-menu-currency-trigger-row">
-                      <span className="wallet-menu-currency-trigger-symbol">{selectedCurrency.symbol}</span>
-                      <IconChevronMenu open={currencyOpen} />
-                    </span>
-                  </button>
-                  {currencyOpen ? (
-                    <ul className="wallet-menu-currency-list" role="listbox" aria-label="Display currency">
-                      {WALLET_CURRENCIES.map((c) => (
-                        <li key={c.id} role="presentation">
-                          <button
-                            type="button"
-                            role="option"
-                            aria-selected={c.id === currencyId}
-                            className={`wallet-menu-currency-option${c.id === currencyId ? ' wallet-menu-currency-option--active' : ''}`}
-                            onClick={() => {
-                              onCurrencyChange?.(c.id);
-                              setCurrencyOpen(false);
-                            }}
-                          >
-                            {c.label}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
+                  <span className="wallet-menu-balance-label">Ethereum</span>
+                  <span className="wallet-menu-balance-value" title={balanceHint}>
+                    {displayBalance ?? '—'}
+                  </span>
                 </div>
               </div>
             </div>

@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useDisconnect } from 'wagmi';
-import { useWalletDisplayCurrency } from '../hooks/useWalletDisplayCurrency';
-import { useWalletMenuBalance } from '../hooks/useWalletMenuBalance';
+import { useEthMainnetBalanceDisplay } from '../hooks/useEthMainnetBalanceDisplay';
 import { useWalletProfile } from '../hooks/useWalletProfile';
 import WalletAccountMenu from './WalletAccountMenu';
 import WalletNftAvatarModal from './WalletNftAvatarModal';
@@ -40,13 +39,12 @@ function WalletTopBarInner({ account, chain, mounted, openConnectModal, openChai
     refresh,
   } = useWalletProfile(account?.address);
 
-  const { currencyId, setCurrencyId } = useWalletDisplayCurrency();
-  const { text: rpcBalanceText } = useWalletMenuBalance(account?.address, currencyId);
-  const hasNativeDisplay =
-    currencyId === 'eth' &&
-    typeof account?.displayBalance === 'string' &&
-    account.displayBalance.trim().length > 0;
-  const menuBalanceText = hasNativeDisplay ? account.displayBalance : rpcBalanceText;
+  const { text: ethBalanceText, onEthereumMainnet } = useEthMainnetBalanceDisplay(
+    account?.address,
+    account?.displayBalance
+  );
+  const menuBalanceText = ethBalanceText;
+  const balanceTitle = onEthereumMainnet ? undefined : 'Switch to Ethereum to see your ETH balance';
 
   const avatarSrc =
     profilePictureUrl ||
@@ -107,7 +105,9 @@ function WalletTopBarInner({ account, chain, mounted, openConnectModal, openChai
         ref={pillRef}
         className="app-wallet-pill"
         onClick={toggleMenu}
-        title={chain?.unsupported ? 'Wrong network' : 'Wallet menu'}
+        title={
+          chain?.unsupported ? 'Wrong network' : !onEthereumMainnet ? balanceTitle : 'Wallet menu'
+        }
         aria-expanded={menuOpen}
         aria-haspopup="menu"
       >
@@ -153,6 +153,7 @@ function WalletTopBarInner({ account, chain, mounted, openConnectModal, openChai
         avatarUrl={avatarSrc}
         username={username}
         displayBalance={balanceText}
+        balanceHint={balanceTitle}
         chainIconUrl={chain?.hasIcon ? chain.iconUrl : undefined}
         chainIconBg={chain?.iconBackground}
         onSignIn={openConnectModal}
@@ -160,8 +161,6 @@ function WalletTopBarInner({ account, chain, mounted, openConnectModal, openChai
           setMenuOpen(false);
           setNftPickerOpen(true);
         }}
-        currencyId={currencyId}
-        onCurrencyChange={setCurrencyId}
       />
       <WalletNftAvatarModal
         open={nftPickerOpen}
