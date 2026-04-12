@@ -238,6 +238,17 @@ export default function App() {
           </div>
           <h1 className="studio-home-hero-title">Studio JOOBA</h1>
         </header>
+        <nav className="studio-home-panels" aria-label="Studio sections">
+          <button type="button" className="studio-home-panel">
+            Information
+          </button>
+          <button type="button" className="studio-home-panel">
+            The Team
+          </button>
+          <button type="button" className="studio-home-panel">
+            Yuga Assets
+          </button>
+        </nav>
         <div className="studio-phase-row studio-phase-row--horizontal">
           <figure className="studio-phase-card studio-phase-card--compact">
             <div className="studio-phase-thumb studio-phase-thumb--compact">

@@ -13,8 +13,8 @@ function IconChevronDown() {
       <svg
         className="app-wallet-pill-chevron-svg"
         viewBox="0 0 10 10"
-        width="7"
-        height="7"
+        width="6"
+        height="6"
         aria-hidden
         focusable="false"
       >
@@ -125,8 +125,8 @@ function WalletTopBarInner({ account, chain, mounted, openConnectModal, openChai
             <img
               alt=""
               src={chain.iconUrl}
-              width={18}
-              height={18}
+              width={14}
+              height={14}
               className="app-wallet-pill-chain-img"
               style={{ background: chain.iconBackground }}
             />
@@ -137,7 +137,7 @@ function WalletTopBarInner({ account, chain, mounted, openConnectModal, openChai
         <span className="app-wallet-pill-balance">{balanceText}</span>
         <span className="app-wallet-pill-divider" aria-hidden />
         <span className="app-wallet-pill-avatar-wrap">
-          <img className="app-wallet-pill-avatar" src={avatarSrc} alt="" width={24} height={24} />
+          <img className="app-wallet-pill-avatar" src={avatarSrc} alt="" width={17} height={17} />
         </span>
         <IconChevronDown />
       </button>
