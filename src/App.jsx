@@ -72,9 +72,6 @@ function Shell({ children, previewMode, onTogglePreview, activeStudioPage, onSel
   const nextIsMobile = previewMode === 'desktop';
   return (
     <div className="app-shell" data-preview={previewMode}>
-      <div className="overlay-scanlines" aria-hidden="true" />
-      <div className="overlay-vignette" aria-hidden="true" />
-      <div className="overlay-glow-sweep" aria-hidden="true" />
       <aside className="app-sidebar" aria-label="Sidebar">
         <div className="app-sidebar-brand">
           <img src="/mayc-outline.png" alt="MAYC outline" />
@@ -127,6 +124,9 @@ function Shell({ children, previewMode, onTogglePreview, activeStudioPage, onSel
             <main className="app-content">
               <div className="app-content-inner">{children}</div>
             </main>
+            <div className="overlay-scanlines" aria-hidden="true" />
+            <div className="overlay-vignette" aria-hidden="true" />
+            <div className="overlay-glow-sweep" aria-hidden="true" />
           </div>
           <footer className="app-footer" aria-label="Footer">
             <div className="app-footer-social">
