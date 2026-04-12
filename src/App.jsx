@@ -32,6 +32,14 @@ function IconHome() {
   );
 }
 
+function PhaseCaption({ number, suffix }) {
+  return (
+    <figcaption className="studio-phase-label">
+      <span className="studio-phase-label-phase">Phase</span> {number} | {suffix}
+    </figcaption>
+  );
+}
+
 function IconSquare3Stack3d() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
@@ -218,19 +226,19 @@ export default function App() {
             <div className="studio-phase-thumb">
               <img className="studio-phase-img" src="/phase1-bops.png" alt="Phase 1 Bops" />
             </div>
-            <figcaption className="studio-phase-label">Phase 1 | Bops</figcaption>
+            <PhaseCaption number={1} suffix="Bops" />
           </figure>
           <figure className="studio-phase-card">
             <div className="studio-phase-thumb studio-phase-thumb--blank" aria-hidden />
-            <figcaption className="studio-phase-label">Phase 2 | TBC</figcaption>
+            <PhaseCaption number={2} suffix="TBC" />
           </figure>
           <figure className="studio-phase-card">
             <div className="studio-phase-thumb studio-phase-thumb--blank" aria-hidden />
-            <figcaption className="studio-phase-label">Phase 3 | TBC</figcaption>
+            <PhaseCaption number={3} suffix="TBC" />
           </figure>
           <figure className="studio-phase-card">
             <div className="studio-phase-thumb studio-phase-thumb--blank" aria-hidden />
-            <figcaption className="studio-phase-label">Phase 4 | TBC</figcaption>
+            <PhaseCaption number={4} suffix="TBC" />
           </figure>
         </div>
       </div>
