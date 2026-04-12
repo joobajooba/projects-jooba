@@ -1,16 +1,47 @@
 import { useEffect, useState } from 'react';
 import { supabase } from './lib/supabaseClient';
 
-function Shell({ children }) {
+function IconMonitor() {
   return (
-    <div className="app-shell">
-      <aside className="app-sidebar" aria-label="Sidebar" />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
+      <rect x="3" y="4" width="18" height="12" rx="1.5" />
+      <path d="M8 20h8M12 16v4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconPhone() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
+      <rect x="7" y="3" width="10" height="18" rx="2" />
+      <path d="M10 18h4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function Shell({ children, previewMode, onTogglePreview }) {
+  const nextIsMobile = previewMode === 'desktop';
+  return (
+    <div className="app-shell" data-preview={previewMode}>
+      <aside className="app-sidebar" aria-label="Sidebar">
+        <button
+          type="button"
+          className="app-sidebar-toggle"
+          onClick={onTogglePreview}
+          title={nextIsMobile ? 'Preview mobile width' : 'Use full desktop width'}
+          aria-label={nextIsMobile ? 'Switch to mobile layout preview' : 'Switch to desktop layout'}
+        >
+          {previewMode === 'desktop' ? <IconPhone /> : <IconMonitor />}
+        </button>
+      </aside>
       <div className="app-main-col">
-        <header className="app-topbar" aria-label="Top bar" />
-        <main className="app-content">
-          <div className="app-content-inner">{children}</div>
-        </main>
-        <footer className="app-footer" aria-label="Footer" />
+        <div className="app-main-stage">
+          <header className="app-topbar" aria-label="Top bar" />
+          <main className="app-content">
+            <div className="app-content-inner">{children}</div>
+          </main>
+          <footer className="app-footer" aria-label="Footer" />
+        </div>
       </div>
     </div>
   );
@@ -18,6 +49,7 @@ function Shell({ children }) {
 
 export default function App() {
   const [status, setStatus] = useState('checking');
+  const [previewMode, setPreviewMode] = useState('desktop');
 
   useEffect(() => {
     if (!supabase) {
@@ -39,9 +71,15 @@ export default function App() {
     };
   }, []);
 
+  const togglePreview = () => {
+    setPreviewMode((m) => (m === 'desktop' ? 'mobile' : 'desktop'));
+  };
+
+  const shellProps = { previewMode, onTogglePreview: togglePreview };
+
   if (status === 'missing_env') {
     return (
-      <Shell>
+      <Shell {...shellProps}>
         <div className="app-message">
           <p>
             Set <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> (see{' '}
@@ -54,7 +92,7 @@ export default function App() {
 
   if (status === 'checking') {
     return (
-      <Shell>
+      <Shell {...shellProps}>
         <div className="app-message">
           <p>Connecting…</p>
         </div>
@@ -64,7 +102,7 @@ export default function App() {
 
   if (status === 'error') {
     return (
-      <Shell>
+      <Shell {...shellProps}>
         <div className="app-message">
           <p>
             Supabase reachable but the session check failed (check URL, key, and project status).
@@ -74,5 +112,5 @@ export default function App() {
     );
   }
 
-  return <Shell>{null}</Shell>;
+  return <Shell {...shellProps}>{null}</Shell>;
 }
