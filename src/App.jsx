@@ -32,13 +32,14 @@ function IconHome() {
   );
 }
 
-function IconList() {
+function IconSquare3Stack3d() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
-      <path d="M8 6h13M8 12h13M8 18h13" strokeLinecap="round" />
-      <circle cx="4" cy="6" r="1.25" fill="currentColor" stroke="none" />
-      <circle cx="4" cy="12" r="1.25" fill="currentColor" stroke="none" />
-      <circle cx="4" cy="18" r="1.25" fill="currentColor" stroke="none" />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M6.429 9.75 2.25 12l4.179 2.25m0-4.5 5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0 4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0-5.571 3-5.571-3"
+      />
     </svg>
   );
 }
@@ -86,7 +87,7 @@ function Shell({ children, previewMode, onTogglePreview, activeStudioPage, onSel
             aria-label="Other Pages"
             aria-current={activeStudioPage === 'other' ? 'page' : undefined}
           >
-            <IconList />
+            <IconSquare3Stack3d />
           </button>
         </nav>
         <button

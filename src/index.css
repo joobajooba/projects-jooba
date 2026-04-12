@@ -8,12 +8,14 @@
   --sidebar-w: 3rem;
   --chrome-h: 2.75rem;
   --mobile-preview-w: 390px;
+  --app-font: Calibri, 'Calibri Light', Candara, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
 }
 
 html {
   height: 100%;
   min-height: 100dvh;
   overflow: hidden;
+  font-family: var(--app-font);
 }
 
 body {
@@ -21,7 +23,7 @@ body {
   min-height: 100dvh;
   margin: 0;
   overflow: hidden;
-  font-family: system-ui, sans-serif;
+  font-family: var(--app-font);
   color: #e5e5e5;
   background: #0c0c0e;
 }
@@ -51,6 +53,7 @@ body {
   min-width: 0;
   display: flex;
   flex-direction: column;
+  font-family: var(--app-font);
 }
 
 .app-viewport-root {
@@ -62,6 +65,7 @@ body {
 }
 
 code {
+  font-family: var(--app-font);
   font-size: 0.9em;
   background: #262626;
   padding: 0.15em 0.35em;
@@ -522,7 +526,7 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   margin-top: 0.15rem;
   font-size: 0.8125rem;
   color: #a1a1aa;
-  font-family: ui-monospace, monospace;
+  font-family: var(--app-font);
 }
 
 .wallet-menu-divider {
@@ -695,7 +699,7 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
 }
 
 .wallet-mono {
-  font-family: ui-monospace, monospace;
+  font-family: var(--app-font);
   color: #d4d4d8;
 }
 
@@ -853,7 +857,7 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
 }
 
 .wallet-nft-code {
-  font-family: ui-monospace, monospace;
+  font-family: var(--app-font);
   font-size: 0.75rem;
   color: #d4d4d8;
 }
