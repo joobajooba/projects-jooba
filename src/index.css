@@ -145,6 +145,52 @@ code {
   height: 1.125rem;
 }
 
+.app-sidebar-nav {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid #3d3d42;
+}
+
+.app-sidebar-nav-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 2.25rem;
+  min-height: 2.25rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #b0b0b8;
+  cursor: pointer;
+}
+
+.app-sidebar-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #e8e8ec;
+}
+
+.app-sidebar-nav-btn:focus-visible {
+  outline: 2px solid #6b6b75;
+  outline-offset: -2px;
+}
+
+.app-sidebar-nav-btn[aria-current='page'] {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e8e8ec;
+}
+
+.app-sidebar-nav-btn svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
 .app-main-col {
   flex: 1;
   min-width: 0;
@@ -187,8 +233,20 @@ code {
   border-bottom: 1px solid #3d3d42;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
   padding: 0 0.625rem;
+}
+
+.app-topbar-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #e8e8ec;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .app-topbar-inner {
@@ -324,6 +382,53 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
 
 .app-footer {
   border-top: 1px solid #3d3d42;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0 0.625rem;
+}
+
+.app-footer-social {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.app-footer-social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 6px;
+  color: #b0b0b8;
+}
+
+.app-footer-social-link:hover {
+  color: #e8e8ec;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.app-footer-social-link:focus-visible {
+  outline: 2px solid #6b6b75;
+  outline-offset: 2px;
+}
+
+.app-footer-social-link svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.studio-page {
+  padding: 1.25rem 1rem;
+}
+
+.studio-page-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #e8e8ec;
+  letter-spacing: 0.02em;
 }
 
 .app-content {
