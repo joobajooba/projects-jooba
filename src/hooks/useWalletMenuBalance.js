@@ -5,6 +5,21 @@ import { useBalance, useReadContract } from 'wagmi';
 const MAINNET = 1;
 const APECHAIN = 33139;
 
+/** Rainbow/wagmi may expose chain id as number, string, or bigint. */
+function normalizeChainId(chainId) {
+  if (chainId == null) return undefined;
+  if (typeof chainId === 'bigint') return Number(chainId);
+  const n = Number(chainId);
+  return Number.isFinite(n) ? n : undefined;
+}
+
+/** v5: `isLoading` can stay true in edge cases; use fetch + data for UI. */
+function queryResolving(result) {
+  if (result.data !== undefined) return false;
+  if (result.isError) return false;
+  return result.isFetching;
+}
+
 const WETH_MAINNET = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
 const APE_MAINNET = '0x4d224452801ACEd8B2F0aebE155379bb5D594381';
 const WAPE_MAINNET = '0x76551Ab68d42042c15D54A8DB54431FCAC7a7C2D';
@@ -43,17 +58,18 @@ function formatTokenAmount(raw, decimals = 18, symbol) {
  */
 export function useWalletMenuBalance(address, chainId, currencyId) {
   const addr = address ?? undefined;
+  const cid = normalizeChainId(chainId);
 
   const ethMainnet = useBalance({
     address: addr,
     chainId: MAINNET,
-    query: { enabled: Boolean(addr && chainId === MAINNET && currencyId === 'eth') },
+    query: { enabled: Boolean(addr && cid === MAINNET && currencyId === 'eth') },
   });
 
   const apeNative = useBalance({
     address: addr,
     chainId: APECHAIN,
-    query: { enabled: Boolean(addr && chainId === APECHAIN && currencyId === 'apecoin') },
+    query: { enabled: Boolean(addr && cid === APECHAIN && currencyId === 'apecoin') },
   });
 
   const wethMainnet = useReadContract({
@@ -62,7 +78,7 @@ export function useWalletMenuBalance(address, chainId, currencyId) {
     abi: erc20Abi,
     functionName: 'balanceOf',
     args: addr ? [addr] : undefined,
-    query: { enabled: Boolean(addr && chainId === MAINNET && currencyId === 'weth') },
+    query: { enabled: Boolean(addr && cid === MAINNET && currencyId === 'weth') },
   });
 
   const apeMainnet = useReadContract({
@@ -71,7 +87,7 @@ export function useWalletMenuBalance(address, chainId, currencyId) {
     abi: erc20Abi,
     functionName: 'balanceOf',
     args: addr ? [addr] : undefined,
-    query: { enabled: Boolean(addr && chainId === MAINNET && currencyId === 'apecoin') },
+    query: { enabled: Boolean(addr && cid === MAINNET && currencyId === 'apecoin') },
   });
 
   const wapeMainnet = useReadContract({
@@ -80,7 +96,7 @@ export function useWalletMenuBalance(address, chainId, currencyId) {
     abi: erc20Abi,
     functionName: 'balanceOf',
     args: addr ? [addr] : undefined,
-    query: { enabled: Boolean(addr && chainId === MAINNET && currencyId === 'wape') },
+    query: { enabled: Boolean(addr && cid === MAINNET && currencyId === 'wape') },
   });
 
   const wapeApechain = useReadContract({
@@ -89,39 +105,27 @@ export function useWalletMenuBalance(address, chainId, currencyId) {
     abi: erc20Abi,
     functionName: 'balanceOf',
     args: addr ? [addr] : undefined,
-    query: { enabled: Boolean(addr && chainId === APECHAIN && currencyId === 'wape') },
+    query: { enabled: Boolean(addr && cid === APECHAIN && currencyId === 'wape') },
   });
 
   return useMemo(() => {
-    if (!addr || !chainId) {
+    if (!addr || cid == null) {
       return { text: '—', isLoading: false };
     }
 
     const loading =
-      (chainId === MAINNET &&
-        currencyId === 'eth' &&
-        ethMainnet.isLoading) ||
-      (chainId === APECHAIN &&
-        currencyId === 'apecoin' &&
-        apeNative.isLoading) ||
-      (chainId === MAINNET &&
-        currencyId === 'weth' &&
-        wethMainnet.isLoading) ||
-      (chainId === MAINNET &&
-        currencyId === 'apecoin' &&
-        apeMainnet.isLoading) ||
-      (chainId === MAINNET &&
-        currencyId === 'wape' &&
-        wapeMainnet.isLoading) ||
-      (chainId === APECHAIN &&
-        currencyId === 'wape' &&
-        wapeApechain.isLoading);
+      (cid === MAINNET && currencyId === 'eth' && queryResolving(ethMainnet)) ||
+      (cid === APECHAIN && currencyId === 'apecoin' && queryResolving(apeNative)) ||
+      (cid === MAINNET && currencyId === 'weth' && queryResolving(wethMainnet)) ||
+      (cid === MAINNET && currencyId === 'apecoin' && queryResolving(apeMainnet)) ||
+      (cid === MAINNET && currencyId === 'wape' && queryResolving(wapeMainnet)) ||
+      (cid === APECHAIN && currencyId === 'wape' && queryResolving(wapeApechain));
 
     if (loading) {
       return { text: '…', isLoading: true };
     }
 
-    if (chainId === MAINNET) {
+    if (cid === MAINNET) {
       if (currencyId === 'eth') {
         const d = ethMainnet.data;
         if (!d) return { text: '—', isLoading: false };
@@ -145,7 +149,7 @@ export function useWalletMenuBalance(address, chainId, currencyId) {
       }
     }
 
-    if (chainId === APECHAIN) {
+    if (cid === APECHAIN) {
       if (currencyId === 'apecoin') {
         const d = apeNative.data;
         if (!d) return { text: '—', isLoading: false };
@@ -167,19 +171,25 @@ export function useWalletMenuBalance(address, chainId, currencyId) {
     return { text: '—', isLoading: false };
   }, [
     addr,
-    chainId,
+    cid,
     currencyId,
     ethMainnet.data,
-    ethMainnet.isLoading,
+    ethMainnet.isError,
+    ethMainnet.isFetching,
     apeNative.data,
-    apeNative.isLoading,
+    apeNative.isError,
+    apeNative.isFetching,
     wethMainnet.data,
-    wethMainnet.isLoading,
+    wethMainnet.isError,
+    wethMainnet.isFetching,
     apeMainnet.data,
-    apeMainnet.isLoading,
+    apeMainnet.isError,
+    apeMainnet.isFetching,
     wapeMainnet.data,
-    wapeMainnet.isLoading,
+    wapeMainnet.isError,
+    wapeMainnet.isFetching,
     wapeApechain.data,
-    wapeApechain.isLoading,
+    wapeApechain.isError,
+    wapeApechain.isFetching,
   ]);
 }
