@@ -147,6 +147,112 @@ code {
 
 .app-topbar {
   border-bottom: 1px solid #3d3d42;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 0.625rem;
+}
+
+.app-topbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.app-wallet-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: calc(var(--chrome-h) - 6px);
+  max-height: calc(var(--chrome-h) - 6px);
+  padding: 0 0.5rem 0 0.4rem;
+  border: 1px solid #4a4a52;
+  border-radius: 999px;
+  background: #1e1e22;
+  color: #e8e8ec;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.app-wallet-pill:hover {
+  background: #26262c;
+  border-color: #5a5a64;
+}
+
+.app-wallet-pill:focus-visible {
+  outline: 2px solid #6b6b78;
+  outline-offset: 2px;
+}
+
+.app-wallet-pill--connect {
+  padding: 0 0.85rem;
+}
+
+.app-wallet-pill--placeholder {
+  min-width: 8rem;
+  pointer-events: none;
+  opacity: 0.35;
+}
+
+.app-wallet-pill-chain {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.app-wallet-pill-chain-img {
+  display: block;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.app-wallet-pill-chain-fallback {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #4b5563, #9ca3af);
+}
+
+.app-wallet-pill-balance {
+  color: #f0f0f5;
+  white-space: nowrap;
+  max-width: 6.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app-wallet-pill-divider {
+  width: 1px;
+  height: 1.125rem;
+  background: #4a4a52;
+  flex-shrink: 0;
+}
+
+.app-wallet-pill-avatar-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.app-wallet-pill-avatar {
+  display: block;
+  width: 1.375rem;
+  height: 1.375rem;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.app-wallet-pill-chevron {
+  width: 0.625rem;
+  height: 0.625rem;
+  flex-shrink: 0;
+  color: #9ca3af;
 }
 
 .app-footer {

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from './lib/supabaseClient';
+import WalletTopBarButton from './components/WalletTopBarButton';
 
 function IconMonitor() {
   return (
@@ -39,7 +40,11 @@ function Shell({ children, previewMode, onTogglePreview }) {
       </aside>
       <div className="app-main-col">
         <div className="app-main-stage">
-          <header className="app-topbar" aria-label="Top bar" />
+          <header className="app-topbar" aria-label="Top bar">
+            <div className="app-topbar-inner">
+              <WalletTopBarButton />
+            </div>
+          </header>
           <main className="app-content">
             <div className="app-content-inner">{children}</div>
           </main>
