@@ -32,9 +32,9 @@ function IconHome() {
   );
 }
 
-function PhaseCaption({ number, suffix }) {
+function PhaseCaption({ number, suffix, compact }) {
   return (
-    <figcaption className="studio-phase-label">
+    <figcaption className={`studio-phase-label${compact ? ' studio-phase-label--compact' : ''}`}>
       <span className="studio-phase-label-phase">Phase</span> {number} | {suffix}
     </figcaption>
   );
@@ -75,10 +75,6 @@ function Shell({ children, previewMode, onTogglePreview, activeStudioPage, onSel
       <div className="overlay-scanlines" aria-hidden="true" />
       <div className="overlay-vignette" aria-hidden="true" />
       <div className="overlay-glow-sweep" aria-hidden="true" />
-      <div className="corner-frames" aria-hidden="true">
-        <div className="corner-frame-br" />
-        <div className="corner-frame-bl" />
-      </div>
       <aside className="app-sidebar" aria-label="Sidebar">
         <div className="app-sidebar-brand">
           <img src="/mayc-outline.png" alt="MAYC outline" />
@@ -123,9 +119,15 @@ function Shell({ children, previewMode, onTogglePreview, activeStudioPage, onSel
               <WalletTopBarButton />
             </div>
           </header>
-          <main className="app-content">
-            <div className="app-content-inner">{children}</div>
-          </main>
+          <div className="app-main-body">
+            <div className="corner-frames" aria-hidden="true">
+              <div className="corner-frame-br" />
+              <div className="corner-frame-bl" />
+            </div>
+            <main className="app-content">
+              <div className="app-content-inner">{children}</div>
+            </main>
+          </div>
           <footer className="app-footer" aria-label="Footer">
             <div className="app-footer-social">
               <a
@@ -228,24 +230,33 @@ export default function App() {
   const studioMain =
     studioPage === 'home' ? (
       <div className="studio-page studio-page--home">
-        <div className="studio-phase-row">
-          <figure className="studio-phase-card">
-            <div className="studio-phase-thumb">
+        <header className="studio-home-hero">
+          <div className="studio-home-hero-label-row">
+            <span className="studio-home-hero-line" aria-hidden="true" />
+            <span className="studio-home-hero-label">Coming to Apechain</span>
+            <span className="studio-home-hero-line" aria-hidden="true" />
+          </div>
+          <h1 className="studio-home-hero-title">Studio JOOBA</h1>
+          <p className="studio-home-hero-sub">Patience is Virtue</p>
+        </header>
+        <div className="studio-phase-row studio-phase-row--horizontal">
+          <figure className="studio-phase-card studio-phase-card--compact">
+            <div className="studio-phase-thumb studio-phase-thumb--compact">
               <img className="studio-phase-img" src="/phase1-bops.png" alt="Phase 1 Bops" />
             </div>
-            <PhaseCaption number={1} suffix="Bops" />
+            <PhaseCaption number={1} suffix="Bops" compact />
           </figure>
-          <figure className="studio-phase-card">
-            <div className="studio-phase-thumb studio-phase-thumb--blank" aria-hidden />
-            <PhaseCaption number={2} suffix="TBC" />
+          <figure className="studio-phase-card studio-phase-card--compact">
+            <div className="studio-phase-thumb studio-phase-thumb--blank studio-phase-thumb--compact" aria-hidden />
+            <PhaseCaption number={2} suffix="TBC" compact />
           </figure>
-          <figure className="studio-phase-card">
-            <div className="studio-phase-thumb studio-phase-thumb--blank" aria-hidden />
-            <PhaseCaption number={3} suffix="TBC" />
+          <figure className="studio-phase-card studio-phase-card--compact">
+            <div className="studio-phase-thumb studio-phase-thumb--blank studio-phase-thumb--compact" aria-hidden />
+            <PhaseCaption number={3} suffix="TBC" compact />
           </figure>
-          <figure className="studio-phase-card">
-            <div className="studio-phase-thumb studio-phase-thumb--blank" aria-hidden />
-            <PhaseCaption number={4} suffix="TBC" />
+          <figure className="studio-phase-card studio-phase-card--compact">
+            <div className="studio-phase-thumb studio-phase-thumb--blank studio-phase-thumb--compact" aria-hidden />
+            <PhaseCaption number={4} suffix="TBC" compact />
           </figure>
         </div>
       </div>
