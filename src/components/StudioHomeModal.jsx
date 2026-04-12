@@ -1,7 +1,7 @@
 import { useEffect, useId } from 'react';
 import { createPortal } from 'react-dom';
 
-export default function StudioHomeModal({ open, title, onClose, children }) {
+export default function StudioHomeModal({ open, title, onClose, children, dialogClassName }) {
   const titleId = useId();
 
   useEffect(() => {
@@ -24,7 +24,7 @@ export default function StudioHomeModal({ open, title, onClose, children }) {
         onClick={onClose}
       />
       <div
-        className="studio-home-modal-dialog"
+        className={['studio-home-modal-dialog', dialogClassName].filter(Boolean).join(' ')}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}

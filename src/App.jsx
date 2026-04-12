@@ -166,6 +166,43 @@ function Shell({ children, previewMode, onTogglePreview, activeStudioPage, onSel
   );
 }
 
+function StudioHomeTeamBody() {
+  const members = [
+    {
+      src: '/team-jooba.png',
+      name: 'J00BA',
+      role: 'web3 / Artist',
+      alt: 'J00BA team portrait',
+    },
+    {
+      src: '/team-okidokie.png',
+      name: 'OkiDokie',
+      role: 'Sound Engineer / Artist',
+      alt: 'OkiDokie team portrait',
+    },
+    {
+      src: '/team-melvolio.png',
+      name: 'Melvolio',
+      role: 'Developer',
+      alt: 'Melvolio team portrait',
+    },
+  ];
+
+  return (
+    <div className="studio-home-team-grid">
+      {members.map((m) => (
+        <div key={m.name} className="studio-home-team-member">
+          <div className="studio-home-team-avatar">
+            <img src={m.src} alt={m.alt} width={512} height={512} decoding="async" />
+          </div>
+          <p className="studio-home-team-name">{m.name}</p>
+          <p className="studio-home-team-role">{m.role}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function StudioHomeInformationBody() {
   return (
     <>
@@ -357,13 +394,12 @@ export default function App() {
         open={homeModal != null}
         title={homeModalTitle}
         onClose={() => setHomeModal(null)}
+        dialogClassName={homeModal === 'team' ? 'studio-home-modal-dialog--team' : undefined}
       >
         {homeModal === 'information' ? (
           <StudioHomeInformationBody />
         ) : homeModal === 'team' ? (
-          <p className="studio-home-modal-lead">
-            Meet the Studio JOOBA crew — team bios, roles, and links are coming soon.
-          </p>
+          <StudioHomeTeamBody />
         ) : homeModal === 'yuga' ? (
           <p className="studio-home-modal-lead">
             How we work with Yuga Labs IP and on-chain assets — details to be announced.
