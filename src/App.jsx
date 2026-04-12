@@ -33,10 +33,20 @@ function IconHome() {
   );
 }
 
-function PhaseCaption({ number, suffix, compact }) {
+function PhaseCaptionLines({ phase, name, instrument, compact }) {
+  const row = (label, value) => (
+    <div className="studio-phase-line">
+      <span className="studio-phase-line-label">{label}</span>
+      <span className="studio-phase-line-sep"> | </span>
+      <span className="studio-phase-line-value">{value}</span>
+    </div>
+  );
+
   return (
-    <figcaption className={`studio-phase-label${compact ? ' studio-phase-label--compact' : ''}`}>
-      <span className="studio-phase-label-phase">Phase</span> {number} | {suffix}
+    <figcaption className={`studio-phase-caption${compact ? ' studio-phase-caption--compact' : ''}`}>
+      {row('Phase', String(phase))}
+      {row('Name', name)}
+      {row('Instrument', instrument)}
     </figcaption>
   );
 }
@@ -338,21 +348,27 @@ export default function App() {
         <div className="studio-phase-row studio-phase-row--horizontal">
           <figure className="studio-phase-card studio-phase-card--compact">
             <div className="studio-phase-thumb studio-phase-thumb--compact">
-              <img className="studio-phase-img" src="/phase1-bops.png" alt="Phase 1 Bops" />
+              <img className="studio-phase-img" src="/phase1-bops.png" alt="Phase 1, Bops, guitar" />
             </div>
-            <PhaseCaption number={1} suffix="Bops" compact />
+            <PhaseCaptionLines phase={1} name="Bops" instrument="Guitar" compact />
+          </figure>
+          <figure className="studio-phase-card studio-phase-card--compact">
+            <div className="studio-phase-thumb studio-phase-thumb--compact">
+              <img
+                className="studio-phase-img"
+                src="/phase2-elf.png"
+                alt="Phase 2, to be confirmed, guitar"
+              />
+            </div>
+            <PhaseCaptionLines phase={2} name="TBC" instrument="Guitar" compact />
           </figure>
           <figure className="studio-phase-card studio-phase-card--compact">
             <div className="studio-phase-thumb studio-phase-thumb--blank studio-phase-thumb--compact" aria-hidden />
-            <PhaseCaption number={2} suffix="TBC" compact />
+            <PhaseCaptionLines phase={3} name="TBC" instrument="Drums" compact />
           </figure>
           <figure className="studio-phase-card studio-phase-card--compact">
             <div className="studio-phase-thumb studio-phase-thumb--blank studio-phase-thumb--compact" aria-hidden />
-            <PhaseCaption number={3} suffix="TBC" compact />
-          </figure>
-          <figure className="studio-phase-card studio-phase-card--compact">
-            <div className="studio-phase-thumb studio-phase-thumb--blank studio-phase-thumb--compact" aria-hidden />
-            <PhaseCaption number={4} suffix="TBC" compact />
+            <PhaseCaptionLines phase={4} name="TBC" instrument="Vocals" compact />
           </figure>
         </div>
       </div>
