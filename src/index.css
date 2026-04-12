@@ -8,9 +8,9 @@
   --sidebar-w: 3rem;
   --chrome-h: 2.75rem;
   --mobile-preview-w: 390px;
-  --font-display: 'Barlow Condensed', 'Arial Narrow', Arial, sans-serif;
-  --font-mono: 'Share Tech Mono', 'Courier New', monospace;
-  --app-font: var(--font-mono);
+  --font-display: 'DynaPuff', system-ui, sans-serif;
+  --font-mono: 'DynaPuff', system-ui, sans-serif;
+  --app-font: 'DynaPuff', system-ui, sans-serif;
   --jooba-gold: #ffdea8;
   --jooba-gold-2: #e8a030;
   --jooba-gold-bright: #fff0d4;
@@ -391,7 +391,7 @@ code {
 .app-topbar-title {
   font-family: var(--font-display);
   font-size: 0.9375rem;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #ffffff;
@@ -581,7 +581,7 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   margin: 0;
   font-family: var(--font-display);
   font-size: 1.35rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--jooba-gold-bright);
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -630,7 +630,7 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
 .studio-home-hero-title {
   margin: 0;
   font-family: var(--font-display);
-  font-weight: 900;
+  font-weight: 700;
   text-transform: uppercase;
   line-height: 0.92;
   letter-spacing: 0.02em;
@@ -756,7 +756,7 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
 }
 
 .studio-phase-label-phase {
-  font-weight: 800;
+  font-weight: 700;
   font-family: var(--font-display);
   color: var(--jooba-gold);
   letter-spacing: 0.06em;
