@@ -114,7 +114,7 @@ function Shell({ children, previewMode, onTogglePreview, activeStudioPage, onSel
             <div className="app-footer-social">
               <a
                 className="app-footer-social-link"
-                href="https://discord.com"
+                href="https://discord.gg/Z4nuZYgwHP"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Discord"
@@ -123,7 +123,7 @@ function Shell({ children, previewMode, onTogglePreview, activeStudioPage, onSel
               </a>
               <a
                 className="app-footer-social-link"
-                href="https://x.com"
+                href="https://x.com/StudioJ00BA"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="X (Twitter)"
