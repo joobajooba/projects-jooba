@@ -12,14 +12,16 @@ const queryClient = new QueryClient();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <WagmiProvider config={wagmiConfig}>
-      <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider theme={darkTheme({ borderRadius: 'medium' })} modalSize="compact">
-          <div className="app-viewport-root">
-            <App />
-          </div>
-        </RainbowKitProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
+    <div className="app-root-outer">
+      <WagmiProvider config={wagmiConfig}>
+        <QueryClientProvider client={queryClient}>
+          <RainbowKitProvider theme={darkTheme({ borderRadius: 'medium' })} modalSize="compact">
+            <div className="app-viewport-root">
+              <App />
+            </div>
+          </RainbowKitProvider>
+        </QueryClientProvider>
+      </WagmiProvider>
+    </div>
   </React.StrictMode>
 );
