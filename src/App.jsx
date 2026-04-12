@@ -212,8 +212,27 @@ export default function App() {
 
   const studioMain =
     studioPage === 'home' ? (
-      <div className="studio-page">
-        <h1 className="studio-page-title">Home Page</h1>
+      <div className="studio-page studio-page--home">
+        <div className="studio-phase-row">
+          <figure className="studio-phase-card">
+            <div className="studio-phase-thumb">
+              <img className="studio-phase-img" src="/phase1-bops.png" alt="Phase 1 Bops" />
+            </div>
+            <figcaption className="studio-phase-label">Phase 1 | Bops</figcaption>
+          </figure>
+          <figure className="studio-phase-card">
+            <div className="studio-phase-thumb studio-phase-thumb--blank" aria-hidden />
+            <figcaption className="studio-phase-label">Phase 2 | TBC</figcaption>
+          </figure>
+          <figure className="studio-phase-card">
+            <div className="studio-phase-thumb studio-phase-thumb--blank" aria-hidden />
+            <figcaption className="studio-phase-label">Phase 3 | TBC</figcaption>
+          </figure>
+          <figure className="studio-phase-card">
+            <div className="studio-phase-thumb studio-phase-thumb--blank" aria-hidden />
+            <figcaption className="studio-phase-label">Phase 4 | TBC</figcaption>
+          </figure>
+        </div>
       </div>
     ) : (
       <div className="studio-page">

@@ -435,6 +435,59 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   letter-spacing: 0.02em;
 }
 
+.studio-page--home {
+  padding-top: 1.5rem;
+}
+
+.studio-phase-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: clamp(0.75rem, 3vw, 1.25rem);
+}
+
+.studio-phase-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+  width: clamp(5.5rem, 18vw, 9rem);
+  min-width: 5.5rem;
+  text-align: center;
+  gap: 0.5rem;
+}
+
+.studio-phase-thumb {
+  width: 100%;
+  aspect-ratio: 1;
+  flex-shrink: 0;
+}
+
+.studio-phase-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.studio-phase-thumb--blank {
+  box-sizing: border-box;
+  border: 1px solid #3f3f46;
+  border-radius: 12px;
+  background: #161618;
+}
+
+.studio-phase-label {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: #a1a1aa;
+}
+
 .app-content {
   flex: 1;
   min-height: 0;
