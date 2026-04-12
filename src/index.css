@@ -345,6 +345,25 @@ code {
   gap: 0.75rem;
 }
 
+.wallet-menu-avatar-btn {
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+.wallet-menu-avatar-btn:hover .wallet-menu-avatar-lg {
+  border-color: #71717a;
+}
+
+.wallet-menu-avatar-btn:focus-visible {
+  outline: 2px solid #a1a1aa;
+  outline-offset: 2px;
+}
+
 .wallet-menu-avatar-lg {
   width: 3rem;
   height: 3rem;
@@ -612,4 +631,157 @@ code {
 
 .wallet-username-modal-secondary:hover {
   color: #a1a1aa;
+}
+
+/* NFT avatar picker (portal) */
+.wallet-nft-modal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 10002;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.wallet-nft-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.wallet-nft-modal-dialog {
+  position: relative;
+  width: 100%;
+  max-width: 28rem;
+  max-height: min(85vh, 36rem);
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  border: 1px solid #3f3f46;
+  background: #141416;
+  padding: 1.1rem 1.2rem 1.15rem;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+
+.wallet-nft-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.wallet-nft-modal-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #fafafa;
+}
+
+.wallet-nft-modal-close {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #a1a1aa;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.wallet-nft-modal-close:hover {
+  background: #1c1c1f;
+  color: #fafafa;
+}
+
+.wallet-nft-modal-sub {
+  margin: 0.5rem 0 0.85rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: #a1a1aa;
+}
+
+.wallet-nft-modal-error,
+.wallet-nft-modal-empty,
+.wallet-nft-modal-loading {
+  margin: 0 0 0.75rem;
+  font-size: 0.8125rem;
+  color: #a1a1aa;
+}
+
+.wallet-nft-modal-error {
+  color: #f87171;
+}
+
+.wallet-nft-code {
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  color: #d4d4d8;
+}
+
+.wallet-nft-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(4.5rem, 1fr));
+  gap: 0.5rem;
+  overflow-y: auto;
+  max-height: min(50vh, 22rem);
+  padding: 0.15rem 0;
+}
+
+.wallet-nft-tile {
+  position: relative;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 1px solid #3f3f46;
+  border-radius: 10px;
+  background: #0c0c0e;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.wallet-nft-tile:hover {
+  border-color: #71717a;
+}
+
+.wallet-nft-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.wallet-nft-badge {
+  position: absolute;
+  bottom: 0.2rem;
+  right: 0.2rem;
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: rgba(0, 0, 0, 0.72);
+  color: #e4e4e7;
+}
+
+.wallet-nft-retry {
+  margin-top: 0.65rem;
+  padding: 0.45rem 0.65rem;
+  align-self: flex-start;
+  border: 1px solid #3f3f46;
+  border-radius: 8px;
+  background: #1a1a1d;
+  color: #a1a1aa;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.wallet-nft-retry:hover {
+  background: #222226;
+  color: #e4e4e7;
 }

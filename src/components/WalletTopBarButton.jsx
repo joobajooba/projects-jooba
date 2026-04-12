@@ -3,6 +3,7 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useDisconnect } from 'wagmi';
 import { useWalletProfile } from '../hooks/useWalletProfile';
 import WalletAccountMenu from './WalletAccountMenu';
+import WalletNftAvatarModal from './WalletNftAvatarModal';
 import WalletUsernameModal from './WalletUsernameModal';
 
 function IconChevronDown() {
@@ -24,13 +25,22 @@ export default function WalletTopBarButton() {
 function WalletTopBarInner({ account, chain, mounted, openConnectModal, openChainModal }) {
   const pillRef = useRef(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [nftPickerOpen, setNftPickerOpen] = useState(false);
   const { disconnect } = useDisconnect();
-  const { username, needsUsername, saveUsername, saveError, setSaveError, refresh } = useWalletProfile(
-    account?.address
-  );
+  const {
+    username,
+    profilePictureUrl,
+    needsUsername,
+    saveUsername,
+    saveProfilePictureUrl,
+    saveError,
+    setSaveError,
+    refresh,
+  } = useWalletProfile(account?.address);
 
   const avatarSrc =
-    account?.ensAvatar ??
+    profilePictureUrl ||
+    account?.ensAvatar ||
     (account?.address ? `https://avatar.vercel.sh/${account.address}?size=128` : '');
 
   const toggleMenu = () => {
@@ -136,6 +146,19 @@ function WalletTopBarInner({ account, chain, mounted, openConnectModal, openChai
         chainIconUrl={chain?.hasIcon ? chain.iconUrl : undefined}
         chainIconBg={chain?.iconBackground}
         onSignIn={openConnectModal}
+        onAvatarClick={() => {
+          setMenuOpen(false);
+          setNftPickerOpen(true);
+        }}
+      />
+      <WalletNftAvatarModal
+        open={nftPickerOpen}
+        address={account.address}
+        onClose={() => setNftPickerOpen(false)}
+        onPick={async (url) => {
+          await saveProfilePictureUrl(url);
+          refresh();
+        }}
       />
     </>
   );

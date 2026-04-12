@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
 const LS_KEY = 'jooba_wallet_usernames';
+const LS_AVATAR_KEY = 'jooba_wallet_avatars';
 const SESSION_SKIP_KEY = 'jooba_skip_supabase_user_data';
 
 function readLocalMap() {
@@ -13,10 +14,25 @@ function readLocalMap() {
   }
 }
 
+function readLocalAvatarMap() {
+  try {
+    const raw = localStorage.getItem(LS_AVATAR_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
 function writeLocalUsername(address, username) {
   const map = readLocalMap();
   map[address.toLowerCase()] = username;
   localStorage.setItem(LS_KEY, JSON.stringify(map));
+}
+
+function writeLocalAvatar(address, url) {
+  const map = readLocalAvatarMap();
+  map[address.toLowerCase()] = url;
+  localStorage.setItem(LS_AVATAR_KEY, JSON.stringify(map));
 }
 
 function skipSupabaseUserDataReads() {
@@ -35,7 +51,6 @@ function markSkipSupabaseUserData() {
   }
 }
 
-/** PostgREST / Postgres when `user_data` was never migrated in the Supabase project. */
 function isUserDataTableMissing(error) {
   if (!error) return false;
   const msg = String(error.message ?? error.details ?? '');
@@ -54,18 +69,26 @@ function isUsernameUniqueViolation(error) {
 }
 
 /**
- * Loads / saves display username for a connected wallet (Supabase user_data when available).
- * Falls back to localStorage if the table is missing or Supabase is not configured.
+ * Username + profile picture URL for a wallet (Supabase user_data when available).
  */
 export function useWalletProfile(address) {
   const normalized = address?.toLowerCase() ?? null;
   const [username, setUsernameState] = useState(null);
+  const [profilePictureUrl, setProfilePictureUrl] = useState(null);
   const [loading, setLoading] = useState(Boolean(normalized));
   const [saveError, setSaveError] = useState(null);
+
+  const applyLocalFallback = useCallback(() => {
+    const map = readLocalMap();
+    const av = readLocalAvatarMap();
+    setUsernameState(map[normalized]?.trim() ?? '');
+    setProfilePictureUrl(av[normalized]?.trim() || null);
+  }, [normalized]);
 
   const refresh = useCallback(async () => {
     if (!normalized) {
       setUsernameState(null);
+      setProfilePictureUrl(null);
       setLoading(false);
       return;
     }
@@ -75,28 +98,29 @@ export function useWalletProfile(address) {
       if (supabase && !skipSupabaseUserDataReads()) {
         const { data, error } = await supabase
           .from('user_data')
-          .select('username')
+          .select('username, profile_picture_url')
           .eq('wallet_address', normalized)
           .maybeSingle();
         if (!error) {
           const u = data?.username?.trim() ?? '';
+          const p = data?.profile_picture_url?.trim() || null;
           setUsernameState(u);
+          setProfilePictureUrl(p);
           if (u) writeLocalUsername(normalized, u);
+          if (p) writeLocalAvatar(normalized, p);
           return;
         }
         if (isUserDataTableMissing(error)) {
           markSkipSupabaseUserData();
         }
       }
-      const map = readLocalMap();
-      setUsernameState(map[normalized]?.trim() ?? '');
+      applyLocalFallback();
     } catch {
-      const map = readLocalMap();
-      setUsernameState(map[normalized]?.trim() ?? '');
+      applyLocalFallback();
     } finally {
       setLoading(false);
     }
-  }, [normalized]);
+  }, [normalized, applyLocalFallback]);
 
   useEffect(() => {
     refresh();
@@ -126,11 +150,13 @@ export function useWalletProfile(address) {
             {
               wallet_address: normalized,
               username: trimmed,
+              profile_picture_url: profilePictureUrl || null,
             },
             { onConflict: 'wallet_address' }
           );
           if (!error) {
             writeLocalUsername(normalized, trimmed);
+            if (profilePictureUrl) writeLocalAvatar(normalized, profilePictureUrl);
             setUsernameState(trimmed);
             return true;
           }
@@ -153,14 +179,53 @@ export function useWalletProfile(address) {
         return false;
       }
     },
-    [normalized]
+    [normalized, profilePictureUrl]
+  );
+
+  const saveProfilePictureUrl = useCallback(
+    async (url) => {
+      const trimmed = url?.trim();
+      if (!normalized || !trimmed || !username?.trim()) return false;
+      try {
+        if (supabase && !skipSupabaseUserDataReads()) {
+          const { error } = await supabase.from('user_data').upsert(
+            {
+              wallet_address: normalized,
+              username: username.trim(),
+              profile_picture_url: trimmed,
+            },
+            { onConflict: 'wallet_address' }
+          );
+          if (!error) {
+            writeLocalAvatar(normalized, trimmed);
+            setProfilePictureUrl(trimmed);
+            return true;
+          }
+          if (isUserDataTableMissing(error)) {
+            markSkipSupabaseUserData();
+          } else {
+            return false;
+          }
+        }
+        writeLocalAvatar(normalized, trimmed);
+        setProfilePictureUrl(trimmed);
+        return true;
+      } catch {
+        writeLocalAvatar(normalized, trimmed);
+        setProfilePictureUrl(trimmed);
+        return true;
+      }
+    },
+    [normalized, username]
   );
 
   return {
     username,
+    profilePictureUrl,
     loading,
     needsUsername,
     saveUsername,
+    saveProfilePictureUrl,
     saveError,
     setSaveError,
     refresh,
