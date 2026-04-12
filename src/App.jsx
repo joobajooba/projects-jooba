@@ -24,6 +24,9 @@ function Shell({ children, previewMode, onTogglePreview }) {
   return (
     <div className="app-shell" data-preview={previewMode}>
       <aside className="app-sidebar" aria-label="Sidebar">
+        <div className="app-sidebar-brand">
+          <img src="/mayc-outline.png" alt="MAYC outline" />
+        </div>
         <button
           type="button"
           className="app-sidebar-toggle"
