@@ -237,7 +237,6 @@ export default function App() {
             <span className="studio-home-hero-line" aria-hidden="true" />
           </div>
           <h1 className="studio-home-hero-title">Studio JOOBA</h1>
-          <p className="studio-home-hero-sub">Patience is Virtue</p>
         </header>
         <div className="studio-phase-row studio-phase-row--horizontal">
           <figure className="studio-phase-card studio-phase-card--compact">

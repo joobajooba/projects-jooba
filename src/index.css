@@ -173,41 +173,41 @@ code {
 .corner-frames::after {
   content: '';
   position: absolute;
-  width: 26px;
-  height: 26px;
+  width: 32px;
+  height: 32px;
   border-color: rgba(255, 200, 120, 0.42);
   border-style: solid;
 }
 
 .corner-frames::before {
-  top: 6px;
-  left: 6px;
+  top: 16px;
+  left: 16px;
   border-width: 2px 0 0 2px;
 }
 
 .corner-frames::after {
-  top: 6px;
-  right: 6px;
+  top: 16px;
+  right: 16px;
   border-width: 2px 2px 0 0;
 }
 
 .corner-frame-br,
 .corner-frame-bl {
   position: absolute;
-  width: 26px;
-  height: 26px;
-  bottom: 6px;
+  width: 32px;
+  height: 32px;
+  bottom: 16px;
   border-color: rgba(255, 200, 120, 0.42);
   border-style: solid;
 }
 
 .corner-frame-br {
-  right: 6px;
+  right: 16px;
   border-width: 0 2px 2px 0;
 }
 
 .corner-frame-bl {
-  left: 6px;
+  left: 16px;
   border-width: 0 0 2px 2px;
 }
 
@@ -590,37 +590,37 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
 
 .studio-page--home {
   box-sizing: border-box;
-  max-width: 48rem;
+  max-width: min(100%, 96rem);
   margin-inline: auto;
-  padding: 10dvh 1rem 1.75rem;
+  padding: 10dvh 2rem 3.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.75rem;
+  gap: 3.5rem;
   text-align: center;
 }
 
 .studio-home-hero {
   width: 100%;
-  padding-bottom: 1.25rem;
+  padding-bottom: 2.5rem;
 }
 
 .studio-home-hero-label-row {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(0.65rem, 3vw, 1.25rem);
-  margin-bottom: 0.85rem;
+  gap: clamp(1.3rem, 6vw, 2.5rem);
+  margin-bottom: 1.7rem;
 }
 
 .studio-home-hero-line {
   flex: 0 0 auto;
-  width: clamp(36px, 11vw, 72px);
+  width: clamp(72px, 22vw, 144px);
   border-top: 1px solid var(--jooba-border);
 }
 
 .studio-home-hero-label {
-  font-size: 0.88rem;
+  font-size: 1.76rem;
   letter-spacing: 0.28em;
   text-transform: uppercase;
   color: var(--jooba-text-tertiary);
@@ -636,24 +636,16 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   letter-spacing: 0.02em;
   color: var(--jooba-gold-bright);
   text-shadow:
-    0 0 28px rgba(255, 200, 120, 0.5),
-    0 0 72px rgba(255, 160, 60, 0.22);
-  font-size: clamp(2.65rem, 11vw, 4.65rem);
+    0 0 36px rgba(255, 200, 120, 0.55),
+    0 0 96px rgba(255, 160, 60, 0.28);
+  font-size: clamp(5.3rem, 22vw, 9.3rem);
   animation: studio-hero-title-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
-}
-
-.studio-home-hero-sub {
-  margin: 0.85rem 0 0;
-  font-size: clamp(0.82rem, 2.6vw, 1rem);
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: var(--jooba-text-secondary);
 }
 
 @keyframes studio-hero-title-in {
   from {
     opacity: 0;
-    transform: translateY(16px) scaleY(0.94);
+    transform: translateY(24px) scaleY(0.94);
   }
   to {
     opacity: 1;
@@ -674,9 +666,9 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
 .studio-phase-row--horizontal {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.5rem 0.65rem;
+  gap: 1rem 1.3rem;
   width: 100%;
-  max-width: min(100%, 26.5rem);
+  max-width: min(100%, 53rem);
   margin-inline: auto;
   align-items: start;
   justify-items: center;
@@ -698,7 +690,7 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   min-width: 0;
   align-items: center;
   text-align: center;
-  gap: 0.35rem;
+  gap: 0.7rem;
 }
 
 .studio-phase-thumb {
@@ -736,15 +728,15 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
 }
 
 .studio-phase-thumb--compact {
-  border-radius: 6px;
+  border-radius: 12px;
 }
 
 .studio-phase-thumb--compact.studio-phase-thumb--blank {
-  border-radius: 6px;
+  border-radius: 12px;
 }
 
 .studio-phase-label--compact {
-  font-size: calc(0.55rem - 2px);
+  font-size: calc(1.1rem - 4px);
   letter-spacing: 0.05em;
   line-height: 1.25;
   max-width: 100%;
