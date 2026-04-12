@@ -4,6 +4,11 @@
   box-sizing: border-box;
 }
 
+:root {
+  --sidebar-w: 3rem;
+  --chrome-h: 2.75rem;
+}
+
 html,
 body,
 #root {
@@ -13,12 +18,7 @@ body,
 
 body {
   font-family: system-ui, sans-serif;
-  background: #0a0a0a;
   color: #e5e5e5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
 }
 
 code {
@@ -26,4 +26,57 @@ code {
   background: #262626;
   padding: 0.15em 0.35em;
   border-radius: 4px;
+}
+
+.app-shell {
+  display: flex;
+  height: 100%;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.app-sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: linear-gradient(180deg, #2d2d30 0%, #252528 100%);
+  border-right: 1px solid #3d3d42;
+}
+
+.app-main-col {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(145deg, #222226 0%, #18181b 42%, #141416 100%);
+}
+
+.app-topbar,
+.app-footer {
+  height: var(--chrome-h);
+  flex-shrink: 0;
+  background: #2a2a2e;
+  border-color: #3d3d42;
+}
+
+.app-topbar {
+  border-bottom: 1px solid #3d3d42;
+}
+
+.app-footer {
+  border-top: 1px solid #3d3d42;
+}
+
+.app-content {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.app-content-inner {
+  min-height: 100%;
+}
+
+.app-message {
+  padding: 1rem;
 }
