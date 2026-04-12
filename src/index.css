@@ -49,7 +49,6 @@ body {
   color: var(--jooba-text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  -webkit-text-stroke: 0.2px currentColor;
   background:
     radial-gradient(ellipse 80% 50% at 50% 0%, rgba(200, 120, 40, 0.38), transparent 70%),
     radial-gradient(ellipse 60% 40% at 50% 100%, rgba(90, 50, 12, 0.45), transparent 70%),
@@ -233,6 +232,8 @@ code {
   min-height: 0;
   background: linear-gradient(180deg, var(--jooba-surface-3) 0%, var(--jooba-surface-1) 100%);
   border-right: 1px solid var(--jooba-border);
+  -webkit-text-stroke: 0;
+  text-rendering: optimizeLegibility;
 }
 
 .app-sidebar-brand {
@@ -286,8 +287,10 @@ code {
 }
 
 .app-sidebar-toggle svg {
-  width: 1.125rem;
-  height: 1.125rem;
+  width: 1.3125rem;
+  height: 1.3125rem;
+  flex-shrink: 0;
+  shape-rendering: geometricPrecision;
 }
 
 .app-sidebar-nav {
@@ -333,8 +336,10 @@ code {
 }
 
 .app-sidebar-nav-btn svg {
-  width: 1.125rem;
-  height: 1.125rem;
+  width: 1.3125rem;
+  height: 1.3125rem;
+  flex-shrink: 0;
+  shape-rendering: geometricPrecision;
 }
 
 .app-main-col {
@@ -374,9 +379,10 @@ code {
   height: var(--chrome-h);
   min-height: var(--chrome-h);
   flex-shrink: 0;
-  background: rgba(18, 12, 6, 0.92);
-  backdrop-filter: blur(6px);
+  background: var(--jooba-surface-1);
   border-color: var(--jooba-border);
+  -webkit-text-stroke: 0;
+  text-rendering: optimizeLegibility;
 }
 
 .app-topbar {
@@ -390,12 +396,11 @@ code {
 
 .app-topbar-title {
   font-family: var(--font-display);
-  font-size: 0.9375rem;
+  font-size: 1rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #ffffff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -423,8 +428,8 @@ code {
   border-radius: 999px;
   background: rgba(255, 200, 120, 0.06);
   color: var(--jooba-gold);
-  font-size: 0.8125rem;
-  font-weight: 500;
+  font-size: 0.875rem;
+  font-weight: 700;
   letter-spacing: 0.01em;
   cursor: pointer;
   font-family: inherit;
@@ -569,8 +574,10 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
 }
 
 .app-footer-social-link svg {
-  width: 1.125rem;
-  height: 1.125rem;
+  width: 1.375rem;
+  height: 1.375rem;
+  flex-shrink: 0;
+  shape-rendering: geometricPrecision;
 }
 
 .studio-page {
@@ -673,7 +680,9 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   text-shadow:
     0 0 36px rgba(255, 200, 120, 0.55),
     0 0 96px rgba(255, 160, 60, 0.28);
-  font-size: clamp(5rem, 21vw, 9rem);
+  font-size: clamp(4rem, 16.8vw, 7.2rem);
+  -webkit-text-stroke: 0;
+  text-rendering: optimizeLegibility;
   animation: studio-hero-title-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
 }
 
