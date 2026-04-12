@@ -222,9 +222,20 @@ export default function App() {
     studioPage === 'home' ? (
       <div className="studio-page studio-page--home">
         <div className="studio-phase-row">
-          <figure className="studio-phase-card">
-            <div className="studio-phase-thumb">
-              <img className="studio-phase-img" src="/phase1-bops.png" alt="Phase 1 Bops" />
+          <figure className="studio-phase-card studio-phase-card--one">
+            <div className="studio-phase-pair">
+              <div className="studio-phase-pair-left">
+                <div className="studio-phase-thumb">
+                  <img className="studio-phase-img" src="/phase1-bops.png" alt="Phase 1 Bops" />
+                </div>
+              </div>
+              <div className="studio-phase-pair-right">
+                <img
+                  className="studio-phase-landscape"
+                  src="/phase1-cave-wide.png"
+                  alt="Bops in a bioluminescent cave"
+                />
+              </div>
             </div>
             <PhaseCaption number={1} suffix="Bops" />
           </figure>
