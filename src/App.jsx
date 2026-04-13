@@ -428,6 +428,11 @@ export default function App() {
         heroTitle="Studio JOOBA"
         showInfoPanels
         onOpenHomeModal={setHomeModal}
+        phase2ImageSrc="/phase2-home-silhouette.png"
+        phase2ImageAlt="Phase 2, elfin silhouette on olive green, Bass"
+        phase3ImageSrc="/phase3-home-silhouette.png"
+        phase3ImageAlt="Phase 3, bold silhouette on grey, Drums"
+        phase4TbcBox
       />
     ) : studioPage === 'j00ba' ? (
       <StudioLandingContent
