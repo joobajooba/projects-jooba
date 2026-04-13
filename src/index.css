@@ -849,7 +849,8 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
 
 .studio-phase-thumb--blank {
   box-sizing: border-box;
-  aspect-ratio: 1;
+  /* Matches phase preview PNGs (e.g. phase1-bops / phase2-elf, 723×1024) */
+  aspect-ratio: 723 / 1024;
   border: 1px dashed var(--jooba-ui-border);
   border-radius: 12px;
   background: rgba(172, 198, 142, 0.03);

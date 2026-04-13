@@ -63,6 +63,19 @@ function IconSquare3Stack3d() {
   );
 }
 
+function IconStudioJ00ba() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
+      <circle cx="12" cy="12" r="9" strokeLinecap="round" />
+      <path
+        d="M10.25 8.25v7.5L16.25 12l-6-3.75z"
+        fill="currentColor"
+        stroke="none"
+      />
+    </svg>
+  );
+}
+
 function IconDiscord() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -97,6 +110,16 @@ function Shell({ children, previewMode, onTogglePreview, activeStudioPage, onSel
             aria-current={activeStudioPage === 'home' ? 'page' : undefined}
           >
             <IconHome />
+          </button>
+          <button
+            type="button"
+            className="app-sidebar-nav-btn"
+            onClick={() => onSelectStudioPage('j00ba')}
+            title="Studio J00BA"
+            aria-label="Studio J00BA"
+            aria-current={activeStudioPage === 'j00ba' ? 'page' : undefined}
+          >
+            <IconStudioJ00ba />
           </button>
           <button
             type="button"
@@ -243,6 +266,64 @@ function StudioHomeInformationBody() {
   );
 }
 
+function StudioLandingContent({ heroTitle, showInfoPanels, onOpenHomeModal }) {
+  return (
+    <div className="studio-page studio-page--home">
+      <header className="studio-home-hero">
+        <div className="studio-home-hero-label-row">
+          <span className="studio-home-hero-line" aria-hidden="true" />
+          <span className="studio-home-hero-label">Coming to Apechain</span>
+          <span className="studio-home-hero-line" aria-hidden="true" />
+        </div>
+        <h1 className="studio-home-hero-title">{heroTitle}</h1>
+      </header>
+      {showInfoPanels ? (
+        <nav className="studio-home-panels" aria-label="Studio sections">
+          <button
+            type="button"
+            className="studio-home-panel"
+            onClick={() => onOpenHomeModal('information')}
+          >
+            Information
+          </button>
+          <button type="button" className="studio-home-panel" onClick={() => onOpenHomeModal('team')}>
+            The Team
+          </button>
+          <button type="button" className="studio-home-panel" onClick={() => onOpenHomeModal('yuga')}>
+            Yuga Assets
+          </button>
+        </nav>
+      ) : null}
+      <div className="studio-phase-row studio-phase-row--horizontal">
+        <figure className="studio-phase-card studio-phase-card--compact">
+          <div className="studio-phase-thumb studio-phase-thumb--compact">
+            <img className="studio-phase-img" src="/phase1-bops.png" alt="Phase 1, Bops, Guitar" />
+          </div>
+          <PhaseCaptionLines phase={1} name="Bops" instrument="Guitar" compact />
+        </figure>
+        <figure className="studio-phase-card studio-phase-card--compact">
+          <div className="studio-phase-thumb studio-phase-thumb--compact">
+            <img
+              className="studio-phase-img"
+              src="/phase2-elf.png"
+              alt="Phase 2, to be confirmed, Bass"
+            />
+          </div>
+          <PhaseCaptionLines phase={2} name="TBC" instrument="Bass" compact />
+        </figure>
+        <figure className="studio-phase-card studio-phase-card--compact">
+          <div className="studio-phase-thumb studio-phase-thumb--blank studio-phase-thumb--compact" aria-hidden />
+          <PhaseCaptionLines phase={3} name="TBC" instrument="Drums" compact />
+        </figure>
+        <figure className="studio-phase-card studio-phase-card--compact">
+          <div className="studio-phase-thumb studio-phase-thumb--blank studio-phase-thumb--compact" aria-hidden />
+          <PhaseCaptionLines phase={4} name="TBC" instrument="Vocals" compact />
+        </figure>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [status, setStatus] = useState('checking');
   const [previewMode, setPreviewMode] = useState('desktop');
@@ -321,57 +402,13 @@ export default function App() {
 
   const studioMain =
     studioPage === 'home' ? (
-      <div className="studio-page studio-page--home">
-        <header className="studio-home-hero">
-          <div className="studio-home-hero-label-row">
-            <span className="studio-home-hero-line" aria-hidden="true" />
-            <span className="studio-home-hero-label">Coming to Apechain</span>
-            <span className="studio-home-hero-line" aria-hidden="true" />
-          </div>
-          <h1 className="studio-home-hero-title">Studio JOOBA</h1>
-        </header>
-        <nav className="studio-home-panels" aria-label="Studio sections">
-          <button
-            type="button"
-            className="studio-home-panel"
-            onClick={() => setHomeModal('information')}
-          >
-            Information
-          </button>
-          <button type="button" className="studio-home-panel" onClick={() => setHomeModal('team')}>
-            The Team
-          </button>
-          <button type="button" className="studio-home-panel" onClick={() => setHomeModal('yuga')}>
-            Yuga Assets
-          </button>
-        </nav>
-        <div className="studio-phase-row studio-phase-row--horizontal">
-          <figure className="studio-phase-card studio-phase-card--compact">
-            <div className="studio-phase-thumb studio-phase-thumb--compact">
-              <img className="studio-phase-img" src="/phase1-bops.png" alt="Phase 1, Bops, Guitar" />
-            </div>
-            <PhaseCaptionLines phase={1} name="Bops" instrument="Guitar" compact />
-          </figure>
-          <figure className="studio-phase-card studio-phase-card--compact">
-            <div className="studio-phase-thumb studio-phase-thumb--compact">
-              <img
-                className="studio-phase-img"
-                src="/phase2-elf.png"
-                alt="Phase 2, to be confirmed, Bass"
-              />
-            </div>
-            <PhaseCaptionLines phase={2} name="TBC" instrument="Bass" compact />
-          </figure>
-          <figure className="studio-phase-card studio-phase-card--compact">
-            <div className="studio-phase-thumb studio-phase-thumb--blank studio-phase-thumb--compact" aria-hidden />
-            <PhaseCaptionLines phase={3} name="TBC" instrument="Drums" compact />
-          </figure>
-          <figure className="studio-phase-card studio-phase-card--compact">
-            <div className="studio-phase-thumb studio-phase-thumb--blank studio-phase-thumb--compact" aria-hidden />
-            <PhaseCaptionLines phase={4} name="TBC" instrument="Vocals" compact />
-          </figure>
-        </div>
-      </div>
+      <StudioLandingContent
+        heroTitle="Studio JOOBA"
+        showInfoPanels
+        onOpenHomeModal={setHomeModal}
+      />
+    ) : studioPage === 'j00ba' ? (
+      <StudioLandingContent heroTitle="Studio J00BA" showInfoPanels={false} onOpenHomeModal={setHomeModal} />
     ) : (
       <div className="studio-page studio-page--other">
         <h1 className="studio-page-title">Other Pages</h1>
