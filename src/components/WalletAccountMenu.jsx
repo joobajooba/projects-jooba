@@ -33,6 +33,8 @@ export default function WalletAccountMenu({
   username,
   displayBalance,
   balanceHint,
+  apeDisplayBalance,
+  apeBalanceHint,
   chainIconUrl,
   chainIconBg,
   onSignIn,
@@ -158,6 +160,21 @@ export default function WalletAccountMenu({
                   <span className="wallet-menu-balance-label">Ethereum</span>
                   <span className="wallet-menu-balance-value" title={balanceHint}>
                     {displayBalance ?? '—'}
+                  </span>
+                </div>
+              </div>
+              <div className="wallet-menu-balance-row">
+                <img
+                  src="/apechain-logo.png"
+                  alt=""
+                  width={36}
+                  height={36}
+                  className="wallet-menu-chain-lg wallet-menu-chain-lg--apechain"
+                />
+                <div className="wallet-menu-balance-text">
+                  <span className="wallet-menu-balance-label">ApeChain</span>
+                  <span className="wallet-menu-balance-value" title={apeBalanceHint}>
+                    {apeDisplayBalance ?? '—'}
                   </span>
                 </div>
               </div>

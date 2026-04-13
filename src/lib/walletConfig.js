@@ -11,10 +11,10 @@ const mainnetWithPublicRpc = {
   },
 };
 
-const apeChain = defineChain({
+export const apeChain = defineChain({
   id: 33139,
   name: 'ApeChain',
-  nativeCurrency: { name: 'APE', symbol: 'APE', decimals: 18 },
+  nativeCurrency: { name: 'ApeCoin', symbol: 'APE', decimals: 18 },
   rpcUrls: { default: { http: ['https://rpc.apechain.com'] } },
   blockExplorers: { default: { name: 'Explorer', url: 'https://explorer.apechain.com' } },
 });

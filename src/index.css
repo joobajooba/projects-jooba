@@ -1072,6 +1072,12 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   background: rgba(150, 178, 118, 0.12);
 }
 
+.wallet-menu-balance {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
 .wallet-menu-balance-row {
   display: flex;
   align-items: center;
@@ -1084,6 +1090,13 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
+}
+
+.wallet-menu-chain-lg--apechain {
+  object-fit: contain;
+  padding: 0.2rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(150, 178, 118, 0.2);
 }
 
 .wallet-menu-chain-fallback {

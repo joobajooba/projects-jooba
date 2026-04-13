@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useDisconnect } from 'wagmi';
+import { useApeChainBalanceDisplay } from '../hooks/useApeChainBalanceDisplay';
 import { useEthMainnetBalanceDisplay } from '../hooks/useEthMainnetBalanceDisplay';
 import { useWalletProfile } from '../hooks/useWalletProfile';
 import WalletAccountMenu from './WalletAccountMenu';
@@ -52,6 +53,7 @@ function WalletTopBarInner({ account, chain, mounted, openConnectModal, openChai
     account?.address,
     account?.displayBalance
   );
+  const { text: apeBalanceText } = useApeChainBalanceDisplay(account?.address);
   const menuBalanceText = ethBalanceText;
   const balanceTitle = onEthereumMainnet ? undefined : 'Switch to Ethereum to see your ETH balance';
 
@@ -163,6 +165,8 @@ function WalletTopBarInner({ account, chain, mounted, openConnectModal, openChai
         username={username}
         displayBalance={balanceText}
         balanceHint={balanceTitle}
+        apeDisplayBalance={apeBalanceText}
+        apeBalanceHint="Native ApeCoin (APE) on ApeChain (not Ethereum)"
         chainIconUrl={chain?.hasIcon ? chain.iconUrl : undefined}
         chainIconBg={chain?.iconBackground}
         onSignIn={openConnectModal}
