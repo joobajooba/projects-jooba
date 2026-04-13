@@ -5,6 +5,7 @@ import {
   fetchOpenSeaCollections,
   hasOpenSeaApiKey,
 } from '../lib/openseaClient';
+import MaycDonutPlaceholder from './MaycDonutPlaceholder.jsx';
 import MaycSalesDonutChart from './MaycSalesDonutChart.jsx';
 
 function formatEth(n) {
@@ -83,6 +84,8 @@ export default function NftAnalysisPage({ onBack }) {
     };
   }, []);
 
+  const showMutantSection = hasOpenSeaApiKey() && state.kind !== 'no_key';
+
   return (
     <div className="studio-page studio-nft-analysis">
       <header className="studio-nft-analysis-head">
@@ -114,6 +117,10 @@ export default function NftAnalysisPage({ onBack }) {
             Keys in <code>VITE_*</code> variables are exposed to the browser; for production, prefer a
             small server or edge proxy that holds the secret.
           </p>
+          <p className="studio-nft-analysis-note">
+            The MAYC M1/M2 donut chart loads from the same key — add <code>VITE_OPENSEA_API_KEY</code> on
+            Vercel (or your host) and redeploy if the chart is missing in production.
+          </p>
         </div>
       ) : null}
 
@@ -127,50 +134,50 @@ export default function NftAnalysisPage({ onBack }) {
         </div>
       ) : null}
 
+      {showMutantSection ? (
+        <div className="studio-nft-analysis-body">
+          <section className="studio-nft-analysis-panel studio-nft-analysis-panel--donut">
+            <h2 className="studio-nft-analysis-section-title">Mutant Ape sales — 2026</h2>
+            <p className="studio-nft-analysis-muted">
+              Sale events on OpenSea (Ethereum) between 1 Jan 2026 and 31 Dec 2026 UTC, split by{' '}
+              <code>Fur</code> trait <code>M1</code> vs <code>M2</code>. Off-platform sales are not
+              included.
+            </p>
+            {mutant2026.kind === 'loading' ? <MaycDonutPlaceholder /> : null}
+            {mutant2026.kind === 'error' ? (
+              <p className="studio-nft-analysis-donut-error">{mutant2026.message}</p>
+            ) : null}
+            {mutant2026.kind === 'ok' ? (
+              <>
+                <MaycSalesDonutChart m1={mutant2026.data.m1} m2={mutant2026.data.m2} />
+                <dl className="studio-nft-donut-meta">
+                  <div>
+                    <dt>Total sale events (time window)</dt>
+                    <dd>{mutant2026.data.totalSales.toLocaleString()}</dd>
+                  </div>
+                  <div>
+                    <dt>Other Fur / not M1·M2</dt>
+                    <dd>{mutant2026.data.otherFur.toLocaleString()}</dd>
+                  </div>
+                  <div>
+                    <dt>No Fur trait on event</dt>
+                    <dd>{mutant2026.data.unclassified.toLocaleString()}</dd>
+                  </div>
+                </dl>
+                {mutant2026.data.truncated ? (
+                  <p className="studio-nft-analysis-note studio-nft-donut-truncated">
+                    Pagination cap reached ({mutant2026.data.pages} pages); more sales may exist — counts
+                    can be incomplete.
+                  </p>
+                ) : null}
+              </>
+            ) : null}
+          </section>
+        </div>
+      ) : null}
+
       {state.kind === 'ok' ? (
         <div className="studio-nft-analysis-body">
-          {mutant2026.kind !== 'skip' ? (
-            <section className="studio-nft-analysis-panel">
-              <h2 className="studio-nft-analysis-section-title">Mutant Ape sales — 2026</h2>
-              <p className="studio-nft-analysis-muted">
-                Sale events on OpenSea (Ethereum) between 1 Jan 2026 and 31 Dec 2026 UTC, split by{' '}
-                <code>Fur</code> trait <code>M1</code> vs <code>M2</code>. Off-platform sales are not
-                included.
-              </p>
-              {mutant2026.kind === 'loading' ? (
-                <p className="studio-nft-analysis-status">Loading 2026 sale events from OpenSea…</p>
-              ) : null}
-              {mutant2026.kind === 'error' ? (
-                <p className="studio-nft-analysis-donut-error">{mutant2026.message}</p>
-              ) : null}
-              {mutant2026.kind === 'ok' ? (
-                <>
-                  <MaycSalesDonutChart m1={mutant2026.data.m1} m2={mutant2026.data.m2} />
-                  <dl className="studio-nft-donut-meta">
-                    <div>
-                      <dt>Total sale events (time window)</dt>
-                      <dd>{mutant2026.data.totalSales.toLocaleString()}</dd>
-                    </div>
-                    <div>
-                      <dt>Other Fur / not M1·M2</dt>
-                      <dd>{mutant2026.data.otherFur.toLocaleString()}</dd>
-                    </div>
-                    <div>
-                      <dt>No Fur trait on event</dt>
-                      <dd>{mutant2026.data.unclassified.toLocaleString()}</dd>
-                    </div>
-                  </dl>
-                  {mutant2026.data.truncated ? (
-                    <p className="studio-nft-analysis-note studio-nft-donut-truncated">
-                      Pagination cap reached ({mutant2026.data.pages} pages); more sales may exist — counts
-                      can be incomplete.
-                    </p>
-                  ) : null}
-                </>
-              ) : null}
-            </section>
-          ) : null}
-
           {state.maycStats?.total ? (
             <section className="studio-nft-analysis-panel">
               <h2 className="studio-nft-analysis-section-title">MAYC (sample stats)</h2>
