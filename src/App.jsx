@@ -425,11 +425,15 @@ export default function App() {
         ) : homeModal === 'yuga' ? (
           <div className="studio-home-yuga-assets">
             <figure className="studio-home-yuga-figure">
-              <img src="/mayc-9419.png" alt="MAYC #9419" />
+              <div className="studio-home-yuga-thumb">
+                <img src="/mayc-9419.png" alt="MAYC #9419" />
+              </div>
               <figcaption className="studio-home-yuga-id">#9419</figcaption>
             </figure>
             <figure className="studio-home-yuga-figure">
-              <img src="/otherdeed-20314.png" alt="Otherdeed #20314" />
+              <div className="studio-home-yuga-thumb">
+                <img src="/otherdeed-20314.png" alt="Otherdeed #20314" />
+              </div>
               <figcaption className="studio-home-yuga-id">#20314</figcaption>
             </figure>
           </div>

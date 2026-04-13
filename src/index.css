@@ -1488,15 +1488,29 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   flex: 1 1 12rem;
   min-width: 0;
   max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
 }
 
-.studio-home-yuga-figure img {
-  display: block;
+.studio-home-yuga-thumb {
   width: 100%;
-  height: auto;
+  aspect-ratio: 1 / 1;
   border-radius: 10px;
   border: 1px solid var(--jooba-ui-border-muted);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.studio-home-yuga-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .studio-home-yuga-id {
