@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import {
+  fetchMaycMutantSalesSplit2026,
   fetchOpenSeaCollectionStats,
   fetchOpenSeaCollections,
   hasOpenSeaApiKey,
 } from '../lib/openseaClient';
+import MaycSalesDonutChart from './MaycSalesDonutChart.jsx';
 
 function formatEth(n) {
   if (n == null || Number.isNaN(n)) return '—';
@@ -15,6 +17,33 @@ function formatEth(n) {
 
 export default function NftAnalysisPage({ onBack }) {
   const [state, setState] = useState({ kind: 'loading' });
+  const [mutant2026, setMutant2026] = useState(() =>
+    hasOpenSeaApiKey() ? { kind: 'loading' } : { kind: 'skip' },
+  );
+
+  useEffect(() => {
+    if (!hasOpenSeaApiKey()) {
+      setMutant2026({ kind: 'skip' });
+      return undefined;
+    }
+    let cancelled = false;
+    setMutant2026({ kind: 'loading' });
+    fetchMaycMutantSalesSplit2026()
+      .then((data) => {
+        if (!cancelled) setMutant2026({ kind: 'ok', data });
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          setMutant2026({
+            kind: 'error',
+            message: e?.message || 'Failed to load MAYC sales events.',
+          });
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!hasOpenSeaApiKey()) {
@@ -100,6 +129,48 @@ export default function NftAnalysisPage({ onBack }) {
 
       {state.kind === 'ok' ? (
         <div className="studio-nft-analysis-body">
+          {mutant2026.kind !== 'skip' ? (
+            <section className="studio-nft-analysis-panel">
+              <h2 className="studio-nft-analysis-section-title">Mutant Ape sales — 2026</h2>
+              <p className="studio-nft-analysis-muted">
+                Sale events on OpenSea (Ethereum) between 1 Jan 2026 and 31 Dec 2026 UTC, split by{' '}
+                <code>Fur</code> trait <code>M1</code> vs <code>M2</code>. Off-platform sales are not
+                included.
+              </p>
+              {mutant2026.kind === 'loading' ? (
+                <p className="studio-nft-analysis-status">Loading 2026 sale events from OpenSea…</p>
+              ) : null}
+              {mutant2026.kind === 'error' ? (
+                <p className="studio-nft-analysis-donut-error">{mutant2026.message}</p>
+              ) : null}
+              {mutant2026.kind === 'ok' ? (
+                <>
+                  <MaycSalesDonutChart m1={mutant2026.data.m1} m2={mutant2026.data.m2} />
+                  <dl className="studio-nft-donut-meta">
+                    <div>
+                      <dt>Total sale events (time window)</dt>
+                      <dd>{mutant2026.data.totalSales.toLocaleString()}</dd>
+                    </div>
+                    <div>
+                      <dt>Other Fur / not M1·M2</dt>
+                      <dd>{mutant2026.data.otherFur.toLocaleString()}</dd>
+                    </div>
+                    <div>
+                      <dt>No Fur trait on event</dt>
+                      <dd>{mutant2026.data.unclassified.toLocaleString()}</dd>
+                    </div>
+                  </dl>
+                  {mutant2026.data.truncated ? (
+                    <p className="studio-nft-analysis-note studio-nft-donut-truncated">
+                      Pagination cap reached ({mutant2026.data.pages} pages); more sales may exist — counts
+                      can be incomplete.
+                    </p>
+                  ) : null}
+                </>
+              ) : null}
+            </section>
+          ) : null}
+
           {state.maycStats?.total ? (
             <section className="studio-nft-analysis-panel">
               <h2 className="studio-nft-analysis-section-title">MAYC (sample stats)</h2>

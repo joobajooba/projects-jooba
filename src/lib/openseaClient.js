@@ -1,3 +1,5 @@
+import { SALES_2026_AFTER, SALES_2026_BEFORE, classifyMutantFur } from './maycSales2026.js';
+
 const OPENSEA_ORIGIN = 'https://api.opensea.io';
 
 export function hasOpenSeaApiKey() {
@@ -64,4 +66,88 @@ export function fetchOpenSeaCollectionStats(slug, opts = {}) {
   }
   const chain = opts.chain ?? 'ethereum';
   return openSeaGet(`/api/v2/collections/${encodeURIComponent(slug)}/stats`, { chain });
+}
+
+/**
+ * One page of collection events (OpenSea v2).
+ * @param {string} slug
+ * @param {Record<string, string | number | undefined>} query
+ */
+export function fetchOpenSeaCollectionEventsPage(slug, query) {
+  if (!hasOpenSeaApiKey()) {
+    const e = new Error('missing_key');
+    e.code = 'missing_key';
+    throw e;
+  }
+  return openSeaGet(`/api/v2/events/collection/${encodeURIComponent(slug)}`, query);
+}
+
+/**
+ * Paginate MAYC sale events for calendar year 2026 (Ethereum), aggregate M1 vs M2 by Fur trait.
+ * @param {{ maxPages?: number }} [opts]
+ * @returns {Promise<{ m1: number, m2: number, otherFur: number, unclassified: number, totalSales: number, truncated: boolean, pages: number }>}
+ */
+export async function fetchMaycMutantSalesSplit2026(opts = {}) {
+  const maxPages = opts.maxPages ?? 30;
+  const slug = opts.slug ?? 'mutant-ape-yacht-club';
+  const after = opts.after ?? SALES_2026_AFTER;
+  const before = opts.before ?? SALES_2026_BEFORE;
+
+  let m1 = 0;
+  let m2 = 0;
+  let otherFur = 0;
+  let unclassified = 0;
+  let totalSales = 0;
+  let next = undefined;
+  let pages = 0;
+
+  for (let i = 0; i < maxPages; i += 1) {
+    const params = {
+      event_type: 'sale',
+      chain: 'ethereum',
+      after,
+      before,
+      limit: 200,
+    };
+    if (next) params.next = next;
+
+    const data = await fetchOpenSeaCollectionEventsPage(slug, params);
+    pages += 1;
+    const events = Array.isArray(data?.asset_events) ? data.asset_events : [];
+
+    for (const ev of events) {
+      if (ev?.event_type !== 'sale' || !ev.nft) continue;
+      totalSales += 1;
+      const kind = classifyMutantFur(ev.nft);
+      if (kind === 'm1') m1 += 1;
+      else if (kind === 'm2') m2 += 1;
+      else if (kind === 'other') otherFur += 1;
+      else unclassified += 1;
+    }
+
+    const n = data?.next;
+    const cursor = typeof n === 'string' ? n : n && typeof n === 'object' && n.value != null ? String(n.value) : '';
+    next = cursor.length > 0 ? cursor : undefined;
+    if (!next || events.length === 0) {
+      return {
+        m1,
+        m2,
+        otherFur,
+        unclassified,
+        totalSales,
+        truncated: false,
+        pages,
+      };
+    }
+  }
+
+  return {
+    m1,
+    m2,
+    otherFur,
+    unclassified,
+    totalSales,
+    truncated: true,
+    pages,
+  };
 }
