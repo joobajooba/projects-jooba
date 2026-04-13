@@ -440,14 +440,19 @@ export default function App() {
     ) : (
       <div className="studio-page studio-page--other" aria-label="Other pages">
         <div className="studio-other-row">
-          <button
-            type="button"
-            className="studio-other-tile studio-other-tile--action"
-            onClick={() => setOtherSubView('nft-analysis')}
-            aria-label="Open NFT Analysis"
-          >
-            <IconBarChart />
-          </button>
+          <div className="studio-other-tile-wrap">
+            <button
+              type="button"
+              className="studio-other-tile studio-other-tile--action"
+              onClick={() => setOtherSubView('nft-analysis')}
+              aria-label="Open NFT Analysis"
+            >
+              <IconBarChart />
+            </button>
+            <span className="studio-other-tile-popup" aria-hidden="true">
+              NFT Analysis
+            </span>
+          </div>
           <div className="studio-other-tile" />
           <div className="studio-other-tile" />
         </div>
