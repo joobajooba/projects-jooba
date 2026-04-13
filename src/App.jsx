@@ -272,6 +272,9 @@ function StudioLandingContent({
   onOpenHomeModal,
   phase2ImageSrc = '/phase2-elf.png',
   phase2ImageAlt = 'Phase 2, to be confirmed, Bass',
+  phase3ImageSrc = null,
+  phase3ImageAlt = 'Phase 3, to be confirmed, Drums',
+  phase4TbcBox = false,
 }) {
   return (
     <div className="studio-page studio-page--home">
@@ -314,11 +317,28 @@ function StudioLandingContent({
           <PhaseCaptionLines phase={2} name="TBC" instrument="Bass" compact />
         </figure>
         <figure className="studio-phase-card studio-phase-card--compact">
-          <div className="studio-phase-thumb studio-phase-thumb--blank studio-phase-thumb--compact" aria-hidden />
+          <div
+            className={
+              phase3ImageSrc
+                ? 'studio-phase-thumb studio-phase-thumb--compact'
+                : 'studio-phase-thumb studio-phase-thumb--blank studio-phase-thumb--compact'
+            }
+            aria-hidden={!phase3ImageSrc}
+          >
+            {phase3ImageSrc ? (
+              <img className="studio-phase-img" src={phase3ImageSrc} alt={phase3ImageAlt} />
+            ) : null}
+          </div>
           <PhaseCaptionLines phase={3} name="TBC" instrument="Drums" compact />
         </figure>
         <figure className="studio-phase-card studio-phase-card--compact">
-          <div className="studio-phase-thumb studio-phase-thumb--blank studio-phase-thumb--compact" aria-hidden />
+          {phase4TbcBox ? (
+            <div className="studio-phase-thumb studio-phase-thumb--compact studio-phase-thumb--tbc" aria-hidden>
+              <span className="studio-phase-thumb-tbc-label">TBC</span>
+            </div>
+          ) : (
+            <div className="studio-phase-thumb studio-phase-thumb--blank studio-phase-thumb--compact" aria-hidden />
+          )}
           <PhaseCaptionLines phase={4} name="TBC" instrument="Vocals" compact />
         </figure>
       </div>
@@ -416,6 +436,9 @@ export default function App() {
         onOpenHomeModal={setHomeModal}
         phase2ImageSrc="/phase2-j00ba-silhouette.png"
         phase2ImageAlt="Phase 2, elfin silhouette on green, Bass"
+        phase3ImageSrc="/phase3-j00ba-silhouette.png"
+        phase3ImageAlt="Phase 3, silhouette on olive green, Drums"
+        phase4TbcBox
       />
     ) : (
       <div className="studio-page studio-page--other">

@@ -864,6 +864,24 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   border-radius: 12px;
 }
 
+.studio-phase-thumb--tbc {
+  box-sizing: border-box;
+  aspect-ratio: 723 / 1024;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0a0a0a;
+  border: 1px solid var(--jooba-border);
+}
+
+.studio-phase-thumb-tbc-label {
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 3.5vw, 1.65rem);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: rgba(230, 235, 220, 0.45);
+}
+
 .studio-phase-caption {
   margin: 0;
   display: flex;
