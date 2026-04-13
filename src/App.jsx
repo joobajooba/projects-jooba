@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from './lib/supabaseClient';
+import { playClickSound } from './lib/clickSound';
 import WalletTopBarButton from './components/WalletTopBarButton';
 import StudioHomeModal from './components/StudioHomeModal';
 
@@ -353,6 +354,15 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    const onPointerDown = (e) => {
+      if (e.button !== 0) return;
+      playClickSound();
+    };
+    document.addEventListener('pointerdown', onPointerDown, true);
+    return () => document.removeEventListener('pointerdown', onPointerDown, true);
+  }, []);
+
   const togglePreview = () => {
     setPreviewMode((m) => (m === 'desktop' ? 'mobile' : 'desktop'));
   };
@@ -413,10 +423,10 @@ export default function App() {
       />
     ) : (
       <div className="studio-page studio-page--other" aria-label="Other pages">
-        <div className="studio-other-row" role="presentation">
-          <div className="studio-other-tile" aria-hidden="true" />
-          <div className="studio-other-tile" aria-hidden="true" />
-          <div className="studio-other-tile" aria-hidden="true" />
+        <div className="studio-other-row">
+          <div className="studio-other-tile" />
+          <div className="studio-other-tile" />
+          <div className="studio-other-tile" />
         </div>
       </div>
     );
