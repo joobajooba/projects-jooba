@@ -63,19 +63,6 @@ function IconSquare3Stack3d() {
   );
 }
 
-function IconStudioJ00ba() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
-      <circle cx="12" cy="12" r="9" strokeLinecap="round" />
-      <path
-        d="M10.25 8.25v7.5L16.25 12l-6-3.75z"
-        fill="currentColor"
-        stroke="none"
-      />
-    </svg>
-  );
-}
-
 function IconDiscord() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -110,16 +97,6 @@ function Shell({ children, previewMode, onTogglePreview, activeStudioPage, onSel
             aria-current={activeStudioPage === 'home' ? 'page' : undefined}
           >
             <IconHome />
-          </button>
-          <button
-            type="button"
-            className="app-sidebar-nav-btn"
-            onClick={() => onSelectStudioPage('j00ba')}
-            title="Studio J00BA"
-            aria-label="Studio J00BA"
-            aria-current={activeStudioPage === 'j00ba' ? 'page' : undefined}
-          >
-            <IconStudioJ00ba />
           </button>
           <button
             type="button"
@@ -432,17 +409,6 @@ export default function App() {
         phase2ImageAlt="Phase 2, elfin silhouette on olive green, Bass"
         phase3ImageSrc="/phase3-home-silhouette.png"
         phase3ImageAlt="Phase 3, bold silhouette on grey, Drums"
-        phase4TbcBox
-      />
-    ) : studioPage === 'j00ba' ? (
-      <StudioLandingContent
-        heroTitle="Studio J00BA"
-        showInfoPanels={false}
-        onOpenHomeModal={setHomeModal}
-        phase2ImageSrc="/phase2-j00ba-silhouette.png"
-        phase2ImageAlt="Phase 2, elfin silhouette on green, Bass"
-        phase3ImageSrc="/phase3-j00ba-silhouette.png"
-        phase3ImageAlt="Phase 3, silhouette on olive green, Drums"
         phase4TbcBox
       />
     ) : (
