@@ -1513,10 +1513,6 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   object-fit: contain;
 }
 
-.studio-home-yuga-thumb--cover img {
-  object-fit: cover;
-}
-
 .studio-home-yuga-id {
   margin: 0.5rem 0 0;
   font-family: var(--font-display);
