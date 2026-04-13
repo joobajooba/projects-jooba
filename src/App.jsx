@@ -431,7 +431,7 @@ export default function App() {
               <figcaption className="studio-home-yuga-id">#9419</figcaption>
             </figure>
             <figure className="studio-home-yuga-figure">
-              <div className="studio-home-yuga-thumb">
+              <div className="studio-home-yuga-thumb studio-home-yuga-thumb--cover">
                 <img src="/otherdeed-20314.png" alt="Otherdeed #20314" />
               </div>
               <figcaption className="studio-home-yuga-id">#20314</figcaption>
