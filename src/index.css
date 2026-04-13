@@ -1496,8 +1496,10 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
 }
 
 .studio-home-yuga-thumb {
+  box-sizing: border-box;
   width: var(--yuga-thumb-size);
   aspect-ratio: 1 / 1;
+  min-width: 0;
   border-radius: 10px;
   border: 1px solid var(--jooba-ui-border-muted);
   overflow: hidden;
@@ -1507,15 +1509,17 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   background: rgba(0, 0, 0, 0.25);
 }
 
-/* Matches public/otherdeed-20314.png (731×1024); same height as MAYC thumb, narrower width — no side bars */
+/* 731×1024 asset; explicit size avoids flex min-width:auto using the img intrinsic width */
 .studio-home-yuga-thumb--otherdeed {
-  width: auto;
+  width: calc(var(--yuga-thumb-size) * 731 / 1024);
   height: var(--yuga-thumb-size);
-  aspect-ratio: 731 / 1024;
+  aspect-ratio: unset;
 }
 
 .studio-home-yuga-thumb img {
   display: block;
+  min-width: 0;
+  min-height: 0;
   width: 100%;
   height: 100%;
   object-fit: contain;
