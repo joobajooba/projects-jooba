@@ -266,7 +266,13 @@ function StudioHomeInformationBody() {
   );
 }
 
-function StudioLandingContent({ heroTitle, showInfoPanels, onOpenHomeModal }) {
+function StudioLandingContent({
+  heroTitle,
+  showInfoPanels,
+  onOpenHomeModal,
+  phase2ImageSrc = '/phase2-elf.png',
+  phase2ImageAlt = 'Phase 2, to be confirmed, Bass',
+}) {
   return (
     <div className="studio-page studio-page--home">
       <header className="studio-home-hero">
@@ -303,11 +309,7 @@ function StudioLandingContent({ heroTitle, showInfoPanels, onOpenHomeModal }) {
         </figure>
         <figure className="studio-phase-card studio-phase-card--compact">
           <div className="studio-phase-thumb studio-phase-thumb--compact">
-            <img
-              className="studio-phase-img"
-              src="/phase2-elf.png"
-              alt="Phase 2, to be confirmed, Bass"
-            />
+            <img className="studio-phase-img" src={phase2ImageSrc} alt={phase2ImageAlt} />
           </div>
           <PhaseCaptionLines phase={2} name="TBC" instrument="Bass" compact />
         </figure>
@@ -408,7 +410,13 @@ export default function App() {
         onOpenHomeModal={setHomeModal}
       />
     ) : studioPage === 'j00ba' ? (
-      <StudioLandingContent heroTitle="Studio J00BA" showInfoPanels={false} onOpenHomeModal={setHomeModal} />
+      <StudioLandingContent
+        heroTitle="Studio J00BA"
+        showInfoPanels={false}
+        onOpenHomeModal={setHomeModal}
+        phase2ImageSrc="/phase2-j00ba-silhouette.png"
+        phase2ImageAlt="Phase 2, elfin silhouette on green, Bass"
+      />
     ) : (
       <div className="studio-page studio-page--other">
         <h1 className="studio-page-title">Other Pages</h1>
