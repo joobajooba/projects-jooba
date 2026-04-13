@@ -1,27 +1,44 @@
 import { SALES_2026_AFTER, SALES_2026_BEFORE, classifyMutantFur } from './maycSales2026.js';
 
 const OPENSEA_ORIGIN = 'https://api.opensea.io';
+/** Same-origin proxy path (Vite dev server + Vercel /api/opensea/*). OpenSea blocks direct browser CORS. */
+const OPENSEA_PROXY_PREFIX = '/api/opensea/';
+
+function isBrowser() {
+  return typeof window !== 'undefined' && typeof window.location?.origin === 'string';
+}
 
 export function hasOpenSeaApiKey() {
   const k = import.meta.env.VITE_OPENSEA_API_KEY;
   return typeof k === 'string' && k.trim().length > 0;
 }
 
-function headers() {
-  const key = import.meta.env.VITE_OPENSEA_API_KEY?.trim();
-  const h = { Accept: 'application/json' };
-  if (key) h['x-api-key'] = key;
-  return h;
-}
-
-async function openSeaGet(path, searchParams) {
-  const url = new URL(path, `${OPENSEA_ORIGIN}/`);
+function openSeaRequestUrl(path, searchParams) {
+  const clean = path.replace(/^\//, '');
+  const base = isBrowser()
+    ? `${window.location.origin}${OPENSEA_PROXY_PREFIX}`
+    : `${OPENSEA_ORIGIN}/`;
+  const url = isBrowser() ? new URL(clean, base) : new URL(`/${clean}`, base);
   if (searchParams) {
     for (const [k, v] of Object.entries(searchParams)) {
       if (v != null && v !== '') url.searchParams.set(k, String(v));
     }
   }
-  const res = await fetch(url.toString(), { headers: headers() });
+  return url.toString();
+}
+
+function openSeaFetchHeaders() {
+  const h = { Accept: 'application/json' };
+  // API key is added by Vite proxy (dev) or Vercel function (prod), not sent from the browser.
+  if (!isBrowser()) {
+    const key = import.meta.env.VITE_OPENSEA_API_KEY?.trim();
+    if (key) h['x-api-key'] = key;
+  }
+  return h;
+}
+
+async function openSeaGet(path, searchParams) {
+  const res = await fetch(openSeaRequestUrl(path, searchParams), { headers: openSeaFetchHeaders() });
   if (!res.ok) {
     let detail = '';
     try {
