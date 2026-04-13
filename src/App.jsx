@@ -429,8 +429,8 @@ export default function App() {
               <figcaption className="studio-home-yuga-id">#9419</figcaption>
             </figure>
             <figure className="studio-home-yuga-figure">
-              <img src="/otherdeed-20314.png" alt="Otherdeed 20314" />
-              <figcaption className="studio-home-yuga-id">20314</figcaption>
+              <img src="/otherdeed-20314.png" alt="Otherdeed #20314" />
+              <figcaption className="studio-home-yuga-id">#20314</figcaption>
             </figure>
           </div>
         ) : null}
