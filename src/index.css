@@ -617,17 +617,23 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   display: flex;
   flex-direction: column;
   align-items: center;
-  max-width: 48rem;
+  max-width: min(100%, 53rem);
   margin-inline: auto;
   box-sizing: border-box;
 }
 
-.studio-other-box {
+.studio-other-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem 1.25rem;
   width: 100%;
   max-width: min(100%, 53rem);
-  min-height: clamp(12rem, 32vh, 20rem);
   margin-inline: auto;
-  flex: 1 1 auto;
+  align-items: stretch;
+}
+
+.studio-other-tile {
+  aspect-ratio: 1 / 1;
   min-width: 0;
   border: 1px solid var(--jooba-border);
   border-radius: 12px;

@@ -413,7 +413,11 @@ export default function App() {
       />
     ) : (
       <div className="studio-page studio-page--other" aria-label="Other pages">
-        <div className="studio-other-box" aria-hidden="true" />
+        <div className="studio-other-row" role="presentation">
+          <div className="studio-other-tile" aria-hidden="true" />
+          <div className="studio-other-tile" aria-hidden="true" />
+          <div className="studio-other-tile" aria-hidden="true" />
+        </div>
       </div>
     );
 
