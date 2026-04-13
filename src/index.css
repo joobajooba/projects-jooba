@@ -1475,6 +1475,7 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
 }
 
 .studio-home-yuga-assets {
+  --yuga-thumb-size: min(14rem, 42vw);
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
@@ -1485,7 +1486,7 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
 
 .studio-home-yuga-figure {
   margin: 0;
-  flex: 1 1 12rem;
+  flex: 0 0 auto;
   min-width: 0;
   max-width: 100%;
   display: flex;
@@ -1495,7 +1496,7 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
 }
 
 .studio-home-yuga-thumb {
-  width: 100%;
+  width: var(--yuga-thumb-size);
   aspect-ratio: 1 / 1;
   border-radius: 10px;
   border: 1px solid var(--jooba-ui-border-muted);
@@ -1504,6 +1505,13 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   align-items: center;
   justify-content: center;
   background: rgba(0, 0, 0, 0.25);
+}
+
+/* Matches public/otherdeed-20314.png (731×1024); same height as MAYC thumb, narrower width — no side bars */
+.studio-home-yuga-thumb--otherdeed {
+  width: auto;
+  height: var(--yuga-thumb-size);
+  aspect-ratio: 731 / 1024;
 }
 
 .studio-home-yuga-thumb img {
