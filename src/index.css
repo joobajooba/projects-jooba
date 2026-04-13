@@ -908,7 +908,7 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   font-family: var(--app-font);
   color: var(--jooba-text-secondary);
   letter-spacing: 0.03em;
-  text-transform: lowercase;
+  text-transform: none;
 }
 
 .app-content {
@@ -1468,6 +1468,41 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
 
 .studio-home-modal-dialog--team {
   max-width: min(44rem, calc(100vw - 2rem));
+}
+
+.studio-home-modal-dialog--yuga {
+  max-width: min(28rem, calc(100vw - 2rem));
+}
+
+.studio-home-yuga-assets {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  align-items: center;
+}
+
+.studio-home-yuga-figure {
+  margin: 0;
+  width: 100%;
+  max-width: 20rem;
+  text-align: center;
+}
+
+.studio-home-yuga-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  border: 1px solid var(--jooba-ui-border-muted);
+}
+
+.studio-home-yuga-id {
+  margin: 0.5rem 0 0;
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--jooba-gold-bright);
 }
 
 .studio-home-modal-head {

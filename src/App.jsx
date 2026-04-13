@@ -348,7 +348,7 @@ export default function App() {
         <div className="studio-phase-row studio-phase-row--horizontal">
           <figure className="studio-phase-card studio-phase-card--compact">
             <div className="studio-phase-thumb studio-phase-thumb--compact">
-              <img className="studio-phase-img" src="/phase1-bops.png" alt="Phase 1, Bops, guitar" />
+              <img className="studio-phase-img" src="/phase1-bops.png" alt="Phase 1, Bops, Guitar" />
             </div>
             <PhaseCaptionLines phase={1} name="Bops" instrument="Guitar" compact />
           </figure>
@@ -357,10 +357,10 @@ export default function App() {
               <img
                 className="studio-phase-img"
                 src="/phase2-elf.png"
-                alt="Phase 2, to be confirmed, guitar"
+                alt="Phase 2, to be confirmed, Bass"
               />
             </div>
-            <PhaseCaptionLines phase={2} name="TBC" instrument="Guitar" compact />
+            <PhaseCaptionLines phase={2} name="TBC" instrument="Bass" compact />
           </figure>
           <figure className="studio-phase-card studio-phase-card--compact">
             <div className="studio-phase-thumb studio-phase-thumb--blank studio-phase-thumb--compact" aria-hidden />
@@ -410,16 +410,29 @@ export default function App() {
         open={homeModal != null}
         title={homeModalTitle}
         onClose={() => setHomeModal(null)}
-        dialogClassName={homeModal === 'team' ? 'studio-home-modal-dialog--team' : undefined}
+        dialogClassName={
+          homeModal === 'team'
+            ? 'studio-home-modal-dialog--team'
+            : homeModal === 'yuga'
+              ? 'studio-home-modal-dialog--yuga'
+              : undefined
+        }
       >
         {homeModal === 'information' ? (
           <StudioHomeInformationBody />
         ) : homeModal === 'team' ? (
           <StudioHomeTeamBody />
         ) : homeModal === 'yuga' ? (
-          <p className="studio-home-modal-lead">
-            How we work with Yuga Labs IP and on-chain assets — details to be announced.
-          </p>
+          <div className="studio-home-yuga-assets">
+            <figure className="studio-home-yuga-figure">
+              <img src="/mayc-9419.png" alt="MAYC #9419" />
+              <figcaption className="studio-home-yuga-id">#9419</figcaption>
+            </figure>
+            <figure className="studio-home-yuga-figure">
+              <img src="/otherdeed-20314.png" alt="Otherdeed 20314" />
+              <figcaption className="studio-home-yuga-id">20314</figcaption>
+            </figure>
+          </div>
         ) : null}
       </StudioHomeModal>
     </>
