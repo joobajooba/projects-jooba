@@ -3,7 +3,6 @@ import { supabase } from './lib/supabaseClient';
 import { playClickSound } from './lib/clickSound';
 import WalletTopBarButton from './components/WalletTopBarButton';
 import StudioHomeModal from './components/StudioHomeModal';
-import NftAnalysisPage from './components/NftAnalysisPage';
 
 function IconMonitor() {
   return (
@@ -50,14 +49,6 @@ function PhaseCaptionLines({ phase, name, instrument, compact }) {
       {row('Name', name)}
       {row('Instrument', instrument)}
     </figcaption>
-  );
-}
-
-function IconBarChart() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" aria-hidden>
-      <path d="M6 20V10M12 20V4M18 20v-8" />
-    </svg>
   );
 }
 
@@ -338,14 +329,9 @@ export default function App() {
   const [previewMode, setPreviewMode] = useState('desktop');
   const [studioPage, setStudioPage] = useState('home');
   const [homeModal, setHomeModal] = useState(null);
-  const [otherSubView, setOtherSubView] = useState('tiles');
 
   useEffect(() => {
     if (studioPage !== 'home') setHomeModal(null);
-  }, [studioPage]);
-
-  useEffect(() => {
-    if (studioPage !== 'other') setOtherSubView('tiles');
   }, [studioPage]);
 
   useEffect(() => {
@@ -435,24 +421,10 @@ export default function App() {
         phase3ImageAlt="Phase 3, bold silhouette on grey, Drums"
         phase4TbcBox
       />
-    ) : otherSubView === 'nft-analysis' ? (
-      <NftAnalysisPage onBack={() => setOtherSubView('tiles')} />
     ) : (
       <div className="studio-page studio-page--other" aria-label="Other pages">
         <div className="studio-other-row">
-          <div className="studio-other-tile-wrap">
-            <button
-              type="button"
-              className="studio-other-tile studio-other-tile--action"
-              onClick={() => setOtherSubView('nft-analysis')}
-              aria-label="Open NFT Analysis"
-            >
-              <IconBarChart />
-            </button>
-            <span className="studio-other-tile-popup" aria-hidden="true">
-              NFT Analysis
-            </span>
-          </div>
+          <div className="studio-other-tile" />
           <div className="studio-other-tile" />
           <div className="studio-other-tile" />
         </div>
