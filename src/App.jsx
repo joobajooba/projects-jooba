@@ -352,6 +352,81 @@ function StudioLandingContent({
   );
 }
 
+function formatEth(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n <= 0) return '0 ETH';
+  return `${n.toFixed(3)} ETH`;
+}
+
+function StudioAnalysisPage() {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [payload, setPayload] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const response = await fetch('/api/opensea-sales?limit=20');
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data?.detail || data?.error || 'Unable to fetch sales data');
+        }
+        if (!cancelled) setPayload(data);
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Unable to fetch sales data');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return (
+    <div className="studio-page studio-nft-analysis" aria-label="Analysis page">
+      <header className="studio-nft-analysis-head">
+        <h1 className="studio-nft-analysis-title">Ape Sales Analysis</h1>
+      </header>
+
+      {loading ? (
+        <p className="studio-nft-analysis-status">Loading OpenSea sales...</p>
+      ) : error ? (
+        <div className="studio-nft-analysis-panel studio-nft-analysis-panel--error">
+          <p className="studio-nft-analysis-lead">Could not load OpenSea sales data.</p>
+          <p>{error}</p>
+        </div>
+      ) : (
+        <div className="studio-nft-analysis-body">
+          {(payload?.collections || []).map((collection) => (
+            <section key={collection.key} className="studio-nft-analysis-panel">
+              <h2 className="studio-nft-analysis-section-title">{collection.label}</h2>
+              <p className="studio-nft-analysis-muted">
+                Last {collection.salesCount} sales | Total volume: {formatEth(collection.totalVolumeEth)}
+              </p>
+              <ul className="studio-nft-analysis-list">
+                {(collection.sales || []).slice(0, 8).map((sale) => (
+                  <li key={sale.eventId || `${collection.key}-${sale.tokenId}-${sale.timestamp}`}>
+                    <span className="studio-nft-analysis-list-name">
+                      {sale.name || `Token #${sale.tokenId || 'N/A'}`}
+                    </span>
+                    <strong>{formatEth(sale.priceEth)}</strong>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function App() {
   const [status, setStatus] = useState('checking');
   const [previewMode, setPreviewMode] = useState('desktop');
@@ -470,7 +545,7 @@ export default function App() {
       </div>
     );
   } else if (studioPage === 'other-analysis') {
-    studioMain = <div className="studio-page studio-page--blank" aria-label="Analysis page" />;
+    studioMain = <StudioAnalysisPage />;
   } else {
     studioMain = (
       <div className="studio-page studio-page--studio" aria-label="Studio page">
