@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useDisconnect } from 'wagmi';
+import { isPageSoundsMuted, setPageSoundsMuted } from '../lib/clickSound';
 
 function formatAddress(addr) {
   if (!addr) return '';
@@ -43,6 +44,8 @@ export default function WalletAccountMenu({
   const { disconnect } = useDisconnect();
   const menuRef = useRef(null);
   const [pos, setPos] = useState({ top: 0, right: 0 });
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [muteSounds, setMuteSounds] = useState(() => isPageSoundsMuted());
 
   const updatePosition = useCallback(() => {
     const el = anchorRef?.current;
@@ -72,11 +75,16 @@ export default function WalletAccountMenu({
   useEffect(() => {
     if (!open) return;
     const onKey = (e) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key !== 'Escape') return;
+      if (settingsOpen) {
+        setSettingsOpen(false);
+        return;
+      }
+      onClose();
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [open, onClose]);
+  }, [open, onClose, settingsOpen]);
 
   useEffect(() => {
     if (!open) return;
@@ -93,6 +101,11 @@ export default function WalletAccountMenu({
     };
   }, [open, onClose, anchorRef]);
 
+  useEffect(() => {
+    if (open) return;
+    setSettingsOpen(false);
+  }, [open]);
+
   if (!open || typeof document === 'undefined') return null;
 
   const handleDisconnect = () => {
@@ -101,7 +114,13 @@ export default function WalletAccountMenu({
   };
 
   const handleSettings = () => {
-    onClose();
+    setSettingsOpen(true);
+  };
+
+  const handleMuteSoundsChange = (e) => {
+    const nextMuted = e.target.checked;
+    setMuteSounds(nextMuted);
+    setPageSoundsMuted(nextMuted);
   };
 
   return createPortal(
@@ -165,7 +184,7 @@ export default function WalletAccountMenu({
               </div>
               <div className="wallet-menu-balance-row">
                 <img
-                  src="/apechain-logo.png"
+                  src="/apechain-logo-mark.png"
                   alt=""
                   width={36}
                   height={36}
@@ -199,6 +218,38 @@ export default function WalletAccountMenu({
           </>
         )}
       </div>
+      {settingsOpen ? (
+        <div className="wallet-settings-modal-root" role="dialog" aria-modal="true" aria-label="Settings">
+          <button
+            type="button"
+            className="wallet-settings-modal-backdrop"
+            aria-label="Close settings"
+            onClick={() => setSettingsOpen(false)}
+          />
+          <div className="wallet-settings-modal-dialog">
+            <div className="wallet-settings-modal-head">
+              <h3 className="wallet-settings-modal-title">Settings</h3>
+              <button
+                type="button"
+                className="wallet-settings-modal-close"
+                aria-label="Close settings"
+                onClick={() => setSettingsOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+            <label className="wallet-settings-modal-checkbox-row">
+              <input
+                type="checkbox"
+                className="wallet-settings-modal-checkbox"
+                checked={muteSounds}
+                onChange={handleMuteSoundsChange}
+              />
+              <span>Mute page sounds</span>
+            </label>
+          </div>
+        </div>
+      ) : null}
     </>,
     document.body
   );

@@ -168,7 +168,7 @@ function Shell({ children, previewMode, onTogglePreview, activeStudioPage, onSel
               rel="noopener noreferrer"
               aria-label="Apechain"
             >
-              <img src="/apechain-logo.png" alt="" width={120} height={40} decoding="async" />
+              <img src="/apechain-logo-mark.png" alt="" width={40} height={40} decoding="async" />
             </a>
           </footer>
         </div>

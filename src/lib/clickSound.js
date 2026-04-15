@@ -1,4 +1,5 @@
 let audioCtx = null;
+const STORAGE_KEY = 'jooba:sounds-muted';
 
 function getCtx() {
   if (typeof window === 'undefined') return null;
@@ -8,9 +9,33 @@ function getCtx() {
   return audioCtx;
 }
 
+function readStoredMute() {
+  if (typeof window === 'undefined') return false;
+  try {
+    return window.localStorage.getItem(STORAGE_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+let pageSoundsMuted = readStoredMute();
+
+export function isPageSoundsMuted() {
+  return pageSoundsMuted;
+}
+
+export function setPageSoundsMuted(nextMuted) {
+  pageSoundsMuted = Boolean(nextMuted);
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(STORAGE_KEY, pageSoundsMuted ? '1' : '0');
+  } catch {}
+}
+
 /** Short mechanical-style tick; skipped when user prefers reduced motion. */
 export function playClickSound() {
   if (typeof window === 'undefined') return;
+  if (pageSoundsMuted) return;
   if (window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) return;
 
   const ctx = getCtx();
