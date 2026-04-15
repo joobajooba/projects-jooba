@@ -358,9 +358,20 @@ function formatEth(value) {
   return `${n.toFixed(3)} ETH`;
 }
 
+function toTimestampMs(timestamp) {
+  if (timestamp == null || timestamp === '') return NaN;
+  if (typeof timestamp === 'number') return timestamp < 1e12 ? timestamp * 1000 : timestamp;
+  const maybeNumber = Number(timestamp);
+  if (Number.isFinite(maybeNumber) && String(timestamp).trim() !== '') {
+    return maybeNumber < 1e12 ? maybeNumber * 1000 : maybeNumber;
+  }
+  return new Date(timestamp).getTime();
+}
+
 function formatSaleDate(timestamp) {
-  if (!timestamp) return 'N/A';
-  const d = new Date(timestamp);
+  const ts = toTimestampMs(timestamp);
+  if (!Number.isFinite(ts)) return 'N/A';
+  const d = new Date(ts);
   if (Number.isNaN(d.getTime())) return 'N/A';
   const year = d.getUTCFullYear();
   const month = String(d.getUTCMonth() + 1).padStart(2, '0');
@@ -368,16 +379,9 @@ function formatSaleDate(timestamp) {
   return `${year}-${month}-${day}`;
 }
 
-function getMonthKey(timestamp) {
-  if (!timestamp) return '';
-  const maybeNumber = Number(timestamp);
-  const normalized =
-    Number.isFinite(maybeNumber) && String(timestamp).trim() !== ''
-      ? maybeNumber < 1e12
-        ? maybeNumber * 1000
-        : maybeNumber
-      : timestamp;
-  const d = new Date(normalized);
+function getMonthKeyFromMs(timestampMs) {
+  if (!Number.isFinite(timestampMs)) return '';
+  const d = new Date(timestampMs);
   if (Number.isNaN(d.getTime())) return '';
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
 }
@@ -436,21 +440,27 @@ function StudioAnalysisPage() {
         ...sale,
         collectionKey: collection.key,
         collectionLabel: collection.label,
+        timestampMs: toTimestampMs(sale.timestamp),
       }))
     )
     .sort((a, b) => {
-      const ta = a.timestamp ? new Date(a.timestamp).getTime() : 0;
-      const tb = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+      const ta = Number.isFinite(a.timestampMs) ? a.timestampMs : 0;
+      const tb = Number.isFinite(b.timestampMs) ? b.timestampMs : 0;
       return tb - ta;
     });
   const monthOptions = buildMonthOptions(2026);
   const startMonthOptions = monthOptions.filter((month) => month <= monthEnd);
   const endMonthOptions = monthOptions.filter((month) => month >= monthStart);
+  const [startYear, startMonthNumber] = monthStart.split('-').map(Number);
+  const [endYear, endMonthNumber] = monthEnd.split('-').map(Number);
+  const rangeStartMs = Date.UTC(startYear, (startMonthNumber || 1) - 1, 1, 0, 0, 0, 0);
+  const rangeEndMs = Date.UTC(endYear, endMonthNumber || 1, 0, 23, 59, 59, 999);
 
   const timeFilteredSales =
     mergedSales.filter((sale) => {
-      const monthKey = getMonthKey(sale.timestamp);
-      if (!monthKey) return false;
+      if (!Number.isFinite(sale.timestampMs)) return false;
+      if (sale.timestampMs < rangeStartMs || sale.timestampMs > rangeEndMs) return false;
+      const monthKey = getMonthKeyFromMs(sale.timestampMs);
       return monthKey >= monthStart && monthKey <= monthEnd;
     });
   const filteredVolume = timeFilteredSales.reduce((sum, sale) => sum + Number(sale.priceEth || 0), 0);
