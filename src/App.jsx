@@ -614,19 +614,16 @@ function StudioAnalysisPage() {
             <ul className="studio-nft-analysis-bar-list">
               {selectedTraitBars.map((item) => (
                 <li key={item.label} className="studio-nft-analysis-bar-row">
-                  <div className="studio-nft-analysis-bar-row-meta">
-                    <span className="studio-nft-analysis-bar-row-label">{item.label}</span>
-                    <strong>{item.count}</strong>
-                  </div>
                   <div className="studio-nft-analysis-bar-track">
                     <span
                       className="studio-nft-analysis-bar-fill"
                       style={{
-                        background: item.color,
-                        width: `${maxTraitCount > 0 ? (item.count / maxTraitCount) * 100 : 0}%`,
+                        height: `${maxTraitCount > 0 ? (item.count / maxTraitCount) * 100 : 0}%`,
                       }}
                     />
                   </div>
+                  <strong className="studio-nft-analysis-bar-row-count">{item.count}</strong>
+                  <span className="studio-nft-analysis-bar-row-label">{item.label}</span>
                 </li>
               ))}
             </ul>
