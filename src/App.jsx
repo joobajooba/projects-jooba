@@ -358,15 +358,11 @@ function formatEth(value) {
   return `${n.toFixed(3)} ETH`;
 }
 
-function getPeriodKey(timestamp, mode) {
+function getMonthKey(timestamp) {
   if (!timestamp) return '';
   const d = new Date(timestamp);
   if (Number.isNaN(d.getTime())) return '';
-  const year = d.getUTCFullYear();
-  const month = d.getUTCMonth() + 1;
-  if (mode === 'year') return String(year);
-  if (mode === 'quarter') return `${year}-Q${Math.floor((month - 1) / 3) + 1}`;
-  return `${year}-${String(month).padStart(2, '0')}`;
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
 }
 
 function getDonutColor(index) {
@@ -374,25 +370,9 @@ function getDonutColor(index) {
   return palette[index % palette.length];
 }
 
-function buildTimeOptions(mode) {
-  const startYear = 2021;
-  const endYear = new Date().getUTCFullYear();
-  const years = [];
-  for (let y = startYear; y <= endYear; y += 1) years.push(y);
-
-  if (mode === 'year') return years.map((y) => String(y));
-  if (mode === 'quarter') {
-    const out = [];
-    for (const y of years) {
-      for (let q = 1; q <= 4; q += 1) out.push(`${y}-Q${q}`);
-    }
-    return out;
-  }
-
+function buildMonthOptions(year = 2026) {
   const out = [];
-  for (const y of years) {
-    for (let m = 1; m <= 12; m += 1) out.push(`${y}-${String(m).padStart(2, '0')}`);
-  }
+  for (let m = 1; m <= 12; m += 1) out.push(`${year}-${String(m).padStart(2, '0')}`);
   return out;
 }
 
@@ -402,8 +382,8 @@ function StudioAnalysisPage() {
   const [payload, setPayload] = useState(null);
   const [filterOpen, setFilterOpen] = useState(false);
   const [collectionFilter, setCollectionFilter] = useState('bayc');
-  const [timeFilterType, setTimeFilterType] = useState('year');
-  const [timeFilterValue, setTimeFilterValue] = useState('all');
+  const [monthStart, setMonthStart] = useState('2026-01');
+  const [monthEnd, setMonthEnd] = useState('2026-12');
   const [traitFilterType, setTraitFilterType] = useState('Background');
 
   useEffect(() => {
@@ -446,16 +426,15 @@ function StudioAnalysisPage() {
       const tb = b.timestamp ? new Date(b.timestamp).getTime() : 0;
       return tb - ta;
     });
-  const timeOptions = buildTimeOptions(timeFilterType);
-
-  useEffect(() => {
-    setTimeFilterValue('all');
-  }, [timeFilterType, collectionFilter]);
+  const monthOptions = buildMonthOptions(2026);
 
   const timeFilteredSales =
-    timeFilterValue === 'all'
-      ? mergedSales
-      : mergedSales.filter((sale) => getPeriodKey(sale.timestamp, timeFilterType) === timeFilterValue);
+    mergedSales.filter((sale) => {
+      const monthKey = getMonthKey(sale.timestamp);
+      if (!monthKey) return false;
+      const [from, to] = monthStart <= monthEnd ? [monthStart, monthEnd] : [monthEnd, monthStart];
+      return monthKey >= from && monthKey <= to;
+    });
   const filteredVolume = timeFilteredSales.reduce((sum, sale) => sum + Number(sale.priceEth || 0), 0);
 
   const traitTypeOptions = Array.from(
@@ -515,25 +494,28 @@ function StudioAnalysisPage() {
       </div>
       <h2 className="studio-nft-analysis-filter-title studio-nft-analysis-filter-title--spaced">Time Filter</h2>
       <div className="studio-nft-analysis-filter-options">
+        <label className="studio-nft-analysis-filter-label">Start Month</label>
         <select
           className="studio-nft-analysis-filter-select"
-          value={timeFilterType}
-          onChange={(e) => setTimeFilterType(e.target.value)}
-          aria-label="Time filter type"
+          value={monthStart}
+          onChange={(e) => setMonthStart(e.target.value)}
+          aria-label="Start month"
         >
-          <option value="year">Year</option>
-          <option value="quarter">Quarter</option>
-          <option value="month">Month</option>
+          {monthOptions.map((option) => (
+            <option key={`start-${option}`} value={option}>
+              {option}
+            </option>
+          ))}
         </select>
+        <label className="studio-nft-analysis-filter-label">End Month</label>
         <select
           className="studio-nft-analysis-filter-select"
-          value={timeFilterValue}
-          onChange={(e) => setTimeFilterValue(e.target.value)}
-          aria-label="Time period"
+          value={monthEnd}
+          onChange={(e) => setMonthEnd(e.target.value)}
+          aria-label="End month"
         >
-          <option value="all">All</option>
-          {timeOptions.map((option) => (
-            <option key={option} value={option}>
+          {monthOptions.map((option) => (
+            <option key={`end-${option}`} value={option}>
               {option}
             </option>
           ))}

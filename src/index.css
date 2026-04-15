@@ -1020,6 +1020,14 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   gap: 0.45rem;
 }
 
+.studio-nft-analysis-filter-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--jooba-text-tertiary);
+}
+
 .studio-nft-analysis-filter-title--spaced {
   margin-top: 1rem;
 }

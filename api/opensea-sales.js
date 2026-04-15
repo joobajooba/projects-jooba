@@ -5,7 +5,8 @@ const COLLECTIONS = [
 
 const DEFAULT_LIMIT = 200;
 const MAX_LIMIT = 50;
-const MAX_PAGES = 12;
+const MAX_PAGES = 80;
+const TARGET_YEAR = 2026;
 
 function toNumber(value) {
   const n = Number(value);
@@ -72,6 +73,7 @@ async function fetchCollectionSales(slug, apiKey, limit) {
   const rawEvents = [];
   let next = null;
   let pages = 0;
+  let seenTargetYear = false;
 
   while (rawEvents.length < limit && pages < MAX_PAGES) {
     const url = new URL(`https://api.opensea.io/api/v2/events/collection/${slug}`);
@@ -94,12 +96,36 @@ async function fetchCollectionSales(slug, apiKey, limit) {
     const payload = JSON.parse(text);
     const pageEvents = Array.isArray(payload?.asset_events) ? payload.asset_events : [];
     rawEvents.push(...pageEvents);
+    for (const event of pageEvents) {
+      const ts =
+        event?.event_timestamp ||
+        event?.sale?.event_timestamp ||
+        event?.created_date ||
+        event?.sale?.created_date;
+      if (!ts) continue;
+      const year = new Date(ts).getUTCFullYear();
+      if (year === TARGET_YEAR) seenTargetYear = true;
+    }
     next = payload?.next || null;
     pages += 1;
 
+    const oldestEvent = pageEvents[pageEvents.length - 1];
+    const oldestTs =
+      oldestEvent?.event_timestamp ||
+      oldestEvent?.sale?.event_timestamp ||
+      oldestEvent?.created_date ||
+      oldestEvent?.sale?.created_date;
+    const oldestYear = oldestTs ? new Date(oldestTs).getUTCFullYear() : null;
+
+    if (seenTargetYear && oldestYear != null && oldestYear < TARGET_YEAR) break;
     if (!next || pageEvents.length === 0) break;
   }
-  const sales = rawEvents.map(normalizeEvent);
+  const sales = rawEvents
+    .map(normalizeEvent)
+    .filter((sale) => {
+      if (!sale.timestamp) return false;
+      return new Date(sale.timestamp).getUTCFullYear() === TARGET_YEAR;
+    });
   const totalVolumeEth = sales.reduce((sum, sale) => sum + toNumber(sale.priceEth), 0);
 
   return {
