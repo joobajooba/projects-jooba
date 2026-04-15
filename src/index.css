@@ -870,14 +870,8 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
 }
 
 .studio-nft-analysis-shell {
-  display: block;
-}
-
-.studio-nft-analysis-shell--with-filter {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(13rem, 15rem);
-  gap: 0.9rem;
-  align-items: start;
+  position: relative;
+  overflow: visible;
 }
 
 .studio-nft-analysis-table-wrap {
@@ -1001,7 +995,13 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
 }
 
 .studio-nft-analysis-filter-col {
-  align-self: start;
+  position: absolute;
+  top: 0;
+  left: calc(100% + 0.9rem);
+  width: min(15rem, 30vw);
+  min-width: 13rem;
+  max-width: 15rem;
+  z-index: 7;
 }
 
 .studio-nft-analysis-filter-title {
@@ -1066,8 +1066,12 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
     grid-template-columns: 1fr;
   }
 
-  .studio-nft-analysis-shell--with-filter {
-    grid-template-columns: 1fr;
+  .studio-nft-analysis-filter-col {
+    position: static;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    margin-top: 0.75rem;
   }
 
   .studio-nft-analysis-donut {

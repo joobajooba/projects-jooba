@@ -566,13 +566,9 @@ function StudioAnalysisPage() {
           <p className="studio-nft-analysis-lead">Could not load OpenSea sales data.</p>
           <p>{error}</p>
         </div>
-      ) : timeFilteredSales.length === 0 ? (
-        <div className="studio-nft-analysis-panel">
-          <p className="studio-nft-analysis-lead">No sales found for the selected filter.</p>
-        </div>
       ) : (
         <div className="studio-nft-analysis-body">
-          <div className={`studio-nft-analysis-shell${filterOpen ? ' studio-nft-analysis-shell--with-filter' : ''}`}>
+          <div className="studio-nft-analysis-shell">
             <section className="studio-nft-analysis-panel studio-nft-analysis-layout">
             <div className="studio-nft-analysis-chart-col">
               <div className="studio-nft-analysis-chart-head">
@@ -632,13 +628,19 @@ function StudioAnalysisPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {timeFilteredSales.map((sale) => (
-                      <tr key={sale.eventId || `${sale.collectionKey}-${sale.tokenId}-${sale.timestamp}`}>
-                        <td>{sale.collectionKey.toUpperCase()}</td>
-                        <td>{sale.name || `Token #${sale.tokenId || 'N/A'}`}</td>
-                        <td>{formatEth(sale.priceEth)}</td>
+                    {timeFilteredSales.length ? (
+                      timeFilteredSales.map((sale) => (
+                        <tr key={sale.eventId || `${sale.collectionKey}-${sale.tokenId}-${sale.timestamp}`}>
+                          <td>{sale.collectionKey.toUpperCase()}</td>
+                          <td>{sale.name || `Token #${sale.tokenId || 'N/A'}`}</td>
+                          <td>{formatEth(sale.priceEth)}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={3}>No sales found for the selected filter.</td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>
