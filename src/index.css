@@ -809,6 +809,38 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   gap: 0.75rem;
 }
 
+.studio-nft-analysis-view-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.studio-nft-analysis-view-btn {
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--jooba-border);
+  border-radius: 8px;
+  background: rgba(172, 198, 142, 0.08);
+  color: var(--jooba-text-secondary);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.studio-nft-analysis-view-btn:hover {
+  border-color: var(--jooba-border-hover);
+  color: var(--jooba-gold-bright);
+  background: rgba(172, 198, 142, 0.14);
+}
+
+.studio-nft-analysis-view-btn--active {
+  border-color: var(--jooba-border-hover);
+  color: var(--jooba-gold-bright);
+  background: rgba(172, 198, 142, 0.18);
+}
+
 .studio-nft-analysis-filter-toggle {
   padding: 0.4rem 0.55rem;
   border: 1px solid var(--jooba-border);

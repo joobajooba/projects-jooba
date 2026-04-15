@@ -376,7 +376,7 @@ function formatSaleDate(timestamp) {
   const year = d.getUTCFullYear();
   const month = String(d.getUTCMonth() + 1).padStart(2, '0');
   const day = String(d.getUTCDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  return `${day}/${month}/${year}`;
 }
 
 function getDonutColor(index) {
@@ -393,12 +393,8 @@ function buildMonthOptions(year = 2026) {
 function StudioAnalysisPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [payload, setPayload] = useState(null);
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [collectionFilter, setCollectionFilter] = useState('bayc');
-  const [monthStart, setMonthStart] = useState('2026-01');
-  const [monthEnd, setMonthEnd] = useState('2026-12');
-  const [traitFilterType, setTraitFilterType] = useState('Background');
+  const [sales, setSales] = useState([]);
+  const [viewMode, setViewMode] = useState('dashboard');
 
   useEffect(() => {
     let cancelled = false;
@@ -406,12 +402,12 @@ function StudioAnalysisPage() {
       setLoading(true);
       setError('');
       try {
-        const response = await fetch('/api/opensea-sales?limit=4000');
+        const response = await fetch('/api/opensea-mayc-sales');
         const data = await response.json();
         if (!response.ok) {
           throw new Error(data?.detail || data?.error || 'Unable to fetch sales data');
         }
-        if (!cancelled) setPayload(data);
+        if (!cancelled) setSales(Array.isArray(data?.sales) ? data.sales : []);
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : 'Unable to fetch sales data');
       } finally {
@@ -425,64 +421,32 @@ function StudioAnalysisPage() {
     };
   }, []);
 
-  const collections = payload?.collections || [];
-  const filteredCollections = collections.filter((c) => c.key === collectionFilter);
-  const mergedSales = filteredCollections
-    .flatMap((collection) =>
-      (collection.sales || []).map((sale) => ({
-        ...sale,
-        collectionKey: collection.key,
-        collectionLabel: collection.label,
-        timestampMs: toTimestampMs(sale.timestamp),
-        saleDate: formatSaleDate(sale.timestamp),
-      }))
-    )
+  const normalizedSales = sales
+    .map((sale) => ({
+      ...sale,
+      timestampMs: toTimestampMs(sale.timestamp),
+      saleDate: formatSaleDate(sale.timestamp),
+      apeLabel: sale.apeId ? `#${sale.apeId}` : sale.name || 'N/A',
+      collection: sale.collection || 'Mutant Ape Yacht Club',
+      fur: sale.fur || 'Unknown',
+    }))
+    .filter((sale) => Number.isFinite(sale.timestampMs))
     .sort((a, b) => {
       const ta = Number.isFinite(a.timestampMs) ? a.timestampMs : 0;
       const tb = Number.isFinite(b.timestampMs) ? b.timestampMs : 0;
       return tb - ta;
     });
-  const monthOptions = buildMonthOptions(2026);
-  const startMonthOptions = monthOptions.filter((month) => month <= monthEnd);
-  const endMonthOptions = monthOptions.filter((month) => month >= monthStart);
-  const [startYear, startMonthNumber] = monthStart.split('-').map(Number);
-  const [endYear, endMonthNumber] = monthEnd.split('-').map(Number);
-  const rangeStartMs = Date.UTC(startYear, (startMonthNumber || 1) - 1, 1, 0, 0, 0, 0);
-  const rangeEndMs = Date.UTC(endYear, endMonthNumber || 1, 0, 23, 59, 59, 999);
-
-  const timeFilteredSales =
-    mergedSales.filter((sale) => {
-      if (!Number.isFinite(sale.timestampMs) || sale.saleDate === 'N/A') return false;
-      if (sale.timestampMs < rangeStartMs || sale.timestampMs > rangeEndMs) return false;
-      const monthKey = sale.saleDate.slice(0, 7);
-      return monthKey >= monthStart && monthKey <= monthEnd;
-    });
-  const filteredVolume = timeFilteredSales.reduce((sum, sale) => sum + Number(sale.priceEth || 0), 0);
-
-  const traitTypeOptions = Array.from(
-    new Set(
-      timeFilteredSales.flatMap((sale) => (sale.traits || []).map((trait) => trait.traitType)).filter(Boolean)
-    )
-  ).sort((a, b) => a.localeCompare(b));
-
-  useEffect(() => {
-    if (!traitTypeOptions.length) return;
-    if (!traitTypeOptions.includes(traitFilterType)) {
-      setTraitFilterType(traitTypeOptions.includes('Background') ? 'Background' : traitTypeOptions[0]);
-    }
-  }, [traitTypeOptions, traitFilterType]);
 
   const donutGroupsMap = new Map();
-  for (const sale of timeFilteredSales) {
-    const trait = (sale.traits || []).find((item) => item.traitType === traitFilterType);
-    const traitValue = String(trait?.value ?? 'Unknown');
-    const prev = donutGroupsMap.get(traitValue) || { label: traitValue, count: 0, volumeEth: 0 };
+  for (const sale of normalizedSales) {
+    const prev = donutGroupsMap.get(sale.fur) || { label: sale.fur, count: 0, volumeEth: 0 };
     prev.count += 1;
     prev.volumeEth += Number(sale.priceEth || 0);
-    donutGroupsMap.set(traitValue, prev);
+    donutGroupsMap.set(sale.fur, prev);
   }
   const donutGroups = Array.from(donutGroupsMap.values()).sort((a, b) => b.count - a.count);
   const donutTotal = donutGroups.reduce((sum, item) => sum + item.count, 0);
+  const totalVolume = normalizedSales.reduce((sum, sale) => sum + Number(sale.priceEth || 0), 0);
   let donutOffset = 0;
   const donutSegments = donutGroups.map((item, index) => {
     const fraction = donutTotal > 0 ? item.count / donutTotal : 0;
@@ -491,176 +455,110 @@ function StudioAnalysisPage() {
     return segment;
   });
 
-  const filterPanel = filterOpen ? (
-    <aside id="analysis-filter-panel" className="studio-nft-analysis-filter-panel" aria-label="Sales filters">
-      <h2 className="studio-nft-analysis-filter-title">Filter Collections</h2>
-      <div className="studio-nft-analysis-filter-options">
-        <button
-          type="button"
-          className={`studio-nft-analysis-filter-option${
-            collectionFilter === 'bayc' ? ' studio-nft-analysis-filter-option--active' : ''
-          }`}
-          onClick={() => setCollectionFilter('bayc')}
-        >
-          BAYC
-        </button>
-        <button
-          type="button"
-          className={`studio-nft-analysis-filter-option${
-            collectionFilter === 'mayc' ? ' studio-nft-analysis-filter-option--active' : ''
-          }`}
-          onClick={() => setCollectionFilter('mayc')}
-        >
-          MAYC
-        </button>
-      </div>
-      <h2 className="studio-nft-analysis-filter-title studio-nft-analysis-filter-title--spaced">Time Filter</h2>
-      <div className="studio-nft-analysis-filter-options">
-        <label className="studio-nft-analysis-filter-label">Start Month</label>
-        <select
-          className="studio-nft-analysis-filter-select"
-          value={monthStart}
-          onChange={(e) => {
-            const next = e.target.value;
-            setMonthStart(next);
-            if (next > monthEnd) setMonthEnd(next);
-          }}
-          aria-label="Start month"
-        >
-          {startMonthOptions.map((option) => (
-            <option key={`start-${option}`} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-        <label className="studio-nft-analysis-filter-label">End Month</label>
-        <select
-          className="studio-nft-analysis-filter-select"
-          value={monthEnd}
-          onChange={(e) => {
-            const next = e.target.value;
-            setMonthEnd(next);
-            if (next < monthStart) setMonthStart(next);
-          }}
-          aria-label="End month"
-        >
-          {endMonthOptions.map((option) => (
-            <option key={`end-${option}`} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-      </div>
-    </aside>
-  ) : null;
-
   return (
     <div className="studio-page studio-nft-analysis" aria-label="Analysis page">
       <header className="studio-nft-analysis-head">
         <div className="studio-nft-analysis-head-row">
-          <h1 className="studio-nft-analysis-title">Ape Sales Analysis</h1>
-          <button
-            type="button"
-            className="studio-nft-analysis-filter-toggle"
-            onClick={() => setFilterOpen((v) => !v)}
-            aria-expanded={filterOpen}
-            aria-controls="analysis-filter-panel"
-          >
-            Filters
-          </button>
+          <h1 className="studio-nft-analysis-title">Mutant Ape Sales</h1>
+          <div className="studio-nft-analysis-view-toggle" role="tablist" aria-label="Sales view mode">
+            <button
+              type="button"
+              className={`studio-nft-analysis-view-btn${
+                viewMode === 'dashboard' ? ' studio-nft-analysis-view-btn--active' : ''
+              }`}
+              onClick={() => setViewMode('dashboard')}
+              role="tab"
+              aria-selected={viewMode === 'dashboard'}
+            >
+              Dashboard
+            </button>
+            <button
+              type="button"
+              className={`studio-nft-analysis-view-btn${
+                viewMode === 'table' ? ' studio-nft-analysis-view-btn--active' : ''
+              }`}
+              onClick={() => setViewMode('table')}
+              role="tab"
+              aria-selected={viewMode === 'table'}
+            >
+              Datatable
+            </button>
+          </div>
         </div>
       </header>
 
       {loading ? (
-        <p className="studio-nft-analysis-status">Loading OpenSea sales...</p>
+        <p className="studio-nft-analysis-status">Loading last 500 MAYC sales...</p>
       ) : error ? (
         <div className="studio-nft-analysis-panel studio-nft-analysis-panel--error">
           <p className="studio-nft-analysis-lead">Could not load OpenSea sales data.</p>
           <p>{error}</p>
         </div>
+      ) : viewMode === 'dashboard' ? (
+        <div className="studio-nft-analysis-panel">
+          <p className="studio-nft-analysis-muted">
+            Last {normalizedSales.length} sales | Total volume: {formatEth(totalVolume)}
+          </p>
+          <div className="studio-nft-analysis-donut-wrap">
+            <svg className="studio-nft-analysis-donut" viewBox="0 0 42 42" role="img" aria-label="Fur trait donut chart">
+              <circle cx="21" cy="21" r="15.9155" fill="transparent" stroke="rgba(172, 198, 142, 0.15)" strokeWidth="6" />
+              {donutSegments.map((segment) => (
+                <circle
+                  key={segment.label}
+                  cx="21"
+                  cy="21"
+                  r="15.9155"
+                  fill="transparent"
+                  stroke={segment.color}
+                  strokeWidth="6"
+                  strokeDasharray={`${segment.fraction * 100} ${100 - segment.fraction * 100}`}
+                  strokeDashoffset={25 - segment.offset * 100}
+                />
+              ))}
+            </svg>
+            <ul className="studio-nft-analysis-donut-legend">
+              {donutSegments.map((segment) => (
+                <li key={segment.label}>
+                  <span className="studio-nft-analysis-donut-swatch" style={{ background: segment.color }} />
+                  <span className="studio-nft-analysis-donut-label">{segment.label}</span>
+                  <strong>{segment.count}</strong>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
       ) : (
-        <div className="studio-nft-analysis-body">
-          <div className="studio-nft-analysis-shell">
-            <section className="studio-nft-analysis-panel studio-nft-analysis-layout">
-            <div className="studio-nft-analysis-chart-col">
-              <div className="studio-nft-analysis-chart-head">
-                <h2 className="studio-nft-analysis-section-title">Trait Distribution</h2>
-                <select
-                  className="studio-nft-analysis-trait-select"
-                  value={traitFilterType}
-                  onChange={(e) => setTraitFilterType(e.target.value)}
-                  aria-label="Trait type"
-                >
-                  {traitTypeOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="studio-nft-analysis-donut-wrap">
-                <svg className="studio-nft-analysis-donut" viewBox="0 0 42 42" role="img" aria-label="Trait donut chart">
-                  <circle cx="21" cy="21" r="15.9155" fill="transparent" stroke="rgba(172, 198, 142, 0.15)" strokeWidth="6" />
-                  {donutSegments.map((segment) => (
-                    <circle
-                      key={segment.label}
-                      cx="21"
-                      cy="21"
-                      r="15.9155"
-                      fill="transparent"
-                      stroke={segment.color}
-                      strokeWidth="6"
-                      strokeDasharray={`${segment.fraction * 100} ${100 - segment.fraction * 100}`}
-                      strokeDashoffset={25 - segment.offset * 100}
-                    />
-                  ))}
-                </svg>
-                <ul className="studio-nft-analysis-donut-legend">
-                  {donutSegments.map((segment) => (
-                    <li key={segment.label}>
-                      <span className="studio-nft-analysis-donut-swatch" style={{ background: segment.color }} />
-                      <span className="studio-nft-analysis-donut-label">{segment.label}</span>
-                      <strong>{segment.count}</strong>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-            <div className="studio-nft-analysis-table-col">
-              <p className="studio-nft-analysis-muted">
-                Showing {timeFilteredSales.length} sales | Total volume: {formatEth(filteredVolume)}
-              </p>
-              <div className="studio-nft-analysis-table-wrap">
-                <table className="studio-nft-analysis-table">
-                  <thead>
-                    <tr>
-                      <th>Collection</th>
-                      <th>Token</th>
-                      <th>Sale Date</th>
-                      <th>ETH Price</th>
+        <div className="studio-nft-analysis-panel">
+          <p className="studio-nft-analysis-muted">
+            Showing {normalizedSales.length} sales | Total volume: {formatEth(totalVolume)}
+          </p>
+          <div className="studio-nft-analysis-table-wrap">
+            <table className="studio-nft-analysis-table">
+              <thead>
+                <tr>
+                  <th>Collection</th>
+                  <th>Ape ID</th>
+                  <th>Sale Date</th>
+                  <th>ETH Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                {normalizedSales.length ? (
+                  normalizedSales.map((sale) => (
+                    <tr key={sale.eventId || `${sale.apeId}-${sale.timestamp}`}>
+                      <td>{sale.collection}</td>
+                      <td>{sale.apeLabel}</td>
+                      <td>{sale.saleDate}</td>
+                      <td>{formatEth(sale.priceEth)}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {timeFilteredSales.length ? (
-                      timeFilteredSales.map((sale) => (
-                        <tr key={sale.eventId || `${sale.collectionKey}-${sale.tokenId}-${sale.timestamp}`}>
-                          <td>{sale.collectionKey.toUpperCase()}</td>
-                          <td>{sale.name || `Token #${sale.tokenId || 'N/A'}`}</td>
-                          <td>{sale.saleDate}</td>
-                          <td>{formatEth(sale.priceEth)}</td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={4}>No sales found for the selected filter.</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            </section>
-            {filterPanel ? <div className="studio-nft-analysis-filter-col">{filterPanel}</div> : null}
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={4}>No sales data available.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
@@ -786,7 +684,7 @@ export default function App() {
       </div>
     );
   } else if (studioPage === 'other-analysis') {
-    studioMain = <div className="studio-page studio-page--blank" />;
+    studioMain = <StudioAnalysisPage />;
   } else {
     studioMain = (
       <div className="studio-page studio-page--studio" aria-label="Studio page">
