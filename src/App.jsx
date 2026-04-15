@@ -661,17 +661,19 @@ function StudioAnalysisPage() {
           {selectedTraitBars.length ? (
             <ul className="studio-nft-analysis-bar-list">
               {selectedTraitBars.map((item) => (
-                <li key={item.label} className="studio-nft-analysis-bar-row">
+                <li
+                  key={item.label}
+                  className="studio-nft-analysis-bar-row"
+                  style={{ '--bar-fill': `${Math.min((item.count / barAxisMax) * 100, 100)}%` }}
+                >
                   <span className="studio-nft-analysis-bar-row-label">{item.label}</span>
                   <div className="studio-nft-analysis-bar-track">
                     <span
                       className="studio-nft-analysis-bar-fill"
-                      style={{
-                        width: `${Math.min((item.count / barAxisMax) * 100, 100)}%`,
-                      }}
+                      style={{ width: `var(--bar-fill)` }}
                     />
+                    <strong className="studio-nft-analysis-bar-row-count">{item.count}</strong>
                   </div>
-                  <strong className="studio-nft-analysis-bar-row-count">{item.count}</strong>
                 </li>
               ))}
             </ul>

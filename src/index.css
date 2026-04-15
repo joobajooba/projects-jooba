@@ -1158,9 +1158,10 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   height: 0.82rem;
   border-radius: 999px;
   background: transparent;
-  overflow: hidden;
+  overflow: visible;
   display: flex;
   align-items: center;
+  position: relative;
 }
 
 .studio-nft-analysis-bar-fill {
@@ -1171,10 +1172,15 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
 }
 
 .studio-nft-analysis-bar-row-count {
-  flex: 0 0 1.75rem;
-  text-align: right;
+  position: absolute;
+  left: min(var(--bar-fill), 98%);
+  transform: translateX(-50%);
+  bottom: calc(100% + 0.08rem);
   font-size: 0.66rem;
   color: var(--jooba-gold-bright);
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 .studio-nft-analysis-table {
