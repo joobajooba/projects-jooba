@@ -55,7 +55,14 @@ function extractEthFromEvent(event) {
   if (raw <= 0 || decimals <= 0) return 0;
 
   const baseAmount = raw / 10 ** decimals;
-  if (paymentSymbol === 'ETH' || paymentSymbol === 'WETH') return baseAmount;
+  if (
+    paymentSymbol === 'ETH' ||
+    paymentSymbol === 'WETH' ||
+    paymentSymbol === 'APE' ||
+    paymentSymbol === 'APECOIN'
+  ) {
+    return baseAmount;
+  }
   return 0;
 }
 

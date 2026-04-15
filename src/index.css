@@ -1116,7 +1116,7 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   width: 100%;
   height: 10rem;
   border-radius: 8px;
-  background: rgba(172, 198, 142, 0.12);
+  background: transparent;
   overflow: hidden;
   display: flex;
   align-items: flex-end;

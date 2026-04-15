@@ -352,10 +352,10 @@ function StudioLandingContent({
   );
 }
 
-function formatEth(value) {
+function formatCurrency(value, unit = 'ETH') {
   const n = Number(value);
-  if (!Number.isFinite(n) || n <= 0) return '0 ETH';
-  return `${n.toFixed(3)} ETH`;
+  if (!Number.isFinite(n) || n <= 0) return `0 ${unit}`;
+  return `${n.toFixed(3)} ${unit}`;
 }
 
 function toTimestampMs(timestamp) {
@@ -402,18 +402,21 @@ function StudioAnalysisPage() {
       label: 'Mutant Ape Yacht Club',
       shortLabel: 'MAYC',
       endpoint: '/api/opensea-mayc-sales',
+      volumeUnit: 'ETH',
     },
     bayc: {
       key: 'bayc',
       label: 'Bored Ape Yacht Club',
       shortLabel: 'BAYC',
       endpoint: '/api/opensea-bayc-sales',
+      volumeUnit: 'ETH',
     },
     napc: {
       key: 'napc',
       label: 'Not a Punks Cult',
       shortLabel: 'NAPC',
       endpoint: '/api/opensea-napc-sales',
+      volumeUnit: 'APE',
     },
   };
 
@@ -520,7 +523,7 @@ function StudioAnalysisPage() {
     <div className="studio-page studio-nft-analysis" aria-label="Analysis page">
       <header className="studio-nft-analysis-head">
         <div className="studio-nft-analysis-head-row">
-          <h1 className="studio-nft-analysis-title">{PROJECTS[selectedProject].label} Sales</h1>
+          <h1 className="studio-nft-analysis-title">Project Analysis</h1>
           <div className="studio-nft-analysis-view-toggle" role="tablist" aria-label="Sales view mode">
             <button
               type="button"
@@ -593,7 +596,8 @@ function StudioAnalysisPage() {
         <div className="studio-nft-analysis-panel">
           <div className="studio-nft-analysis-bar-head">
             <p className="studio-nft-analysis-muted">
-              Last {normalizedSales.length} sales | Total volume: {formatEth(totalVolume)}
+              Last {normalizedSales.length} sales | Total volume:{' '}
+              {formatCurrency(totalVolume, PROJECTS[selectedProject].volumeUnit)}
             </p>
             <label className="studio-nft-analysis-bar-filter">
               Trait Type
@@ -614,6 +618,7 @@ function StudioAnalysisPage() {
             <ul className="studio-nft-analysis-bar-list">
               {selectedTraitBars.map((item) => (
                 <li key={item.label} className="studio-nft-analysis-bar-row">
+                  <strong className="studio-nft-analysis-bar-row-count">{item.count}</strong>
                   <div className="studio-nft-analysis-bar-track">
                     <span
                       className="studio-nft-analysis-bar-fill"
@@ -622,7 +627,6 @@ function StudioAnalysisPage() {
                       }}
                     />
                   </div>
-                  <strong className="studio-nft-analysis-bar-row-count">{item.count}</strong>
                   <span className="studio-nft-analysis-bar-row-label">{item.label}</span>
                 </li>
               ))}
@@ -634,7 +638,8 @@ function StudioAnalysisPage() {
       ) : (
         <div className="studio-nft-analysis-panel">
           <p className="studio-nft-analysis-muted">
-            Showing {normalizedSales.length} sales | Total volume: {formatEth(totalVolume)}
+            Showing {normalizedSales.length} sales | Total volume:{' '}
+            {formatCurrency(totalVolume, PROJECTS[selectedProject].volumeUnit)}
           </p>
           <div className="studio-nft-analysis-table-wrap">
             <table className="studio-nft-analysis-table">
@@ -643,7 +648,7 @@ function StudioAnalysisPage() {
                   <th>Collection</th>
                   <th>Ape ID</th>
                   <th>Sale Date</th>
-                  <th>ETH Price</th>
+                  <th>Price</th>
                   {traitTypes.map((traitType) => (
                     <th key={traitType}>{traitType}</th>
                   ))}
@@ -656,7 +661,7 @@ function StudioAnalysisPage() {
                       <td>{sale.collection}</td>
                       <td>{sale.apeLabel}</td>
                       <td>{sale.saleDate}</td>
-                      <td>{formatEth(sale.priceEth)}</td>
+                      <td>{formatCurrency(sale.priceEth, PROJECTS[selectedProject].volumeUnit)}</td>
                       {traitTypes.map((traitType) => {
                         const trait = sale.traits.find((item) => item.traitType === traitType);
                         return <td key={`${sale.eventId || sale.apeId}-${traitType}`}>{trait?.value || '-'}</td>;
