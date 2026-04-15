@@ -432,7 +432,7 @@ function StudioAnalysisPage() {
       timestampMs: toTimestampMs(sale.timestamp),
       saleDate: formatSaleDate(sale.timestamp),
       apeLabel: sale.apeId ? `#${sale.apeId}` : sale.name || 'N/A',
-      collection: sale.collection || 'Mutant Ape Yacht Club',
+      collection: 'MAYC',
       traits: Array.isArray(sale.traits) ? sale.traits : [],
     }))
     .filter((sale) => Number.isFinite(sale.timestampMs))
@@ -443,6 +443,9 @@ function StudioAnalysisPage() {
     });
 
   const totalVolume = normalizedSales.reduce((sum, sale) => sum + Number(sale.priceEth || 0), 0);
+  const traitTypes = Array.from(
+    new Set(normalizedSales.flatMap((sale) => sale.traits.map((trait) => trait.traitType)).filter(Boolean))
+  ).sort((a, b) => a.localeCompare(b));
 
   const traitTypeMap = new Map();
   for (const sale of normalizedSales) {
@@ -577,6 +580,9 @@ function StudioAnalysisPage() {
                   <th>Ape ID</th>
                   <th>Sale Date</th>
                   <th>ETH Price</th>
+                  {traitTypes.map((traitType) => (
+                    <th key={traitType}>{traitType}</th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
@@ -587,11 +593,15 @@ function StudioAnalysisPage() {
                       <td>{sale.apeLabel}</td>
                       <td>{sale.saleDate}</td>
                       <td>{formatEth(sale.priceEth)}</td>
+                      {traitTypes.map((traitType) => {
+                        const trait = sale.traits.find((item) => item.traitType === traitType);
+                        return <td key={`${sale.eventId || sale.apeId}-${traitType}`}>{trait?.value || '-'}</td>;
+                      })}
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={4}>No sales data available.</td>
+                    <td colSpan={4 + traitTypes.length}>No sales data available.</td>
                   </tr>
                 )}
               </tbody>
