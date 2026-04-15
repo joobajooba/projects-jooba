@@ -64,6 +64,24 @@ function IconSquare3Stack3d() {
   );
 }
 
+function IconChartBar() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
+      <path d="M4.5 19.5h15" strokeLinecap="round" />
+      <path d="M7.5 16.5v-4.5M12 16.5v-9M16.5 16.5v-6.75" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconSparkles() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
+      <path d="M12 3.75 13.95 8.1 18.3 10.05 13.95 12 12 16.35 10.05 12 5.7 10.05 10.05 8.1 12 3.75Z" strokeLinejoin="round" />
+      <path d="M18.75 15.75 19.65 17.85 21.75 18.75 19.65 19.65 18.75 21.75 17.85 19.65 15.75 18.75 17.85 17.85 18.75 15.75ZM5.25 14.25l.6 1.35 1.35.6-1.35.6-.6 1.35-.6-1.35-1.35-.6 1.35-.6.6-1.35Z" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function IconDiscord() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -108,6 +126,16 @@ function Shell({ children, previewMode, onTogglePreview, activeStudioPage, onSel
             aria-current={activeStudioPage === 'other' ? 'page' : undefined}
           >
             <IconSquare3Stack3d />
+          </button>
+          <button
+            type="button"
+            className="app-sidebar-nav-btn"
+            onClick={() => onSelectStudioPage('studio')}
+            title="Studio"
+            aria-label="Studio"
+            aria-current={activeStudioPage === 'studio' ? 'page' : undefined}
+          >
+            <IconSparkles />
           </button>
         </nav>
         <button
@@ -409,8 +437,9 @@ export default function App() {
     );
   }
 
-  const studioMain =
-    studioPage === 'home' ? (
+  let studioMain;
+  if (studioPage === 'home') {
+    studioMain = (
       <StudioLandingContent
         heroTitle="Studio JOOBA"
         showInfoPanels
@@ -421,15 +450,35 @@ export default function App() {
         phase3ImageAlt="Phase 3, bold silhouette on grey, Drums"
         phase4TbcBox
       />
-    ) : (
+    );
+  } else if (studioPage === 'other') {
+    studioMain = (
       <div className="studio-page studio-page--other" aria-label="Other pages">
         <div className="studio-other-row">
-          <div className="studio-other-tile" />
+          <button
+            type="button"
+            className="studio-other-tile studio-other-tile--action"
+            onClick={() => setStudioPage('other-analysis')}
+            aria-label="Open analysis page"
+            title="Analysis"
+          >
+            <IconChartBar />
+          </button>
           <div className="studio-other-tile" />
           <div className="studio-other-tile" />
         </div>
       </div>
     );
+  } else if (studioPage === 'other-analysis') {
+    studioMain = <div className="studio-page studio-page--blank" aria-label="Analysis page" />;
+  } else {
+    studioMain = (
+      <div className="studio-page studio-page--studio" aria-label="Studio page">
+        <h1 className="studio-page-title">Studio</h1>
+        <p className="studio-studio-dev-note">In Development</p>
+      </div>
+    );
+  }
 
   const homeModalTitle =
     homeModal === 'information'
