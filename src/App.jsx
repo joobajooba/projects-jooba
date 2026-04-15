@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import html2canvas from 'html2canvas';
 import { supabase } from './lib/supabaseClient';
 import { playClickSound } from './lib/clickSound';
 import WalletTopBarButton from './components/WalletTopBarButton';
@@ -427,7 +428,11 @@ function StudioAnalysisPage() {
   const [selectedProject, setSelectedProject] = useState('mayc');
   const [projectPickerOpen, setProjectPickerOpen] = useState(false);
   const [selectedTraitType, setSelectedTraitType] = useState('');
+  const [snapshotConfirmOpen, setSnapshotConfirmOpen] = useState(false);
+  const [snapshotError, setSnapshotError] = useState('');
+  const [snapshotBusy, setSnapshotBusy] = useState(false);
   const projectPickerRef = useRef(null);
+  const chartPanelRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -519,6 +524,37 @@ function StudioAnalysisPage() {
     : [];
   const maxTraitCount = selectedTraitBars.reduce((max, item) => Math.max(max, item.count), 0);
 
+  const openSnapshotConfirm = () => {
+    setSnapshotError('');
+    setSnapshotConfirmOpen(true);
+  };
+
+  const downloadSnapshot = async () => {
+    if (!chartPanelRef.current) return;
+    setSnapshotBusy(true);
+    setSnapshotError('');
+    try {
+      const canvas = await html2canvas(chartPanelRef.current, {
+        scale: 3,
+        useCORS: true,
+        backgroundColor: '#0b120b',
+        logging: false,
+      });
+      const jpg = canvas.toDataURL('image/jpeg', 0.98);
+      const link = document.createElement('a');
+      link.href = jpg;
+      link.download = `${PROJECTS[selectedProject].shortLabel.toLowerCase()}-graph-snapshot.jpeg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setSnapshotConfirmOpen(false);
+    } catch (err) {
+      setSnapshotError(err instanceof Error ? err.message : 'Snapshot export failed.');
+    } finally {
+      setSnapshotBusy(false);
+    }
+  };
+
   return (
     <div className="studio-page studio-nft-analysis" aria-label="Analysis page">
       <header className="studio-nft-analysis-head">
@@ -579,6 +615,14 @@ function StudioAnalysisPage() {
                 </div>
               ) : null}
             </div>
+            <button
+              type="button"
+              className="studio-nft-analysis-view-btn"
+              onClick={openSnapshotConfirm}
+              disabled={viewMode !== 'dashboard' || loading || !!error || snapshotBusy}
+            >
+              Download Snapshot
+            </button>
           </div>
         </div>
       </header>
@@ -593,7 +637,7 @@ function StudioAnalysisPage() {
           <p>{error}</p>
         </div>
       ) : viewMode === 'dashboard' ? (
-        <div className="studio-nft-analysis-panel">
+        <div className="studio-nft-analysis-panel" ref={chartPanelRef}>
           <div className="studio-nft-analysis-bar-head">
             <p className="studio-nft-analysis-muted">
               Last {normalizedSales.length} sales | Total volume:{' '}
@@ -685,6 +729,35 @@ function StudioAnalysisPage() {
           </div>
         </div>
       )}
+      {snapshotConfirmOpen ? (
+        <div className="studio-nft-analysis-confirm-overlay" role="dialog" aria-modal="true">
+          <div className="studio-nft-analysis-confirm-card">
+            <p className="studio-nft-analysis-confirm-text">
+              Are you sure you want to download the Snapshot of the graph, it will be saved as a
+              .jpeg
+            </p>
+            {snapshotError ? <p className="studio-nft-analysis-confirm-error">{snapshotError}</p> : null}
+            <div className="studio-nft-analysis-confirm-actions">
+              <button
+                type="button"
+                className="studio-nft-analysis-view-btn"
+                onClick={() => setSnapshotConfirmOpen(false)}
+                disabled={snapshotBusy}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="studio-nft-analysis-view-btn studio-nft-analysis-view-btn--active"
+                onClick={downloadSnapshot}
+                disabled={snapshotBusy}
+              >
+                {snapshotBusy ? 'Downloading…' : 'Download .jpeg'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

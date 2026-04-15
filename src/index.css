@@ -876,6 +876,11 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   cursor: pointer;
 }
 
+.studio-nft-analysis-view-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .studio-nft-analysis-view-btn:hover {
   border-color: var(--jooba-border-hover);
   color: var(--jooba-gold-bright);
@@ -886,6 +891,46 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   border-color: var(--jooba-border-hover);
   color: var(--jooba-gold-bright);
   background: rgba(172, 198, 142, 0.18);
+}
+
+.studio-nft-analysis-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: rgba(4, 8, 4, 0.66);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.studio-nft-analysis-confirm-card {
+  width: min(31rem, 100%);
+  border: 1px solid var(--jooba-border);
+  border-radius: 12px;
+  background: var(--jooba-panel);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+  padding: 1rem;
+}
+
+.studio-nft-analysis-confirm-text {
+  margin: 0;
+  color: var(--jooba-text-primary);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.studio-nft-analysis-confirm-error {
+  margin: 0.6rem 0 0;
+  color: #fca5a5;
+  font-size: 0.78rem;
+}
+
+.studio-nft-analysis-confirm-actions {
+  margin-top: 0.9rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.45rem;
 }
 
 .studio-nft-analysis-filter-toggle {
