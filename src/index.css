@@ -815,6 +815,53 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   gap: 0.4rem;
 }
 
+.studio-nft-analysis-project-select {
+  position: relative;
+}
+
+.studio-nft-analysis-project-menu {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  min-width: 13rem;
+  padding: 0.45rem;
+  border: 1px solid var(--jooba-border);
+  border-radius: 10px;
+  background: var(--jooba-panel);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.32);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  z-index: 40;
+}
+
+.studio-nft-analysis-project-option {
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--jooba-ui-border-muted);
+  border-radius: 8px;
+  background: rgba(172, 198, 142, 0.05);
+  color: var(--jooba-text-secondary);
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: left;
+  cursor: pointer;
+}
+
+.studio-nft-analysis-project-option:hover {
+  border-color: var(--jooba-border-hover);
+  background: rgba(172, 198, 142, 0.14);
+  color: var(--jooba-gold-bright);
+}
+
+.studio-nft-analysis-project-option--active {
+  border-color: var(--jooba-border-hover);
+  background: rgba(172, 198, 142, 0.2);
+  color: var(--jooba-gold-bright);
+}
+
 .studio-nft-analysis-view-btn {
   padding: 0.4rem 0.55rem;
   border: 1px solid var(--jooba-border);

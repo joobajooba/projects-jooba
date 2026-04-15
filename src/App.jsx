@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from './lib/supabaseClient';
 import { playClickSound } from './lib/clickSound';
 import WalletTopBarButton from './components/WalletTopBarButton';
@@ -396,10 +396,28 @@ function getDonutColor(index) {
 }
 
 function StudioAnalysisPage() {
+  const PROJECTS = {
+    mayc: {
+      key: 'mayc',
+      label: 'Mutant Ape Yacht Club',
+      shortLabel: 'MAYC',
+      endpoint: '/api/opensea-mayc-sales',
+    },
+    bayc: {
+      key: 'bayc',
+      label: 'Bored Ape Yacht Club',
+      shortLabel: 'BAYC',
+      endpoint: '/api/opensea-bayc-sales',
+    },
+  };
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [sales, setSales] = useState([]);
   const [viewMode, setViewMode] = useState('dashboard');
+  const [selectedProject, setSelectedProject] = useState('mayc');
+  const [projectPickerOpen, setProjectPickerOpen] = useState(false);
+  const projectPickerRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -407,7 +425,7 @@ function StudioAnalysisPage() {
       setLoading(true);
       setError('');
       try {
-        const response = await fetch('/api/opensea-mayc-sales');
+        const response = await fetch(PROJECTS[selectedProject].endpoint);
         const data = await response.json();
         if (!response.ok) {
           throw new Error(data?.detail || data?.error || 'Unable to fetch sales data');
@@ -424,6 +442,17 @@ function StudioAnalysisPage() {
     return () => {
       cancelled = true;
     };
+  }, [selectedProject]);
+
+  useEffect(() => {
+    const onPointerDown = (event) => {
+      if (!projectPickerRef.current) return;
+      if (!projectPickerRef.current.contains(event.target)) {
+        setProjectPickerOpen(false);
+      }
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
   }, []);
 
   const normalizedSales = sales
@@ -432,7 +461,7 @@ function StudioAnalysisPage() {
       timestampMs: toTimestampMs(sale.timestamp),
       saleDate: formatSaleDate(sale.timestamp),
       apeLabel: sale.apeId ? `#${sale.apeId}` : sale.name || 'N/A',
-      collection: 'MAYC',
+      collection: PROJECTS[selectedProject].shortLabel,
       traits: Array.isArray(sale.traits) ? sale.traits : [],
     }))
     .filter((sale) => Number.isFinite(sale.timestampMs))
@@ -487,7 +516,7 @@ function StudioAnalysisPage() {
     <div className="studio-page studio-nft-analysis" aria-label="Analysis page">
       <header className="studio-nft-analysis-head">
         <div className="studio-nft-analysis-head-row">
-          <h1 className="studio-nft-analysis-title">Mutant Ape Sales</h1>
+          <h1 className="studio-nft-analysis-title">{PROJECTS[selectedProject].label} Sales</h1>
           <div className="studio-nft-analysis-view-toggle" role="tablist" aria-label="Sales view mode">
             <button
               type="button"
@@ -511,12 +540,46 @@ function StudioAnalysisPage() {
             >
               Datatable
             </button>
+            <div className="studio-nft-analysis-project-select" ref={projectPickerRef}>
+              <button
+                type="button"
+                className="studio-nft-analysis-view-btn"
+                onClick={() => setProjectPickerOpen((open) => !open)}
+                aria-haspopup="dialog"
+                aria-expanded={projectPickerOpen}
+              >
+                Select Project
+              </button>
+              {projectPickerOpen ? (
+                <div className="studio-nft-analysis-project-menu" role="dialog" aria-label="Select NFT project">
+                  {Object.values(PROJECTS).map((project) => (
+                    <button
+                      key={project.key}
+                      type="button"
+                      className={`studio-nft-analysis-project-option${
+                        selectedProject === project.key
+                          ? ' studio-nft-analysis-project-option--active'
+                          : ''
+                      }`}
+                      onClick={() => {
+                        setSelectedProject(project.key);
+                        setProjectPickerOpen(false);
+                      }}
+                    >
+                      {project.label}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
       </header>
 
       {loading ? (
-        <p className="studio-nft-analysis-status">Loading last 500 MAYC sales...</p>
+        <p className="studio-nft-analysis-status">
+          Loading last 500 {PROJECTS[selectedProject].shortLabel} sales...
+        </p>
       ) : error ? (
         <div className="studio-nft-analysis-panel studio-nft-analysis-panel--error">
           <p className="studio-nft-analysis-lead">Could not load OpenSea sales data.</p>
