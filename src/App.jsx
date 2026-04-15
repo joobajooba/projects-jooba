@@ -374,6 +374,28 @@ function getDonutColor(index) {
   return palette[index % palette.length];
 }
 
+function buildTimeOptions(mode) {
+  const startYear = 2021;
+  const endYear = new Date().getUTCFullYear();
+  const years = [];
+  for (let y = startYear; y <= endYear; y += 1) years.push(y);
+
+  if (mode === 'year') return years.map((y) => String(y));
+  if (mode === 'quarter') {
+    const out = [];
+    for (const y of years) {
+      for (let q = 1; q <= 4; q += 1) out.push(`${y}-Q${q}`);
+    }
+    return out;
+  }
+
+  const out = [];
+  for (const y of years) {
+    for (let m = 1; m <= 12; m += 1) out.push(`${y}-${String(m).padStart(2, '0')}`);
+  }
+  return out;
+}
+
 function StudioAnalysisPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -424,13 +446,7 @@ function StudioAnalysisPage() {
       const tb = b.timestamp ? new Date(b.timestamp).getTime() : 0;
       return tb - ta;
     });
-  const timeOptions = Array.from(
-    new Set(
-      mergedSales
-        .map((sale) => getPeriodKey(sale.timestamp, timeFilterType))
-        .filter(Boolean)
-    )
-  ).sort((a, b) => (a < b ? 1 : -1));
+  const timeOptions = buildTimeOptions(timeFilterType);
 
   useEffect(() => {
     setTimeFilterValue('all');
@@ -556,11 +572,8 @@ function StudioAnalysisPage() {
         </div>
       ) : (
         <div className="studio-nft-analysis-body">
-          <section
-            className={`studio-nft-analysis-panel studio-nft-analysis-layout${
-              filterOpen ? ' studio-nft-analysis-layout--with-filter' : ''
-            }`}
-          >
+          <div className={`studio-nft-analysis-shell${filterOpen ? ' studio-nft-analysis-shell--with-filter' : ''}`}>
+            <section className="studio-nft-analysis-panel studio-nft-analysis-layout">
             <div className="studio-nft-analysis-chart-col">
               <div className="studio-nft-analysis-chart-head">
                 <h2 className="studio-nft-analysis-section-title">Trait Distribution</h2>
@@ -595,7 +608,7 @@ function StudioAnalysisPage() {
                   ))}
                 </svg>
                 <ul className="studio-nft-analysis-donut-legend">
-                  {donutSegments.slice(0, 8).map((segment) => (
+                  {donutSegments.map((segment) => (
                     <li key={segment.label}>
                       <span className="studio-nft-analysis-donut-swatch" style={{ background: segment.color }} />
                       <span className="studio-nft-analysis-donut-label">{segment.label}</span>
@@ -630,8 +643,9 @@ function StudioAnalysisPage() {
                 </table>
               </div>
             </div>
-            {filterPanel}
-          </section>
+            </section>
+            {filterPanel ? <div className="studio-nft-analysis-filter-col">{filterPanel}</div> : null}
+          </div>
         </div>
       )}
     </div>
