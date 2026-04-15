@@ -1133,62 +1133,53 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(3.4rem, 1fr));
-  gap: 0.75rem 0.5rem;
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
 }
 
 .studio-nft-analysis-bar-row {
   display: flex;
   flex-direction: column;
+  gap: 0.28rem;
+}
+
+.studio-nft-analysis-bar-row-meta {
+  display: flex;
   align-items: center;
-  gap: 0.3rem;
+  justify-content: space-between;
+  gap: 0.6rem;
 }
 
 .studio-nft-analysis-bar-row-label {
-  width: 100%;
+  min-width: 0;
+  font-size: 0.66rem;
+  color: var(--jooba-text-secondary);
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: normal;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-  text-align: center;
-  line-height: 1.2;
-  font-size: 0.62rem;
-  color: var(--jooba-text-secondary);
-  min-height: 2.4em;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
 }
 
 .studio-nft-analysis-bar-track {
   width: 100%;
-  height: 10rem;
-  border-radius: 8px;
-  background: transparent;
-  overflow: visible;
+  height: 0.82rem;
+  border-radius: 999px;
+  background: rgba(172, 198, 142, 0.12);
+  overflow: hidden;
   display: flex;
-  align-items: flex-end;
-  position: relative;
+  align-items: center;
 }
 
 .studio-nft-analysis-bar-fill {
   display: block;
-  width: 100%;
-  border-radius: 6px 6px 0 0;
+  height: 100%;
+  border-radius: inherit;
   background: #9fb4c8;
 }
 
 .studio-nft-analysis-bar-row-count {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
   font-size: 0.66rem;
   color: var(--jooba-gold-bright);
-  line-height: 1;
-  pointer-events: none;
 }
 
 .studio-nft-analysis-table {

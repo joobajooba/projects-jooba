@@ -415,7 +415,7 @@ function StudioAnalysisPage() {
     napc: {
       key: 'napc',
       label: 'Not a Punks Cult',
-      shortLabel: 'NAPC',
+      shortLabel: 'NPC',
       endpoint: '/api/opensea-napc-sales',
       volumeUnit: 'APE',
     },
@@ -662,23 +662,18 @@ function StudioAnalysisPage() {
             <ul className="studio-nft-analysis-bar-list">
               {selectedTraitBars.map((item) => (
                 <li key={item.label} className="studio-nft-analysis-bar-row">
+                  <div className="studio-nft-analysis-bar-row-meta">
+                    <span className="studio-nft-analysis-bar-row-label">{item.label}</span>
+                    <strong className="studio-nft-analysis-bar-row-count">{item.count}</strong>
+                  </div>
                   <div className="studio-nft-analysis-bar-track">
                     <span
                       className="studio-nft-analysis-bar-fill"
                       style={{
-                        height: `${maxTraitCount > 0 ? (item.count / maxTraitCount) * 100 : 0}%`,
+                        width: `${maxTraitCount > 0 ? (item.count / maxTraitCount) * 100 : 0}%`,
                       }}
                     />
-                    <strong
-                      className="studio-nft-analysis-bar-row-count"
-                      style={{
-                        bottom: `calc(${maxTraitCount > 0 ? (item.count / maxTraitCount) * 100 : 0}% + 0.2rem)`,
-                      }}
-                    >
-                      {item.count}
-                    </strong>
                   </div>
-                  <span className="studio-nft-analysis-bar-row-label">{item.label}</span>
                 </li>
               ))}
             </ul>
