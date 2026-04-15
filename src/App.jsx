@@ -379,13 +379,6 @@ function formatSaleDate(timestamp) {
   return `${year}-${month}-${day}`;
 }
 
-function getMonthKeyFromMs(timestampMs) {
-  if (!Number.isFinite(timestampMs)) return '';
-  const d = new Date(timestampMs);
-  if (Number.isNaN(d.getTime())) return '';
-  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
-}
-
 function getDonutColor(index) {
   const palette = ['#3b82f6', '#22c55e', '#f59e0b', '#a855f7', '#ef4444', '#14b8a6', '#f97316', '#64748b'];
   return palette[index % palette.length];
@@ -441,6 +434,7 @@ function StudioAnalysisPage() {
         collectionKey: collection.key,
         collectionLabel: collection.label,
         timestampMs: toTimestampMs(sale.timestamp),
+        saleDate: formatSaleDate(sale.timestamp),
       }))
     )
     .sort((a, b) => {
@@ -458,9 +452,9 @@ function StudioAnalysisPage() {
 
   const timeFilteredSales =
     mergedSales.filter((sale) => {
-      if (!Number.isFinite(sale.timestampMs)) return false;
+      if (!Number.isFinite(sale.timestampMs) || sale.saleDate === 'N/A') return false;
       if (sale.timestampMs < rangeStartMs || sale.timestampMs > rangeEndMs) return false;
-      const monthKey = getMonthKeyFromMs(sale.timestampMs);
+      const monthKey = sale.saleDate.slice(0, 7);
       return monthKey >= monthStart && monthKey <= monthEnd;
     });
   const filteredVolume = timeFilteredSales.reduce((sum, sale) => sum + Number(sale.priceEth || 0), 0);
@@ -652,7 +646,7 @@ function StudioAnalysisPage() {
                         <tr key={sale.eventId || `${sale.collectionKey}-${sale.tokenId}-${sale.timestamp}`}>
                           <td>{sale.collectionKey.toUpperCase()}</td>
                           <td>{sale.name || `Token #${sale.tokenId || 'N/A'}`}</td>
-                          <td>{formatSaleDate(sale.timestamp)}</td>
+                          <td>{sale.saleDate}</td>
                           <td>{formatEth(sale.priceEth)}</td>
                         </tr>
                       ))
