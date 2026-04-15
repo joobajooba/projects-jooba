@@ -1175,12 +1175,15 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   position: absolute;
   left: min(var(--bar-fill), 96%);
   top: 50%;
-  transform: translate(0.35rem, -50%);
+  transform: translate(0.5rem, -120%);
   font-size: 0.66rem;
   color: var(--jooba-gold-bright);
   line-height: 1;
   white-space: nowrap;
   pointer-events: none;
+  padding: 0.05rem 0.2rem;
+  border-radius: 0.3rem;
+  background: rgba(5, 10, 6, 0.72);
   text-shadow: 0 0 6px rgba(8, 14, 8, 0.95);
 }
 
