@@ -786,7 +786,7 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
 /* NFT Analysis (OpenSea) */
 .studio-nft-analysis {
   width: 100%;
-  max-width: min(100%, 86rem);
+  max-width: min(100%, 96rem);
   margin-inline: auto;
   box-sizing: border-box;
   padding: 1.25rem 1rem 2rem;
@@ -1182,7 +1182,7 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
 .studio-nft-analysis-section-title {
   margin: 0 0 0.4rem;
   font-family: var(--font-display);
-  font-size: 0.8125rem;
+  font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
