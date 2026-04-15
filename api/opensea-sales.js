@@ -3,8 +3,9 @@ const COLLECTIONS = [
   { key: 'mayc', slug: 'mutant-ape-yacht-club', label: 'Mutant Ape Yacht Club' },
 ];
 
-const DEFAULT_LIMIT = 20;
+const DEFAULT_LIMIT = 200;
 const MAX_LIMIT = 50;
+const MAX_PAGES = 12;
 
 function toNumber(value) {
   const n = Number(value);
@@ -54,7 +55,12 @@ function normalizeEvent(event) {
     seller: sale?.from_account?.address || event?.seller || null,
     buyer: sale?.to_account?.address || event?.buyer || null,
     txHash: event?.transaction || event?.transaction_hash || null,
-    timestamp: event?.event_timestamp || event?.created_date || null,
+    timestamp:
+      event?.event_timestamp ||
+      sale?.event_timestamp ||
+      event?.created_date ||
+      sale?.created_date ||
+      null,
     paymentSymbol:
       event?.payment?.symbol || event?.payment?.token_symbol || sale?.payment_token?.symbol || null,
     priceEth: extractEthFromEvent(event),
@@ -63,24 +69,36 @@ function normalizeEvent(event) {
 }
 
 async function fetchCollectionSales(slug, apiKey, limit) {
-  const url = new URL(`https://api.opensea.io/api/v2/events/collection/${slug}`);
-  url.searchParams.set('event_type', 'sale');
-  url.searchParams.set('limit', String(limit));
+  const rawEvents = [];
+  let next = null;
+  let pages = 0;
 
-  const response = await fetch(url, {
-    headers: {
-      accept: 'application/json',
-      'x-api-key': apiKey,
-    },
-  });
+  while (rawEvents.length < limit && pages < MAX_PAGES) {
+    const url = new URL(`https://api.opensea.io/api/v2/events/collection/${slug}`);
+    url.searchParams.set('event_type', 'sale');
+    url.searchParams.set('limit', String(Math.min(MAX_LIMIT, limit - rawEvents.length)));
+    if (next) url.searchParams.set('next', next);
 
-  const text = await response.text();
-  if (!response.ok) {
-    throw new Error(`OpenSea ${response.status}: ${text.slice(0, 220)}`);
+    const response = await fetch(url, {
+      headers: {
+        accept: 'application/json',
+        'x-api-key': apiKey,
+      },
+    });
+
+    const text = await response.text();
+    if (!response.ok) {
+      throw new Error(`OpenSea ${response.status}: ${text.slice(0, 220)}`);
+    }
+
+    const payload = JSON.parse(text);
+    const pageEvents = Array.isArray(payload?.asset_events) ? payload.asset_events : [];
+    rawEvents.push(...pageEvents);
+    next = payload?.next || null;
+    pages += 1;
+
+    if (!next || pageEvents.length === 0) break;
   }
-
-  const payload = JSON.parse(text);
-  const rawEvents = Array.isArray(payload?.asset_events) ? payload.asset_events : [];
   const sales = rawEvents.map(normalizeEvent);
   const totalVolumeEth = sales.reduce((sum, sale) => sum + toNumber(sale.priceEth), 0);
 
@@ -103,7 +121,7 @@ export default async function handler(req, res) {
   }
 
   const requestedLimit = Number(req.query?.limit ?? DEFAULT_LIMIT);
-  const limit = Math.min(Math.max(Number.isFinite(requestedLimit) ? requestedLimit : DEFAULT_LIMIT, 1), MAX_LIMIT);
+  const limit = Math.min(Math.max(Number.isFinite(requestedLimit) ? requestedLimit : DEFAULT_LIMIT, 1), MAX_LIMIT * MAX_PAGES);
 
   try {
     const results = await Promise.all(

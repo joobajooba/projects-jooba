@@ -390,7 +390,7 @@ function StudioAnalysisPage() {
       setLoading(true);
       setError('');
       try {
-        const response = await fetch('/api/opensea-sales?limit=20');
+        const response = await fetch('/api/opensea-sales');
         const data = await response.json();
         if (!response.ok) {
           throw new Error(data?.detail || data?.error || 'Unable to fetch sales data');
@@ -474,6 +474,58 @@ function StudioAnalysisPage() {
     return segment;
   });
 
+  const filterPanel = filterOpen ? (
+    <aside id="analysis-filter-panel" className="studio-nft-analysis-filter-panel" aria-label="Sales filters">
+      <h2 className="studio-nft-analysis-filter-title">Filter Collections</h2>
+      <div className="studio-nft-analysis-filter-options">
+        <button
+          type="button"
+          className={`studio-nft-analysis-filter-option${
+            collectionFilter === 'bayc' ? ' studio-nft-analysis-filter-option--active' : ''
+          }`}
+          onClick={() => setCollectionFilter('bayc')}
+        >
+          BAYC
+        </button>
+        <button
+          type="button"
+          className={`studio-nft-analysis-filter-option${
+            collectionFilter === 'mayc' ? ' studio-nft-analysis-filter-option--active' : ''
+          }`}
+          onClick={() => setCollectionFilter('mayc')}
+        >
+          MAYC
+        </button>
+      </div>
+      <h2 className="studio-nft-analysis-filter-title studio-nft-analysis-filter-title--spaced">Time Filter</h2>
+      <div className="studio-nft-analysis-filter-options">
+        <select
+          className="studio-nft-analysis-filter-select"
+          value={timeFilterType}
+          onChange={(e) => setTimeFilterType(e.target.value)}
+          aria-label="Time filter type"
+        >
+          <option value="year">Year</option>
+          <option value="quarter">Quarter</option>
+          <option value="month">Month</option>
+        </select>
+        <select
+          className="studio-nft-analysis-filter-select"
+          value={timeFilterValue}
+          onChange={(e) => setTimeFilterValue(e.target.value)}
+          aria-label="Time period"
+        >
+          <option value="all">All</option>
+          {timeOptions.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      </div>
+    </aside>
+  ) : null;
+
   return (
     <div className="studio-page studio-nft-analysis" aria-label="Analysis page">
       <header className="studio-nft-analysis-head">
@@ -504,7 +556,11 @@ function StudioAnalysisPage() {
         </div>
       ) : (
         <div className="studio-nft-analysis-body">
-          <section className="studio-nft-analysis-panel studio-nft-analysis-layout">
+          <section
+            className={`studio-nft-analysis-panel studio-nft-analysis-layout${
+              filterOpen ? ' studio-nft-analysis-layout--with-filter' : ''
+            }`}
+          >
             <div className="studio-nft-analysis-chart-col">
               <div className="studio-nft-analysis-chart-head">
                 <h2 className="studio-nft-analysis-section-title">Trait Distribution</h2>
@@ -574,61 +630,10 @@ function StudioAnalysisPage() {
                 </table>
               </div>
             </div>
+            {filterPanel}
           </section>
         </div>
       )}
-
-      {filterOpen ? (
-        <aside id="analysis-filter-panel" className="studio-nft-analysis-filter-panel" aria-label="Sales filters">
-          <h2 className="studio-nft-analysis-filter-title">Filter Collections</h2>
-          <div className="studio-nft-analysis-filter-options">
-            <button
-              type="button"
-              className={`studio-nft-analysis-filter-option${
-                collectionFilter === 'bayc' ? ' studio-nft-analysis-filter-option--active' : ''
-              }`}
-              onClick={() => setCollectionFilter('bayc')}
-            >
-              BAYC
-            </button>
-            <button
-              type="button"
-              className={`studio-nft-analysis-filter-option${
-                collectionFilter === 'mayc' ? ' studio-nft-analysis-filter-option--active' : ''
-              }`}
-              onClick={() => setCollectionFilter('mayc')}
-            >
-              MAYC
-            </button>
-          </div>
-          <h2 className="studio-nft-analysis-filter-title studio-nft-analysis-filter-title--spaced">Time Filter</h2>
-          <div className="studio-nft-analysis-filter-options">
-            <select
-              className="studio-nft-analysis-filter-select"
-              value={timeFilterType}
-              onChange={(e) => setTimeFilterType(e.target.value)}
-              aria-label="Time filter type"
-            >
-              <option value="year">Year</option>
-              <option value="quarter">Quarter</option>
-              <option value="month">Month</option>
-            </select>
-            <select
-              className="studio-nft-analysis-filter-select"
-              value={timeFilterValue}
-              onChange={(e) => setTimeFilterValue(e.target.value)}
-              aria-label="Time period"
-            >
-              <option value="all">All</option>
-              {timeOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </div>
-        </aside>
-      ) : null}
     </div>
   );
 }
