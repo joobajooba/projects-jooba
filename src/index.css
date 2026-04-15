@@ -1173,14 +1173,15 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
 
 .studio-nft-analysis-bar-row-count {
   position: absolute;
-  left: min(var(--bar-fill), 99%);
+  left: min(var(--bar-fill), 96%);
   top: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(0.35rem, -50%);
   font-size: 0.66rem;
   color: var(--jooba-gold-bright);
   line-height: 1;
   white-space: nowrap;
   pointer-events: none;
+  text-shadow: 0 0 6px rgba(8, 14, 8, 0.95);
 }
 
 .studio-nft-analysis-table {
