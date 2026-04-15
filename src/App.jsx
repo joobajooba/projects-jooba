@@ -362,6 +362,8 @@ function StudioAnalysisPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [payload, setPayload] = useState(null);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [collectionFilter, setCollectionFilter] = useState('bayc');
 
   useEffect(() => {
     let cancelled = false;
@@ -388,10 +390,38 @@ function StudioAnalysisPage() {
     };
   }, []);
 
+  const collections = payload?.collections || [];
+  const filteredCollections = collections.filter((c) => c.key === collectionFilter);
+  const mergedSales = filteredCollections
+    .flatMap((collection) =>
+      (collection.sales || []).map((sale) => ({
+        ...sale,
+        collectionKey: collection.key,
+        collectionLabel: collection.label,
+      }))
+    )
+    .sort((a, b) => {
+      const ta = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+      const tb = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+      return tb - ta;
+    });
+  const filteredVolume = mergedSales.reduce((sum, sale) => sum + Number(sale.priceEth || 0), 0);
+
   return (
     <div className="studio-page studio-nft-analysis" aria-label="Analysis page">
       <header className="studio-nft-analysis-head">
-        <h1 className="studio-nft-analysis-title">Ape Sales Analysis</h1>
+        <div className="studio-nft-analysis-head-row">
+          <h1 className="studio-nft-analysis-title">Ape Sales Analysis</h1>
+          <button
+            type="button"
+            className="studio-nft-analysis-filter-toggle"
+            onClick={() => setFilterOpen((v) => !v)}
+            aria-expanded={filterOpen}
+            aria-controls="analysis-filter-panel"
+          >
+            Filters
+          </button>
+        </div>
       </header>
 
       {loading ? (
@@ -401,28 +431,65 @@ function StudioAnalysisPage() {
           <p className="studio-nft-analysis-lead">Could not load OpenSea sales data.</p>
           <p>{error}</p>
         </div>
+      ) : mergedSales.length === 0 ? (
+        <div className="studio-nft-analysis-panel">
+          <p className="studio-nft-analysis-lead">No sales found for the selected filter.</p>
+        </div>
       ) : (
         <div className="studio-nft-analysis-body">
-          {(payload?.collections || []).map((collection) => (
-            <section key={collection.key} className="studio-nft-analysis-panel">
-              <h2 className="studio-nft-analysis-section-title">{collection.label}</h2>
-              <p className="studio-nft-analysis-muted">
-                Last {collection.salesCount} sales | Total volume: {formatEth(collection.totalVolumeEth)}
-              </p>
-              <ul className="studio-nft-analysis-list">
-                {(collection.sales || []).slice(0, 8).map((sale) => (
-                  <li key={sale.eventId || `${collection.key}-${sale.tokenId}-${sale.timestamp}`}>
-                    <span className="studio-nft-analysis-list-name">
-                      {sale.name || `Token #${sale.tokenId || 'N/A'}`}
-                    </span>
-                    <strong>{formatEth(sale.priceEth)}</strong>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
+          <section className="studio-nft-analysis-panel">
+            <p className="studio-nft-analysis-muted">
+              Showing {mergedSales.length} sales | Total volume: {formatEth(filteredVolume)}
+            </p>
+            <div className="studio-nft-analysis-table-wrap">
+              <table className="studio-nft-analysis-table">
+                <thead>
+                  <tr>
+                    <th>Collection</th>
+                    <th>Token</th>
+                    <th>Sale Price</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {mergedSales.map((sale) => (
+                    <tr key={sale.eventId || `${sale.collectionKey}-${sale.tokenId}-${sale.timestamp}`}>
+                      <td>{sale.collectionKey.toUpperCase()}</td>
+                      <td>{sale.name || `Token #${sale.tokenId || 'N/A'}`}</td>
+                      <td>{formatEth(sale.priceEth)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
         </div>
       )}
+
+      {filterOpen ? (
+        <aside id="analysis-filter-panel" className="studio-nft-analysis-filter-panel" aria-label="Sales filters">
+          <h2 className="studio-nft-analysis-filter-title">Filter Collections</h2>
+          <div className="studio-nft-analysis-filter-options">
+            <button
+              type="button"
+              className={`studio-nft-analysis-filter-option${
+                collectionFilter === 'bayc' ? ' studio-nft-analysis-filter-option--active' : ''
+              }`}
+              onClick={() => setCollectionFilter('bayc')}
+            >
+              BAYC
+            </button>
+            <button
+              type="button"
+              className={`studio-nft-analysis-filter-option${
+                collectionFilter === 'mayc' ? ' studio-nft-analysis-filter-option--active' : ''
+              }`}
+              onClick={() => setCollectionFilter('mayc')}
+            >
+              MAYC
+            </button>
+          </div>
+        </aside>
+      ) : null}
     </div>
   );
 }

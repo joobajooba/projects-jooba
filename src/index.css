@@ -800,6 +800,33 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   margin-bottom: 1.25rem;
 }
 
+.studio-nft-analysis-head-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.studio-nft-analysis-filter-toggle {
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--jooba-border);
+  border-radius: 8px;
+  background: rgba(172, 198, 142, 0.08);
+  color: var(--jooba-gold-bright);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.studio-nft-analysis-filter-toggle:hover {
+  border-color: var(--jooba-border-hover);
+  background: rgba(172, 198, 142, 0.14);
+}
+
 .studio-nft-analysis-back {
   padding: 0.35rem 0.5rem;
   margin: 0;
@@ -839,6 +866,92 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+}
+
+.studio-nft-analysis-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.studio-nft-analysis-table {
+  width: 100%;
+  min-width: 27rem;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+
+.studio-nft-analysis-table th,
+.studio-nft-analysis-table td {
+  text-align: left;
+  padding: 0.55rem 0.4rem;
+  border-bottom: 1px solid var(--jooba-ui-border-muted);
+}
+
+.studio-nft-analysis-table th {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--jooba-text-tertiary);
+}
+
+.studio-nft-analysis-table td {
+  color: var(--jooba-text-primary);
+}
+
+.studio-nft-analysis-filter-panel {
+  position: fixed;
+  top: calc(var(--chrome-h) + 0.65rem);
+  right: 0.75rem;
+  z-index: 40;
+  width: min(15rem, calc(100vw - 2rem));
+  border: 1px solid var(--jooba-border);
+  border-radius: 12px 0 0 12px;
+  background: var(--jooba-panel);
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.55);
+  padding: 0.9rem 0.95rem;
+}
+
+.studio-nft-analysis-filter-title {
+  margin: 0 0 0.65rem;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--jooba-gold);
+}
+
+.studio-nft-analysis-filter-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.studio-nft-analysis-filter-option {
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--jooba-ui-border-muted);
+  border-radius: 8px;
+  background: rgba(172, 198, 142, 0.05);
+  color: var(--jooba-text-secondary);
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: left;
+  cursor: pointer;
+}
+
+.studio-nft-analysis-filter-option:hover {
+  border-color: var(--jooba-border-hover);
+  color: var(--jooba-gold-bright);
+}
+
+.studio-nft-analysis-filter-option--active {
+  border-color: var(--jooba-border-hover);
+  background: rgba(172, 198, 142, 0.14);
+  color: var(--jooba-gold-bright);
 }
 
 .studio-nft-analysis-panel {
