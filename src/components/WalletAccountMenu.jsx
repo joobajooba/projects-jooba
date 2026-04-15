@@ -43,6 +43,7 @@ export default function WalletAccountMenu({
 }) {
   const { disconnect } = useDisconnect();
   const menuRef = useRef(null);
+  const settingsDialogRef = useRef(null);
   const [pos, setPos] = useState({ top: 0, right: 0 });
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [muteSounds, setMuteSounds] = useState(() => isPageSoundsMuted());
@@ -92,6 +93,7 @@ export default function WalletAccountMenu({
       const t = e.target;
       if (menuRef.current?.contains(t)) return;
       if (anchorRef?.current?.contains(t)) return;
+      if (settingsDialogRef.current?.contains(t)) return;
       onClose();
     };
     const id = window.setTimeout(() => document.addEventListener('mousedown', onDown), 0);
@@ -226,7 +228,7 @@ export default function WalletAccountMenu({
             aria-label="Close settings"
             onClick={() => setSettingsOpen(false)}
           />
-          <div className="wallet-settings-modal-dialog">
+          <div ref={settingsDialogRef} className="wallet-settings-modal-dialog">
             <div className="wallet-settings-modal-head">
               <h3 className="wallet-settings-modal-title">Settings</h3>
               <button
