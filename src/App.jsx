@@ -729,7 +729,7 @@ function StudioAnalysisPage() {
                     points={timelinePath}
                     fill="none"
                     stroke="#9fb4c8"
-                    strokeWidth="1.6"
+                    strokeWidth="0.5"
                     strokeLinejoin="round"
                     strokeLinecap="round"
                   />
