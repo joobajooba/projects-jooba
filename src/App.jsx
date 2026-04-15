@@ -522,7 +522,7 @@ function StudioAnalysisPage() {
         .sort((a, b) => b.count - a.count)
         .slice(0, 15)
     : [];
-  const barAxisMax = 100;
+  const barAxisMax = Math.max(...selectedTraitBars.map((item) => item.count), 1);
 
   const openSnapshotConfirm = () => {
     setSnapshotError('');
