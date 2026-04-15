@@ -358,6 +358,16 @@ function formatEth(value) {
   return `${n.toFixed(3)} ETH`;
 }
 
+function formatSaleDate(timestamp) {
+  if (!timestamp) return 'N/A';
+  const d = new Date(timestamp);
+  if (Number.isNaN(d.getTime())) return 'N/A';
+  const year = d.getUTCFullYear();
+  const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 function getMonthKey(timestamp) {
   if (!timestamp) return '';
   const maybeNumber = Number(timestamp);
@@ -399,7 +409,7 @@ function StudioAnalysisPage() {
       setLoading(true);
       setError('');
       try {
-        const response = await fetch('/api/opensea-sales');
+        const response = await fetch('/api/opensea-sales?limit=4000');
         const data = await response.json();
         if (!response.ok) {
           throw new Error(data?.detail || data?.error || 'Unable to fetch sales data');
@@ -434,13 +444,14 @@ function StudioAnalysisPage() {
       return tb - ta;
     });
   const monthOptions = buildMonthOptions(2026);
+  const startMonthOptions = monthOptions.filter((month) => month <= monthEnd);
+  const endMonthOptions = monthOptions.filter((month) => month >= monthStart);
 
   const timeFilteredSales =
     mergedSales.filter((sale) => {
       const monthKey = getMonthKey(sale.timestamp);
       if (!monthKey) return false;
-      const [from, to] = monthStart <= monthEnd ? [monthStart, monthEnd] : [monthEnd, monthStart];
-      return monthKey >= from && monthKey <= to;
+      return monthKey >= monthStart && monthKey <= monthEnd;
     });
   const filteredVolume = timeFilteredSales.reduce((sum, sale) => sum + Number(sale.priceEth || 0), 0);
 
@@ -505,10 +516,14 @@ function StudioAnalysisPage() {
         <select
           className="studio-nft-analysis-filter-select"
           value={monthStart}
-          onChange={(e) => setMonthStart(e.target.value)}
+          onChange={(e) => {
+            const next = e.target.value;
+            setMonthStart(next);
+            if (next > monthEnd) setMonthEnd(next);
+          }}
           aria-label="Start month"
         >
-          {monthOptions.map((option) => (
+          {startMonthOptions.map((option) => (
             <option key={`start-${option}`} value={option}>
               {option}
             </option>
@@ -518,10 +533,14 @@ function StudioAnalysisPage() {
         <select
           className="studio-nft-analysis-filter-select"
           value={monthEnd}
-          onChange={(e) => setMonthEnd(e.target.value)}
+          onChange={(e) => {
+            const next = e.target.value;
+            setMonthEnd(next);
+            if (next < monthStart) setMonthStart(next);
+          }}
           aria-label="End month"
         >
-          {monthOptions.map((option) => (
+          {endMonthOptions.map((option) => (
             <option key={`end-${option}`} value={option}>
               {option}
             </option>
@@ -613,7 +632,8 @@ function StudioAnalysisPage() {
                     <tr>
                       <th>Collection</th>
                       <th>Token</th>
-                      <th>Sale Price</th>
+                      <th>Sale Date</th>
+                      <th>ETH Price</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -622,12 +642,13 @@ function StudioAnalysisPage() {
                         <tr key={sale.eventId || `${sale.collectionKey}-${sale.tokenId}-${sale.timestamp}`}>
                           <td>{sale.collectionKey.toUpperCase()}</td>
                           <td>{sale.name || `Token #${sale.tokenId || 'N/A'}`}</td>
+                          <td>{formatSaleDate(sale.timestamp)}</td>
                           <td>{formatEth(sale.priceEth)}</td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={3}>No sales found for the selected filter.</td>
+                        <td colSpan={4}>No sales found for the selected filter.</td>
                       </tr>
                     )}
                   </tbody>

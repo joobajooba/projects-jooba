@@ -3,9 +3,9 @@ const COLLECTIONS = [
   { key: 'mayc', slug: 'mutant-ape-yacht-club', label: 'Mutant Ape Yacht Club' },
 ];
 
-const DEFAULT_LIMIT = 200;
 const MAX_LIMIT = 50;
 const MAX_PAGES = 80;
+const DEFAULT_LIMIT = MAX_LIMIT * MAX_PAGES;
 const TARGET_YEAR = 2026;
 
 function toNumber(value) {
