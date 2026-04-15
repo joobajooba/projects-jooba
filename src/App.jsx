@@ -786,7 +786,7 @@ export default function App() {
       </div>
     );
   } else if (studioPage === 'other-analysis') {
-    studioMain = <StudioAnalysisPage />;
+    studioMain = <div className="studio-page studio-page--blank" />;
   } else {
     studioMain = (
       <div className="studio-page studio-page--studio" aria-label="Studio page">
