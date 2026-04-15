@@ -618,7 +618,6 @@ function StudioAnalysisPage() {
             <ul className="studio-nft-analysis-bar-list">
               {selectedTraitBars.map((item) => (
                 <li key={item.label} className="studio-nft-analysis-bar-row">
-                  <strong className="studio-nft-analysis-bar-row-count">{item.count}</strong>
                   <div className="studio-nft-analysis-bar-track">
                     <span
                       className="studio-nft-analysis-bar-fill"
@@ -626,6 +625,14 @@ function StudioAnalysisPage() {
                         height: `${maxTraitCount > 0 ? (item.count / maxTraitCount) * 100 : 0}%`,
                       }}
                     />
+                    <strong
+                      className="studio-nft-analysis-bar-row-count"
+                      style={{
+                        bottom: `calc(${maxTraitCount > 0 ? (item.count / maxTraitCount) * 100 : 0}% + 0.2rem)`,
+                      }}
+                    >
+                      {item.count}
+                    </strong>
                   </div>
                   <span className="studio-nft-analysis-bar-row-label">{item.label}</span>
                 </li>
