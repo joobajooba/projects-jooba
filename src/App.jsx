@@ -423,6 +423,7 @@ function StudioAnalysisPage() {
   const [viewMode, setViewMode] = useState('dashboard');
   const [selectedProject, setSelectedProject] = useState('mayc');
   const [projectPickerOpen, setProjectPickerOpen] = useState(false);
+  const [selectedTraitType, setSelectedTraitType] = useState('');
   const projectPickerRef = useRef(null);
 
   useEffect(() => {
@@ -493,30 +494,27 @@ function StudioAnalysisPage() {
     }
   }
 
-  const traitCharts = Array.from(traitTypeMap.entries())
-    .map(([traitType, valueMap]) => {
-      const topGroups = Array.from(valueMap.entries())
-        .map(([label, count]) => ({ label, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 10);
+  useEffect(() => {
+    if (!traitTypes.length) {
+      setSelectedTraitType('');
+      return;
+    }
+    if (!selectedTraitType || !traitTypes.includes(selectedTraitType)) {
+      setSelectedTraitType(traitTypes[0]);
+    }
+  }, [traitTypes, selectedTraitType]);
 
-      const donutTotal = topGroups.reduce((sum, item) => sum + item.count, 0);
-      let donutOffset = 0;
-      const segments = topGroups.map((item, index) => {
-        const fraction = donutTotal > 0 ? item.count / donutTotal : 0;
-        const segment = {
-          ...item,
-          fraction,
-          offset: donutOffset,
+  const selectedTraitBars = selectedTraitType
+    ? Array.from(traitTypeMap.get(selectedTraitType)?.entries() || [])
+        .map(([label, count], index) => ({
+          label,
+          count,
           color: getDonutColor(index),
-        };
-        donutOffset += fraction;
-        return segment;
-      });
-
-      return { traitType, total: donutTotal, segments };
-    })
-    .sort((a, b) => b.total - a.total);
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 15)
+    : [];
+  const maxTraitCount = selectedTraitBars.reduce((max, item) => Math.max(max, item.count), 0);
 
   return (
     <div className="studio-page studio-nft-analysis" aria-label="Analysis page">
@@ -593,48 +591,48 @@ function StudioAnalysisPage() {
         </div>
       ) : viewMode === 'dashboard' ? (
         <div className="studio-nft-analysis-panel">
-          <p className="studio-nft-analysis-muted">
-            Last {normalizedSales.length} sales | Total volume: {formatEth(totalVolume)}
-          </p>
-          <div className="studio-nft-analysis-donut-grid">
-            {traitCharts.map((chart) => (
-              <article key={chart.traitType} className="studio-nft-analysis-donut-card">
-                <h2 className="studio-nft-analysis-section-title">{chart.traitType} (Top 10)</h2>
-                <div className="studio-nft-analysis-donut-wrap">
-                  <svg
-                    className="studio-nft-analysis-donut"
-                    viewBox="0 0 42 42"
-                    role="img"
-                    aria-label={`${chart.traitType} trait donut chart`}
-                  >
-                    <circle cx="21" cy="21" r="15.9155" fill="transparent" stroke="rgba(172, 198, 142, 0.15)" strokeWidth="6" />
-                    {chart.segments.map((segment) => (
-                      <circle
-                        key={segment.label}
-                        cx="21"
-                        cy="21"
-                        r="15.9155"
-                        fill="transparent"
-                        stroke={segment.color}
-                        strokeWidth="6"
-                        strokeDasharray={`${segment.fraction * 100} ${100 - segment.fraction * 100}`}
-                        strokeDashoffset={25 - segment.offset * 100}
-                      />
-                    ))}
-                  </svg>
-                  <ul className="studio-nft-analysis-donut-legend">
-                    {chart.segments.map((segment) => (
-                      <li key={segment.label}>
-                        <span className="studio-nft-analysis-donut-swatch" style={{ background: segment.color }} />
-                        <span className="studio-nft-analysis-donut-label">{segment.label}</span>
-                        <strong>{segment.count}</strong>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </article>
-            ))}
+          <div className="studio-nft-analysis-bar-head">
+            <p className="studio-nft-analysis-muted">
+              Last {normalizedSales.length} sales | Total volume: {formatEth(totalVolume)}
+            </p>
+            <label className="studio-nft-analysis-bar-filter">
+              Trait Type
+              <select
+                value={selectedTraitType}
+                onChange={(event) => setSelectedTraitType(event.target.value)}
+                disabled={!traitTypes.length}
+              >
+                {traitTypes.map((traitType) => (
+                  <option key={traitType} value={traitType}>
+                    {traitType}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
+          {selectedTraitBars.length ? (
+            <ul className="studio-nft-analysis-bar-list">
+              {selectedTraitBars.map((item) => (
+                <li key={item.label} className="studio-nft-analysis-bar-row">
+                  <div className="studio-nft-analysis-bar-row-meta">
+                    <span className="studio-nft-analysis-bar-row-label">{item.label}</span>
+                    <strong>{item.count}</strong>
+                  </div>
+                  <div className="studio-nft-analysis-bar-track">
+                    <span
+                      className="studio-nft-analysis-bar-fill"
+                      style={{
+                        background: item.color,
+                        width: `${maxTraitCount > 0 ? (item.count / maxTraitCount) * 100 : 0}%`,
+                      }}
+                    />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="studio-nft-analysis-status">No trait data available for this selection.</p>
+          )}
         </div>
       ) : (
         <div className="studio-nft-analysis-panel">
