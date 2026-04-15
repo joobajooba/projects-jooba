@@ -1213,6 +1213,7 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
 }
 
 .studio-nft-analysis-line-wrap {
+  position: relative;
   height: 10rem;
   border: 1px solid var(--jooba-ui-border-muted);
   border-radius: 10px;
@@ -1238,6 +1239,22 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   justify-content: space-between;
   font-size: 0.62rem;
   color: var(--jooba-text-tertiary);
+}
+
+.studio-nft-analysis-line-y-axis-labels {
+  margin-top: 0.2rem;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.6rem;
+  color: var(--jooba-text-tertiary);
+}
+
+.studio-nft-analysis-line-y-axis-title {
+  margin: 0.35rem 0 0;
+  font-size: 0.62rem;
+  color: var(--jooba-text-tertiary);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .studio-nft-analysis-table {

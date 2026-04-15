@@ -534,19 +534,44 @@ function StudioAnalysisPage() {
       price: Number(sale.priceEth || 0),
       saleDate: sale.saleDate,
     }));
-  const timelineMaxPrice = salesTimeline.reduce((max, point) => Math.max(max, point.price), 0);
-  const timelinePath = salesTimeline.length
-    ? salesTimeline
+  const timelineBuckets = (() => {
+    if (!salesTimeline.length) return [];
+    const maxPoints = 90;
+    const chunkSize = Math.max(1, Math.ceil(salesTimeline.length / maxPoints));
+    const buckets = [];
+    for (let i = 0; i < salesTimeline.length; i += chunkSize) {
+      const chunk = salesTimeline.slice(i, i + chunkSize);
+      const avgPrice =
+        chunk.reduce((sum, point) => sum + point.price, 0) / Math.max(chunk.length, 1);
+      buckets.push({
+        timestampMs: chunk[chunk.length - 1]?.timestampMs || chunk[0]?.timestampMs || 0,
+        price: avgPrice,
+        saleDate: chunk[chunk.length - 1]?.saleDate || chunk[0]?.saleDate || '',
+      });
+    }
+    return buckets;
+  })();
+  const timelineMaxPrice = timelineBuckets.reduce((max, point) => Math.max(max, point.price), 0);
+  const chartPadding = { left: 6, right: 2, top: 4, bottom: 8 };
+  const timelinePath = timelineBuckets.length
+    ? timelineBuckets
         .map((point, index) => {
+          const xRange = 100 - chartPadding.left - chartPadding.right;
+          const yRange = 100 - chartPadding.top - chartPadding.bottom;
           const x =
-            salesTimeline.length > 1 ? (index / (salesTimeline.length - 1)) * 100 : 50;
-          const y = timelineMaxPrice > 0 ? 100 - (point.price / timelineMaxPrice) * 100 : 100;
+            timelineBuckets.length > 1
+              ? chartPadding.left + (index / (timelineBuckets.length - 1)) * xRange
+              : chartPadding.left + xRange / 2;
+          const y =
+            timelineMaxPrice > 0
+              ? chartPadding.top + (1 - point.price / timelineMaxPrice) * yRange
+              : chartPadding.top + yRange;
           return `${x},${y}`;
         })
         .join(' ')
     : '';
-  const timelineStart = salesTimeline[0]?.saleDate || '';
-  const timelineEnd = salesTimeline[salesTimeline.length - 1]?.saleDate || '';
+  const timelineStart = timelineBuckets[0]?.saleDate || '';
+  const timelineEnd = timelineBuckets[timelineBuckets.length - 1]?.saleDate || '';
 
   const openSnapshotConfirm = () => {
     setSnapshotError('');
@@ -713,11 +738,12 @@ function StudioAnalysisPage() {
             <div className="studio-nft-analysis-line-head">
               <h2 className="studio-nft-analysis-section-title">Sales Over Time</h2>
               <span className="studio-nft-analysis-line-meta">
-                {salesTimeline.length} sales | Max: {formatCurrency(timelineMaxPrice, PROJECTS[selectedProject].volumeUnit)}
+                {salesTimeline.length} sales | Max:{' '}
+                {formatCurrency(timelineMaxPrice, PROJECTS[selectedProject].volumeUnit)}
               </span>
             </div>
             <div className="studio-nft-analysis-line-wrap">
-              {salesTimeline.length ? (
+              {timelineBuckets.length ? (
                 <svg
                   className="studio-nft-analysis-line-chart"
                   viewBox="0 0 100 100"
@@ -725,13 +751,25 @@ function StudioAnalysisPage() {
                   role="img"
                   aria-label="Line chart of sale prices over time"
                 >
-                  <line x1="0" y1="100" x2="100" y2="100" className="studio-nft-analysis-line-axis-stroke" />
-                  <line x1="0" y1="0" x2="0" y2="100" className="studio-nft-analysis-line-axis-stroke" />
+                  <line
+                    x1={chartPadding.left}
+                    y1={100 - chartPadding.bottom}
+                    x2={100 - chartPadding.right}
+                    y2={100 - chartPadding.bottom}
+                    className="studio-nft-analysis-line-axis-stroke"
+                  />
+                  <line
+                    x1={chartPadding.left}
+                    y1={chartPadding.top}
+                    x2={chartPadding.left}
+                    y2={100 - chartPadding.bottom}
+                    className="studio-nft-analysis-line-axis-stroke"
+                  />
                   <polyline
                     points={timelinePath}
                     fill="none"
                     stroke="#9fb4c8"
-                    strokeWidth="0.5"
+                    strokeWidth="0.85"
                     strokeLinejoin="round"
                     strokeLinecap="round"
                   />
@@ -740,13 +778,22 @@ function StudioAnalysisPage() {
                 <p className="studio-nft-analysis-status">No timeline data available.</p>
               )}
             </div>
-            {salesTimeline.length ? (
+            {timelineBuckets.length ? (
               <div className="studio-nft-analysis-line-axis">
                 <span>{timelineStart}</span>
-                <span>Price ({PROJECTS[selectedProject].volumeUnit})</span>
+                <span>Sale Date (X-Axis)</span>
                 <span>{timelineEnd}</span>
               </div>
             ) : null}
+            {timelineBuckets.length ? (
+              <div className="studio-nft-analysis-line-y-axis-labels">
+                <span>{formatCurrency(timelineMaxPrice, PROJECTS[selectedProject].volumeUnit)}</span>
+                <span>0 {PROJECTS[selectedProject].volumeUnit}</span>
+              </div>
+            ) : null}
+            <p className="studio-nft-analysis-line-y-axis-title">
+              Y-Axis: Price ({PROJECTS[selectedProject].volumeUnit})
+            </p>
           </div>
         </div>
       ) : (
