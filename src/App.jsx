@@ -409,6 +409,12 @@ function StudioAnalysisPage() {
       shortLabel: 'BAYC',
       endpoint: '/api/opensea-bayc-sales',
     },
+    napc: {
+      key: 'napc',
+      label: 'Not a Punks Cult',
+      shortLabel: 'NAPC',
+      endpoint: '/api/opensea-napc-sales',
+    },
   };
 
   const [loading, setLoading] = useState(true);
