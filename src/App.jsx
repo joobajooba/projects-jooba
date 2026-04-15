@@ -523,6 +523,30 @@ function StudioAnalysisPage() {
         .slice(0, 15)
     : [];
   const maxTraitCount = selectedTraitBars.reduce((max, item) => Math.max(max, item.count), 0);
+  const salesTimeline = [...normalizedSales]
+    .sort((a, b) => {
+      const ta = Number.isFinite(a.timestampMs) ? a.timestampMs : 0;
+      const tb = Number.isFinite(b.timestampMs) ? b.timestampMs : 0;
+      return ta - tb;
+    })
+    .map((sale) => ({
+      timestampMs: sale.timestampMs,
+      price: Number(sale.priceEth || 0),
+      saleDate: sale.saleDate,
+    }));
+  const timelineMaxPrice = salesTimeline.reduce((max, point) => Math.max(max, point.price), 0);
+  const timelinePath = salesTimeline.length
+    ? salesTimeline
+        .map((point, index) => {
+          const x =
+            salesTimeline.length > 1 ? (index / (salesTimeline.length - 1)) * 100 : 50;
+          const y = timelineMaxPrice > 0 ? 100 - (point.price / timelineMaxPrice) * 100 : 100;
+          return `${x},${y}`;
+        })
+        .join(' ')
+    : '';
+  const timelineStart = salesTimeline[0]?.saleDate || '';
+  const timelineEnd = salesTimeline[salesTimeline.length - 1]?.saleDate || '';
 
   const openSnapshotConfirm = () => {
     setSnapshotError('');
@@ -685,6 +709,42 @@ function StudioAnalysisPage() {
           ) : (
             <p className="studio-nft-analysis-status">No trait data available for this selection.</p>
           )}
+          <div className="studio-nft-analysis-line-panel">
+            <div className="studio-nft-analysis-line-head">
+              <h2 className="studio-nft-analysis-section-title">Sales Over Time</h2>
+              <span className="studio-nft-analysis-line-meta">
+                {salesTimeline.length} sales | Max: {formatCurrency(timelineMaxPrice, PROJECTS[selectedProject].volumeUnit)}
+              </span>
+            </div>
+            <div className="studio-nft-analysis-line-wrap">
+              {salesTimeline.length ? (
+                <svg
+                  className="studio-nft-analysis-line-chart"
+                  viewBox="0 0 100 100"
+                  preserveAspectRatio="none"
+                  role="img"
+                  aria-label="Line chart of sale prices over time"
+                >
+                  <polyline
+                    points={timelinePath}
+                    fill="none"
+                    stroke="#9fb4c8"
+                    strokeWidth="1.6"
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              ) : (
+                <p className="studio-nft-analysis-status">No timeline data available.</p>
+              )}
+            </div>
+            {salesTimeline.length ? (
+              <div className="studio-nft-analysis-line-axis">
+                <span>{timelineStart}</span>
+                <span>{timelineEnd}</span>
+              </div>
+            ) : null}
+          </div>
         </div>
       ) : (
         <div className="studio-nft-analysis-panel">
