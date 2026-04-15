@@ -380,7 +380,18 @@ function formatSaleDate(timestamp) {
 }
 
 function getDonutColor(index) {
-  const palette = ['#3b82f6', '#22c55e', '#f59e0b', '#a855f7', '#ef4444', '#14b8a6', '#f97316', '#64748b'];
+  const palette = [
+    '#2563eb',
+    '#16a34a',
+    '#f59e0b',
+    '#9333ea',
+    '#ef4444',
+    '#06b6d4',
+    '#f97316',
+    '#84cc16',
+    '#ec4899',
+    '#64748b',
+  ];
   return palette[index % palette.length];
 }
 
