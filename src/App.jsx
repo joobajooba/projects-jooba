@@ -522,7 +522,7 @@ function StudioAnalysisPage() {
         .sort((a, b) => b.count - a.count)
         .slice(0, 15)
     : [];
-  const maxTraitCount = selectedTraitBars.reduce((max, item) => Math.max(max, item.count), 0);
+  const barAxisMax = 100;
 
   const openSnapshotConfirm = () => {
     setSnapshotError('');
@@ -662,18 +662,16 @@ function StudioAnalysisPage() {
             <ul className="studio-nft-analysis-bar-list">
               {selectedTraitBars.map((item) => (
                 <li key={item.label} className="studio-nft-analysis-bar-row">
-                  <div className="studio-nft-analysis-bar-row-meta">
-                    <span className="studio-nft-analysis-bar-row-label">{item.label}</span>
-                    <strong className="studio-nft-analysis-bar-row-count">{item.count}</strong>
-                  </div>
+                  <span className="studio-nft-analysis-bar-row-label">{item.label}</span>
                   <div className="studio-nft-analysis-bar-track">
                     <span
                       className="studio-nft-analysis-bar-fill"
                       style={{
-                        width: `${maxTraitCount > 0 ? (item.count / maxTraitCount) * 100 : 0}%`,
+                        width: `${Math.min((item.count / barAxisMax) * 100, 100)}%`,
                       }}
                     />
                   </div>
+                  <strong className="studio-nft-analysis-bar-row-count">{item.count}</strong>
                 </li>
               ))}
             </ul>
