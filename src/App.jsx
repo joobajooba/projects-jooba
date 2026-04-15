@@ -725,6 +725,8 @@ function StudioAnalysisPage() {
                   role="img"
                   aria-label="Line chart of sale prices over time"
                 >
+                  <line x1="0" y1="100" x2="100" y2="100" className="studio-nft-analysis-line-axis-stroke" />
+                  <line x1="0" y1="0" x2="0" y2="100" className="studio-nft-analysis-line-axis-stroke" />
                   <polyline
                     points={timelinePath}
                     fill="none"
@@ -741,6 +743,7 @@ function StudioAnalysisPage() {
             {salesTimeline.length ? (
               <div className="studio-nft-analysis-line-axis">
                 <span>{timelineStart}</span>
+                <span>Price ({PROJECTS[selectedProject].volumeUnit})</span>
                 <span>{timelineEnd}</span>
               </div>
             ) : null}

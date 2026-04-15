@@ -1226,6 +1226,12 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   display: block;
 }
 
+.studio-nft-analysis-line-axis-stroke {
+  stroke: rgba(172, 198, 142, 0.35);
+  stroke-width: 0.45;
+  shape-rendering: crispEdges;
+}
+
 .studio-nft-analysis-line-axis {
   margin-top: 0.45rem;
   display: flex;
