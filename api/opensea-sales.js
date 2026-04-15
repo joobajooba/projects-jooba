@@ -38,6 +38,14 @@ function extractEthFromEvent(event) {
 function normalizeEvent(event) {
   const nft = event?.nft || {};
   const sale = event?.sale || {};
+  const traits = Array.isArray(nft?.traits)
+    ? nft.traits
+        .map((trait) => ({
+          traitType: trait?.trait_type || trait?.type || null,
+          value: trait?.value ?? null,
+        }))
+        .filter((trait) => trait.traitType && trait.value != null)
+    : [];
   return {
     eventId: event?.event_id || event?.id || null,
     tokenId: nft?.identifier || sale?.identifier || null,
@@ -50,6 +58,7 @@ function normalizeEvent(event) {
     paymentSymbol:
       event?.payment?.symbol || event?.payment?.token_symbol || sale?.payment_token?.symbol || null,
     priceEth: extractEthFromEvent(event),
+    traits,
   };
 }
 

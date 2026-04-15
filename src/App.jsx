@@ -358,12 +358,31 @@ function formatEth(value) {
   return `${n.toFixed(3)} ETH`;
 }
 
+function getPeriodKey(timestamp, mode) {
+  if (!timestamp) return '';
+  const d = new Date(timestamp);
+  if (Number.isNaN(d.getTime())) return '';
+  const year = d.getUTCFullYear();
+  const month = d.getUTCMonth() + 1;
+  if (mode === 'year') return String(year);
+  if (mode === 'quarter') return `${year}-Q${Math.floor((month - 1) / 3) + 1}`;
+  return `${year}-${String(month).padStart(2, '0')}`;
+}
+
+function getDonutColor(index) {
+  const palette = ['#3b82f6', '#22c55e', '#f59e0b', '#a855f7', '#ef4444', '#14b8a6', '#f97316', '#64748b'];
+  return palette[index % palette.length];
+}
+
 function StudioAnalysisPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [payload, setPayload] = useState(null);
   const [filterOpen, setFilterOpen] = useState(false);
   const [collectionFilter, setCollectionFilter] = useState('bayc');
+  const [timeFilterType, setTimeFilterType] = useState('year');
+  const [timeFilterValue, setTimeFilterValue] = useState('all');
+  const [traitFilterType, setTraitFilterType] = useState('Background');
 
   useEffect(() => {
     let cancelled = false;
@@ -405,7 +424,55 @@ function StudioAnalysisPage() {
       const tb = b.timestamp ? new Date(b.timestamp).getTime() : 0;
       return tb - ta;
     });
-  const filteredVolume = mergedSales.reduce((sum, sale) => sum + Number(sale.priceEth || 0), 0);
+  const timeOptions = Array.from(
+    new Set(
+      mergedSales
+        .map((sale) => getPeriodKey(sale.timestamp, timeFilterType))
+        .filter(Boolean)
+    )
+  ).sort((a, b) => (a < b ? 1 : -1));
+
+  useEffect(() => {
+    setTimeFilterValue('all');
+  }, [timeFilterType, collectionFilter]);
+
+  const timeFilteredSales =
+    timeFilterValue === 'all'
+      ? mergedSales
+      : mergedSales.filter((sale) => getPeriodKey(sale.timestamp, timeFilterType) === timeFilterValue);
+  const filteredVolume = timeFilteredSales.reduce((sum, sale) => sum + Number(sale.priceEth || 0), 0);
+
+  const traitTypeOptions = Array.from(
+    new Set(
+      timeFilteredSales.flatMap((sale) => (sale.traits || []).map((trait) => trait.traitType)).filter(Boolean)
+    )
+  ).sort((a, b) => a.localeCompare(b));
+
+  useEffect(() => {
+    if (!traitTypeOptions.length) return;
+    if (!traitTypeOptions.includes(traitFilterType)) {
+      setTraitFilterType(traitTypeOptions.includes('Background') ? 'Background' : traitTypeOptions[0]);
+    }
+  }, [traitTypeOptions, traitFilterType]);
+
+  const donutGroupsMap = new Map();
+  for (const sale of timeFilteredSales) {
+    const trait = (sale.traits || []).find((item) => item.traitType === traitFilterType);
+    const traitValue = String(trait?.value ?? 'Unknown');
+    const prev = donutGroupsMap.get(traitValue) || { label: traitValue, count: 0, volumeEth: 0 };
+    prev.count += 1;
+    prev.volumeEth += Number(sale.priceEth || 0);
+    donutGroupsMap.set(traitValue, prev);
+  }
+  const donutGroups = Array.from(donutGroupsMap.values()).sort((a, b) => b.count - a.count);
+  const donutTotal = donutGroups.reduce((sum, item) => sum + item.count, 0);
+  let donutOffset = 0;
+  const donutSegments = donutGroups.map((item, index) => {
+    const fraction = donutTotal > 0 ? item.count / donutTotal : 0;
+    const segment = { ...item, fraction, offset: donutOffset, color: getDonutColor(index) };
+    donutOffset += fraction;
+    return segment;
+  });
 
   return (
     <div className="studio-page studio-nft-analysis" aria-label="Analysis page">
@@ -431,35 +498,81 @@ function StudioAnalysisPage() {
           <p className="studio-nft-analysis-lead">Could not load OpenSea sales data.</p>
           <p>{error}</p>
         </div>
-      ) : mergedSales.length === 0 ? (
+      ) : timeFilteredSales.length === 0 ? (
         <div className="studio-nft-analysis-panel">
           <p className="studio-nft-analysis-lead">No sales found for the selected filter.</p>
         </div>
       ) : (
         <div className="studio-nft-analysis-body">
-          <section className="studio-nft-analysis-panel">
-            <p className="studio-nft-analysis-muted">
-              Showing {mergedSales.length} sales | Total volume: {formatEth(filteredVolume)}
-            </p>
-            <div className="studio-nft-analysis-table-wrap">
-              <table className="studio-nft-analysis-table">
-                <thead>
-                  <tr>
-                    <th>Collection</th>
-                    <th>Token</th>
-                    <th>Sale Price</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {mergedSales.map((sale) => (
-                    <tr key={sale.eventId || `${sale.collectionKey}-${sale.tokenId}-${sale.timestamp}`}>
-                      <td>{sale.collectionKey.toUpperCase()}</td>
-                      <td>{sale.name || `Token #${sale.tokenId || 'N/A'}`}</td>
-                      <td>{formatEth(sale.priceEth)}</td>
-                    </tr>
+          <section className="studio-nft-analysis-panel studio-nft-analysis-layout">
+            <div className="studio-nft-analysis-chart-col">
+              <div className="studio-nft-analysis-chart-head">
+                <h2 className="studio-nft-analysis-section-title">Trait Distribution</h2>
+                <select
+                  className="studio-nft-analysis-trait-select"
+                  value={traitFilterType}
+                  onChange={(e) => setTraitFilterType(e.target.value)}
+                  aria-label="Trait type"
+                >
+                  {traitTypeOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
                   ))}
-                </tbody>
-              </table>
+                </select>
+              </div>
+              <div className="studio-nft-analysis-donut-wrap">
+                <svg className="studio-nft-analysis-donut" viewBox="0 0 42 42" role="img" aria-label="Trait donut chart">
+                  <circle cx="21" cy="21" r="15.9155" fill="transparent" stroke="rgba(172, 198, 142, 0.15)" strokeWidth="6" />
+                  {donutSegments.map((segment) => (
+                    <circle
+                      key={segment.label}
+                      cx="21"
+                      cy="21"
+                      r="15.9155"
+                      fill="transparent"
+                      stroke={segment.color}
+                      strokeWidth="6"
+                      strokeDasharray={`${segment.fraction * 100} ${100 - segment.fraction * 100}`}
+                      strokeDashoffset={25 - segment.offset * 100}
+                    />
+                  ))}
+                </svg>
+                <ul className="studio-nft-analysis-donut-legend">
+                  {donutSegments.slice(0, 8).map((segment) => (
+                    <li key={segment.label}>
+                      <span className="studio-nft-analysis-donut-swatch" style={{ background: segment.color }} />
+                      <span className="studio-nft-analysis-donut-label">{segment.label}</span>
+                      <strong>{segment.count}</strong>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            <div className="studio-nft-analysis-table-col">
+              <p className="studio-nft-analysis-muted">
+                Showing {timeFilteredSales.length} sales | Total volume: {formatEth(filteredVolume)}
+              </p>
+              <div className="studio-nft-analysis-table-wrap">
+                <table className="studio-nft-analysis-table">
+                  <thead>
+                    <tr>
+                      <th>Collection</th>
+                      <th>Token</th>
+                      <th>Sale Price</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {timeFilteredSales.map((sale) => (
+                      <tr key={sale.eventId || `${sale.collectionKey}-${sale.tokenId}-${sale.timestamp}`}>
+                        <td>{sale.collectionKey.toUpperCase()}</td>
+                        <td>{sale.name || `Token #${sale.tokenId || 'N/A'}`}</td>
+                        <td>{formatEth(sale.priceEth)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </section>
         </div>
@@ -487,6 +600,32 @@ function StudioAnalysisPage() {
             >
               MAYC
             </button>
+          </div>
+          <h2 className="studio-nft-analysis-filter-title studio-nft-analysis-filter-title--spaced">Time Filter</h2>
+          <div className="studio-nft-analysis-filter-options">
+            <select
+              className="studio-nft-analysis-filter-select"
+              value={timeFilterType}
+              onChange={(e) => setTimeFilterType(e.target.value)}
+              aria-label="Time filter type"
+            >
+              <option value="year">Year</option>
+              <option value="quarter">Quarter</option>
+              <option value="month">Month</option>
+            </select>
+            <select
+              className="studio-nft-analysis-filter-select"
+              value={timeFilterValue}
+              onChange={(e) => setTimeFilterValue(e.target.value)}
+              aria-label="Time period"
+            >
+              <option value="all">All</option>
+              {timeOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
           </div>
         </aside>
       ) : null}
