@@ -360,7 +360,14 @@ function formatEth(value) {
 
 function getMonthKey(timestamp) {
   if (!timestamp) return '';
-  const d = new Date(timestamp);
+  const maybeNumber = Number(timestamp);
+  const normalized =
+    Number.isFinite(maybeNumber) && String(timestamp).trim() !== ''
+      ? maybeNumber < 1e12
+        ? maybeNumber * 1000
+        : maybeNumber
+      : timestamp;
+  const d = new Date(normalized);
   if (Number.isNaN(d.getTime())) return '';
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
 }

@@ -13,6 +13,29 @@ function toNumber(value) {
   return Number.isFinite(n) ? n : 0;
 }
 
+function normalizeTimestamp(value) {
+  if (value == null) return null;
+  if (typeof value === 'number') {
+    const millis = value < 1e12 ? value * 1000 : value;
+    const date = new Date(millis);
+    if (Number.isNaN(date.getTime())) return null;
+    return date.toISOString();
+  }
+  if (typeof value === 'string') {
+    const asNumber = Number(value);
+    if (Number.isFinite(asNumber)) {
+      const millis = asNumber < 1e12 ? asNumber * 1000 : asNumber;
+      const date = new Date(millis);
+      if (Number.isNaN(date.getTime())) return null;
+      return date.toISOString();
+    }
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+    return date.toISOString();
+  }
+  return null;
+}
+
 function extractEthFromEvent(event) {
   const quantity = toNumber(event?.quantity || 1);
   const payment = event?.payment;
@@ -48,6 +71,12 @@ function normalizeEvent(event) {
         }))
         .filter((trait) => trait.traitType && trait.value != null)
     : [];
+  const rawTimestamp =
+    event?.event_timestamp ||
+    sale?.event_timestamp ||
+    event?.created_date ||
+    sale?.created_date ||
+    null;
   return {
     eventId: event?.event_id || event?.id || null,
     tokenId: nft?.identifier || sale?.identifier || null,
@@ -56,12 +85,7 @@ function normalizeEvent(event) {
     seller: sale?.from_account?.address || event?.seller || null,
     buyer: sale?.to_account?.address || event?.buyer || null,
     txHash: event?.transaction || event?.transaction_hash || null,
-    timestamp:
-      event?.event_timestamp ||
-      sale?.event_timestamp ||
-      event?.created_date ||
-      sale?.created_date ||
-      null,
+    timestamp: normalizeTimestamp(rawTimestamp),
     paymentSymbol:
       event?.payment?.symbol || event?.payment?.token_symbol || sale?.payment_token?.symbol || null,
     priceEth: extractEthFromEvent(event),
@@ -97,11 +121,12 @@ async function fetchCollectionSales(slug, apiKey, limit) {
     const pageEvents = Array.isArray(payload?.asset_events) ? payload.asset_events : [];
     rawEvents.push(...pageEvents);
     for (const event of pageEvents) {
-      const ts =
+      const rawTs =
         event?.event_timestamp ||
         event?.sale?.event_timestamp ||
         event?.created_date ||
         event?.sale?.created_date;
+      const ts = normalizeTimestamp(rawTs);
       if (!ts) continue;
       const year = new Date(ts).getUTCFullYear();
       if (year === TARGET_YEAR) seenTargetYear = true;
@@ -110,11 +135,12 @@ async function fetchCollectionSales(slug, apiKey, limit) {
     pages += 1;
 
     const oldestEvent = pageEvents[pageEvents.length - 1];
-    const oldestTs =
+    const oldestRawTs =
       oldestEvent?.event_timestamp ||
       oldestEvent?.sale?.event_timestamp ||
       oldestEvent?.created_date ||
       oldestEvent?.sale?.created_date;
+    const oldestTs = normalizeTimestamp(oldestRawTs);
     const oldestYear = oldestTs ? new Date(oldestTs).getUTCFullYear() : null;
 
     if (seenTargetYear && oldestYear != null && oldestYear < TARGET_YEAR) break;
