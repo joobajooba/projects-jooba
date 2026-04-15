@@ -523,55 +523,6 @@ function StudioAnalysisPage() {
         .slice(0, 15)
     : [];
   const maxTraitCount = selectedTraitBars.reduce((max, item) => Math.max(max, item.count), 0);
-  const salesTimeline = [...normalizedSales]
-    .sort((a, b) => {
-      const ta = Number.isFinite(a.timestampMs) ? a.timestampMs : 0;
-      const tb = Number.isFinite(b.timestampMs) ? b.timestampMs : 0;
-      return ta - tb;
-    })
-    .map((sale) => ({
-      timestampMs: sale.timestampMs,
-      price: Number(sale.priceEth || 0),
-      saleDate: sale.saleDate,
-    }));
-  const timelineBuckets = (() => {
-    if (!salesTimeline.length) return [];
-    const maxPoints = 90;
-    const chunkSize = Math.max(1, Math.ceil(salesTimeline.length / maxPoints));
-    const buckets = [];
-    for (let i = 0; i < salesTimeline.length; i += chunkSize) {
-      const chunk = salesTimeline.slice(i, i + chunkSize);
-      const avgPrice =
-        chunk.reduce((sum, point) => sum + point.price, 0) / Math.max(chunk.length, 1);
-      buckets.push({
-        timestampMs: chunk[chunk.length - 1]?.timestampMs || chunk[0]?.timestampMs || 0,
-        price: avgPrice,
-        saleDate: chunk[chunk.length - 1]?.saleDate || chunk[0]?.saleDate || '',
-      });
-    }
-    return buckets;
-  })();
-  const timelineMaxPrice = timelineBuckets.reduce((max, point) => Math.max(max, point.price), 0);
-  const chartPadding = { left: 6, right: 2, top: 4, bottom: 8 };
-  const timelinePath = timelineBuckets.length
-    ? timelineBuckets
-        .map((point, index) => {
-          const xRange = 100 - chartPadding.left - chartPadding.right;
-          const yRange = 100 - chartPadding.top - chartPadding.bottom;
-          const x =
-            timelineBuckets.length > 1
-              ? chartPadding.left + (index / (timelineBuckets.length - 1)) * xRange
-              : chartPadding.left + xRange / 2;
-          const y =
-            timelineMaxPrice > 0
-              ? chartPadding.top + (1 - point.price / timelineMaxPrice) * yRange
-              : chartPadding.top + yRange;
-          return `${x},${y}`;
-        })
-        .join(' ')
-    : '';
-  const timelineStart = timelineBuckets[0]?.saleDate || '';
-  const timelineEnd = timelineBuckets[timelineBuckets.length - 1]?.saleDate || '';
 
   const openSnapshotConfirm = () => {
     setSnapshotError('');
@@ -734,67 +685,6 @@ function StudioAnalysisPage() {
           ) : (
             <p className="studio-nft-analysis-status">No trait data available for this selection.</p>
           )}
-          <div className="studio-nft-analysis-line-panel">
-            <div className="studio-nft-analysis-line-head">
-              <h2 className="studio-nft-analysis-section-title">Sales Over Time</h2>
-              <span className="studio-nft-analysis-line-meta">
-                {salesTimeline.length} sales | Max:{' '}
-                {formatCurrency(timelineMaxPrice, PROJECTS[selectedProject].volumeUnit)}
-              </span>
-            </div>
-            <div className="studio-nft-analysis-line-wrap">
-              {timelineBuckets.length ? (
-                <svg
-                  className="studio-nft-analysis-line-chart"
-                  viewBox="0 0 100 100"
-                  preserveAspectRatio="none"
-                  role="img"
-                  aria-label="Line chart of sale prices over time"
-                >
-                  <line
-                    x1={chartPadding.left}
-                    y1={100 - chartPadding.bottom}
-                    x2={100 - chartPadding.right}
-                    y2={100 - chartPadding.bottom}
-                    className="studio-nft-analysis-line-axis-stroke"
-                  />
-                  <line
-                    x1={chartPadding.left}
-                    y1={chartPadding.top}
-                    x2={chartPadding.left}
-                    y2={100 - chartPadding.bottom}
-                    className="studio-nft-analysis-line-axis-stroke"
-                  />
-                  <polyline
-                    points={timelinePath}
-                    fill="none"
-                    stroke="#9fb4c8"
-                    strokeWidth="0.85"
-                    strokeLinejoin="round"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              ) : (
-                <p className="studio-nft-analysis-status">No timeline data available.</p>
-              )}
-            </div>
-            {timelineBuckets.length ? (
-              <div className="studio-nft-analysis-line-axis">
-                <span>{timelineStart}</span>
-                <span>Sale Date (X-Axis)</span>
-                <span>{timelineEnd}</span>
-              </div>
-            ) : null}
-            {timelineBuckets.length ? (
-              <div className="studio-nft-analysis-line-y-axis-labels">
-                <span>{formatCurrency(timelineMaxPrice, PROJECTS[selectedProject].volumeUnit)}</span>
-                <span>0 {PROJECTS[selectedProject].volumeUnit}</span>
-              </div>
-            ) : null}
-            <p className="studio-nft-analysis-line-y-axis-title">
-              Y-Axis: Price ({PROJECTS[selectedProject].volumeUnit})
-            </p>
-          </div>
         </div>
       ) : (
         <div className="studio-nft-analysis-panel">
