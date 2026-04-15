@@ -952,9 +952,12 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
 
 .studio-nft-analysis-donut-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(13.5rem, 1fr);
   gap: 1rem;
   align-items: start;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
 }
 
 .studio-nft-analysis-donut-card {
