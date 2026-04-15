@@ -384,12 +384,6 @@ function getDonutColor(index) {
   return palette[index % palette.length];
 }
 
-function buildMonthOptions(year = 2026) {
-  const out = [];
-  for (let m = 1; m <= 12; m += 1) out.push(`${year}-${String(m).padStart(2, '0')}`);
-  return out;
-}
-
 function StudioAnalysisPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -428,7 +422,7 @@ function StudioAnalysisPage() {
       saleDate: formatSaleDate(sale.timestamp),
       apeLabel: sale.apeId ? `#${sale.apeId}` : sale.name || 'N/A',
       collection: sale.collection || 'Mutant Ape Yacht Club',
-      fur: sale.fur || 'Unknown',
+      traits: Array.isArray(sale.traits) ? sale.traits : [],
     }))
     .filter((sale) => Number.isFinite(sale.timestampMs))
     .sort((a, b) => {
@@ -437,23 +431,43 @@ function StudioAnalysisPage() {
       return tb - ta;
     });
 
-  const donutGroupsMap = new Map();
-  for (const sale of normalizedSales) {
-    const prev = donutGroupsMap.get(sale.fur) || { label: sale.fur, count: 0, volumeEth: 0 };
-    prev.count += 1;
-    prev.volumeEth += Number(sale.priceEth || 0);
-    donutGroupsMap.set(sale.fur, prev);
-  }
-  const donutGroups = Array.from(donutGroupsMap.values()).sort((a, b) => b.count - a.count);
-  const donutTotal = donutGroups.reduce((sum, item) => sum + item.count, 0);
   const totalVolume = normalizedSales.reduce((sum, sale) => sum + Number(sale.priceEth || 0), 0);
-  let donutOffset = 0;
-  const donutSegments = donutGroups.map((item, index) => {
-    const fraction = donutTotal > 0 ? item.count / donutTotal : 0;
-    const segment = { ...item, fraction, offset: donutOffset, color: getDonutColor(index) };
-    donutOffset += fraction;
-    return segment;
-  });
+
+  const traitTypeMap = new Map();
+  for (const sale of normalizedSales) {
+    for (const trait of sale.traits) {
+      const traitType = trait?.traitType || 'Unknown';
+      const traitValue = String(trait?.value ?? 'Unknown');
+      if (!traitTypeMap.has(traitType)) traitTypeMap.set(traitType, new Map());
+      const valueMap = traitTypeMap.get(traitType);
+      valueMap.set(traitValue, (valueMap.get(traitValue) || 0) + 1);
+    }
+  }
+
+  const traitCharts = Array.from(traitTypeMap.entries())
+    .map(([traitType, valueMap]) => {
+      const topGroups = Array.from(valueMap.entries())
+        .map(([label, count]) => ({ label, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
+
+      const donutTotal = topGroups.reduce((sum, item) => sum + item.count, 0);
+      let donutOffset = 0;
+      const segments = topGroups.map((item, index) => {
+        const fraction = donutTotal > 0 ? item.count / donutTotal : 0;
+        const segment = {
+          ...item,
+          fraction,
+          offset: donutOffset,
+          color: getDonutColor(index),
+        };
+        donutOffset += fraction;
+        return segment;
+      });
+
+      return { traitType, total: donutTotal, segments };
+    })
+    .sort((a, b) => b.total - a.total);
 
   return (
     <div className="studio-page studio-nft-analysis" aria-label="Analysis page">
@@ -499,32 +513,44 @@ function StudioAnalysisPage() {
           <p className="studio-nft-analysis-muted">
             Last {normalizedSales.length} sales | Total volume: {formatEth(totalVolume)}
           </p>
-          <div className="studio-nft-analysis-donut-wrap">
-            <svg className="studio-nft-analysis-donut" viewBox="0 0 42 42" role="img" aria-label="Fur trait donut chart">
-              <circle cx="21" cy="21" r="15.9155" fill="transparent" stroke="rgba(172, 198, 142, 0.15)" strokeWidth="6" />
-              {donutSegments.map((segment) => (
-                <circle
-                  key={segment.label}
-                  cx="21"
-                  cy="21"
-                  r="15.9155"
-                  fill="transparent"
-                  stroke={segment.color}
-                  strokeWidth="6"
-                  strokeDasharray={`${segment.fraction * 100} ${100 - segment.fraction * 100}`}
-                  strokeDashoffset={25 - segment.offset * 100}
-                />
-              ))}
-            </svg>
-            <ul className="studio-nft-analysis-donut-legend">
-              {donutSegments.map((segment) => (
-                <li key={segment.label}>
-                  <span className="studio-nft-analysis-donut-swatch" style={{ background: segment.color }} />
-                  <span className="studio-nft-analysis-donut-label">{segment.label}</span>
-                  <strong>{segment.count}</strong>
-                </li>
-              ))}
-            </ul>
+          <div className="studio-nft-analysis-donut-grid">
+            {traitCharts.map((chart) => (
+              <article key={chart.traitType} className="studio-nft-analysis-donut-card">
+                <h2 className="studio-nft-analysis-section-title">{chart.traitType} (Top 10)</h2>
+                <div className="studio-nft-analysis-donut-wrap">
+                  <svg
+                    className="studio-nft-analysis-donut"
+                    viewBox="0 0 42 42"
+                    role="img"
+                    aria-label={`${chart.traitType} trait donut chart`}
+                  >
+                    <circle cx="21" cy="21" r="15.9155" fill="transparent" stroke="rgba(172, 198, 142, 0.15)" strokeWidth="6" />
+                    {chart.segments.map((segment) => (
+                      <circle
+                        key={segment.label}
+                        cx="21"
+                        cy="21"
+                        r="15.9155"
+                        fill="transparent"
+                        stroke={segment.color}
+                        strokeWidth="6"
+                        strokeDasharray={`${segment.fraction * 100} ${100 - segment.fraction * 100}`}
+                        strokeDashoffset={25 - segment.offset * 100}
+                      />
+                    ))}
+                  </svg>
+                  <ul className="studio-nft-analysis-donut-legend">
+                    {chart.segments.map((segment) => (
+                      <li key={segment.label}>
+                        <span className="studio-nft-analysis-donut-swatch" style={{ background: segment.color }} />
+                        <span className="studio-nft-analysis-donut-label">{segment.label}</span>
+                        <strong>{segment.count}</strong>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </article>
+            ))}
           </div>
         </div>
       ) : (

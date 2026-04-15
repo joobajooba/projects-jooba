@@ -950,6 +950,20 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   gap: 0.65rem;
 }
 
+.studio-nft-analysis-donut-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+.studio-nft-analysis-donut-card {
+  border: 1px solid var(--jooba-ui-border-muted);
+  border-radius: 10px;
+  padding: 0.7rem 0.75rem;
+  background: rgba(172, 198, 142, 0.03);
+}
+
 .studio-nft-analysis-donut {
   width: 11rem;
   height: 11rem;

@@ -59,13 +59,14 @@ function extractEthFromEvent(event) {
   return 0;
 }
 
-function extractFurTrait(nft) {
+function normalizeTraits(nft) {
   const traits = Array.isArray(nft?.traits) ? nft.traits : [];
-  const fur = traits.find((trait) => {
-    const type = (trait?.trait_type || trait?.type || '').toLowerCase();
-    return type === 'fur';
-  });
-  return fur?.value != null ? String(fur.value) : 'Unknown';
+  return traits
+    .map((trait) => ({
+      traitType: trait?.trait_type || trait?.type || null,
+      value: trait?.value != null ? String(trait.value) : null,
+    }))
+    .filter((trait) => trait.traitType && trait.value != null);
 }
 
 function normalizeEvent(event) {
@@ -86,7 +87,7 @@ function normalizeEvent(event) {
     name: nft?.name || null,
     timestamp: normalizeTimestamp(rawTimestamp),
     priceEth: extractEthFromEvent(event),
-    fur: extractFurTrait(nft),
+    traits: normalizeTraits(nft),
   };
 }
 
