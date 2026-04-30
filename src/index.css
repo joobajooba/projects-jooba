@@ -14,24 +14,24 @@
   /* High-contrast chrome (sidebar / top bar / footer) */
   --chrome-fg: #f2f5ee;
   --chrome-fg-muted: #d6dccf;
-  /* Accent names kept for compatibility; palette is khaki / olive green */
-  --jooba-gold: #b8c9a0;
-  --jooba-gold-2: #5f7a4e;
-  --jooba-gold-bright: #e8efd8;
-  --jooba-text-primary: #eef2e8;
-  --jooba-text-secondary: #b4c4a8;
-  --jooba-text-tertiary: #7a8a6e;
-  --jooba-border: rgba(175, 198, 150, 0.28);
-  --jooba-border-hover: rgba(195, 218, 168, 0.52);
-  --jooba-glow: rgba(120, 150, 95, 0.38);
-  --jooba-surface-deep: #050604;
-  --jooba-surface-0: #080a07;
-  --jooba-surface-1: #0e100c;
-  --jooba-surface-2: #141812;
-  --jooba-surface-3: #1a1f18;
-  --jooba-panel: #0c0f0b;
-  --jooba-ui-border: rgba(165, 190, 135, 0.32);
-  --jooba-ui-border-muted: rgba(140, 165, 115, 0.22);
+  /* Accent names kept for compatibility; palette shifted to cool blue */
+  --jooba-gold: #9ab8de;
+  --jooba-gold-2: #47648a;
+  --jooba-gold-bright: #dce9f8;
+  --jooba-text-primary: #edf4ff;
+  --jooba-text-secondary: #afc3de;
+  --jooba-text-tertiary: #7589a5;
+  --jooba-border: rgba(136, 168, 206, 0.28);
+  --jooba-border-hover: rgba(164, 196, 235, 0.52);
+  --jooba-glow: rgba(80, 120, 170, 0.38);
+  --jooba-surface-deep: #03050a;
+  --jooba-surface-0: #060a12;
+  --jooba-surface-1: #0b111c;
+  --jooba-surface-2: #121a29;
+  --jooba-surface-3: #182334;
+  --jooba-panel: #0a101a;
+  --jooba-ui-border: rgba(132, 164, 203, 0.32);
+  --jooba-ui-border-muted: rgba(108, 140, 177, 0.22);
 }
 
 html {
@@ -54,9 +54,9 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background:
-    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(95, 120, 72, 0.28), transparent 70%),
-    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(38, 48, 30, 0.5), transparent 70%),
-    linear-gradient(180deg, #0e100c, #080a07 42%, #050604);
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(66, 100, 150, 0.28), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(22, 34, 56, 0.5), transparent 70%),
+    linear-gradient(180deg, #0b111c, #060a12 42%, #03050a);
 }
 
 @keyframes jooba-sweep {
