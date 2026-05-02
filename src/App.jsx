@@ -445,34 +445,94 @@ export default function App() {
   } else if (studioPage === 'other') {
     studioMain = (
       <div className="studio-page studio-page--other" aria-label="Portfolio">
-        <div className="studio-portfolio-row">
-          <figure className="studio-portfolio-item">
-            <img
-              src="/mayc-other-page.png"
-              alt="Mutant Ape Yacht Club"
-              width={1024}
-              height={1024}
-              decoding="async"
-            />
-          </figure>
-          <figure className="studio-portfolio-item">
-            <img
-              src="/portfolio-demonbros.png"
-              alt="Demonbros"
-              width={1024}
-              height={1024}
-              decoding="async"
-            />
-          </figure>
-          <figure className="studio-portfolio-item">
-            <img
-              src="/portfolio-otherpet.png"
-              alt="Otherpet"
-              width={1024}
-              height={1024}
-              decoding="async"
-            />
-          </figure>
+        <div className="studio-portfolio-rows">
+          <div className="studio-portfolio-row">
+            <figure className="studio-portfolio-item">
+              <img
+                src="/mayc-other-page.png"
+                alt="Mutant Ape Yacht Club"
+                width={1024}
+                height={1024}
+                decoding="async"
+              />
+            </figure>
+            <figure className="studio-portfolio-item">
+              <img
+                src="/portfolio-demonbros.png"
+                alt="Demonbros"
+                width={1024}
+                height={1024}
+                decoding="async"
+              />
+            </figure>
+            <figure className="studio-portfolio-item">
+              <img
+                src="/portfolio-otherpet.png"
+                alt="Otherpet"
+                width={1024}
+                height={1024}
+                decoding="async"
+              />
+            </figure>
+          </div>
+          <div className="studio-portfolio-row">
+            <figure className="studio-portfolio-item">
+              <img
+                src="/portfolio-otheregg.png"
+                alt="Otherdeed egg"
+                width={1024}
+                height={1024}
+                decoding="async"
+              />
+            </figure>
+            <figure className="studio-portfolio-item">
+              <img
+                src="/portfolio-hoodlum.png"
+                alt="Hoodlum pixel character"
+                width={1024}
+                height={1024}
+                decoding="async"
+              />
+            </figure>
+            <figure className="studio-portfolio-item">
+              <img
+                src="/portfolio-mimu.png"
+                alt="Mimu"
+                width={1024}
+                height={1024}
+                decoding="async"
+              />
+            </figure>
+          </div>
+          <div className="studio-portfolio-row">
+            <figure className="studio-portfolio-item">
+              <img
+                src="/portfolio-bani.png"
+                alt="Bani cybernetic rabbit"
+                width={1024}
+                height={1024}
+                decoding="async"
+              />
+            </figure>
+            <figure className="studio-portfolio-item">
+              <img
+                src="/portfolio-goblin.png"
+                alt="Royal goblin character"
+                width={1024}
+                height={1024}
+                decoding="async"
+              />
+            </figure>
+            <figure className="studio-portfolio-item">
+              <img
+                src="/portfolio-cloudy.png"
+                alt="Cloudy wizard cat"
+                width={1024}
+                height={1024}
+                decoding="async"
+              />
+            </figure>
+          </div>
         </div>
       </div>
     );

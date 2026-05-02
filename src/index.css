@@ -617,12 +617,20 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   width: 100%;
   max-width: min(100%, 72rem);
   min-height: min(52dvh, 22rem);
   margin-inline: auto;
+  padding-block: 0.5rem 1.5rem;
   box-sizing: border-box;
+}
+
+.studio-portfolio-rows {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.5rem, 2vw, 1rem);
+  width: 100%;
 }
 
 .studio-page--blank {
