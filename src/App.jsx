@@ -1,5 +1,25 @@
 import { useEffect, useState } from 'react';
 import { supabase } from './lib/supabaseClient';
+
+/** Deep-link paths so copying the address bar matches the visible studio tab. */
+function pathnameToStudioPage(pathname) {
+  const p = (pathname || '/').replace(/\/+$/, '') || '/';
+  if (p === '/portfolio') return 'other';
+  if (p === '/studio') return 'studio';
+  return 'home';
+}
+
+function studioPageToPathname(page) {
+  if (page === 'other') return '/portfolio';
+  if (page === 'studio') return '/studio';
+  return '/';
+}
+
+function pathnamesEqual(a, b) {
+  const x = (a || '/').replace(/\/+$/, '') || '/';
+  const y = (b || '/').replace(/\/+$/, '') || '/';
+  return x === y;
+}
 import { playClickSound } from './lib/clickSound';
 import WalletTopBarButton from './components/WalletTopBarButton';
 import StudioHomeModal from './components/StudioHomeModal';
@@ -346,8 +366,26 @@ function StudioLandingContent({
 export default function App() {
   const [status, setStatus] = useState('checking');
   const [previewMode, setPreviewMode] = useState('desktop');
-  const [studioPage, setStudioPage] = useState('home');
+  const [studioPage, setStudioPage] = useState(() =>
+    typeof window !== 'undefined' ? pathnameToStudioPage(window.location.pathname) : 'home',
+  );
   const [homeModal, setHomeModal] = useState(null);
+
+  const selectStudioPage = (page) => {
+    setStudioPage(page);
+    const next = studioPageToPathname(page);
+    if (!pathnamesEqual(window.location.pathname, next)) {
+      window.history.pushState({ studioPage: page }, '', next);
+    }
+  };
+
+  useEffect(() => {
+    const onPopState = () => {
+      setStudioPage(pathnameToStudioPage(window.location.pathname));
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
 
   useEffect(() => {
     if (studioPage !== 'home') setHomeModal(null);
@@ -390,7 +428,7 @@ export default function App() {
     previewMode,
     onTogglePreview: togglePreview,
     activeStudioPage: studioPage,
-    onSelectStudioPage: setStudioPage,
+    onSelectStudioPage: selectStudioPage,
   };
 
   if (status === 'missing_env') {
