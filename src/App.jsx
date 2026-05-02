@@ -458,6 +458,15 @@ export default function App() {
             </figure>
             <figure className="studio-portfolio-item">
               <img
+                src="/portfolio-npc.png"
+                alt="NPC portrait with sunglasses"
+                width={1024}
+                height={1024}
+                decoding="async"
+              />
+            </figure>
+            <figure className="studio-portfolio-item">
+              <img
                 src="/portfolio-demonbros.png"
                 alt="Demonbros"
                 width={1024}
@@ -465,6 +474,8 @@ export default function App() {
                 decoding="async"
               />
             </figure>
+          </div>
+          <div className="studio-portfolio-row">
             <figure className="studio-portfolio-item">
               <img
                 src="/portfolio-otherpet.png"
@@ -474,8 +485,6 @@ export default function App() {
                 decoding="async"
               />
             </figure>
-          </div>
-          <div className="studio-portfolio-row">
             <figure className="studio-portfolio-item">
               <img
                 src="/portfolio-otheregg.png"
@@ -494,6 +503,8 @@ export default function App() {
                 decoding="async"
               />
             </figure>
+          </div>
+          <div className="studio-portfolio-row">
             <figure className="studio-portfolio-item">
               <img
                 src="/portfolio-mimu.png"
@@ -503,8 +514,6 @@ export default function App() {
                 decoding="async"
               />
             </figure>
-          </div>
-          <div className="studio-portfolio-row">
             <figure className="studio-portfolio-item">
               <img
                 src="/portfolio-bani.png"
@@ -523,10 +532,30 @@ export default function App() {
                 decoding="async"
               />
             </figure>
+          </div>
+          <div className="studio-portfolio-row">
             <figure className="studio-portfolio-item">
               <img
                 src="/portfolio-cloudy.png"
                 alt="Cloudy wizard cat"
+                width={1024}
+                height={1024}
+                decoding="async"
+              />
+            </figure>
+            <figure className="studio-portfolio-item">
+              <img
+                src="/portfolio-punkbitmutant.png"
+                alt="Punkbit voxel mutant"
+                width={1024}
+                height={1024}
+                decoding="async"
+              />
+            </figure>
+            <figure className="studio-portfolio-item">
+              <img
+                src="/portfolio-ape-3123.png"
+                alt="Ape with lamp and genie line art"
                 width={1024}
                 height={1024}
                 decoding="async"
