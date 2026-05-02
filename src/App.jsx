@@ -112,8 +112,8 @@ function Shell({ children, previewMode, onTogglePreview, activeStudioPage, onSel
             type="button"
             className="app-sidebar-nav-btn"
             onClick={() => onSelectStudioPage('other')}
-            title="Other Pages"
-            aria-label="Other Pages"
+            title="Portfolio"
+            aria-label="Portfolio"
             aria-current={activeStudioPage === 'other' ? 'page' : undefined}
           >
             <IconSquare3Stack3d />
@@ -444,17 +444,36 @@ export default function App() {
     );
   } else if (studioPage === 'other') {
     studioMain = (
-      <div className="studio-page studio-page--other" aria-label="Other pages">
-        <figure className="studio-other-figure">
-          <img
-            className="studio-other-full-img"
-            src="/mayc-other-page.png"
-            alt="Mutant Ape Yacht Club"
-            width={1024}
-            height={1024}
-            decoding="async"
-          />
-        </figure>
+      <div className="studio-page studio-page--other" aria-label="Portfolio">
+        <div className="studio-portfolio-row">
+          <figure className="studio-portfolio-item">
+            <img
+              src="/mayc-other-page.png"
+              alt="Mutant Ape Yacht Club"
+              width={1024}
+              height={1024}
+              decoding="async"
+            />
+          </figure>
+          <figure className="studio-portfolio-item">
+            <img
+              src="/portfolio-demonbros.png"
+              alt="Demonbros"
+              width={1024}
+              height={1024}
+              decoding="async"
+            />
+          </figure>
+          <figure className="studio-portfolio-item">
+            <img
+              src="/portfolio-otherpet.png"
+              alt="Otherpet"
+              width={1024}
+              height={1024}
+              decoding="async"
+            />
+          </figure>
+        </div>
       </div>
     );
   } else {
