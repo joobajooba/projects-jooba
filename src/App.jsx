@@ -21,28 +21,29 @@ const HOME_SECTIONS = [
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
-  const [wipeActive, setWipeActive] = useState(false);
-  const wipeTimeoutRef = useRef(null);
-  const lastWipeRef = useRef(0);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [curtainActive, setCurtainActive] = useState(false);
+  const curtainTimeoutRef = useRef(null);
+  const lastCurtainRef = useRef(0);
 
   useEffect(() => () => {
-    window.clearTimeout(wipeTimeoutRef.current);
+    window.clearTimeout(curtainTimeoutRef.current);
   }, []);
 
-  const triggerGradientWipe = () => {
+  const triggerCurtainTransition = () => {
     const now = Date.now();
 
-    if (now - lastWipeRef.current < 900) {
+    if (now - lastCurtainRef.current < 900) {
       return;
     }
 
-    lastWipeRef.current = now;
-    window.clearTimeout(wipeTimeoutRef.current);
-    setWipeActive(false);
+    lastCurtainRef.current = now;
+    window.clearTimeout(curtainTimeoutRef.current);
+    setCurtainActive(false);
 
     window.requestAnimationFrame(() => {
-      setWipeActive(true);
-      wipeTimeoutRef.current = window.setTimeout(() => setWipeActive(false), 850);
+      setCurtainActive(true);
+      curtainTimeoutRef.current = window.setTimeout(() => setCurtainActive(false), 900);
     });
   };
 
@@ -56,13 +57,13 @@ export default function App() {
   };
 
   const handleSectionNav = () => {
-    triggerGradientWipe();
+    triggerCurtainTransition();
     closeSidebar();
   };
 
   const handleWheel = (event) => {
     if (event.deltaY > 40) {
-      triggerGradientWipe();
+      triggerCurtainTransition();
     }
   };
 
@@ -119,12 +120,56 @@ export default function App() {
         <section className="c-section-grid" aria-label="Home sections">
           {HOME_SECTIONS.map((section) => (
             <article key={section.id} id={section.id} className="c-section-card" aria-label={section.title}>
-              <img className="c-section-card__image" src={section.image} alt="" loading="lazy" />
+              {section.id === 'roadmap' ? (
+                <button
+                  type="button"
+                  className="c-section-card__button"
+                  onClick={() => setProfileModalOpen(true)}
+                  aria-label="Open J00BA profile"
+                >
+                  <img className="c-section-card__image" src={section.image} alt="" loading="lazy" />
+                </button>
+              ) : (
+                <img className="c-section-card__image" src={section.image} alt="" loading="lazy" />
+              )}
             </article>
           ))}
         </section>
       </main>
-      <div className={`c-gradient-wipe${wipeActive ? ' c-gradient-wipe--active' : ''}`} aria-hidden="true" />
+      <div className={`c-curtain-transition${curtainActive ? ' c-curtain-transition--active' : ''}`} aria-hidden="true">
+        <span className="c-curtain-transition__panel c-curtain-transition__panel--top" />
+        <span className="c-curtain-transition__panel c-curtain-transition__panel--bottom" />
+      </div>
+      {profileModalOpen && (
+        <div className="c-profile-modal" role="dialog" aria-modal="true" aria-labelledby="j00ba-profile-title">
+          <button
+            type="button"
+            className="c-profile-modal__overlay"
+            onClick={() => setProfileModalOpen(false)}
+            aria-label="Close J00BA profile"
+          />
+          <section className="c-profile-modal__panel">
+            <button type="button" className="c-profile-modal__close" onClick={() => setProfileModalOpen(false)}>
+              Close
+            </button>
+            <img className="c-profile-modal__image" src="/section-art/roadmap.png" alt="J00BA artwork" />
+            <dl className="c-profile-modal__details">
+              <div className="c-profile-modal__row">
+                <dt>Name</dt>
+                <dd id="j00ba-profile-title">J00BA</dd>
+              </div>
+              <div className="c-profile-modal__row">
+                <dt>Handle</dt>
+                <dd>j00ba_j00ba</dd>
+              </div>
+              <div className="c-profile-modal__row">
+                <dt>About me</dt>
+                <dd>My name is J00BA and i love JPEGS</dd>
+              </div>
+            </dl>
+          </section>
+        </div>
+      )}
       <CryptoWalletModal open={walletModalOpen} onClose={() => setWalletModalOpen(false)} />
     </div>
   );

@@ -430,24 +430,42 @@ a {
   -webkit-background-clip: text;
 }
 
-/* Components: gradient wipe */
-.c-gradient-wipe {
+/* Components: curtain transition */
+.c-curtain-transition {
   position: fixed;
   inset: 0;
   z-index: 60;
+  overflow: hidden;
   pointer-events: none;
-  background: linear-gradient(
-    120deg,
-    var(--color-gradient-cyan),
-    var(--color-gradient-coral),
-    var(--color-gradient-navy)
-  );
-  opacity: 0;
-  transform: translateY(105%);
 }
 
-.c-gradient-wipe--active {
-  animation: gradient-wipe 850ms cubic-bezier(0.76, 0, 0.24, 1);
+.c-curtain-transition__panel {
+  position: absolute;
+  right: 0;
+  left: 0;
+  height: 50%;
+  background:
+    linear-gradient(90deg, rgba(114, 247, 239, 0.22), rgba(255, 111, 97, 0.14), rgba(23, 45, 92, 0.28)),
+    var(--color-page);
+  opacity: 0;
+}
+
+.c-curtain-transition__panel--top {
+  top: 0;
+  transform: translateY(-100%);
+}
+
+.c-curtain-transition__panel--bottom {
+  bottom: 0;
+  transform: translateY(100%);
+}
+
+.c-curtain-transition--active .c-curtain-transition__panel--top {
+  animation: curtain-slide-top 900ms cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.c-curtain-transition--active .c-curtain-transition__panel--bottom {
+  animation: curtain-slide-bottom 900ms cubic-bezier(0.76, 0, 0.24, 1);
 }
 
 @keyframes marquee-scroll {
@@ -460,24 +478,45 @@ a {
   }
 }
 
-@keyframes gradient-wipe {
+@keyframes curtain-slide-top {
   0% {
     opacity: 0;
-    transform: translateY(105%);
+    transform: translateY(-100%);
   }
 
   18% {
-    opacity: 0.94;
+    opacity: 0.98;
   }
 
   52% {
-    opacity: 0.94;
+    opacity: 0.98;
     transform: translateY(0);
   }
 
   100% {
     opacity: 0;
-    transform: translateY(-105%);
+    transform: translateY(-100%);
+  }
+}
+
+@keyframes curtain-slide-bottom {
+  0% {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+
+  18% {
+    opacity: 0.98;
+  }
+
+  52% {
+    opacity: 0.98;
+    transform: translateY(0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(100%);
   }
 }
 
@@ -510,6 +549,22 @@ a {
   border-right: 0;
 }
 
+.c-section-card__button {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.c-section-card__button:focus-visible {
+  outline: 4px solid var(--color-gradient-cyan);
+  outline-offset: -4px;
+}
+
 .c-section-card__image {
   position: absolute;
   inset: 0;
@@ -524,6 +579,82 @@ a {
   inset: 0;
   content: '';
   background: linear-gradient(180deg, rgba(3, 5, 10, 0.2), rgba(3, 5, 10, 0.55));
+  pointer-events: none;
+}
+
+/* Components: profile modal */
+.c-profile-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  padding: var(--space-lg);
+}
+
+.c-profile-modal__overlay {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.72);
+  cursor: pointer;
+}
+
+.c-profile-modal__panel {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 32rem);
+  padding: var(--space-xl);
+  border: var(--section-line-width) solid var(--color-text);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.65);
+}
+
+.c-profile-modal__close {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
+  padding: 0.45rem 0.7rem;
+  border-radius: var(--radius-md);
+  background: var(--color-button-bg);
+  color: var(--color-button-text);
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.c-profile-modal__image {
+  display: block;
+  width: min(100%, 18rem);
+  aspect-ratio: 1;
+  margin: 0 auto var(--space-xl);
+  border-radius: var(--radius-lg);
+  object-fit: cover;
+}
+
+.c-profile-modal__details {
+  display: grid;
+  gap: var(--space-md);
+  margin: 0;
+}
+
+.c-profile-modal__row {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.c-profile-modal__row dt {
+  color: var(--color-gradient-cyan);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.c-profile-modal__row dd {
+  margin: 0;
+  color: var(--color-text);
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  font-weight: 800;
 }
 
 /* Components: 3D model viewer */
@@ -659,7 +790,7 @@ a {
     transform: translateX(0);
   }
 
-  .c-gradient-wipe--active {
+  .c-curtain-transition--active .c-curtain-transition__panel {
     animation: none;
   }
 }
