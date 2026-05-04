@@ -83,7 +83,7 @@ body {
 }
 
 .app-only-shell {
-  --app-nav-w: 44px;
+  --app-nav-w: 66px;
   flex: 1;
   min-height: 0;
   width: 100%;
@@ -93,8 +93,8 @@ body {
   background: var(--jooba-surface-deep);
 }
 
-.app-only-shell--collapsed {
-  --app-nav-w: 28px;
+.app-only-shell--collapsed .app-left-nav {
+  display: none;
 }
 
 .app-left-nav {
@@ -171,7 +171,7 @@ body {
   width: 1.45rem;
   height: 1.45rem;
   padding: 0;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.55);
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
@@ -186,6 +186,7 @@ body {
 }
 
 .app-only-shell--collapsed .app-left-nav-collapse {
+  left: 0.35rem;
   transform: rotate(180deg);
 }
 
