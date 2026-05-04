@@ -128,21 +128,33 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0;
+  position: relative;
   min-height: 3.1rem;
   padding: 0.45rem 0.25rem;
-  border: 2px solid transparent;
+  border: none;
   border-radius: 8px;
   color: #ffffff;
   text-decoration: none;
-  background:
-    linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0)) padding-box,
-    linear-gradient(120deg, #b8f0eb 0%, #ffc8be 52%, #2c4a75 100%) border-box;
+  background: transparent;
+}
+
+.app-left-nav-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(120deg, #b8f0eb 0%, #ffc8be 52%, #2c4a75 100%);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
 }
 
 .app-left-nav-btn:hover {
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.08)) padding-box,
-    linear-gradient(120deg, #b8f0eb 0%, #ffc8be 52%, #2c4a75 100%) border-box;
+  background: transparent;
 }
 
 .app-left-nav-icon {
@@ -174,22 +186,33 @@ body {
   width: 1.45rem;
   height: 1.45rem;
   padding: 0;
-  border: 2px solid transparent;
+  border: none;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background:
-    linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0)) padding-box,
-    linear-gradient(120deg, #b8f0eb 0%, #ffc8be 52%, #2c4a75 100%) border-box;
+  background: transparent;
   color: #ffffff;
   cursor: pointer;
 }
 
+.app-left-nav-collapse::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(120deg, #b8f0eb 0%, #ffc8be 52%, #2c4a75 100%);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
 .app-left-nav-collapse:hover {
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.08)) padding-box,
-    linear-gradient(120deg, #b8f0eb 0%, #ffc8be 52%, #2c4a75 100%) border-box;
+  background: transparent;
 }
 
 .app-only-shell--collapsed .app-left-nav-collapse {
