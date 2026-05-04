@@ -22,28 +22,29 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
-  const [curtainActive, setCurtainActive] = useState(false);
-  const curtainTimeoutRef = useRef(null);
-  const lastCurtainRef = useRef(0);
+  const [twitterModalOpen, setTwitterModalOpen] = useState(false);
+  const [fadeActive, setFadeActive] = useState(false);
+  const fadeTimeoutRef = useRef(null);
+  const lastFadeRef = useRef(0);
 
   useEffect(() => () => {
-    window.clearTimeout(curtainTimeoutRef.current);
+    window.clearTimeout(fadeTimeoutRef.current);
   }, []);
 
-  const triggerCurtainTransition = () => {
+  const triggerFadeTransition = () => {
     const now = Date.now();
 
-    if (now - lastCurtainRef.current < 900) {
+    if (now - lastFadeRef.current < 700) {
       return;
     }
 
-    lastCurtainRef.current = now;
-    window.clearTimeout(curtainTimeoutRef.current);
-    setCurtainActive(false);
+    lastFadeRef.current = now;
+    window.clearTimeout(fadeTimeoutRef.current);
+    setFadeActive(false);
 
     window.requestAnimationFrame(() => {
-      setCurtainActive(true);
-      curtainTimeoutRef.current = window.setTimeout(() => setCurtainActive(false), 900);
+      setFadeActive(true);
+      fadeTimeoutRef.current = window.setTimeout(() => setFadeActive(false), 650);
     });
   };
 
@@ -57,14 +58,19 @@ export default function App() {
   };
 
   const handleSectionNav = () => {
-    triggerCurtainTransition();
+    triggerFadeTransition();
     closeSidebar();
   };
 
   const handleWheel = (event) => {
     if (event.deltaY > 40) {
-      triggerCurtainTransition();
+      triggerFadeTransition();
     }
+  };
+
+  const openTwitterModal = (event) => {
+    event.preventDefault();
+    setTwitterModalOpen(true);
   };
 
   return (
@@ -136,10 +142,7 @@ export default function App() {
           ))}
         </section>
       </main>
-      <div className={`c-curtain-transition${curtainActive ? ' c-curtain-transition--active' : ''}`} aria-hidden="true">
-        <span className="c-curtain-transition__panel c-curtain-transition__panel--top" />
-        <span className="c-curtain-transition__panel c-curtain-transition__panel--bottom" />
-      </div>
+      <div className={`c-fade-transition${fadeActive ? ' c-fade-transition--active' : ''}`} aria-hidden="true" />
       {profileModalOpen && (
         <div className="c-profile-modal" role="dialog" aria-modal="true" aria-labelledby="j00ba-profile-title">
           <button
@@ -160,13 +163,41 @@ export default function App() {
               </div>
               <div className="c-profile-modal__row">
                 <dt>Handle</dt>
-                <dd>j00ba_j00ba</dd>
+                <dd>
+                  <a className="c-profile-modal__link" href="https://x.com/j00ba_j00ba" onClick={openTwitterModal}>
+                    j00ba_j00ba
+                  </a>
+                </dd>
               </div>
               <div className="c-profile-modal__row">
                 <dt>About me</dt>
                 <dd>My name is J00BA and i love JPEGS</dd>
               </div>
             </dl>
+          </section>
+        </div>
+      )}
+      {twitterModalOpen && (
+        <div className="c-link-modal" role="dialog" aria-modal="true" aria-labelledby="twitter-link-title">
+          <button
+            type="button"
+            className="c-link-modal__overlay"
+            onClick={() => setTwitterModalOpen(false)}
+            aria-label="Close Twitter link notice"
+          />
+          <section className="c-link-modal__panel">
+            <h2 id="twitter-link-title" className="c-link-modal__title">
+              Leaving Jooba
+            </h2>
+            <p className="c-link-modal__text">This link will take you to my Twitter profile.</p>
+            <div className="c-link-modal__actions">
+              <a className="c-link-modal__button c-link-modal__button--primary" href="https://x.com/j00ba_j00ba" target="_blank" rel="noreferrer">
+                Continue
+              </a>
+              <button type="button" className="c-link-modal__button" onClick={() => setTwitterModalOpen(false)}>
+                Cancel
+              </button>
+            </div>
           </section>
         </div>
       )}
