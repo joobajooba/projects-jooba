@@ -182,7 +182,7 @@ code {
   flex-direction: column;
   min-height: clamp(360px, 74dvh, min(920px, 1040px));
   padding: clamp(0.4rem, 1.2vw, 0.65rem) clamp(0.35rem, 1.5vw, 0.6rem) clamp(0.35rem, 1.2vw, 0.55rem);
-  background: #000000;
+  background: linear-gradient(180deg, #05202a 0%, #0a3b52 45%, #1397b0 78%, #8deff8 100%);
   border-bottom: 1px solid var(--jooba-border);
 }
 
