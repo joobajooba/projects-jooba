@@ -28,7 +28,7 @@
   --pp-ink: #0b1020;
   --pp-yellow: #fbbf24;
   --pp-red: #dc2626;
-  --pp-marquee-h: 2.5rem;
+  --pp-marquee-h: 2.75rem;
 }
 
 html {
@@ -117,15 +117,48 @@ code {
 }
 
 .pp-marquee-group {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
   flex-shrink: 0;
-  padding-right: 2rem;
+  padding-right: clamp(2rem, 6vw, 4rem);
+  white-space: nowrap;
+}
+
+.pp-marquee-chunk {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  flex-shrink: 0;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 0.8125rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: var(--jooba-gold-bright);
+  font-size: 0.875rem;
+  letter-spacing: 0.06em;
+  background: linear-gradient(
+    98deg,
+    #b8f0eb 0%,
+    #9ee3dc 15%,
+    #ffc8be 48%,
+    #f5b5a8 58%,
+    #4a6fa5 85%,
+    #2c4a75 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.pp-marquee-sep {
+  display: inline;
+  margin: 0 clamp(1.25rem, 4.5vw, 3.25rem);
+  font-weight: 700;
+  letter-spacing: 0;
+  background: linear-gradient(90deg, #9ee3dc 0%, #f5b5a8 50%, #4a6fa5 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  opacity: 0.92;
 }
 
 @keyframes pp-marquee-scroll {

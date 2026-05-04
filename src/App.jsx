@@ -1,17 +1,30 @@
 import WalletTopBarButton from './components/WalletTopBarButton';
 
-const MARQUEE_CHUNK = 'Coming soon · ';
+function MarqueeGroup({ idSuffix = '' }) {
+  return (
+    <>
+      {Array.from({ length: 18 }, (_, i) => (
+        <span key={`${idSuffix}-${i}`} className="pp-marquee-chunk">
+          $JooB Coming Soon
+          <span className="pp-marquee-sep" aria-hidden>
+            ·
+          </span>
+        </span>
+      ))}
+    </>
+  );
+}
 
 export default function App() {
-  const repeated = Array.from({ length: 24 }, () => MARQUEE_CHUNK).join('');
-
   return (
     <div className="pp-layout">
       <div className="pp-marquee" role="region" aria-label="Site status" aria-live="polite">
         <div className="pp-marquee-track">
-          <div className="pp-marquee-group">{repeated}</div>
+          <div className="pp-marquee-group">
+            <MarqueeGroup idSuffix="a" />
+          </div>
           <div className="pp-marquee-group" aria-hidden>
-            {repeated}
+            <MarqueeGroup idSuffix="b" />
           </div>
         </div>
       </div>
