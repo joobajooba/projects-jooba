@@ -25,15 +25,15 @@ function IconChevronDown() {
   );
 }
 
-export default function WalletTopBarButton() {
+export default function WalletTopBarButton({ connectLabel = 'Sign in' }) {
   return (
     <ConnectButton.Custom>
-      {(ctx) => <WalletTopBarInner {...ctx} />}
+      {(ctx) => <WalletTopBarInner {...ctx} connectLabel={connectLabel} />}
     </ConnectButton.Custom>
   );
 }
 
-function WalletTopBarInner({ account, chain, mounted, openConnectModal, openChainModal }) {
+function WalletTopBarInner({ account, chain, mounted, openConnectModal, openChainModal, connectLabel }) {
   const pillRef = useRef(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [nftPickerOpen, setNftPickerOpen] = useState(false);
@@ -94,7 +94,7 @@ function WalletTopBarInner({ account, chain, mounted, openConnectModal, openChai
           aria-expanded={menuOpen}
           aria-haspopup="menu"
         >
-          Sign in
+          {connectLabel}
         </button>
         <WalletAccountMenu
           open={menuOpen}
