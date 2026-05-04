@@ -23,12 +23,36 @@ export default function App() {
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [twitterModalOpen, setTwitterModalOpen] = useState(false);
+  const [teamPanelVisible, setTeamPanelVisible] = useState(false);
   const [bounceActive, setBounceActive] = useState(false);
   const bounceTimeoutRef = useRef(null);
   const lastBounceRef = useRef(0);
+  const teamPanelRef = useRef(null);
 
   useEffect(() => () => {
     window.clearTimeout(bounceTimeoutRef.current);
+  }, []);
+
+  useEffect(() => {
+    const teamPanel = teamPanelRef.current;
+
+    if (!teamPanel) {
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setTeamPanelVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.35 },
+    );
+
+    observer.observe(teamPanel);
+
+    return () => observer.disconnect();
   }, []);
 
   const triggerBounceTransition = () => {
@@ -125,7 +149,13 @@ export default function App() {
 
         <section className="c-section-grid" aria-label="Home sections">
           {HOME_SECTIONS.map((section) => (
-            <article key={section.id} id={section.id} className="c-section-card" aria-label={section.title}>
+            <article
+              key={section.id}
+              id={section.id}
+              ref={section.id === 'the-team' ? teamPanelRef : undefined}
+              className="c-section-card"
+              aria-label={section.title}
+            >
               {section.id === 'roadmap' ? (
                 <button
                   type="button"
@@ -136,7 +166,12 @@ export default function App() {
                   <img className="c-section-card__image" src={section.image} alt="" loading="lazy" />
                 </button>
               ) : (
-                <img className="c-section-card__image" src={section.image} alt="" loading="lazy" />
+                <img
+                  className={`c-section-card__image${section.id === 'the-team' && teamPanelVisible ? ' c-section-card__image--bounce-in' : ''}`}
+                  src={section.image}
+                  alt=""
+                  loading="lazy"
+                />
               )}
             </article>
           ))}

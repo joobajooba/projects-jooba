@@ -485,6 +485,50 @@ a {
   }
 }
 
+@keyframes bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+    animation-timing-function: ease-in;
+  }
+
+  38% {
+    opacity: 1;
+    transform: scale(1);
+    animation-timing-function: ease-out;
+  }
+
+  55% {
+    transform: scale(0.7);
+    animation-timing-function: ease-in;
+  }
+
+  72% {
+    transform: scale(1);
+    animation-timing-function: ease-out;
+  }
+
+  81% {
+    transform: scale(0.84);
+    animation-timing-function: ease-in;
+  }
+
+  89% {
+    transform: scale(1);
+    animation-timing-function: ease-out;
+  }
+
+  95% {
+    transform: scale(0.95);
+    animation-timing-function: ease-in;
+  }
+
+  100% {
+    transform: scale(1);
+    animation-timing-function: ease-out;
+  }
+}
+
 /* Components: section divider */
 .c-section-divider {
   width: 100%;
@@ -537,6 +581,11 @@ a {
   height: 100%;
   opacity: 0.9;
   object-fit: cover;
+  transform-origin: center;
+}
+
+.c-section-card__image--bounce-in {
+  animation: bounce-in 1.1s both;
 }
 
 .c-section-card::after {
