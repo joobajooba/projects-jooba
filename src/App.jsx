@@ -1,89 +1,26 @@
-import { useEffect, useState } from 'react';
 import WalletTopBarButton from './components/WalletTopBarButton';
 
-const NAV = [
-  { href: '#discover', label: 'Discover' },
-  { href: '#about', label: 'About' },
-  { href: '#community', label: 'Community' },
-];
+const MARQUEE_CHUNK = 'Coming soon · ';
 
 export default function App() {
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  useEffect(() => {
-    document.body.classList.toggle('pp-menu-open', menuOpen);
-    return () => document.body.classList.remove('pp-menu-open');
-  }, [menuOpen]);
-
-  const closeMenu = () => setMenuOpen(false);
+  const repeated = Array.from({ length: 24 }, () => MARQUEE_CHUNK).join('');
 
   return (
     <div className="pp-layout">
-      <header className="pp-header">
-        <div className="pp-header-inner">
-          <a className="pp-logo" href="#top">
-            Jooba
-          </a>
-          <nav className="pp-nav" aria-label="Primary">
-            <ul>
-              {NAV.map(({ href, label }) => (
-                <li key={href}>
-                  <a href={href}>{label}</a>
-                </li>
-              ))}
-            </ul>
-          </nav>
-          <div className="pp-header-actions">
-            <WalletTopBarButton connectLabel="Connect wallet" />
-            <button
-              type="button"
-              className="pp-menu-btn"
-              aria-expanded={menuOpen}
-              aria-controls="pp-mobile-drawer"
-              onClick={() => setMenuOpen((v) => !v)}
-            >
-              {menuOpen ? 'Close' : 'Menu'}
-            </button>
+      <div className="pp-marquee" role="region" aria-label="Site status" aria-live="polite">
+        <div className="pp-marquee-track">
+          <div className="pp-marquee-group">{repeated}</div>
+          <div className="pp-marquee-group" aria-hidden>
+            {repeated}
           </div>
         </div>
-      </header>
-
-      {menuOpen ? (
-        <>
-          <button type="button" className="pp-drawer-backdrop" aria-label="Close menu" onClick={closeMenu} />
-          <div id="pp-mobile-drawer" className="pp-drawer" role="dialog" aria-modal="true" aria-label="Menu">
-            <ul className="pp-drawer-list">
-              {NAV.map(({ href, label }) => (
-                <li key={href}>
-                  <a href={href} onClick={closeMenu}>
-                    {label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </>
-      ) : null}
+      </div>
 
       <main id="top">
-        <section className="pp-hero" aria-labelledby="pp-hero-title">
-          <div className="pp-hero-blobs" aria-hidden />
-          <div className="pp-hero-inner">
-            <p className="pp-eyebrow">Welcome to Jooba</p>
-            <h1 id="pp-hero-title" className="pp-hero-title">
-              A web3-born brand built on creativity &amp; community
-            </h1>
-            <p className="pp-hero-lead">
-              We believe in the power of play and imagination—bring your wallet, explore what is next,
-              and stay tuned as the story unfolds.
-            </p>
-            <div className="pp-hero-cta-row">
-              <a className="pp-btn pp-btn--primary" href="#discover">
-                Discover
-              </a>
-              <a className="pp-btn pp-btn--ghost" href="#about">
-                Learn more
-              </a>
+        <section className="pp-hero" aria-label="Home">
+          <div className="pp-hero-bar">
+            <div className="pp-hero-wallet">
+              <WalletTopBarButton connectLabel="Connect wallet" />
             </div>
           </div>
         </section>
@@ -108,9 +45,8 @@ export default function App() {
               <p className="pp-section-label">About</p>
               <h2 className="pp-section-title">Good vibes, real ownership</h2>
               <p className="pp-section-copy">
-                A warm hero, short story beats, chunky CTAs, and a sticky header so connecting a wallet is
-                always one tap away—a structure that works for playful IP launches and NFT-adjacent
-                brands alike.
+                A landing structure with short story beats and chunky CTAs—connect lives up top so it is
+                always one tap away. Works well for playful IP launches and NFT-adjacent brands.
               </p>
             </div>
             <div className="pp-stats">
@@ -135,8 +71,8 @@ export default function App() {
             <p className="pp-band-tag">Wallet</p>
             <h2 className="pp-band-title">Hook up your wallet to unlock holder experiences</h2>
             <p className="pp-band-copy">
-              Use the Connect control in the header—RainbowKit handles the modal; your Jooba menus and
-              profile flow stay intact.
+              Use Connect above—RainbowKit handles the modal; your Jooba menus and profile flow stay
+              intact.
             </p>
           </div>
         </section>

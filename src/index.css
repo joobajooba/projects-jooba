@@ -5,34 +5,30 @@
 }
 
 :root {
-  --pp-header-h: 4rem;
   --chrome-h: 2.625rem;
   --font-display: 'Goldman', system-ui, sans-serif;
   --font-mono: ui-monospace, 'Cascadia Code', monospace;
   --app-font: 'Nunito', system-ui, sans-serif;
-  --chrome-fg: #0f172a;
-  --chrome-fg-muted: #475569;
-  --jooba-gold: #2563eb;
-  --jooba-gold-2: #1d4ed8;
-  --jooba-gold-bright: #1d4ed8;
-  --jooba-text-primary: #0f172a;
-  --jooba-text-secondary: #475569;
-  --jooba-text-tertiary: #64748b;
-  --jooba-border: rgba(15, 23, 42, 0.12);
-  --jooba-surface-deep: #f1f5f9;
-  --jooba-surface-0: #ffffff;
-  --jooba-surface-1: #f8fafc;
-  --jooba-surface-2: #e2e8f0;
-  --jooba-panel: #ffffff;
-  --jooba-ui-border: rgba(15, 23, 42, 0.12);
-  --jooba-ui-border-muted: rgba(15, 23, 42, 0.08);
-  --pp-sky-1: #b9e0ff;
-  --pp-sky-2: #e0f4ff;
-  --pp-sky-3: #f8fdff;
-  --pp-ink: #0f172a;
+  --chrome-fg: #f1f5f9;
+  --chrome-fg-muted: #94a3b8;
+  --jooba-gold: #9ab8de;
+  --jooba-gold-2: #7c9fd4;
+  --jooba-gold-bright: #dce9f8;
+  --jooba-text-primary: #edf4ff;
+  --jooba-text-secondary: #afc3de;
+  --jooba-text-tertiary: #7589a5;
+  --jooba-border: rgba(136, 168, 206, 0.28);
+  --jooba-surface-deep: #03050a;
+  --jooba-surface-0: #060a12;
+  --jooba-surface-1: #0b111c;
+  --jooba-surface-2: #121a29;
+  --jooba-panel: #0a101a;
+  --jooba-ui-border: rgba(132, 164, 203, 0.32);
+  --jooba-ui-border-muted: rgba(108, 140, 177, 0.22);
+  --pp-ink: #0b1020;
   --pp-yellow: #fbbf24;
-  --pp-yellow-border: #0f172a;
-  --pp-red: #ef4444;
+  --pp-red: #dc2626;
+  --pp-marquee-h: 2.5rem;
 }
 
 html {
@@ -51,14 +47,10 @@ body {
   font-family: var(--app-font);
   font-size: 17px;
   line-height: 1.6;
-  color: var(--pp-ink);
+  color: var(--jooba-text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: var(--pp-sky-3);
-}
-
-body.pp-menu-open {
-  overflow: hidden;
+  background: var(--jooba-surface-deep);
 }
 
 #root {
@@ -93,8 +85,8 @@ body.pp-menu-open {
 code {
   font-family: var(--font-mono);
   font-size: 0.9em;
-  background: rgba(37, 99, 235, 0.08);
-  color: var(--jooba-gold-2);
+  background: rgba(154, 184, 222, 0.1);
+  color: var(--jooba-gold-bright);
   padding: 0.15em 0.35em;
   border-radius: 4px;
   border: 1px solid var(--jooba-ui-border-muted);
@@ -109,212 +101,75 @@ code {
   min-height: 100dvh;
 }
 
-.pp-header {
-  position: sticky;
-  top: 0;
-  z-index: 200;
-  height: var(--pp-header-h);
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 2px solid var(--pp-ink);
-  box-shadow: 0 4px 0 rgba(15, 23, 42, 0.04);
-}
-
-.pp-header-inner {
-  max-width: 72rem;
-  margin: 0 auto;
-  height: 100%;
+.pp-marquee {
+  overflow: hidden;
+  height: var(--pp-marquee-h);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0 clamp(1rem, 4vw, 1.75rem);
+  background: var(--jooba-surface-0);
+  border-bottom: 1px solid var(--jooba-border);
 }
 
-.pp-logo {
+.pp-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: pp-marquee-scroll 55s linear infinite;
+}
+
+.pp-marquee-group {
+  flex-shrink: 0;
+  padding-right: 2rem;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 1.35rem;
-  letter-spacing: 0.04em;
-  text-decoration: none;
-  color: var(--pp-ink);
+  font-size: 0.8125rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--jooba-gold-bright);
 }
 
-.pp-logo:hover {
-  color: var(--jooba-gold);
-}
-
-.pp-nav ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  gap: clamp(1rem, 3vw, 2rem);
-}
-
-.pp-nav a {
-  font-weight: 700;
-  font-size: 0.9375rem;
-  text-decoration: none;
-  color: var(--pp-ink);
-}
-
-.pp-nav a:hover {
-  color: var(--jooba-gold);
-}
-
-.pp-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-}
-
-.pp-menu-btn {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  height: var(--chrome-h);
-  padding: 0 0.85rem;
-  font-family: var(--font-display);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  border: 2px solid var(--pp-ink);
-  border-radius: 999px;
-  background: #fff;
-  color: var(--pp-ink);
-  cursor: pointer;
-}
-
-.pp-menu-btn:hover {
-  background: var(--jooba-surface-2);
-}
-
-@media (max-width: 767px) {
-  .pp-nav {
-    display: none;
+@keyframes pp-marquee-scroll {
+  from {
+    transform: translateX(0);
   }
-
-  .pp-menu-btn {
-    display: inline-flex;
+  to {
+    transform: translateX(-50%);
   }
 }
 
-.pp-drawer-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 280;
-  border: none;
-  padding: 0;
-  margin: 0;
-  background: rgba(15, 23, 42, 0.35);
-  cursor: pointer;
-}
+@media (prefers-reduced-motion: reduce) {
+  .pp-marquee-track {
+    animation: none;
+    justify-content: center;
+    width: 100%;
+  }
 
-.pp-drawer {
-  position: fixed;
-  top: 0;
-  right: 0;
-  z-index: 300;
-  width: min(20rem, 88vw);
-  height: 100dvh;
-  background: #fff;
-  border-left: 2px solid var(--pp-ink);
-  padding: calc(var(--pp-header-h) + 1rem) 1.25rem 1.5rem;
-  box-shadow: -8px 0 40px rgba(15, 23, 42, 0.12);
-}
-
-.pp-drawer-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.pp-drawer-list a {
-  display: block;
-  padding: 0.85rem 0;
-  font-weight: 800;
-  font-size: 1.125rem;
-  text-decoration: none;
-  color: var(--pp-ink);
-  border-bottom: 1px solid var(--jooba-ui-border-muted);
+  .pp-marquee-group {
+    padding-right: 0;
+  }
 }
 
 .pp-hero {
   position: relative;
   overflow: clip;
-  min-height: clamp(520px, 85dvh, 840px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem clamp(1rem, 4vw, 2rem) 4rem;
-  background: linear-gradient(
-    165deg,
-    var(--pp-sky-1) 0%,
-    var(--pp-sky-2) 38%,
-    var(--pp-sky-3) 72%
-  );
-  border-bottom: 2px solid var(--pp-ink);
-}
-
-.pp-hero-blobs {
-  position: absolute;
-  inset: -20% -10% auto;
-  height: 70%;
+  min-height: clamp(220px, 38dvh, 420px);
+  padding: clamp(1.25rem, 4vw, 2rem) clamp(1rem, 4vw, 2rem) clamp(2rem, 5vw, 3rem);
   background:
-    radial-gradient(ellipse at 18% 40%, rgba(255, 255, 255, 0.75), transparent 45%),
-    radial-gradient(ellipse at 82% 55%, rgba(147, 197, 255, 0.45), transparent 42%);
-  pointer-events: none;
+    radial-gradient(ellipse 80% 55% at 50% -10%, rgba(100, 140, 200, 0.22), transparent 55%),
+    linear-gradient(180deg, var(--jooba-surface-2) 0%, var(--jooba-surface-deep) 100%);
+  border-bottom: 1px solid var(--jooba-border);
 }
 
-.pp-hero-inner {
-  position: relative;
-  z-index: 1;
-  max-width: 42rem;
-  text-align: center;
-}
-
-.pp-eyebrow {
-  margin: 0 0 0.75rem;
-  font-weight: 800;
-  font-size: 0.8125rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--jooba-gold-2);
-}
-
-.pp-hero-title {
-  margin: 0 0 1rem;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: clamp(2.25rem, 6.5vw, 3.75rem);
-  line-height: 1.05;
-  letter-spacing: -0.02em;
-  text-transform: uppercase;
-  color: var(--pp-ink);
-  text-shadow: 3px 3px 0 rgba(255, 255, 255, 0.9);
-}
-
-.pp-hero-lead {
-  margin: 0 0 2rem;
-  font-size: 1.0625rem;
-  color: var(--jooba-text-secondary);
-  max-width: 34rem;
-  margin-inline: auto;
-}
-
-.pp-hero-cta-row {
+.pp-hero-bar {
+  max-width: 72rem;
+  margin: 0 auto;
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  justify-content: center;
+  justify-content: flex-end;
+  align-items: flex-start;
+}
+
+.pp-hero-wallet {
+  flex-shrink: 0;
 }
 
 .pp-btn {
@@ -330,7 +185,7 @@ code {
   text-transform: uppercase;
   text-decoration: none;
   border-radius: 999px;
-  border: 2px solid var(--pp-ink);
+  border: 2px solid var(--jooba-gold);
   cursor: pointer;
   transition:
     transform 0.12s ease,
@@ -339,7 +194,7 @@ code {
 
 .pp-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 4px 4px 0 var(--pp-ink);
+  box-shadow: 4px 4px 0 rgba(154, 184, 222, 0.35);
 }
 
 .pp-btn:active {
@@ -349,12 +204,14 @@ code {
 
 .pp-btn--primary {
   background: var(--pp-yellow);
-  color: var(--pp-ink);
+  color: #0f172a;
+  border-color: #0f172a;
 }
 
 .pp-btn--ghost {
-  background: #fff;
-  color: var(--pp-ink);
+  background: transparent;
+  color: var(--jooba-text-primary);
+  border-color: var(--jooba-border);
 }
 
 .pp-btn--inline {
@@ -363,15 +220,15 @@ code {
 
 .pp-section {
   padding: clamp(3rem, 8vw, 5rem) clamp(1rem, 4vw, 2rem);
-  border-bottom: 2px solid var(--pp-ink);
+  border-bottom: 1px solid var(--jooba-border);
 }
 
 .pp-section--tint {
-  background: linear-gradient(180deg, #fff 0%, var(--pp-sky-3) 100%);
+  background: linear-gradient(180deg, var(--jooba-surface-1) 0%, var(--jooba-surface-deep) 100%);
 }
 
 .pp-section--cloud {
-  background: #fff;
+  background: var(--jooba-surface-0);
 }
 
 .pp-section-inner {
@@ -395,7 +252,7 @@ code {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.02em;
-  color: var(--pp-ink);
+  color: var(--jooba-text-primary);
 }
 
 .pp-section-copy {
@@ -427,10 +284,10 @@ code {
   align-items: center;
   gap: 1rem;
   padding: 1rem 1.15rem;
-  background: var(--jooba-surface-1);
-  border: 2px solid var(--pp-ink);
+  background: var(--jooba-surface-2);
+  border: 1px solid var(--jooba-ui-border);
   border-radius: 14px;
-  box-shadow: 4px 4px 0 rgba(15, 23, 42, 0.08);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
 }
 
 .pp-stat-value {
@@ -451,7 +308,7 @@ code {
   padding: clamp(3rem, 7vw, 4.5rem) clamp(1rem, 4vw, 2rem);
   background: var(--pp-red);
   color: #fff;
-  border-bottom: 2px solid var(--pp-ink);
+  border-bottom: 1px solid var(--jooba-border);
   text-align: center;
 }
 
@@ -503,10 +360,10 @@ code {
 
 .pp-card {
   padding: 1.35rem 1.5rem;
-  border: 2px solid var(--pp-ink);
+  border: 1px solid var(--jooba-ui-border);
   border-radius: 16px;
-  background: var(--pp-sky-2);
-  box-shadow: 5px 5px 0 var(--pp-ink);
+  background: var(--jooba-surface-2);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
 }
 
 .pp-card-title {
@@ -515,6 +372,7 @@ code {
   font-size: 1rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  color: var(--jooba-text-primary);
 }
 
 .pp-card-copy {
@@ -554,18 +412,18 @@ code {
   line-height: 1.5;
 }
 
-/* Header wallet: chunky CTA like Pudgy */
-.pp-header .app-wallet-pill--placeholder {
+/* Hero wallet (top-right) */
+.pp-hero-wallet .app-wallet-pill--placeholder {
   min-width: 9.5rem;
   height: var(--chrome-h);
   max-height: var(--chrome-h);
   border-radius: 999px;
   border-width: 2px;
-  border-color: var(--pp-ink);
-  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(11, 17, 28, 0.6);
 }
 
-.pp-header .app-wallet-pill--connect {
+.pp-hero-wallet .app-wallet-pill--connect {
   height: var(--chrome-h);
   max-height: var(--chrome-h);
   padding: 0 1.1rem;
@@ -574,51 +432,55 @@ code {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   border-radius: 999px;
-  border: 2px solid var(--pp-ink);
+  border: 2px solid #0f172a;
   background: var(--pp-yellow);
-  color: var(--pp-ink);
-  box-shadow: 3px 3px 0 var(--pp-ink);
+  color: #0f172a;
+  box-shadow: 3px 3px 0 rgba(15, 23, 42, 0.5);
 }
 
-.pp-header .app-wallet-pill--connect:hover {
+.pp-hero-wallet .app-wallet-pill--connect:hover {
   background: #f59e0b;
-  box-shadow: 4px 4px 0 var(--pp-ink);
+  box-shadow: 4px 4px 0 rgba(15, 23, 42, 0.45);
 }
 
-.pp-header .app-wallet-pill {
+.pp-hero-wallet .app-wallet-pill {
   height: var(--chrome-h);
   max-height: var(--chrome-h);
   padding: 0 0.5rem 0 0.4rem;
   border-width: 2px;
-  border-color: var(--pp-ink);
+  border-color: rgba(255, 255, 255, 0.2);
   border-radius: 999px;
-  background: #fff;
-  color: var(--pp-ink);
+  background: var(--jooba-surface-1);
+  color: var(--jooba-text-primary);
   font-family: var(--app-font);
   font-size: 0.75rem;
   font-weight: 800;
-  box-shadow: 2px 2px 0 var(--pp-ink);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35);
 }
 
-.pp-header .app-wallet-pill:hover {
-  background: var(--jooba-surface-1);
-  border-color: var(--pp-ink);
+.pp-hero-wallet .app-wallet-pill:hover {
+  background: var(--jooba-surface-2);
+  border-color: var(--jooba-gold);
 }
 
-.pp-header .app-wallet-pill-balance {
-  color: var(--pp-ink);
+.pp-hero-wallet .app-wallet-pill-balance {
+  color: var(--jooba-text-primary);
 }
 
-.pp-header .app-wallet-pill-divider {
-  background: rgba(15, 23, 42, 0.2);
+.pp-hero-wallet .app-wallet-pill-divider {
+  background: var(--jooba-ui-border-muted);
 }
 
-.pp-header button.app-wallet-pill > .app-wallet-pill-chevron {
-  color: var(--pp-ink);
+.pp-hero-wallet button.app-wallet-pill > .app-wallet-pill-chevron {
+  color: var(--jooba-text-tertiary);
 }
 
-.pp-header .app-wallet-pill-chain-fallback {
-  background: linear-gradient(135deg, #93c5fd, #bfdbfe);
+.pp-hero-wallet button.app-wallet-pill:hover > .app-wallet-pill-chevron {
+  color: var(--jooba-gold-bright);
+}
+
+.pp-hero-wallet .app-wallet-pill-chain-fallback {
+  background: linear-gradient(135deg, rgba(80, 120, 170, 0.5), rgba(154, 184, 222, 0.45));
 }
 
 .app-wallet-pill {
@@ -755,9 +617,9 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
   z-index: 9999;
   width: min(19.5rem, calc(100vw - 1rem));
   border-radius: 14px;
-  border: 2px solid var(--pp-ink);
+  border: 1px solid var(--jooba-ui-border);
   background: var(--jooba-panel);
-  box-shadow: 8px 8px 0 rgba(15, 23, 42, 0.12);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
   overflow: hidden;
   font-size: 0.875rem;
 }
@@ -947,10 +809,10 @@ button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
 .wallet-menu-signin {
   width: 100%;
   padding: 0.65rem 0.75rem;
-  border: 2px solid var(--pp-ink);
+  border: 2px solid #0f172a;
   border-radius: 10px;
   background: var(--pp-yellow);
-  color: var(--pp-ink);
+  color: #0f172a;
   font-size: 0.875rem;
   font-weight: 700;
   font-family: inherit;
