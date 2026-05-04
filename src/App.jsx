@@ -17,7 +17,6 @@ export default function App() {
           {NAV_ITEMS.map((item) => (
             <a key={item.id} href={item.href} className="app-left-nav-btn" title={item.label} aria-label={item.label}>
               <img src={item.icon} alt="" className="app-left-nav-icon" width={20} height={20} />
-              <span className="app-left-nav-label">{item.label}</span>
             </a>
           ))}
         </nav>
