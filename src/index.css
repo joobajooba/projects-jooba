@@ -101,9 +101,19 @@ body {
   width: var(--app-nav-w);
   min-width: var(--app-nav-w);
   flex-shrink: 0;
-  border-right: 1px solid var(--jooba-border);
+  position: relative;
   background: var(--jooba-surface-1);
   padding: 0.85rem 0.35rem;
+}
+
+.app-left-nav::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, #b8f0eb 0%, #ffc8be 52%, #2c4a75 100%);
 }
 
 .app-left-nav-list {
@@ -122,16 +132,16 @@ body {
   padding: 0.45rem 0.25rem;
   border: 2px solid transparent;
   border-radius: 8px;
-  color: #0f1b33;
+  color: #ffffff;
   text-decoration: none;
   background:
-    linear-gradient(#ffffff, #ffffff) padding-box,
+    linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0)) padding-box,
     linear-gradient(120deg, #b8f0eb 0%, #ffc8be 52%, #2c4a75 100%) border-box;
 }
 
 .app-left-nav-btn:hover {
   background:
-    linear-gradient(#f7fbff, #f7fbff) padding-box,
+    linear-gradient(rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.08)) padding-box,
     linear-gradient(120deg, #b8f0eb 0%, #ffc8be 52%, #2c4a75 100%) border-box;
 }
 
@@ -139,8 +149,7 @@ body {
   width: 20px;
   height: 20px;
   object-fit: contain;
-  filter: brightness(0) saturate(100%) invert(11%) sepia(18%) saturate(1303%) hue-rotate(184deg)
-    brightness(96%) contrast(91%);
+  filter: brightness(0) saturate(100%) invert(100%);
 }
 
 .app-left-nav-label {
@@ -171,15 +180,15 @@ body {
   align-items: center;
   justify-content: center;
   background:
-    linear-gradient(#ffffff, #ffffff) padding-box,
+    linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0)) padding-box,
     linear-gradient(120deg, #b8f0eb 0%, #ffc8be 52%, #2c4a75 100%) border-box;
-  color: #0f1b33;
+  color: #ffffff;
   cursor: pointer;
 }
 
 .app-left-nav-collapse:hover {
   background:
-    linear-gradient(#f7fbff, #f7fbff) padding-box,
+    linear-gradient(rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.08)) padding-box,
     linear-gradient(120deg, #b8f0eb 0%, #ffc8be 52%, #2c4a75 100%) border-box;
 }
 
@@ -191,8 +200,7 @@ body {
   width: 0.75rem;
   height: 0.75rem;
   object-fit: contain;
-  filter: brightness(0) saturate(100%) invert(11%) sepia(18%) saturate(1303%) hue-rotate(184deg)
-    brightness(96%) contrast(91%);
+  filter: brightness(0) saturate(100%) invert(100%);
 }
 
 .app-only-content {
