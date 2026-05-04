@@ -83,7 +83,7 @@ a {
   display: grid;
   place-items: center;
   min-height: 100dvh;
-  padding: var(--space-xl);
+  padding: 0 var(--space-xl) var(--space-xl);
 }
 
 /* Components: buttons */
