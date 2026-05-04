@@ -82,6 +82,28 @@ body {
   width: 100%;
 }
 
+.app-only-shell {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  background: var(--jooba-surface-deep);
+}
+
+.app-only-toprow {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  padding: 0.9rem 1rem;
+}
+
+.app-only-wallet {
+  flex-shrink: 0;
+}
+
+.app-only-wallet .app-wallet-pill--placeholder {
+  min-width: 9rem;
+}
+
 code {
   font-family: var(--font-mono);
   font-size: 0.9em;
