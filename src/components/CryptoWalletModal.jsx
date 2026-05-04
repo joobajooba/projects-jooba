@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useDisconnect } from 'wagmi';
 import { useApeChainBalanceDisplay } from '../hooks/useApeChainBalanceDisplay';
 import { useWalletProfile } from '../hooks/useWalletProfile';
 
@@ -12,6 +13,7 @@ function CryptoWalletModalContent({ account, mounted, open, openConnectModal, on
   const ready = mounted;
   const connected = ready && account?.address;
   const [usernameValue, setUsernameValue] = useState('');
+  const { disconnect } = useDisconnect();
   const { text: apeBalanceText } = useApeChainBalanceDisplay(account?.address);
   const { username, loading, needsUsername, saveUsername, saveError, setSaveError } = useWalletProfile(account?.address);
 
@@ -25,6 +27,11 @@ function CryptoWalletModalContent({ account, mounted, open, openConnectModal, on
   const handleUsernameSubmit = async (event) => {
     event.preventDefault();
     await saveUsername(usernameValue);
+  };
+
+  const handleDisconnect = () => {
+    disconnect();
+    onClose();
   };
 
   return (
@@ -55,9 +62,12 @@ function CryptoWalletModalContent({ account, mounted, open, openConnectModal, on
               <span className="c-info-list__label">Wallet Address</span>
               <span className="c-info-list__value">{shortenAddress(account.address)}</span>
             </div>
-            <div className="c-info-list__item">
+            <div className="c-info-list__item c-info-list__item--balance">
               <span className="c-info-list__label">ApeChain Balance</span>
-              <span className="c-info-list__value">{apeBalanceText}</span>
+              <span className="c-token-balance">
+                <img src="/apechain-logo-mark.png" alt="" className="c-token-balance__logo" width={28} height={28} />
+                <span className="c-token-balance__value">{apeBalanceText}</span>
+              </span>
             </div>
             {username ? (
               <div className="c-info-list__item">
@@ -90,6 +100,10 @@ function CryptoWalletModalContent({ account, mounted, open, openConnectModal, on
               </button>
             </form>
           ) : null}
+
+          <button type="button" className="c-button c-button--danger" onClick={handleDisconnect}>
+            Disconnect Wallet
+          </button>
         </div>
       )}
     </div>
