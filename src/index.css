@@ -1,1384 +1,236 @@
-*,
+﻿*,
 *::before,
 *::after {
   box-sizing: border-box;
 }
 
 :root {
-  --chrome-h: 2.625rem;
-  --font-display: 'Goldman', system-ui, sans-serif;
-  --font-mono: ui-monospace, 'Cascadia Code', monospace;
-  --app-font: 'Nunito', system-ui, sans-serif;
-  --chrome-fg: #f1f5f9;
-  --chrome-fg-muted: #94a3b8;
-  --jooba-gold: #9ab8de;
-  --jooba-gold-2: #7c9fd4;
-  --jooba-gold-bright: #dce9f8;
-  --jooba-text-primary: #edf4ff;
-  --jooba-text-secondary: #afc3de;
-  --jooba-text-tertiary: #7589a5;
-  --jooba-border: rgba(136, 168, 206, 0.28);
-  --jooba-surface-deep: #03050a;
-  --jooba-surface-0: #060a12;
-  --jooba-surface-1: #0b111c;
-  --jooba-surface-2: #121a29;
-  --jooba-panel: #0a101a;
-  --jooba-ui-border: rgba(132, 164, 203, 0.32);
-  --jooba-ui-border-muted: rgba(108, 140, 177, 0.22);
-  --pp-ink: #0b1020;
-  --pp-yellow: #fbbf24;
-  --pp-red: #dc2626;
-  --pp-marquee-h: 2.75rem;
+  --color-page: #03050a;
+  --color-surface: #0b111c;
+  --color-text: #ffffff;
+  --color-button-bg: #ffffff;
+  --color-button-text: #07101f;
+  --color-border: #07101f;
+  --color-gradient-cyan: #72f7ef;
+  --color-gradient-coral: #ff6f61;
+  --color-gradient-navy: #172d5c;
+  --font-body: 'Nunito', system-ui, sans-serif;
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --radius-md: 0.75rem;
+  --sidebar-width: 20vw;
+  --sidebar-border-width: 0.45rem;
+  --transition-standard: 260ms ease;
 }
 
 html {
-  height: auto;
   min-height: 100dvh;
-  overflow-x: clip;
-  overflow-y: auto;
-  font-family: var(--app-font);
-  scroll-behavior: smooth;
+  overflow-x: hidden;
+  font-family: var(--font-body);
 }
 
 body {
-  margin: 0;
   min-height: 100dvh;
-  overflow-x: clip;
-  font-family: var(--app-font);
-  font-size: 17px;
-  line-height: 1.6;
-  color: var(--jooba-text-primary);
+  margin: 0;
+  color: var(--color-text);
+  background: var(--color-page);
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: var(--jooba-surface-deep);
 }
 
-#root {
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
+button,
+a {
+  font: inherit;
 }
 
-.app-root-outer {
-  flex: 1;
-  min-height: 0;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
+button {
+  border: 0;
 }
 
-.app-root-outer [data-rk] {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  font-family: var(--app-font);
-}
-
-.app-viewport-root {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-}
-
-.app-only-shell {
-  --app-nav-w: 66px;
-  flex: 1;
-  min-height: 0;
-  width: 100%;
-  display: flex;
-  flex-direction: row;
-  position: relative;
-  background: var(--jooba-surface-deep);
-}
-
-.app-only-shell--collapsed .app-left-nav {
-  display: none;
-}
-
-.app-left-nav {
-  width: var(--app-nav-w);
-  min-width: var(--app-nav-w);
-  flex-shrink: 0;
-  position: relative;
-  background: var(--jooba-surface-1);
-  padding: 0.7rem 0.15rem;
-}
-
-.app-left-nav::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 4px;
-  background: linear-gradient(180deg, #b8f0eb 0%, #ffc8be 52%, #2c4a75 100%);
-}
-
-.app-left-nav-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1.1rem;
-}
-
-.app-left-nav-btn {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 0;
-  position: relative;
-  min-height: 2.6rem;
-  padding: 0.35rem 0.1rem;
-  border: none;
-  border-radius: 8px;
-  color: #ffffff;
+a {
+  color: inherit;
   text-decoration: none;
-  background: transparent;
 }
 
-.app-left-nav-btn:hover {
-  background: transparent;
-}
-
-.app-left-nav-icon {
-  width: 32px;
-  height: 32px;
-  object-fit: contain;
-  filter: brightness(0) saturate(100%) invert(100%);
-}
-
-.app-left-nav-label {
-  font-family: var(--font-display);
-  font-size: 0.53rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  line-height: 1.15;
-  text-transform: uppercase;
-  text-align: center;
-}
-
-.app-only-shell--collapsed .app-left-nav-label {
-  display: none;
-}
-
-.app-left-nav-collapse {
-  position: absolute;
-  top: 0.85rem;
-  left: calc(var(--app-nav-w) + 0.35rem);
-  z-index: 4;
-  width: 2.9rem;
-  height: 2.9rem;
-  padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  border-radius: 6px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  color: #ffffff;
-  cursor: pointer;
-}
-
-.app-left-nav-collapse:hover {
-  background: transparent;
-}
-
-.app-only-shell--collapsed .app-left-nav-collapse {
-  left: 0.35rem;
-  transform: rotate(180deg);
-}
-
-.app-left-nav-collapse-icon {
-  width: 2rem;
-  height: 2rem;
-  object-fit: contain;
-  filter: brightness(0) saturate(100%) invert(100%);
-}
-
-.app-only-content {
-  flex: 1;
-  min-width: 0;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.app-only-toprow {
-  display: flex;
-  justify-content: flex-end;
-  align-items: flex-start;
-  padding: 0.9rem 1rem 0.5rem;
-}
-
-.app-only-wallet {
-  flex-shrink: 0;
-}
-
-.app-only-wallet .app-wallet-pill--placeholder {
-  min-width: 9rem;
-}
-
-.app-home-section {
-  min-height: 100vh;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  border-bottom: 1px solid #ffffff;
-  background: #03070f;
-}
-
-.app-home-image {
-  width: 100%;
-  height: auto;
-  object-fit: cover;
-  display: block;
-}
-
-.app-blank-page {
-  min-height: 100vh;
-  width: 100%;
-  background: #040a14;
-}
-
-code {
-  font-family: var(--font-mono);
-  font-size: 0.9em;
-  background: rgba(154, 184, 222, 0.1);
-  color: var(--jooba-gold-bright);
-  padding: 0.15em 0.35em;
-  border-radius: 4px;
-  border: 1px solid var(--jooba-ui-border-muted);
-}
-
-/* —— Pudgy-inspired marketing shell (jooba) —— */
-.pp-layout {
-  flex: 1;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
+#root,
+.app-root-outer,
+.app-root-outer [data-rk],
+.app-viewport-root {
   min-height: 100dvh;
 }
 
-.pp-marquee {
+.app-root-outer,
+.app-root-outer [data-rk],
+.app-viewport-root {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Layout */
+.l-page {
+  position: relative;
+  min-height: 100dvh;
   overflow: hidden;
-  height: var(--pp-marquee-h);
-  display: flex;
-  align-items: center;
-  background: var(--jooba-surface-0);
-  border-bottom: 1px solid var(--jooba-border);
+  background: var(--color-page);
 }
 
-.pp-marquee-track {
-  display: flex;
-  width: max-content;
-  animation: pp-marquee-scroll 55s linear infinite;
+.l-page__content {
+  min-height: 100dvh;
 }
 
-.pp-marquee-group {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  align-items: center;
-  flex-shrink: 0;
-  padding-right: clamp(2rem, 6vw, 4rem);
-  white-space: nowrap;
-}
-
-.pp-marquee-chunk {
+/* Components: buttons */
+.c-button {
   display: inline-flex;
-  flex-direction: row;
   align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    transform var(--transition-standard),
+    box-shadow var(--transition-standard);
+}
+
+.c-button:hover {
+  transform: translateY(-1px);
+}
+
+.c-button:focus-visible {
+  outline: 3px solid var(--color-gradient-cyan);
+  outline-offset: 3px;
+}
+
+.c-button--controller {
+  position: fixed;
+  top: var(--space-md);
+  left: var(--space-md);
+  z-index: 20;
+  padding: var(--space-sm) var(--space-md);
+  border: 2px solid var(--color-border);
+  background: var(--color-button-bg);
+  color: var(--color-button-text);
+  box-shadow: 0 0.65rem 1.75rem rgba(0, 0, 0, 0.28);
+  font-weight: 800;
+}
+
+.c-button__label {
+  line-height: 1;
+}
+
+/* Components: icons */
+.c-icon {
+  display: inline-flex;
   flex-shrink: 0;
-  margin-right: clamp(2.75rem, 11vw, 8rem);
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-size: 0.875rem;
-  letter-spacing: 0.12em;
-  background: linear-gradient(
-    98deg,
-    #b8f0eb 0%,
-    #9ee3dc 15%,
-    #ffc8be 48%,
-    #f5b5a8 58%,
-    #4a6fa5 85%,
-    #2c4a75 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
 }
 
-.pp-marquee-group .pp-marquee-chunk:last-child {
-  margin-right: 0;
+.c-icon--hamburger {
+  width: 1.15rem;
+  flex-direction: column;
+  gap: 0.2rem;
 }
 
-@keyframes pp-marquee-scroll {
-  from {
-    transform: translateX(0);
+.c-icon__line {
+  display: block;
+  width: 100%;
+  height: 0.15rem;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+/* Components: sidebar */
+.c-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  width: var(--sidebar-width);
+  min-width: 14rem;
+  max-width: 24rem;
+  height: 100dvh;
+  padding: 6rem var(--space-xl) var(--space-xl);
+  background: var(--color-surface);
+  border-right: var(--sidebar-border-width) solid transparent;
+  border-image: linear-gradient(
+      180deg,
+      var(--color-gradient-cyan) 0%,
+      var(--color-gradient-coral) 52%,
+      var(--color-gradient-navy) 100%
+    )
+    1;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-100%);
+  transition:
+    opacity var(--transition-standard),
+    transform var(--transition-standard);
+}
+
+.c-sidebar--open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.c-sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.c-sidebar__link {
+  display: block;
+  padding: var(--space-xs) 0;
+  color: var(--color-text);
+  font-size: clamp(1rem, 1.2vw, 1.35rem);
+  letter-spacing: 0.02em;
+}
+
+.c-sidebar__link:hover,
+.c-sidebar__link:focus-visible {
+  color: var(--color-gradient-cyan);
+}
+
+.c-sidebar__link:focus-visible {
+  outline: 2px solid var(--color-gradient-cyan);
+  outline-offset: 4px;
+}
+
+/* Utilities */
+.u-text-bold {
+  font-weight: 800;
+}
+
+@media (max-width: 900px) {
+  :root {
+    --sidebar-width: 72vw;
   }
-  to {
-    transform: translateX(-50%);
+}
+
+@media (max-width: 520px) {
+  .c-button--controller {
+    right: var(--space-md);
+    width: calc(100% - (var(--space-md) * 2));
+  }
+
+  .c-sidebar {
+    min-width: 0;
+    max-width: none;
+    padding-right: var(--space-lg);
+    padding-left: var(--space-lg);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pp-marquee-track {
-    animation: none;
-    justify-content: center;
-    width: 100%;
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
   }
-
-  .pp-marquee-group {
-    padding-right: 0;
-  }
-}
-
-.pp-hero {
-  position: relative;
-  overflow: clip;
-  display: flex;
-  flex-direction: column;
-  min-height: clamp(360px, 74dvh, min(920px, 1040px));
-  padding: clamp(0.4rem, 1.2vw, 0.65rem) clamp(0.35rem, 1.5vw, 0.6rem) clamp(0.35rem, 1.2vw, 0.55rem);
-  background: linear-gradient(180deg, #05202a 0%, #0a3b52 45%, #1397b0 78%, #8deff8 100%);
-  border-bottom: 1px solid var(--jooba-border);
-}
-
-.pp-hero-bar {
-  position: relative;
-  z-index: 2;
-  max-width: 72rem;
-  margin: 0 auto;
-  width: 100%;
-  display: flex;
-  justify-content: flex-end;
-  align-items: flex-start;
-  flex-shrink: 0;
-}
-
-.pp-hero-wallet {
-  flex-shrink: 0;
-}
-
-.pp-hero-visual {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  box-sizing: border-box;
-  /* Thin gutter + top band so art uses almost the full hero; clears wallet row */
-  padding: calc(var(--chrome-h) + 10px) clamp(0.25rem, 1vw, 0.65rem) clamp(0.35rem, 1dvh, 0.65rem);
-  pointer-events: none;
-}
-
-.pp-hero-img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  max-width: none;
-  max-height: none;
-  object-fit: contain;
-  object-position: center center;
-  pointer-events: none;
-  user-select: none;
-}
-
-.pp-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 3rem;
-  padding: 0 1.5rem;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 0.8125rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  text-decoration: none;
-  border-radius: 999px;
-  border: 2px solid var(--jooba-gold);
-  cursor: pointer;
-  transition:
-    transform 0.12s ease,
-    box-shadow 0.12s ease;
-}
-
-.pp-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 4px 4px 0 rgba(154, 184, 222, 0.35);
-}
-
-.pp-btn:active {
-  transform: translateY(0);
-  box-shadow: none;
-}
-
-.pp-btn--primary {
-  background: var(--pp-yellow);
-  color: #0f172a;
-  border-color: #0f172a;
-}
-
-.pp-btn--ghost {
-  background: transparent;
-  color: var(--jooba-text-primary);
-  border-color: var(--jooba-border);
-}
-
-.pp-btn--inline {
-  margin-top: 0.5rem;
-}
-
-.pp-section {
-  padding: clamp(3rem, 8vw, 5rem) clamp(1rem, 4vw, 2rem);
-  border-bottom: 1px solid var(--jooba-border);
-}
-
-.pp-section--tint {
-  background: linear-gradient(180deg, var(--jooba-surface-1) 0%, var(--jooba-surface-deep) 100%);
-}
-
-.pp-section--cloud {
-  background: var(--jooba-surface-0);
-}
-
-.pp-section-inner {
-  max-width: 56rem;
-  margin: 0 auto;
-}
-
-.pp-section-label {
-  margin: 0 0 0.5rem;
-  font-weight: 800;
-  font-size: 0.75rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--jooba-gold-2);
-}
-
-.pp-section-title {
-  margin: 0 0 1rem;
-  font-family: var(--font-display);
-  font-size: clamp(1.65rem, 4vw, 2.35rem);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  color: var(--jooba-text-primary);
-}
-
-.pp-section-copy {
-  margin: 0;
-  max-width: 40rem;
-  font-size: 1.0625rem;
-  color: var(--jooba-text-secondary);
-}
-
-.pp-split {
-  display: grid;
-  gap: 2.5rem;
-  align-items: start;
-}
-
-@media (min-width: 768px) {
-  .pp-split {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-.pp-stats {
-  display: grid;
-  gap: 0.75rem;
-}
-
-.pp-stat-card {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem 1.15rem;
-  background: var(--jooba-surface-2);
-  border: 1px solid var(--jooba-ui-border);
-  border-radius: 14px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
-}
-
-.pp-stat-value {
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--jooba-gold);
-}
-
-.pp-stat-label {
-  font-weight: 800;
-  font-size: 0.875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.pp-band {
-  padding: clamp(3rem, 7vw, 4.5rem) clamp(1rem, 4vw, 2rem);
-  background: var(--pp-red);
-  color: #fff;
-  border-bottom: 1px solid var(--jooba-border);
-  text-align: center;
-}
-
-.pp-band-inner {
-  max-width: 40rem;
-  margin: 0 auto;
-}
-
-.pp-band-tag {
-  margin: 0 0 0.5rem;
-  font-weight: 800;
-  font-size: 0.75rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  opacity: 0.95;
-}
-
-.pp-band-title {
-  margin: 0 0 0.75rem;
-  font-family: var(--font-display);
-  font-size: clamp(1.5rem, 4vw, 2rem);
-  font-weight: 700;
-  text-transform: uppercase;
-  line-height: 1.15;
-}
-
-.pp-band-copy {
-  margin: 0;
-  font-size: 1.05rem;
-  line-height: 1.55;
-  opacity: 0.95;
-}
-
-.pp-community-copy {
-  margin-top: 0.75rem;
-  margin-bottom: 1.75rem;
-}
-
-.pp-cards {
-  display: grid;
-  gap: 1rem;
-}
-
-@media (min-width: 640px) {
-  .pp-cards {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.pp-card {
-  padding: 1.35rem 1.5rem;
-  border: 1px solid var(--jooba-ui-border);
-  border-radius: 16px;
-  background: var(--jooba-surface-2);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
-}
-
-.pp-card-title {
-  margin: 0 0 0.5rem;
-  font-family: var(--font-display);
-  font-size: 1rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--jooba-text-primary);
-}
-
-.pp-card-copy {
-  margin: 0;
-  font-size: 0.9375rem;
-  color: var(--jooba-text-secondary);
-}
-
-.pp-footer {
-  margin-top: auto;
-  padding: 2rem clamp(1rem, 4vw, 2rem);
-  background: var(--pp-ink);
-  color: #e2e8f0;
-}
-
-.pp-footer-inner {
-  max-width: 72rem;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  align-items: flex-start;
-}
-
-.pp-footer-brand {
-  font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.pp-footer-note {
-  margin: 0;
-  font-size: 0.8125rem;
-  color: #94a3b8;
-  max-width: 36rem;
-  line-height: 1.5;
-}
-
-/* Hero wallet (top-right) */
-.pp-hero-wallet .app-wallet-pill--placeholder {
-  min-width: 9.5rem;
-  height: var(--chrome-h);
-  max-height: var(--chrome-h);
-  border-radius: 999px;
-  border-width: 2px;
-  border-color: rgba(255, 255, 255, 0.2);
-  background: rgba(11, 17, 28, 0.6);
-}
-
-.pp-hero-wallet .app-wallet-pill--connect {
-  height: var(--chrome-h);
-  max-height: var(--chrome-h);
-  padding: 0 1.1rem;
-  font-family: var(--font-display);
-  font-size: 0.6875rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  border-radius: 999px;
-  border: 2px solid #0f172a;
-  background: var(--pp-yellow);
-  color: #0f172a;
-  box-shadow: 3px 3px 0 rgba(15, 23, 42, 0.5);
-}
-
-.pp-hero-wallet .app-wallet-pill--connect:hover {
-  background: #f59e0b;
-  box-shadow: 4px 4px 0 rgba(15, 23, 42, 0.45);
-}
-
-.pp-hero-wallet .app-wallet-pill {
-  height: var(--chrome-h);
-  max-height: var(--chrome-h);
-  padding: 0 0.5rem 0 0.4rem;
-  border-width: 2px;
-  border-color: rgba(255, 255, 255, 0.2);
-  border-radius: 999px;
-  background: var(--jooba-surface-1);
-  color: var(--jooba-text-primary);
-  font-family: var(--app-font);
-  font-size: 0.75rem;
-  font-weight: 800;
-  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35);
-}
-
-.pp-hero-wallet .app-wallet-pill:hover {
-  background: var(--jooba-surface-2);
-  border-color: var(--jooba-gold);
-}
-
-.pp-hero-wallet .app-wallet-pill-balance {
-  color: var(--jooba-text-primary);
-}
-
-.pp-hero-wallet .app-wallet-pill-divider {
-  background: var(--jooba-ui-border-muted);
-}
-
-.pp-hero-wallet button.app-wallet-pill > .app-wallet-pill-chevron {
-  color: var(--jooba-text-tertiary);
-}
-
-.pp-hero-wallet button.app-wallet-pill:hover > .app-wallet-pill-chevron {
-  color: var(--jooba-gold-bright);
-}
-
-.pp-hero-wallet .app-wallet-pill-chain-fallback {
-  background: linear-gradient(135deg, rgba(80, 120, 170, 0.5), rgba(154, 184, 222, 0.45));
-}
-
-.app-wallet-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.28rem;
-  flex-shrink: 0;
-  height: 1.625rem;
-  max-height: 1.625rem;
-  padding: 0 0.4rem 0 0.3rem;
-  border: 1px solid var(--jooba-ui-border);
-  border-radius: 999px;
-  background: var(--jooba-surface-1);
-  color: var(--jooba-text-primary);
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  cursor: pointer;
-  font-family: inherit;
-}
-
-.app-wallet-pill:hover {
-  background: var(--jooba-surface-2);
-  border-color: var(--jooba-gold);
-}
-
-.app-wallet-pill:focus-visible {
-  outline: 2px solid var(--jooba-gold);
-  outline-offset: 2px;
-}
-
-.app-wallet-pill--connect {
-  padding: 0 0.55rem;
-}
-
-.app-wallet-pill--placeholder {
-  min-width: 8rem;
-  pointer-events: none;
-  opacity: 0.35;
-}
-
-.app-wallet-pill-chain {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.app-wallet-pill-chain-img {
-  display: block;
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
-  object-fit: cover;
-}
-
-.app-wallet-pill-chain-fallback {
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
-  background: linear-gradient(135deg, rgba(72, 92, 52, 0.7), rgba(172, 198, 142, 0.45));
-}
-
-.app-wallet-pill-balance {
-  color: var(--jooba-text-primary);
-  white-space: nowrap;
-  flex-shrink: 0;
-  max-width: none;
-}
-
-.app-wallet-pill-divider {
-  width: 1px;
-  height: 0.875rem;
-  background: var(--jooba-ui-border);
-  flex-shrink: 0;
-}
-
-.app-wallet-pill-avatar-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.app-wallet-pill-avatar {
-  display: block;
-  width: 1.0625rem;
-  height: 1.0625rem;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-button.app-wallet-pill > .app-wallet-pill-chevron {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  width: 6px;
-  height: 6px;
-  min-width: 6px;
-  min-height: 6px;
-  max-width: 6px;
-  max-height: 6px;
-  margin-left: 1px;
-  line-height: 0;
-  color: var(--chrome-fg-muted);
-}
-
-button.app-wallet-pill:hover > .app-wallet-pill-chevron {
-  color: var(--jooba-gold);
-}
-
-button.app-wallet-pill > .app-wallet-pill-chevron .app-wallet-pill-chevron-svg {
-  display: block;
-  width: 6px !important;
-  height: 6px !important;
-  min-width: 0 !important;
-  min-height: 0 !important;
-  max-width: 7px !important;
-  max-height: 7px !important;
-  flex-shrink: 0;
-  vertical-align: middle;
-}
-
-.wallet-menu-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 9998;
-  background: transparent;
-}
-
-.wallet-menu-panel {
-  position: fixed;
-  z-index: 9999;
-  width: min(19.5rem, calc(100vw - 1rem));
-  border-radius: 14px;
-  border: 1px solid var(--jooba-ui-border);
-  background: var(--jooba-panel);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
-  overflow: hidden;
-  font-size: 0.875rem;
-}
-
-.wallet-menu-pad {
-  padding: 0.875rem 1rem;
-}
-
-.wallet-menu-header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.wallet-menu-avatar-btn {
-  padding: 0;
-  border: none;
-  background: transparent;
-  border-radius: 50%;
-  cursor: pointer;
-  flex-shrink: 0;
-  line-height: 0;
-}
-
-.wallet-menu-avatar-btn:hover .wallet-menu-avatar-lg {
-  border-color: rgba(172, 198, 142, 0.45);
-}
-
-.wallet-menu-avatar-btn:focus-visible {
-  outline: 2px solid rgba(172, 198, 142, 0.55);
-  outline-offset: 2px;
-}
-
-.wallet-menu-avatar-lg {
-  width: 3rem;
-  height: 3rem;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-  border: 1px solid var(--jooba-ui-border);
-}
-
-.wallet-menu-header-text {
-  min-width: 0;
-}
-
-.wallet-menu-username {
-  font-weight: 600;
-  font-size: 1rem;
-  color: var(--jooba-text-primary);
-  line-height: 1.25;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.wallet-menu-address {
-  margin-top: 0.15rem;
-  font-size: 0.8125rem;
-  color: var(--jooba-text-secondary);
-  font-family: var(--app-font);
-}
-
-.wallet-menu-divider {
-  height: 1px;
-  background: var(--jooba-ui-border-muted);
-}
-
-.wallet-menu-balance {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.wallet-menu-balance-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.wallet-menu-chain-lg {
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-
-.wallet-menu-chain-lg--apechain {
-  object-fit: contain;
-  padding: 0;
-  background: transparent;
-  border: none;
-}
-
-.wallet-menu-chain-fallback {
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgba(85, 105, 62, 0.6), rgba(172, 198, 142, 0.35));
-  flex-shrink: 0;
-}
-
-.wallet-menu-balance-text {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  flex: 1;
-  min-width: 0;
-}
-
-.wallet-menu-balance-label {
-  font-size: 0.65rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  color: var(--jooba-text-tertiary);
-  text-transform: uppercase;
-}
-
-.wallet-menu-balance-value {
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: var(--jooba-text-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.wallet-menu-icon {
-  width: 1.125rem;
-  height: 1.125rem;
-  flex-shrink: 0;
-  color: var(--jooba-text-secondary);
-}
-
-.wallet-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  width: 100%;
-  padding: 0.65rem 1rem;
-  border: none;
-  background: transparent;
-  color: var(--jooba-text-primary);
-  font-size: 0.875rem;
-  font-family: inherit;
-  cursor: pointer;
-  text-align: left;
-}
-
-.wallet-menu-item:hover {
-  background: rgba(37, 99, 235, 0.06);
-}
-
-.wallet-menu-footer {
-  padding-top: 0.5rem;
-  padding-bottom: 0.75rem;
-}
-
-.wallet-menu-logout {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  width: 100%;
-  padding: 0.6rem 0.75rem;
-  border: 1px solid var(--jooba-ui-border);
-  border-radius: 10px;
-  background: var(--jooba-surface-1);
-  color: var(--jooba-text-secondary);
-  font-size: 0.875rem;
-  font-family: inherit;
-  cursor: pointer;
-}
-
-.wallet-menu-logout:hover {
-  background: var(--jooba-surface-2);
-  color: var(--jooba-text-primary);
-}
-
-.wallet-menu-hint {
-  margin: 0 0 0.75rem;
-  font-size: 0.8125rem;
-  color: var(--jooba-text-secondary);
-}
-
-.wallet-menu-signin {
-  width: 100%;
-  padding: 0.65rem 0.75rem;
-  border: 2px solid #0f172a;
-  border-radius: 10px;
-  background: var(--pp-yellow);
-  color: #0f172a;
-  font-size: 0.875rem;
-  font-weight: 700;
-  font-family: inherit;
-  cursor: pointer;
-}
-
-.wallet-menu-signin:hover {
-  background: #f59e0b;
-}
-
-.wallet-settings-modal-root {
-  position: fixed;
-  inset: 0;
-  z-index: 10003;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-}
-
-.wallet-settings-modal-backdrop {
-  position: absolute;
-  inset: 0;
-  margin: 0;
-  padding: 0;
-  border: none;
-  background: rgba(0, 0, 0, 0.68);
-  cursor: pointer;
-}
-
-.wallet-settings-modal-dialog {
-  position: relative;
-  z-index: 1;
-  width: min(22rem, calc(100vw - 2rem));
-  border-radius: 14px;
-  border: 1px solid var(--jooba-ui-border);
-  background: var(--jooba-panel);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
-  padding: 1rem 1.1rem 1.1rem;
-}
-
-.wallet-settings-modal-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-}
-
-.wallet-settings-modal-title {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 1rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--jooba-gold-bright);
-}
-
-.wallet-settings-modal-close {
-  width: 1.85rem;
-  height: 1.85rem;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--jooba-text-tertiary);
-  font-size: 1.35rem;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.wallet-settings-modal-close:hover {
-  color: var(--jooba-gold-bright);
-  background: rgba(172, 198, 142, 0.08);
-}
-
-.wallet-settings-modal-checkbox-row {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  font-size: 0.875rem;
-  color: var(--jooba-text-secondary);
-  cursor: pointer;
-}
-
-.wallet-settings-modal-checkbox {
-  width: 1rem;
-  height: 1rem;
-  accent-color: #7b9b59;
-}
-
-.wallet-username-modal-root {
-  position: fixed;
-  inset: 0;
-  z-index: 10000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-}
-
-.wallet-username-modal-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.65);
-}
-
-.wallet-username-modal-dialog {
-  position: relative;
-  width: 100%;
-  max-width: 22rem;
-  border-radius: 14px;
-  border: 1px solid var(--jooba-ui-border);
-  background: var(--jooba-panel);
-  padding: 1.25rem 1.35rem 1.35rem;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
-}
-
-.wallet-username-modal-title {
-  margin: 0 0 0.5rem;
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--jooba-text-primary);
-}
-
-.wallet-username-modal-sub {
-  margin: 0 0 1rem;
-  font-size: 0.8125rem;
-  line-height: 1.45;
-  color: var(--jooba-text-secondary);
-}
-
-.wallet-mono {
-  font-family: var(--app-font);
-  color: var(--jooba-gold);
-}
-
-.wallet-username-modal-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.wallet-username-modal-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--jooba-text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.wallet-username-modal-input {
-  width: 100%;
-  padding: 0.55rem 0.65rem;
-  border-radius: 8px;
-  border: 1px solid var(--jooba-ui-border);
-  background: var(--jooba-surface-deep);
-  color: var(--jooba-text-primary);
-  font-size: 0.9375rem;
-  font-family: inherit;
-}
-
-.wallet-username-modal-input:focus {
-  outline: none;
-  border-color: rgba(172, 198, 142, 0.45);
-}
-
-.wallet-username-modal-error {
-  margin: 0;
-  font-size: 0.8125rem;
-  color: #f87171;
-}
-
-.wallet-username-modal-submit {
-  margin-top: 0.35rem;
-  padding: 0.65rem 0.75rem;
-  border: none;
-  border-radius: 10px;
-  background: rgba(145, 172, 110, 0.35);
-  color: var(--jooba-surface-deep);
-  font-size: 0.875rem;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-}
-
-.wallet-username-modal-submit:hover {
-  background: rgba(172, 198, 142, 0.5);
-}
-
-.wallet-username-modal-secondary {
-  margin-top: 0.5rem;
-  padding: 0.5rem;
-  border: none;
-  background: transparent;
-  color: var(--jooba-text-tertiary);
-  font-size: 0.8125rem;
-  font-family: inherit;
-  cursor: pointer;
-  text-decoration: underline;
-}
-
-.wallet-username-modal-secondary:hover {
-  color: var(--jooba-text-secondary);
-}
-
-.wallet-nft-modal-root {
-  position: fixed;
-  inset: 0;
-  z-index: 10002;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-}
-
-.wallet-nft-modal-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.65);
-}
-
-.wallet-nft-modal-dialog {
-  position: relative;
-  width: 100%;
-  max-width: 28rem;
-  max-height: min(85vh, 36rem);
-  display: flex;
-  flex-direction: column;
-  border-radius: 14px;
-  border: 1px solid var(--jooba-ui-border);
-  background: var(--jooba-panel);
-  padding: 1.1rem 1.2rem 1.15rem;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
-  overflow: hidden;
-}
-
-.wallet-nft-modal-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.wallet-nft-modal-title {
-  margin: 0;
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--jooba-text-primary);
-}
-
-.wallet-nft-modal-close {
-  flex-shrink: 0;
-  width: 2rem;
-  height: 2rem;
-  padding: 0;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--jooba-text-secondary);
-  font-size: 1.35rem;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.wallet-nft-modal-close:hover {
-  background: rgba(172, 198, 142, 0.06);
-  color: var(--jooba-text-primary);
-}
-
-.wallet-nft-modal-sub {
-  margin: 0.5rem 0 0.85rem;
-  font-size: 0.8125rem;
-  line-height: 1.45;
-  color: var(--jooba-text-secondary);
-}
-
-.wallet-nft-modal-error,
-.wallet-nft-modal-empty,
-.wallet-nft-modal-loading {
-  margin: 0 0 0.75rem;
-  font-size: 0.8125rem;
-  color: var(--jooba-text-secondary);
-}
-
-.wallet-nft-modal-error {
-  color: #f87171;
-}
-
-.wallet-nft-code {
-  font-family: var(--app-font);
-  font-size: 0.75rem;
-  color: var(--jooba-gold);
-}
-
-.wallet-nft-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(4.5rem, 1fr));
-  gap: 0.5rem;
-  overflow-y: auto;
-  max-height: min(50vh, 22rem);
-  padding: 0.15rem 0;
-}
-
-.wallet-nft-tile {
-  position: relative;
-  aspect-ratio: 1;
-  padding: 0;
-  border: 1px solid var(--jooba-ui-border);
-  border-radius: 10px;
-  background: var(--jooba-surface-deep);
-  cursor: pointer;
-  overflow: hidden;
-}
-
-.wallet-nft-tile:hover {
-  border-color: rgba(172, 198, 142, 0.45);
-}
-
-.wallet-nft-tile img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.wallet-nft-badge {
-  position: absolute;
-  bottom: 0.2rem;
-  right: 0.2rem;
-  padding: 0.1rem 0.3rem;
-  border-radius: 4px;
-  font-size: 0.6rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  background: rgba(0, 0, 0, 0.72);
-  color: var(--jooba-text-primary);
-}
-
-.wallet-nft-retry {
-  margin-top: 0.65rem;
-  padding: 0.45rem 0.65rem;
-  align-self: flex-start;
-  border: 1px solid var(--jooba-ui-border);
-  border-radius: 8px;
-  background: var(--jooba-surface-1);
-  color: var(--jooba-text-secondary);
-  font-size: 0.8125rem;
-  font-family: inherit;
-  cursor: pointer;
-}
-
-.wallet-nft-retry:hover {
-  background: var(--jooba-surface-2);
-  color: var(--jooba-text-primary);
 }
