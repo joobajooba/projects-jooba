@@ -12,10 +12,10 @@ const NAV_ITEMS = [
 const MARQUEE_ITEMS = Array.from({ length: 12 }, (_, index) => index);
 
 const HOME_SECTIONS = [
-  { id: 'roadmap', title: 'Roadmap' },
-  { id: 'the-team', title: 'Team' },
-  { id: 'bops', title: 'Bops' },
-  { id: 'coming-soon', title: 'Coming Soon' },
+  { id: 'roadmap', title: 'Roadmap', image: '/section-art/roadmap.png' },
+  { id: 'the-team', title: 'Team', image: '/section-art/team.png' },
+  { id: 'bops', title: 'Bops', image: '/section-art/bops.png' },
+  { id: 'coming-soon', title: 'Coming Soon', image: '/section-art/coming-soon.png' },
 ];
 
 export default function App() {
@@ -84,6 +84,7 @@ export default function App() {
         <section className="c-section-grid" aria-label="Home sections">
           {HOME_SECTIONS.map((section) => (
             <article key={section.id} id={section.id} className="c-section-card">
+              <img className="c-section-card__image" src={section.image} alt="" loading="lazy" />
               <h2 className="c-section-card__title">{section.title}</h2>
             </article>
           ))}

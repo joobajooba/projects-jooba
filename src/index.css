@@ -25,6 +25,7 @@
   --sidebar-width: 20vw;
   --sidebar-border-width: 0.45rem;
   --marquee-height: 2.5rem;
+  --section-line-width: 0.22rem;
   --transition-standard: 420ms ease-in-out;
 }
 
@@ -441,7 +442,7 @@ a {
 /* Components: section divider */
 .c-section-divider {
   width: 100%;
-  border-top: 0.35rem solid var(--color-text);
+  border-top: var(--section-line-width) solid var(--color-text);
 }
 
 /* Components: section grid */
@@ -452,11 +453,13 @@ a {
 }
 
 .c-section-card {
+  position: relative;
   display: grid;
   place-items: center;
   min-height: 50dvh;
+  overflow: hidden;
   padding: var(--space-xl);
-  border-right: 0.18rem solid rgba(255, 255, 255, 0.85);
+  border-right: var(--section-line-width) solid var(--color-text);
   background: rgba(255, 255, 255, 0.03);
   scroll-margin-top: var(--marquee-height);
 }
@@ -466,13 +469,32 @@ a {
 }
 
 .c-section-card__title {
+  position: relative;
+  z-index: 1;
   margin: 0;
   color: var(--color-text);
   font-size: clamp(1.4rem, 3vw, 2.6rem);
   font-weight: 900;
   letter-spacing: 0.04em;
   text-align: center;
+  text-shadow: 0 0.2rem 0.85rem rgba(0, 0, 0, 0.85);
   text-transform: uppercase;
+}
+
+.c-section-card__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.7;
+  object-fit: cover;
+}
+
+.c-section-card::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  background: linear-gradient(180deg, rgba(3, 5, 10, 0.2), rgba(3, 5, 10, 0.55));
 }
 
 /* Components: 3D model viewer */
@@ -560,7 +582,7 @@ a {
 
   .c-section-card {
     border-right: 0;
-    border-bottom: 0.18rem solid rgba(255, 255, 255, 0.85);
+    border-bottom: var(--section-line-width) solid var(--color-text);
   }
 
   .c-section-card:last-child {
