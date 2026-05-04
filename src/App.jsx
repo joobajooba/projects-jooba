@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import CryptoWalletModal from './components/CryptoWalletModal';
+import FbxModelViewer from './components/FbxModelViewer';
 
 const NAV_ITEMS = [
   { id: 'crypto-wallet', label: 'Crypto Wallet', type: 'wallet' },
@@ -50,7 +51,9 @@ export default function App() {
         </nav>
       </aside>
 
-      <main className="l-page__content" aria-label="Blank page content" />
+      <main className="l-page__content" aria-label="Main page content">
+        <FbxModelViewer src="/models/test.fbx" />
+      </main>
       <CryptoWalletModal open={walletModalOpen} onClose={() => setWalletModalOpen(false)} />
     </div>
   );
