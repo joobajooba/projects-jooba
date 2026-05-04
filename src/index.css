@@ -24,6 +24,7 @@
   --radius-lg: 1.1rem;
   --sidebar-width: 20vw;
   --sidebar-border-width: 0.45rem;
+  --marquee-height: 2.5rem;
   --transition-standard: 420ms ease-in-out;
 }
 
@@ -83,7 +84,7 @@ a {
   display: grid;
   place-items: center;
   min-height: 100dvh;
-  padding: 0 var(--space-xl) var(--space-xl);
+  padding: var(--marquee-height) var(--space-xl) var(--space-xl);
 }
 
 /* Components: buttons */
@@ -110,7 +111,7 @@ a {
 
 .c-button--controller {
   position: fixed;
-  top: var(--space-md);
+  top: calc(var(--marquee-height) + var(--space-md));
   left: var(--space-md);
   z-index: 20;
   width: 3rem;
@@ -382,10 +383,61 @@ a {
   white-space: nowrap;
 }
 
+/* Components: marquee */
+.c-marquee {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 15;
+  height: var(--marquee-height);
+  overflow: hidden;
+  background: rgba(3, 5, 10, 0.9);
+}
+
+.c-marquee__track {
+  display: flex;
+  width: max-content;
+  min-width: 200%;
+  height: 100%;
+  align-items: center;
+  animation: marquee-scroll 22s linear infinite;
+  will-change: transform;
+}
+
+.c-marquee__item {
+  flex: 0 0 auto;
+  margin-right: clamp(4rem, 9vw, 8rem);
+  background: linear-gradient(
+    90deg,
+    var(--color-gradient-cyan),
+    var(--color-gradient-coral),
+    var(--color-gradient-navy)
+  );
+  background-clip: text;
+  color: transparent;
+  font-size: clamp(1rem, 1.8vw, 1.45rem);
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  -webkit-background-clip: text;
+}
+
+@keyframes marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 /* Components: 3D model viewer */
 .c-model-viewer {
   width: min(78vw, 44rem);
-  height: min(78vh, 44rem);
+  height: min(74vh, 42rem);
 }
 
 .c-model-viewer canvas {
@@ -488,5 +540,9 @@ a {
     transition-duration: 1ms !important;
     animation-duration: 1ms !important;
     animation-iteration-count: 1 !important;
+  }
+
+  .c-marquee__track {
+    transform: translateX(0);
   }
 }

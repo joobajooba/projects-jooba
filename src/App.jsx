@@ -9,6 +9,8 @@ const NAV_ITEMS = [
   { id: 'bops', label: 'Bops' },
 ];
 
+const MARQUEE_ITEMS = Array.from({ length: 12 }, (_, index) => index);
+
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
@@ -20,6 +22,16 @@ export default function App() {
 
   return (
     <div className="l-page">
+      <div className="c-marquee" aria-label="Coming soon">
+        <div className="c-marquee__track" aria-hidden="true">
+          {MARQUEE_ITEMS.map((item) => (
+            <span key={item} className="c-marquee__item">
+              Coming soon
+            </span>
+          ))}
+        </div>
+      </div>
+
       <button
         type="button"
         className="c-button c-button--controller"

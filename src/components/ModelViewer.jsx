@@ -18,6 +18,7 @@ export default function ModelViewer({ src, className = '' }) {
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     const modelRoot = new THREE.Group();
     let animationFrameId;
+    let framedModelSize = null;
 
     scene.add(modelRoot);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -42,12 +43,32 @@ export default function ModelViewer({ src, className = '' }) {
     fillLight.position.set(-4, 2, 3);
     scene.add(ambientLight, keyLight, fillLight);
 
+    const fitCameraToModel = () => {
+      if (!framedModelSize) {
+        return;
+      }
+
+      const verticalFov = THREE.MathUtils.degToRad(camera.fov);
+      const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * camera.aspect);
+      const distanceForHeight = framedModelSize.y / (2 * Math.tan(verticalFov / 2));
+      const distanceForWidth = framedModelSize.x / (2 * Math.tan(horizontalFov / 2));
+      const distance = Math.max(distanceForHeight, distanceForWidth, framedModelSize.z) * 1.45;
+
+      camera.position.set(0, framedModelSize.y * 0.03, distance);
+      camera.near = Math.max(distance / 100, 0.01);
+      camera.far = distance + framedModelSize.z * 4 + 10;
+      camera.updateProjectionMatrix();
+      controls.target.set(0, 0, 0);
+      controls.update();
+    };
+
     const resize = () => {
       const { width, height } = mount.getBoundingClientRect();
 
       camera.aspect = width / Math.max(height, 1);
       camera.updateProjectionMatrix();
       renderer.setSize(width, height, false);
+      fitCameraToModel();
     };
 
     const frameModel = (model) => {
@@ -58,9 +79,8 @@ export default function ModelViewer({ src, className = '' }) {
 
       model.position.sub(center);
       model.scale.setScalar(3 / maxDimension);
-      camera.position.set(0, 0.35, 5.5);
-      controls.target.set(0, 0, 0);
-      controls.update();
+      framedModelSize = size.multiplyScalar(model.scale.x);
+      fitCameraToModel();
     };
 
     const loader = new GLTFLoader();
