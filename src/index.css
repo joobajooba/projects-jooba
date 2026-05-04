@@ -382,13 +382,13 @@ a {
   white-space: nowrap;
 }
 
-/* Components: FBX viewer */
-.c-fbx-viewer {
+/* Components: 3D model viewer */
+.c-model-viewer {
   width: min(78vw, 44rem);
   height: min(78vh, 44rem);
 }
 
-.c-fbx-viewer canvas {
+.c-model-viewer canvas {
   display: block;
   width: 100%;
   height: 100%;
