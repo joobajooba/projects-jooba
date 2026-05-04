@@ -2,9 +2,9 @@ import { useState } from 'react';
 import WalletTopBarButton from './components/WalletTopBarButton';
 
 const NAV_ITEMS = [
-  { id: 'wallet', label: 'Wallet Connect', icon: '/nav-collapse.png', href: '#wallet-top' },
+  { id: 'wallet', label: 'Wallet Connect', icon: '/nav-team.png', href: '#wallet-top' },
   { id: 'home', label: 'Home', icon: '/nav-wallet.png', href: '#home' },
-  { id: 'team', label: 'The Team', icon: '/nav-team.png', href: '#the-team' },
+  { id: 'team', label: 'The Team', icon: '/nav-collapse.png', href: '#the-team' },
 ];
 
 export default function App() {

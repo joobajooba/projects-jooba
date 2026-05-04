@@ -83,7 +83,7 @@ body {
 }
 
 .app-only-shell {
-  --app-nav-w: 86px;
+  --app-nav-w: 44px;
   flex: 1;
   min-height: 0;
   width: 100%;
@@ -94,7 +94,7 @@ body {
 }
 
 .app-only-shell--collapsed {
-  --app-nav-w: 58px;
+  --app-nav-w: 28px;
 }
 
 .app-left-nav {
@@ -103,7 +103,7 @@ body {
   flex-shrink: 0;
   position: relative;
   background: var(--jooba-surface-1);
-  padding: 0.85rem 0.35rem;
+  padding: 0.7rem 0.15rem;
 }
 
 .app-left-nav::after {
@@ -112,7 +112,7 @@ body {
   top: 0;
   right: 0;
   bottom: 0;
-  width: 2px;
+  width: 4px;
   background: linear-gradient(180deg, #b8f0eb 0%, #ffc8be 52%, #2c4a75 100%);
 }
 
@@ -129,8 +129,8 @@ body {
   justify-content: center;
   gap: 0;
   position: relative;
-  min-height: 3.1rem;
-  padding: 0.45rem 0.25rem;
+  min-height: 2.6rem;
+  padding: 0.35rem 0.1rem;
   border: none;
   border-radius: 8px;
   color: #ffffff;
@@ -143,8 +143,8 @@ body {
 }
 
 .app-left-nav-icon {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   object-fit: contain;
   filter: brightness(0) saturate(100%) invert(100%);
 }
