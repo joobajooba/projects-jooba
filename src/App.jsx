@@ -5,10 +5,7 @@ function MarqueeGroup({ idSuffix = '' }) {
     <>
       {Array.from({ length: 18 }, (_, i) => (
         <span key={`${idSuffix}-${i}`} className="pp-marquee-chunk">
-          $JooB Coming Soon
-          <span className="pp-marquee-sep" aria-hidden>
-            ·
-          </span>
+          $JOOB COMING SOON
         </span>
       ))}
     </>
@@ -35,6 +32,16 @@ export default function App() {
             <div className="pp-hero-wallet">
               <WalletTopBarButton connectLabel="Connect wallet" />
             </div>
+          </div>
+          <div className="pp-hero-visual">
+            <img
+              className="pp-hero-img"
+              src="/joob-hero-island.png"
+              alt="Illustration: isometric island with glowing cyan water and coral accents"
+              width={1200}
+              height={1200}
+              decoding="async"
+            />
           </div>
         </section>
 

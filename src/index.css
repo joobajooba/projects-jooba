@@ -131,10 +131,11 @@ code {
   flex-direction: row;
   align-items: center;
   flex-shrink: 0;
+  margin-right: clamp(2.75rem, 11vw, 8rem);
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 900;
   font-size: 0.875rem;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.12em;
   background: linear-gradient(
     98deg,
     #b8f0eb 0%,
@@ -149,16 +150,8 @@ code {
   color: transparent;
 }
 
-.pp-marquee-sep {
-  display: inline;
-  margin: 0 clamp(1.25rem, 4.5vw, 3.25rem);
-  font-weight: 700;
-  letter-spacing: 0;
-  background: linear-gradient(90deg, #9ee3dc 0%, #f5b5a8 50%, #4a6fa5 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  opacity: 0.92;
+.pp-marquee-group .pp-marquee-chunk:last-child {
+  margin-right: 0;
 }
 
 @keyframes pp-marquee-scroll {
@@ -185,24 +178,51 @@ code {
 .pp-hero {
   position: relative;
   overflow: clip;
-  min-height: clamp(220px, 38dvh, 420px);
-  padding: clamp(1.25rem, 4vw, 2rem) clamp(1rem, 4vw, 2rem) clamp(2rem, 5vw, 3rem);
-  background:
-    radial-gradient(ellipse 80% 55% at 50% -10%, rgba(100, 140, 200, 0.22), transparent 55%),
-    linear-gradient(180deg, var(--jooba-surface-2) 0%, var(--jooba-surface-deep) 100%);
+  display: flex;
+  flex-direction: column;
+  min-height: clamp(360px, 74dvh, min(920px, 1040px));
+  padding: clamp(1rem, 3vw, 1.35rem) clamp(1rem, 4vw, 2rem) clamp(1rem, 3vw, 2rem);
+  background: #000000;
   border-bottom: 1px solid var(--jooba-border);
 }
 
 .pp-hero-bar {
+  position: relative;
+  z-index: 2;
   max-width: 72rem;
   margin: 0 auto;
+  width: 100%;
   display: flex;
   justify-content: flex-end;
   align-items: flex-start;
+  flex-shrink: 0;
 }
 
 .pp-hero-wallet {
   flex-shrink: 0;
+}
+
+.pp-hero-visual {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(3rem, 14dvh, 8rem) clamp(0.75rem, 3vw, 2rem) clamp(1.5rem, 4dvh, 2.5rem);
+  pointer-events: none;
+}
+
+.pp-hero-img {
+  width: auto;
+  height: auto;
+  max-width: min(100%, 56rem);
+  max-height: calc(100% - 0.5rem);
+  object-fit: contain;
+  object-position: center;
+  flex-shrink: 0;
+  pointer-events: none;
+  user-select: none;
 }
 
 .pp-btn {
