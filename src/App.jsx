@@ -33,12 +33,23 @@ export default function App() {
       </button>
 
       <main className="app-only-content" id="home">
-        <div className="app-only-toprow" id="wallet-top">
-          <div className="app-only-wallet">
-            <WalletTopBarButton connectLabel="Connect wallet" />
+        <section className="app-home-section" aria-label="Home page section">
+          <div className="app-only-toprow" id="wallet-top">
+            <div className="app-only-wallet">
+              <WalletTopBarButton connectLabel="Connect wallet" />
+            </div>
           </div>
-        </div>
-        <section id="the-team" className="app-only-spacer" aria-hidden />
+          <img
+            src="/home-island-1920x1080.png"
+            alt="Jooba home artwork"
+            className="app-home-image"
+            width={1920}
+            height={1080}
+            decoding="async"
+          />
+        </section>
+
+        <section id="the-team" className="app-blank-page" aria-label="Blank page section" />
       </main>
     </div>
   );
