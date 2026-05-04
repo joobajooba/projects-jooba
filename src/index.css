@@ -83,17 +83,119 @@ body {
 }
 
 .app-only-shell {
+  --app-nav-w: 86px;
   flex: 1;
   min-height: 0;
   width: 100%;
+  display: flex;
+  flex-direction: row;
+  position: relative;
   background: var(--jooba-surface-deep);
+}
+
+.app-only-shell--collapsed {
+  --app-nav-w: 58px;
+}
+
+.app-left-nav {
+  width: var(--app-nav-w);
+  min-width: var(--app-nav-w);
+  flex-shrink: 0;
+  border-right: 1px solid var(--jooba-border);
+  background: var(--jooba-surface-1);
+  padding: 0.85rem 0.35rem;
+}
+
+.app-left-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.app-left-nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  min-height: 3.1rem;
+  padding: 0.45rem 0.25rem;
+  border: 1px solid var(--jooba-ui-border-muted);
+  border-radius: 8px;
+  color: var(--jooba-text-secondary);
+  text-decoration: none;
+  background: transparent;
+}
+
+.app-left-nav-btn:hover {
+  border-color: var(--jooba-gold-2);
+  color: var(--jooba-text-primary);
+  background: rgba(154, 184, 222, 0.07);
+}
+
+.app-left-nav-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.app-left-nav-label {
+  font-family: var(--font-display);
+  font-size: 0.53rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.15;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.app-only-shell--collapsed .app-left-nav-label {
+  display: none;
+}
+
+.app-left-nav-collapse {
+  position: absolute;
+  top: 0.85rem;
+  left: calc(var(--app-nav-w) + 0.35rem);
+  z-index: 4;
+  width: 1.45rem;
+  height: 1.45rem;
+  padding: 0;
+  border: 1px solid var(--jooba-ui-border);
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--jooba-surface-2);
+  color: var(--jooba-text-primary);
+  cursor: pointer;
+}
+
+.app-left-nav-collapse:hover {
+  border-color: var(--jooba-gold-2);
+}
+
+.app-only-shell--collapsed .app-left-nav-collapse {
+  transform: rotate(180deg);
+}
+
+.app-left-nav-collapse-icon {
+  width: 0.75rem;
+  height: 0.75rem;
+  object-fit: contain;
+}
+
+.app-only-content {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
 }
 
 .app-only-toprow {
   display: flex;
   justify-content: flex-end;
   align-items: flex-start;
-  padding: 0.9rem 1rem;
+  padding: 0.9rem 1rem 0.5rem;
 }
 
 .app-only-wallet {
@@ -102,6 +204,10 @@ body {
 
 .app-only-wallet .app-wallet-pill--placeholder {
   min-width: 9rem;
+}
+
+.app-only-spacer {
+  min-height: 68vh;
 }
 
 code {
