@@ -23,28 +23,28 @@ export default function App() {
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [twitterModalOpen, setTwitterModalOpen] = useState(false);
-  const [fadeActive, setFadeActive] = useState(false);
-  const fadeTimeoutRef = useRef(null);
-  const lastFadeRef = useRef(0);
+  const [bounceActive, setBounceActive] = useState(false);
+  const bounceTimeoutRef = useRef(null);
+  const lastBounceRef = useRef(0);
 
   useEffect(() => () => {
-    window.clearTimeout(fadeTimeoutRef.current);
+    window.clearTimeout(bounceTimeoutRef.current);
   }, []);
 
-  const triggerFadeTransition = () => {
+  const triggerBounceTransition = () => {
     const now = Date.now();
 
-    if (now - lastFadeRef.current < 700) {
+    if (now - lastBounceRef.current < 850) {
       return;
     }
 
-    lastFadeRef.current = now;
-    window.clearTimeout(fadeTimeoutRef.current);
-    setFadeActive(false);
+    lastBounceRef.current = now;
+    window.clearTimeout(bounceTimeoutRef.current);
+    setBounceActive(false);
 
     window.requestAnimationFrame(() => {
-      setFadeActive(true);
-      fadeTimeoutRef.current = window.setTimeout(() => setFadeActive(false), 650);
+      setBounceActive(true);
+      bounceTimeoutRef.current = window.setTimeout(() => setBounceActive(false), 820);
     });
   };
 
@@ -58,13 +58,13 @@ export default function App() {
   };
 
   const handleSectionNav = () => {
-    triggerFadeTransition();
+    triggerBounceTransition();
     closeSidebar();
   };
 
   const handleWheel = (event) => {
     if (event.deltaY > 40) {
-      triggerFadeTransition();
+      triggerBounceTransition();
     }
   };
 
@@ -142,7 +142,7 @@ export default function App() {
           ))}
         </section>
       </main>
-      <div className={`c-fade-transition${fadeActive ? ' c-fade-transition--active' : ''}`} aria-hidden="true" />
+      <div className={`c-bounce-transition${bounceActive ? ' c-bounce-transition--active' : ''}`} aria-hidden="true" />
       {profileModalOpen && (
         <div className="c-profile-modal" role="dialog" aria-modal="true" aria-labelledby="j00ba-profile-title">
           <button
@@ -153,7 +153,7 @@ export default function App() {
           />
           <section className="c-profile-modal__panel">
             <button type="button" className="c-profile-modal__close" onClick={() => setProfileModalOpen(false)}>
-              Close
+              X
             </button>
             <img className="c-profile-modal__image" src="/section-art/roadmap.png" alt="J00BA artwork" />
             <dl className="c-profile-modal__details">

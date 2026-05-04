@@ -430,18 +430,22 @@ a {
   -webkit-background-clip: text;
 }
 
-/* Components: fade transition */
-.c-fade-transition {
+/* Components: bounce transition */
+.c-bounce-transition {
   position: fixed;
   inset: 0;
   z-index: 60;
   pointer-events: none;
-  background: rgba(3, 5, 10, 0.92);
+  background:
+    radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.08), transparent 35%),
+    rgba(3, 5, 10, 0.92);
   opacity: 0;
+  transform: translateY(-110%) scaleY(0.82);
+  transform-origin: top center;
 }
 
-.c-fade-transition--active {
-  animation: page-fade 650ms ease-in-out;
+.c-bounce-transition--active {
+  animation: page-bounce 820ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 @keyframes marquee-scroll {
@@ -454,17 +458,30 @@ a {
   }
 }
 
-@keyframes page-fade {
+@keyframes page-bounce {
   0% {
     opacity: 0;
+    transform: translateY(-110%) scaleY(0.82);
   }
 
-  45% {
+  32% {
     opacity: 0.9;
+    transform: translateY(0) scaleY(1.08);
+  }
+
+  48% {
+    opacity: 0.9;
+    transform: translateY(-5%) scaleY(0.96);
+  }
+
+  64% {
+    opacity: 0.76;
+    transform: translateY(0) scaleY(1);
   }
 
   100% {
     opacity: 0;
+    transform: translateY(110%) scaleY(0.92);
   }
 }
 
@@ -563,12 +580,16 @@ a {
   position: absolute;
   top: var(--space-md);
   right: var(--space-md);
-  padding: 0.45rem 0.7rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
   border-radius: var(--radius-md);
-  background: var(--color-button-bg);
-  color: var(--color-button-text);
+  background: rgba(255, 111, 97, 0.16);
+  color: var(--color-gradient-coral);
   cursor: pointer;
+  font-size: 1.15rem;
   font-weight: 900;
+  line-height: 1;
 }
 
 .c-profile-modal__image {
@@ -606,14 +627,15 @@ a {
 }
 
 .c-profile-modal__link {
-  color: var(--color-gradient-cyan);
-  text-decoration: underline;
-  text-underline-offset: 0.18em;
+  color: var(--color-text);
+  text-decoration: none;
 }
 
 .c-profile-modal__link:hover,
 .c-profile-modal__link:focus-visible {
-  color: var(--color-gradient-coral);
+  color: var(--color-text);
+  outline: 2px solid var(--color-gradient-cyan);
+  outline-offset: 0.18rem;
 }
 
 /* Components: link modal */
@@ -815,7 +837,7 @@ a {
     transform: translateX(0);
   }
 
-  .c-fade-transition--active {
+  .c-bounce-transition--active {
     animation: none;
   }
 }
