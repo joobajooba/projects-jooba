@@ -138,21 +138,6 @@ body {
   background: transparent;
 }
 
-.app-left-nav-btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 2px;
-  background: linear-gradient(120deg, #b8f0eb 0%, #ffc8be 52%, #2c4a75 100%);
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-}
-
 .app-left-nav-btn:hover {
   background: transparent;
 }
@@ -194,21 +179,6 @@ body {
   background: transparent;
   color: #ffffff;
   cursor: pointer;
-}
-
-.app-left-nav-collapse::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 2px;
-  background: linear-gradient(120deg, #b8f0eb 0%, #ffc8be 52%, #2c4a75 100%);
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
 }
 
 .app-left-nav-collapse:hover {

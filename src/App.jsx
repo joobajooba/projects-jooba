@@ -2,8 +2,8 @@ import { useState } from 'react';
 import WalletTopBarButton from './components/WalletTopBarButton';
 
 const NAV_ITEMS = [
-  { id: 'wallet', label: 'Wallet Connect', icon: '/nav-wallet.png', href: '#wallet-top' },
-  { id: 'home', label: 'Home', icon: '/nav-home.png', href: '#home' },
+  { id: 'wallet', label: 'Wallet Connect', icon: '/nav-collapse.png', href: '#wallet-top' },
+  { id: 'home', label: 'Home', icon: '/nav-wallet.png', href: '#home' },
   { id: 'team', label: 'The Team', icon: '/nav-team.png', href: '#the-team' },
 ];
 
@@ -29,7 +29,7 @@ export default function App() {
         aria-label={sidebarCollapsed ? 'Expand navigation' : 'Collapse navigation'}
         aria-expanded={!sidebarCollapsed}
       >
-        <img src="/nav-collapse.png" alt="" className="app-left-nav-collapse-icon" width={14} height={14} />
+        <img src="/nav-home.png" alt="" className="app-left-nav-collapse-icon" width={14} height={14} />
       </button>
 
       <main className="app-only-content" id="home">
