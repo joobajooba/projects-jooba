@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import CryptoWalletModal from './components/CryptoWalletModal';
 import ModelViewer from './components/ModelViewer';
 
@@ -21,6 +21,30 @@ const HOME_SECTIONS = [
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
+  const [wipeActive, setWipeActive] = useState(false);
+  const wipeTimeoutRef = useRef(null);
+  const lastWipeRef = useRef(0);
+
+  useEffect(() => () => {
+    window.clearTimeout(wipeTimeoutRef.current);
+  }, []);
+
+  const triggerGradientWipe = () => {
+    const now = Date.now();
+
+    if (now - lastWipeRef.current < 900) {
+      return;
+    }
+
+    lastWipeRef.current = now;
+    window.clearTimeout(wipeTimeoutRef.current);
+    setWipeActive(false);
+
+    window.requestAnimationFrame(() => {
+      setWipeActive(true);
+      wipeTimeoutRef.current = window.setTimeout(() => setWipeActive(false), 850);
+    });
+  };
 
   const openWalletModal = () => {
     setWalletModalOpen(true);
@@ -31,8 +55,19 @@ export default function App() {
     setSidebarOpen(false);
   };
 
+  const handleSectionNav = () => {
+    triggerGradientWipe();
+    closeSidebar();
+  };
+
+  const handleWheel = (event) => {
+    if (event.deltaY > 40) {
+      triggerGradientWipe();
+    }
+  };
+
   return (
-    <div className="l-page">
+    <div className="l-page" onWheel={handleWheel}>
       <div className="c-marquee" aria-label="Coming soon">
         <div className="c-marquee__track" aria-hidden="true">
           {MARQUEE_ITEMS.map((item) => (
@@ -66,7 +101,7 @@ export default function App() {
                 {item.label}
               </button>
             ) : (
-              <a key={item.id} className="c-sidebar__link u-text-bold" href={`#${item.id}`} onClick={closeSidebar}>
+              <a key={item.id} className="c-sidebar__link u-text-bold" href={`#${item.id}`} onClick={handleSectionNav}>
                 {item.label}
               </a>
             )
@@ -83,13 +118,13 @@ export default function App() {
 
         <section className="c-section-grid" aria-label="Home sections">
           {HOME_SECTIONS.map((section) => (
-            <article key={section.id} id={section.id} className="c-section-card">
+            <article key={section.id} id={section.id} className="c-section-card" aria-label={section.title}>
               <img className="c-section-card__image" src={section.image} alt="" loading="lazy" />
-              <h2 className="c-section-card__title">{section.title}</h2>
             </article>
           ))}
         </section>
       </main>
+      <div className={`c-gradient-wipe${wipeActive ? ' c-gradient-wipe--active' : ''}`} aria-hidden="true" />
       <CryptoWalletModal open={walletModalOpen} onClose={() => setWalletModalOpen(false)} />
     </div>
   );
