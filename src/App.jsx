@@ -1,14 +1,21 @@
 import { useState } from 'react';
+import CryptoWalletModal from './components/CryptoWalletModal';
 
 const NAV_ITEMS = [
-  'Crypto Wallet',
-  'Roadmap',
-  'The Team',
-  'Bops',
+  { id: 'crypto-wallet', label: 'Crypto Wallet', type: 'wallet' },
+  { id: 'roadmap', label: 'Roadmap' },
+  { id: 'the-team', label: 'The Team' },
+  { id: 'bops', label: 'Bops' },
 ];
 
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [walletModalOpen, setWalletModalOpen] = useState(false);
+
+  const openWalletModal = () => {
+    setWalletModalOpen(true);
+    setSidebarOpen(false);
+  };
 
   return (
     <div className="l-page">
@@ -18,26 +25,33 @@ export default function App() {
         onClick={() => setSidebarOpen((isOpen) => !isOpen)}
         aria-controls="site-sidebar"
         aria-expanded={sidebarOpen}
+        aria-label="Toggle sidebar"
       >
         <span className="c-icon c-icon--hamburger" aria-hidden="true">
           <span className="c-icon__line" />
           <span className="c-icon__line" />
           <span className="c-icon__line" />
         </span>
-        <span className="c-button__label">Side Bar Controller</span>
       </button>
 
       <aside id="site-sidebar" className={`c-sidebar${sidebarOpen ? ' c-sidebar--open' : ''}`} aria-label="Site navigation">
         <nav className="c-sidebar__nav">
           {NAV_ITEMS.map((item) => (
-            <a key={item} className="c-sidebar__link u-text-bold" href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}>
-              {item}
-            </a>
+            item.type === 'wallet' ? (
+              <button key={item.id} type="button" className="c-sidebar__link c-sidebar__link--button u-text-bold" onClick={openWalletModal}>
+                {item.label}
+              </button>
+            ) : (
+              <a key={item.id} className="c-sidebar__link u-text-bold" href={`#${item.id}`}>
+                {item.label}
+              </a>
+            )
           ))}
         </nav>
       </aside>
 
       <main className="l-page__content" aria-label="Blank page content" />
+      <CryptoWalletModal open={walletModalOpen} onClose={() => setWalletModalOpen(false)} />
     </div>
   );
 }
