@@ -62,19 +62,18 @@ function CryptoWalletModalContent({ account, mounted, open, openConnectModal, on
               <span className="c-info-list__label">Wallet Address</span>
               <span className="c-info-list__value">{shortenAddress(account.address)}</span>
             </div>
-            <div className="c-info-list__item c-info-list__item--balance">
-              <span className="c-info-list__label">ApeChain Balance</span>
-              <span className="c-token-balance">
-                <img src="/apechain-logo-mark.png" alt="" className="c-token-balance__logo" width={28} height={28} />
-                <span className="c-token-balance__value">{apeBalanceText}</span>
-              </span>
-            </div>
             {username ? (
               <div className="c-info-list__item">
                 <span className="c-info-list__label">Username</span>
                 <span className="c-info-list__value">{username}</span>
               </div>
             ) : null}
+            <div className="c-info-list__item c-info-list__item--balance">
+              <span className="c-token-balance">
+                <img src="/apechain-logo-mark.png" alt="" className="c-token-balance__logo" width={44} height={44} />
+                <span className="c-token-balance__value">{apeBalanceText}</span>
+              </span>
+            </div>
           </div>
 
           {loading ? <p className="c-text c-text--muted">Checking username...</p> : null}

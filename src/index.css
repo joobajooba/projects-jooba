@@ -337,6 +337,7 @@ a {
 
 .c-info-list__item--balance {
   align-items: center;
+  padding: var(--space-md);
   background: linear-gradient(135deg, rgba(114, 247, 239, 0.1), rgba(255, 111, 97, 0.06));
 }
 
@@ -354,17 +355,18 @@ a {
 
 /* Components: token balance */
 .c-token-balance {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-sm);
+  justify-content: space-between;
+  gap: var(--space-md);
+  width: 100%;
   color: var(--color-text);
   font-weight: 900;
 }
 
 .c-token-balance__logo {
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 2.75rem;
+  height: 2.75rem;
   border-radius: 50%;
   object-fit: contain;
   background: rgba(255, 255, 255, 0.08);
@@ -372,6 +374,7 @@ a {
 }
 
 .c-token-balance__value {
+  flex: 1;
   text-align: right;
   white-space: nowrap;
 }
