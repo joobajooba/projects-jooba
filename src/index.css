@@ -93,6 +93,11 @@ a {
   padding: var(--marquee-height) var(--space-xl) var(--space-xl);
 }
 
+.l-page__blank-section {
+  min-height: 100dvh;
+  background: var(--color-page);
+}
+
 /* Components: buttons */
 .c-button {
   display: inline-flex;

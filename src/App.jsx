@@ -176,6 +176,8 @@ export default function App() {
             </article>
           ))}
         </section>
+
+        <section className="l-page__blank-section" aria-label="Blank section" />
       </main>
       <div className={`c-bounce-transition${bounceActive ? ' c-bounce-transition--active' : ''}`} aria-hidden="true" />
       {profileModalOpen && (
