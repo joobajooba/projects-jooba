@@ -76,11 +76,15 @@ a {
 .l-page {
   position: relative;
   min-height: 100dvh;
-  overflow: hidden;
+  overflow-x: hidden;
   background: var(--color-page);
 }
 
 .l-page__content {
+  min-height: 100dvh;
+}
+
+.l-page__hero {
   display: grid;
   place-items: center;
   min-height: 100dvh;
@@ -113,7 +117,7 @@ a {
   position: fixed;
   top: calc(var(--marquee-height) + var(--space-md));
   left: var(--space-md);
-  z-index: 20;
+  z-index: 35;
   width: 3rem;
   height: 3rem;
   padding: 0;
@@ -182,7 +186,7 @@ a {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 10;
+  z-index: 30;
   width: var(--sidebar-width);
   min-width: 14rem;
   max-width: 24rem;
@@ -434,6 +438,43 @@ a {
   }
 }
 
+/* Components: section divider */
+.c-section-divider {
+  width: 100%;
+  border-top: 0.35rem solid var(--color-text);
+}
+
+/* Components: section grid */
+.c-section-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  min-height: 50dvh;
+}
+
+.c-section-card {
+  display: grid;
+  place-items: center;
+  min-height: 50dvh;
+  padding: var(--space-xl);
+  border-right: 0.18rem solid rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.03);
+  scroll-margin-top: var(--marquee-height);
+}
+
+.c-section-card:last-child {
+  border-right: 0;
+}
+
+.c-section-card__title {
+  margin: 0;
+  color: var(--color-text);
+  font-size: clamp(1.4rem, 3vw, 2.6rem);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
 /* Components: 3D model viewer */
 .c-model-viewer {
   width: min(78vw, 44rem);
@@ -490,6 +531,14 @@ a {
   :root {
     --sidebar-width: 72vw;
   }
+
+  .c-section-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .c-section-card:nth-child(2n) {
+    border-right: 0;
+  }
 }
 
 @media (max-width: 520px) {
@@ -503,6 +552,19 @@ a {
     max-width: none;
     padding-right: var(--space-lg);
     padding-left: var(--space-lg);
+  }
+
+  .c-section-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .c-section-card {
+    border-right: 0;
+    border-bottom: 0.18rem solid rgba(255, 255, 255, 0.85);
+  }
+
+  .c-section-card:last-child {
+    border-bottom: 0;
   }
 
   .c-modal {

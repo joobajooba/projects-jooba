@@ -11,12 +11,23 @@ const NAV_ITEMS = [
 
 const MARQUEE_ITEMS = Array.from({ length: 12 }, (_, index) => index);
 
+const HOME_SECTIONS = [
+  { id: 'roadmap', title: 'Roadmap' },
+  { id: 'the-team', title: 'Team' },
+  { id: 'bops', title: 'Bops' },
+  { id: 'coming-soon', title: 'Coming Soon' },
+];
+
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
 
   const openWalletModal = () => {
     setWalletModalOpen(true);
+    setSidebarOpen(false);
+  };
+
+  const closeSidebar = () => {
     setSidebarOpen(false);
   };
 
@@ -55,7 +66,7 @@ export default function App() {
                 {item.label}
               </button>
             ) : (
-              <a key={item.id} className="c-sidebar__link u-text-bold" href={`#${item.id}`}>
+              <a key={item.id} className="c-sidebar__link u-text-bold" href={`#${item.id}`} onClick={closeSidebar}>
                 {item.label}
               </a>
             )
@@ -64,7 +75,19 @@ export default function App() {
       </aside>
 
       <main className="l-page__content" aria-label="Main page content">
-        <ModelViewer src="/models/9419_model.glb" />
+        <section className="l-page__hero" aria-label="Featured 3D model">
+          <ModelViewer src="/models/9419_model.glb" />
+        </section>
+
+        <div className="c-section-divider" aria-hidden="true" />
+
+        <section className="c-section-grid" aria-label="Home sections">
+          {HOME_SECTIONS.map((section) => (
+            <article key={section.id} id={section.id} className="c-section-card">
+              <h2 className="c-section-card__title">{section.title}</h2>
+            </article>
+          ))}
+        </section>
       </main>
       <CryptoWalletModal open={walletModalOpen} onClose={() => setWalletModalOpen(false)} />
     </div>
