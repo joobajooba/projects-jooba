@@ -543,10 +543,6 @@ a {
   transform-origin: center;
 }
 
-.c-section-card__image--bounce-in {
-  animation: bounce-in 700ms both;
-}
-
 .c-section-card::after {
   position: absolute;
   inset: 0;
@@ -582,6 +578,7 @@ a {
   border-radius: var(--radius-lg);
   background: var(--color-surface);
   box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.65);
+  animation: bounce-in 700ms both;
 }
 
 .c-profile-modal__close {
@@ -845,7 +842,7 @@ a {
     transform: translateX(0);
   }
 
-  .c-section-card__image--bounce-in {
+  .c-profile-modal__panel {
     animation: none;
   }
 }

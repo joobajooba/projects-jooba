@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import CryptoWalletModal from './components/CryptoWalletModal';
 import ModelViewer from './components/ModelViewer';
 
@@ -40,14 +40,6 @@ export default function App() {
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [twitterModalOpen, setTwitterModalOpen] = useState(false);
-  const [bouncingProfileId, setBouncingProfileId] = useState(null);
-  const bounceTimeoutRef = useRef(null);
-  const profileTimeoutRef = useRef(null);
-
-  useEffect(() => () => {
-    window.clearTimeout(bounceTimeoutRef.current);
-    window.clearTimeout(profileTimeoutRef.current);
-  }, []);
 
   const openWalletModal = () => {
     setWalletModalOpen(true);
@@ -64,19 +56,7 @@ export default function App() {
   };
 
   const openProfile = (profile) => {
-    window.clearTimeout(bounceTimeoutRef.current);
-    window.clearTimeout(profileTimeoutRef.current);
-    setSelectedProfile(null);
-    setBouncingProfileId(null);
-
-    window.requestAnimationFrame(() => {
-      const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
-      const modalDelay = prefersReducedMotion ? 0 : 620;
-
-      setBouncingProfileId(profile.slug);
-      bounceTimeoutRef.current = window.setTimeout(() => setBouncingProfileId(null), 700);
-      profileTimeoutRef.current = window.setTimeout(() => setSelectedProfile(profile), modalDelay);
-    });
+    setSelectedProfile(profile);
   };
 
   return (
@@ -144,7 +124,7 @@ export default function App() {
                 aria-label={`Open ${profile.name} profile`}
               >
                 <img
-                  className={`c-section-card__image${bouncingProfileId === profile.slug ? ' c-section-card__image--bounce-in' : ''}`}
+                  className="c-section-card__image"
                   src={profile.image}
                   alt=""
                   loading="lazy"
