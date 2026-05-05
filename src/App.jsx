@@ -10,6 +10,7 @@ const NAV_ITEMS = [
 ];
 
 const MARQUEE_ITEMS = Array.from({ length: 12 }, (_, index) => index);
+const BOP_SECTIONS = ['Bop Info', 'Bop Functionality'];
 
 const HOME_SECTIONS = [
   {
@@ -27,11 +28,10 @@ const HOME_SECTIONS = [
     image: '/team-okidokie.png',
   },
   {
-    id: 'bops',
+    id: 'melvolio',
     slug: 'melvolio',
     name: 'Melvolio',
     image: '/team-melvolio.png',
-    panels: ['Bop Info', 'Bop Functionality'],
   },
   { id: 'coming-soon', slug: 'deliveryservice', name: 'DeliveryService', image: '/section-art/coming-soon.png' },
 ];
@@ -131,25 +131,17 @@ export default function App() {
                   loading="lazy"
                 />
               </button>
-              {profile.panels && (
-                <div className="c-section-card__split" aria-label="Bops sections">
-                  {profile.panels.map((panel) => (
-                    <button
-                      key={panel}
-                      type="button"
-                      className="c-section-card__split-panel"
-                      onClick={() => openProfile(profile)}
-                    >
-                      {panel}
-                    </button>
-                  ))}
-                </div>
-              )}
             </article>
           ))}
         </section>
 
-        <section className="l-page__blank-section" aria-label="Blank section" />
+        <section id="bops" className="c-bops-section" aria-label="Bops">
+          {BOP_SECTIONS.map((section) => (
+            <article key={section} className="c-bops-section__panel">
+              <h2 className="c-bops-section__title">{section}</h2>
+            </article>
+          ))}
+        </section>
       </main>
       {selectedProfile && (
         <div className="c-profile-modal" role="dialog" aria-modal="true" aria-labelledby="team-profile-title">
