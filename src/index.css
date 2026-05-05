@@ -598,16 +598,60 @@ a {
   cursor: pointer;
 }
 
+/* 1. Animation for the modal panel */
+@keyframes modalPopIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* 2. Animation for the dark backdrop */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.c-profile-modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.c-profile-modal__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  border: none;
+  cursor: pointer;
+  animation: fadeIn 0.3s forwards;
+}
+
 .c-profile-modal__panel {
   position: relative;
   z-index: 1;
-  width: min(100%, 32rem);
+  width: min(90%, 32rem);
   padding: var(--space-xl);
   border: var(--section-line-width) solid var(--color-text);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
   box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.65);
-  animation: bounce-in 700ms both;
+  
+  animation: modalPopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.c-profile-modal__image {
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-lg);
 }
 
 .c-profile-modal__close {
