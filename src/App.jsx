@@ -18,59 +18,39 @@ const HOME_SECTIONS = [
   { id: 'coming-soon', title: 'Coming Soon', image: '/section-art/coming-soon.png' },
 ];
 
+const TEAM_MEMBERS = [
+  {
+    id: 'jooba',
+    name: 'J00BA',
+    handle: 'j00ba_j00ba',
+    about: 'My name is J00BA and i love JPEGS',
+    image: '/team-jooba.png',
+  },
+  {
+    id: 'melvolio',
+    name: 'Melvolio',
+    image: '/team-melvolio.png',
+  },
+  {
+    id: 'okidokie',
+    name: 'Okidokie',
+    image: '/team-okidokie.png',
+  },
+];
+
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
-  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [selectedTeamMember, setSelectedTeamMember] = useState(null);
   const [twitterModalOpen, setTwitterModalOpen] = useState(false);
-  const [teamPanelVisible, setTeamPanelVisible] = useState(false);
-  const [bounceActive, setBounceActive] = useState(false);
+  const [bouncingTeamMemberId, setBouncingTeamMemberId] = useState(null);
   const bounceTimeoutRef = useRef(null);
-  const lastBounceRef = useRef(0);
-  const teamPanelRef = useRef(null);
+  const profileTimeoutRef = useRef(null);
 
   useEffect(() => () => {
     window.clearTimeout(bounceTimeoutRef.current);
+    window.clearTimeout(profileTimeoutRef.current);
   }, []);
-
-  useEffect(() => {
-    const teamPanel = teamPanelRef.current;
-
-    if (!teamPanel) {
-      return undefined;
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setTeamPanelVisible(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.35 },
-    );
-
-    observer.observe(teamPanel);
-
-    return () => observer.disconnect();
-  }, []);
-
-  const triggerBounceTransition = () => {
-    const now = Date.now();
-
-    if (now - lastBounceRef.current < 850) {
-      return;
-    }
-
-    lastBounceRef.current = now;
-    window.clearTimeout(bounceTimeoutRef.current);
-    setBounceActive(false);
-
-    window.requestAnimationFrame(() => {
-      setBounceActive(true);
-      bounceTimeoutRef.current = window.setTimeout(() => setBounceActive(false), 820);
-    });
-  };
 
   const openWalletModal = () => {
     setWalletModalOpen(true);
@@ -81,24 +61,29 @@ export default function App() {
     setSidebarOpen(false);
   };
 
-  const handleSectionNav = () => {
-    triggerBounceTransition();
-    closeSidebar();
-  };
-
-  const handleWheel = (event) => {
-    if (event.deltaY > 40) {
-      triggerBounceTransition();
-    }
-  };
-
   const openTwitterModal = (event) => {
     event.preventDefault();
     setTwitterModalOpen(true);
   };
 
+  const openTeamMemberProfile = (member) => {
+    window.clearTimeout(bounceTimeoutRef.current);
+    window.clearTimeout(profileTimeoutRef.current);
+    setSelectedTeamMember(null);
+    setBouncingTeamMemberId(null);
+
+    window.requestAnimationFrame(() => {
+      const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+      const modalDelay = prefersReducedMotion ? 0 : 620;
+
+      setBouncingTeamMemberId(member.id);
+      bounceTimeoutRef.current = window.setTimeout(() => setBouncingTeamMemberId(null), 700);
+      profileTimeoutRef.current = window.setTimeout(() => setSelectedTeamMember(member), modalDelay);
+    });
+  };
+
   return (
-    <div className="l-page" onWheel={handleWheel}>
+    <div className="l-page">
       <div className="c-marquee" aria-label="Coming soon">
         <div className="c-marquee__track" aria-hidden="true">
           {MARQUEE_ITEMS.map((item) => (
@@ -132,7 +117,7 @@ export default function App() {
                 {item.label}
               </button>
             ) : (
-              <a key={item.id} className="c-sidebar__link u-text-bold" href={`#${item.id}`} onClick={handleSectionNav}>
+              <a key={item.id} className="c-sidebar__link u-text-bold" href={`#${item.id}`} onClick={closeSidebar}>
                 {item.label}
               </a>
             )
@@ -152,22 +137,31 @@ export default function App() {
             <article
               key={section.id}
               id={section.id}
-              ref={section.id === 'the-team' ? teamPanelRef : undefined}
               className="c-section-card"
               aria-label={section.title}
             >
-              {section.id === 'roadmap' ? (
-                <button
-                  type="button"
-                  className="c-section-card__button"
-                  onClick={() => setProfileModalOpen(true)}
-                  aria-label="Open J00BA profile"
-                >
-                  <img className="c-section-card__image" src={section.image} alt="" loading="lazy" />
-                </button>
+              {section.id === 'the-team' ? (
+                <div className="c-team-card" aria-label="Team members">
+                  {TEAM_MEMBERS.map((member) => (
+                    <button
+                      key={member.id}
+                      type="button"
+                      className="c-team-card__button"
+                      onClick={() => openTeamMemberProfile(member)}
+                      aria-label={`Open ${member.name} profile`}
+                    >
+                      <img
+                        className={`c-team-card__image${bouncingTeamMemberId === member.id ? ' c-team-card__image--bounce-in' : ''}`}
+                        src={member.image}
+                        alt=""
+                        loading="lazy"
+                      />
+                    </button>
+                  ))}
+                </div>
               ) : (
                 <img
-                  className={`c-section-card__image${section.id === 'the-team' && teamPanelVisible ? ' c-section-card__image--bounce-in' : ''}`}
+                  className="c-section-card__image"
                   src={section.image}
                   alt=""
                   loading="lazy"
@@ -179,37 +173,40 @@ export default function App() {
 
         <section className="l-page__blank-section" aria-label="Blank section" />
       </main>
-      <div className={`c-bounce-transition${bounceActive ? ' c-bounce-transition--active' : ''}`} aria-hidden="true" />
-      {profileModalOpen && (
-        <div className="c-profile-modal" role="dialog" aria-modal="true" aria-labelledby="j00ba-profile-title">
+      {selectedTeamMember && (
+        <div className="c-profile-modal" role="dialog" aria-modal="true" aria-labelledby="team-profile-title">
           <button
             type="button"
             className="c-profile-modal__overlay"
-            onClick={() => setProfileModalOpen(false)}
-            aria-label="Close J00BA profile"
+            onClick={() => setSelectedTeamMember(null)}
+            aria-label={`Close ${selectedTeamMember.name} profile`}
           />
           <section className="c-profile-modal__panel">
-            <button type="button" className="c-profile-modal__close" onClick={() => setProfileModalOpen(false)}>
+            <button type="button" className="c-profile-modal__close" onClick={() => setSelectedTeamMember(null)}>
               X
             </button>
-            <img className="c-profile-modal__image" src="/section-art/roadmap.png" alt="J00BA artwork" />
+            <img className="c-profile-modal__image" src={selectedTeamMember.image} alt={`${selectedTeamMember.name} artwork`} />
             <dl className="c-profile-modal__details">
               <div className="c-profile-modal__row">
                 <dt>Name</dt>
-                <dd id="j00ba-profile-title">J00BA</dd>
+                <dd id="team-profile-title">{selectedTeamMember.name}</dd>
               </div>
-              <div className="c-profile-modal__row">
-                <dt>Handle</dt>
-                <dd>
-                  <a className="c-profile-modal__link" href="https://x.com/j00ba_j00ba" onClick={openTwitterModal}>
-                    j00ba_j00ba
-                  </a>
-                </dd>
-              </div>
-              <div className="c-profile-modal__row">
-                <dt>About me</dt>
-                <dd>My name is J00BA and i love JPEGS</dd>
-              </div>
+              {selectedTeamMember.handle && (
+                <div className="c-profile-modal__row">
+                  <dt>Handle</dt>
+                  <dd>
+                    <a className="c-profile-modal__link" href="https://x.com/j00ba_j00ba" onClick={openTwitterModal}>
+                      {selectedTeamMember.handle}
+                    </a>
+                  </dd>
+                </div>
+              )}
+              {selectedTeamMember.about && (
+                <div className="c-profile-modal__row">
+                  <dt>About me</dt>
+                  <dd>{selectedTeamMember.about}</dd>
+                </div>
+              )}
             </dl>
           </section>
         </div>
