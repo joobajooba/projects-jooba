@@ -521,6 +521,7 @@ a {
 .c-section-card__button {
   position: absolute;
   inset: 0;
+  z-index: 2;
   display: block;
   width: 100%;
   height: 100%;
@@ -537,6 +538,7 @@ a {
 .c-section-card__image {
   position: absolute;
   inset: 0;
+  z-index: 0;
   width: 100%;
   height: 100%;
   opacity: 0.9;
@@ -547,9 +549,43 @@ a {
 .c-section-card::after {
   position: absolute;
   inset: 0;
+  z-index: 1;
   content: '';
   background: linear-gradient(180deg, rgba(3, 5, 10, 0.2), rgba(3, 5, 10, 0.55));
   pointer-events: none;
+}
+
+.c-section-card__split {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-bottom: var(--section-line-width) solid var(--color-text);
+}
+
+.c-section-card__split-panel {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  padding: var(--space-lg);
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: clamp(1.05rem, 2vw, 1.6rem);
+  font-weight: 900;
+  line-height: 1.1;
+  text-align: center;
+  text-shadow: 0 0.2rem 0.9rem rgba(0, 0, 0, 0.8);
+}
+
+.c-section-card__split-panel:first-child {
+  border-right: var(--section-line-width) solid var(--color-text);
+}
+
+.c-section-card__split-panel:focus-visible {
+  outline: 4px solid var(--color-gradient-cyan);
+  outline-offset: -4px;
 }
 
 /* Components: profile modal */

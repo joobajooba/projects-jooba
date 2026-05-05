@@ -4,7 +4,7 @@ import ModelViewer from './components/ModelViewer';
 
 const NAV_ITEMS = [
   { id: 'crypto-wallet', label: 'Crypto Wallet', type: 'wallet' },
-  { id: 'roadmap', label: 'Roadmap' },
+  { id: 'roadmap', label: 'Roadmap', targetId: 'site-top' },
   { id: 'the-team', label: 'The Team' },
   { id: 'bops', label: 'Bops' },
 ];
@@ -31,6 +31,7 @@ const HOME_SECTIONS = [
     slug: 'melvolio',
     name: 'Melvolio',
     image: '/team-melvolio.png',
+    panels: ['Bop Info', 'Bop Functionality'],
   },
   { id: 'coming-soon', slug: 'deliveryservice', name: 'DeliveryService', image: '/section-art/coming-soon.png' },
 ];
@@ -60,7 +61,7 @@ export default function App() {
   };
 
   return (
-    <div className="l-page">
+    <div id="site-top" className="l-page">
       <div className="c-marquee" aria-label="Coming soon">
         <div className="c-marquee__track" aria-hidden="true">
           {MARQUEE_ITEMS.map((item) => (
@@ -94,7 +95,7 @@ export default function App() {
                 {item.label}
               </button>
             ) : (
-              <a key={item.id} className="c-sidebar__link u-text-bold" href={`#${item.id}`} onClick={closeSidebar}>
+              <a key={item.id} className="c-sidebar__link u-text-bold" href={`#${item.targetId ?? item.id}`} onClick={closeSidebar}>
                 {item.label}
               </a>
             )
@@ -130,6 +131,20 @@ export default function App() {
                   loading="lazy"
                 />
               </button>
+              {profile.panels && (
+                <div className="c-section-card__split" aria-label="Bops sections">
+                  {profile.panels.map((panel) => (
+                    <button
+                      key={panel}
+                      type="button"
+                      className="c-section-card__split-panel"
+                      onClick={() => openProfile(profile)}
+                    >
+                      {panel}
+                    </button>
+                  ))}
+                </div>
+              )}
             </article>
           ))}
         </section>
