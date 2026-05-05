@@ -499,6 +499,7 @@ a {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   min-height: 50dvh;
+  border-bottom: var(--section-line-width) solid var(--color-text);
 }
 
 .c-section-card {
