@@ -539,6 +539,11 @@ a {
   opacity: 0.9;
   object-fit: cover;
   transform-origin: center;
+  transition: transform var(--transition-standard);
+}
+
+.c-section-card:hover .c-section-card__image {
+  transform: scale(1.05);
 }
 
 .c-section-card::after {
