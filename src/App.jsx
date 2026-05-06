@@ -40,6 +40,7 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
+  const [isClosing, setIsClosing] = useState(false);
   const [twitterModalOpen, setTwitterModalOpen] = useState(false);
 
   const openWalletModal = () => {
@@ -57,7 +58,16 @@ export default function App() {
   };
 
   const openProfile = (profile) => {
+    setIsClosing(false);
     setSelectedProfile(profile);
+  };
+
+  const handleCloseProfile = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      setSelectedProfile(null);
+      setIsClosing(false);
+    }, 250);
   };
 
   return (
@@ -143,17 +153,18 @@ export default function App() {
           ))}
         </section>
       </main>
+
       {selectedProfile && (
-        <div className="c-profile-modal" role="dialog" aria-modal="true" aria-labelledby="team-profile-title">
+        <div className={`c-profile-modal ${isClosing ? 'is-closing' : ''}`} role="dialog" aria-modal="true" aria-labelledby="team-profile-title">
           <button
             type="button"
             className="c-profile-modal__overlay"
-            onClick={() => setSelectedProfile(null)}
+            onClick={handleCloseProfile}
             aria-label={`Close ${selectedProfile.name} profile`}
           />
           <section className="c-profile-modal__panel">
-            <button type="button" className="c-profile-modal__close" onClick={() => setSelectedProfile(null)}>
-              X
+            <button type="button" className="c-profile-modal__close" onClick={handleCloseProfile}>
+              ✕
             </button>
             <img className="c-profile-modal__image" src={selectedProfile.image} alt={`${selectedProfile.name} artwork`} />
             <dl className="c-profile-modal__details">
@@ -181,6 +192,7 @@ export default function App() {
           </section>
         </div>
       )}
+
       {twitterModalOpen && (
         <div className="c-link-modal" role="dialog" aria-modal="true" aria-labelledby="twitter-link-title">
           <button

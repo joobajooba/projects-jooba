@@ -591,7 +591,7 @@ a {
 .c-profile-modal {
   position: fixed;
   inset: 0;
-  z-index: 70;
+  z-index: 1000;
   display: grid;
   place-items: center;
   padding: var(--space-lg);
@@ -602,7 +602,9 @@ a {
   inset: 0;
   padding: 0;
   background: rgba(0, 0, 0, 0.72);
+  border: none;
   cursor: pointer;
+  animation: fadeIn 0.3s forwards;
 }
 
 /* 1. Animation for the modal panel */
@@ -617,28 +619,31 @@ a {
   }
 }
 
-/* 2. Animation for the dark backdrop */
+/* Animation for the modal exit */
+@keyframes modalPopOut {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.96) translateY(10px);
+  }
+}
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-.c-profile-modal {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
-.c-profile-modal__overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.8);
-  border: none;
-  cursor: pointer;
-  animation: fadeIn 0.3s forwards;
+/* Exit state for overlay */
+.c-profile-modal.is-closing .c-profile-modal__overlay {
+  animation: fadeOut 0.3s forwards;
 }
 
 .c-profile-modal__panel {
@@ -650,16 +655,13 @@ a {
   border-radius: var(--radius-lg);
   background: var(--color-surface);
   box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.65);
-  
-  /* animation: modalPopIn 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) forwards; */ /* animation with slight bounce */
-  animation: modalPopIn 0.4s cubic-bezier(0.3, 1, 0.5, 1) forwards;  /* animation without slight bounce */
+  animation: modalPopIn 0.4s cubic-bezier(0.3, 1, 0.5, 1) forwards;
 }
 
-.c-profile-modal__image {
-  width: 100%;
-  height: auto;
-  border-radius: var(--radius-sm);
-  margin-bottom: var(--space-lg);
+/* Exit state for panel */
+.c-profile-modal.is-closing .c-profile-modal__panel {
+  animation: modalPopOut 0.25s ease-in forwards;
+  pointer-events: none;
 }
 
 .c-profile-modal__close {
@@ -680,17 +682,19 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
-
-  transition: background 0.3s ease, opacity 0.3s ease, filter 0.3s ease;
-  opacity: 1; 
+  
+  transition: background 0.3s ease, opacity 0.3s ease, filter 0.3s ease, transform 0.1s ease;
+  opacity: 0.85; 
 }
 
 .c-profile-modal__close:hover {
   opacity: 1;
   background: rgba(255, 111, 97, 0.24);
-  
-  /* increase brightness on hover */
   filter: brightness(1.2);
+}
+
+.c-profile-modal__close:active {
+  transform: scale(0.96);
 }
 
 .c-profile-modal__image {
