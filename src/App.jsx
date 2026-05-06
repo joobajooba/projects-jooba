@@ -3,10 +3,10 @@ import CryptoWalletModal from './components/CryptoWalletModal';
 import ModelViewer from './components/ModelViewer';
 
 const NAV_ITEMS = [
-  { id: 'crypto-wallet', label: 'Crypto Wallet', type: 'wallet' },
-  { id: 'roadmap', label: 'Roadmap', targetId: 'site-top' },
-  { id: 'the-team', label: 'The Team' },
-  { id: 'bops', label: 'Bops' },
+  { id: 'crypto-wallet', label: 'Crypto Wallet', icon: 'wallet', type: 'wallet' },
+  { id: 'roadmap', label: 'Roadmap', icon: 'map', targetId: 'site-top' },
+  { id: 'the-team', label: 'The Team', icon: 'team' },
+  { id: 'bops', label: 'Bops', icon: 'trophy' },
 ];
 
 const MARQUEE_ITEMS = Array.from({ length: 12 }, (_, index) => index);
@@ -36,8 +36,46 @@ const HOME_SECTIONS = [
   { id: 'coming-soon', slug: 'deliveryservice', name: 'DeliveryService', image: '/section-art/coming-soon.png' },
 ];
 
+function NavIcon({ type }) {
+  return (
+    <svg className="c-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      {type === 'wallet' && (
+        <>
+          <path d="M4 7.5h14.5a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-11a2 2 0 0 1 2-2h12" />
+          <path d="M15 12h5.5v4H15a2 2 0 0 1 0-4Z" />
+          <path d="M16.5 14h.01" />
+        </>
+      )}
+      {type === 'map' && (
+        <>
+          <path d="M3 6.5 8.5 4l7 2.5L21 4v13.5L15.5 20l-7-2.5L3 20V6.5Z" />
+          <path d="M8.5 4v13.5" />
+          <path d="M15.5 6.5V20" />
+        </>
+      )}
+      {type === 'team' && (
+        <>
+          <path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+          <path d="M17 10a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
+          <path d="M3.5 19a5.5 5.5 0 0 1 11 0" />
+          <path d="M14 14.5a4.75 4.75 0 0 1 6.5 4.5" />
+        </>
+      )}
+      {type === 'trophy' && (
+        <>
+          <path d="M8 4h8v5a4 4 0 0 1-8 0V4Z" />
+          <path d="M8 6H4.5v2A3.5 3.5 0 0 0 8 11.5" />
+          <path d="M16 6h3.5v2A3.5 3.5 0 0 1 16 11.5" />
+          <path d="M12 13v4" />
+          <path d="M8.5 20h7" />
+          <path d="M10 17h4" />
+        </>
+      )}
+    </svg>
+  );
+}
+
 export default function App() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [isClosing, setIsClosing] = useState(false);
@@ -45,11 +83,6 @@ export default function App() {
 
   const openWalletModal = () => {
     setWalletModalOpen(true);
-    setSidebarOpen(false);
-  };
-
-  const closeSidebar = () => {
-    setSidebarOpen(false);
   };
 
   const openTwitterModal = (event) => {
@@ -82,31 +115,18 @@ export default function App() {
         </div>
       </div>
 
-      <button
-        type="button"
-        className="c-button c-button--controller"
-        onClick={() => setSidebarOpen((isOpen) => !isOpen)}
-        aria-controls="site-sidebar"
-        aria-expanded={sidebarOpen}
-        aria-label="Toggle sidebar"
-      >
-        <span className="c-icon c-icon--hamburger" aria-hidden="true">
-          <span className="c-icon__line" />
-          <span className="c-icon__line" />
-          <span className="c-icon__line" />
-        </span>
-      </button>
-
-      <aside id="site-sidebar" className={`c-sidebar${sidebarOpen ? ' c-sidebar--open' : ''}`} aria-label="Site navigation">
+      <aside id="site-sidebar" className="c-sidebar" aria-label="Site navigation">
         <nav className="c-sidebar__nav">
           {NAV_ITEMS.map((item) => (
             item.type === 'wallet' ? (
               <button key={item.id} type="button" className="c-sidebar__link c-sidebar__link--button u-text-bold" onClick={openWalletModal}>
-                {item.label}
+                <NavIcon type={item.icon} />
+                <span className="c-sidebar__label">{item.label}</span>
               </button>
             ) : (
-              <a key={item.id} className="c-sidebar__link u-text-bold" href={`#${item.targetId ?? item.id}`} onClick={closeSidebar}>
-                {item.label}
+              <a key={item.id} className="c-sidebar__link u-text-bold" href={`#${item.targetId ?? item.id}`}>
+                <NavIcon type={item.icon} />
+                <span className="c-sidebar__label">{item.label}</span>
               </a>
             )
           ))}

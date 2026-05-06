@@ -22,6 +22,7 @@
   --space-xl: 2rem;
   --radius-md: 0.75rem;
   --radius-lg: 1.1rem;
+  --sidebar-compact-width: 4.75rem;
   --sidebar-width: 20vw;
   --sidebar-border-width: 0.45rem;
   --marquee-height: 2.5rem;
@@ -114,21 +115,6 @@ a {
   outline-offset: 3px;
 }
 
-.c-button--controller {
-  position: fixed;
-  top: calc(var(--marquee-height) + var(--space-md));
-  left: var(--space-md);
-  z-index: 35;
-  width: 3rem;
-  height: 3rem;
-  padding: 0;
-  border: 2px solid var(--color-border);
-  background: var(--color-button-bg);
-  color: var(--color-button-text);
-  box-shadow: 0 0.65rem 1.75rem rgba(0, 0, 0, 0.28);
-  font-weight: 800;
-}
-
 .c-button--primary {
   width: 100%;
   min-height: 2.85rem;
@@ -162,37 +148,18 @@ a {
   box-shadow: 0 0.75rem 1.5rem rgba(255, 111, 97, 0.12);
 }
 
-/* Components: icons */
-.c-icon {
-  display: inline-flex;
-  flex-shrink: 0;
-}
-
-.c-icon--hamburger {
-  width: 1.15rem;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.c-icon__line {
-  display: block;
-  width: 100%;
-  height: 0.15rem;
-  border-radius: 999px;
-  background: currentColor;
-}
-
 /* Components: sidebar */
 .c-sidebar {
   position: fixed;
   top: 0;
   left: 0;
   z-index: 30;
-  width: var(--sidebar-width);
-  min-width: 14rem;
-  max-width: 24rem;
+  width: var(--sidebar-compact-width);
+  min-width: var(--sidebar-compact-width);
+  max-width: var(--sidebar-compact-width);
   height: 100dvh;
-  padding: 6rem var(--space-xl) var(--space-xl);
+  overflow: hidden;
+  padding: calc(var(--marquee-height) + var(--space-xl)) var(--space-sm) var(--space-xl);
   background: var(--color-surface);
   border-right: var(--sidebar-border-width) solid transparent;
   border-image: linear-gradient(
@@ -202,47 +169,86 @@ a {
       var(--color-gradient-navy) 100%
     )
     1;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-100%);
-  transition:
-    opacity var(--transition-standard),
-    transform var(--transition-standard);
-}
-
-.c-sidebar--open {
   opacity: 1;
   pointer-events: auto;
-  transform: translateY(0);
+  transition:
+    width var(--transition-standard),
+    min-width var(--transition-standard),
+    max-width var(--transition-standard),
+    padding var(--transition-standard);
+}
+
+.c-sidebar:hover,
+.c-sidebar:focus-within {
+  width: var(--sidebar-width);
+  min-width: 14rem;
+  max-width: 24rem;
+  padding-right: var(--space-xl);
+  padding-left: var(--space-xl);
 }
 
 .c-sidebar__nav {
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
+  gap: var(--space-md);
 }
 
 .c-sidebar__link {
-  display: block;
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-sm);
   width: 100%;
-  padding: var(--space-xs) 0;
+  min-height: 3rem;
+  padding: var(--space-xs);
   border: 0;
+  border-radius: var(--radius-md);
   background: transparent;
   color: var(--color-text);
   font-size: clamp(1rem, 1.2vw, 1.35rem);
   letter-spacing: 0.02em;
   text-align: left;
   cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background var(--transition-standard),
+    color var(--transition-standard);
 }
 
 .c-sidebar__link:hover,
 .c-sidebar__link:focus-visible {
+  background: rgba(255, 255, 255, 0.08);
   color: var(--color-gradient-cyan);
 }
 
 .c-sidebar__link:focus-visible {
   outline: 2px solid var(--color-gradient-cyan);
   outline-offset: 4px;
+}
+
+.c-sidebar__icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  justify-self: center;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.75;
+}
+
+.c-sidebar__label {
+  opacity: 0;
+  transform: translateX(-0.45rem);
+  transition:
+    opacity var(--transition-standard),
+    transform var(--transition-standard);
+}
+
+.c-sidebar:hover .c-sidebar__label,
+.c-sidebar:focus-within .c-sidebar__label {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 /* Components: modal */
@@ -876,12 +882,15 @@ a {
 }
 
 @media (max-width: 520px) {
-  .c-button--controller {
-    width: 2.85rem;
-    height: 2.85rem;
+  .c-sidebar {
+    min-width: var(--sidebar-compact-width);
+    max-width: var(--sidebar-compact-width);
+    padding-right: var(--space-sm);
+    padding-left: var(--space-sm);
   }
 
-  .c-sidebar {
+  .c-sidebar:hover,
+  .c-sidebar:focus-within {
     min-width: 0;
     max-width: none;
     padding-right: var(--space-lg);
