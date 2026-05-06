@@ -59,7 +59,7 @@ const TEAM_MEMBERS = [
     image: '/team-melvolio.png',
   },
   {
-    name: 'Deliver-Service',
+    name: 'Delivery-Service',
     role: 'Developer',
     image: '/section-art/coming-soon.png',
   },

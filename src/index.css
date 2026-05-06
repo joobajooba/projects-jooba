@@ -587,6 +587,12 @@ a {
     linear-gradient(var(--color-surface), var(--color-surface)) padding-box,
     linear-gradient(135deg, var(--color-gradient-cyan), var(--color-gradient-coral)) border-box;
   object-fit: cover;
+  transition: transform var(--transition-standard);
+}
+
+.c-team-member:hover .c-team-member__image,
+.c-team-member:focus-within .c-team-member__image {
+  transform: scale(1.05);
 }
 
 .c-team-member__name {
