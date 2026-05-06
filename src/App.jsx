@@ -108,6 +108,14 @@ function formatWalletAddress(address) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
+function getMembershipDays(firstSeenAt) {
+  if (!firstSeenAt) return 0;
+  const firstSeenTime = new Date(firstSeenAt).getTime();
+  if (!Number.isFinite(firstSeenTime)) return 0;
+  const days = Math.floor((Date.now() - firstSeenTime) / 86400000);
+  return Math.max(0, days);
+}
+
 function normalizeXAccountUrl(raw) {
   const trimmed = raw.trim();
   if (!trimmed) return { ok: true, value: '' };
@@ -331,7 +339,7 @@ function CommunityPage() {
 
       const { data, error: loadError } = await supabase
         .from('user_data')
-        .select('wallet_address, username, profile_picture_url')
+        .select('wallet_address, username, profile_picture_url, first_logged_in_at')
         .order('username', { ascending: true, nullsFirst: false });
 
       if (cancelled) return;
@@ -372,12 +380,14 @@ function CommunityPage() {
                 <tr>
                   <th scope="col">User</th>
                   <th scope="col">Wallet</th>
+                  <th scope="col">Member Since</th>
                 </tr>
               </thead>
               <tbody>
                 {users.map((user) => {
                   const walletAddress = user.wallet_address ?? '';
                   const username = user.username?.trim() || 'Unnamed Jooba';
+                  const memberDays = getMembershipDays(user.first_logged_in_at);
                   return (
                     <tr key={walletAddress || username}>
                       <td>
@@ -390,8 +400,11 @@ function CommunityPage() {
                       </td>
                       <td>
                         <span className="c-community-wallet" title={walletAddress}>
-                          {walletAddress || 'No wallet'}
+                          {walletAddress ? formatWalletAddress(walletAddress) : 'No wallet'}
                         </span>
+                      </td>
+                      <td>
+                        <span className="c-community-member-days">{memberDays}</span>
                       </td>
                     </tr>
                   );

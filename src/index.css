@@ -525,6 +525,15 @@ a {
   word-break: break-all;
 }
 
+.c-community-member-days {
+  display: inline-flex;
+  min-width: 3rem;
+  justify-content: flex-start;
+  font-family: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', monospace;
+  font-size: 0.95rem;
+  font-weight: 900;
+}
+
 .c-profile-card__edit-button,
 .c-profile-card__cancel-button {
   display: inline-flex;
