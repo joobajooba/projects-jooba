@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
 import CryptoWalletModal from './components/CryptoWalletModal';
 import ModelViewer from './components/ModelViewer';
+import WalletNftAvatarModal from './components/WalletNftAvatarModal';
 import { useWalletProfile } from './hooks/useWalletProfile';
 
 const NAV_ITEMS = [
@@ -127,10 +128,13 @@ function ProfilePage() {
     bio,
     xAccountUrl,
     saveProfileDetails,
+    saveProfilePictureUrl,
     saveError,
     setSaveError,
+    refresh,
   } = useWalletProfile(address);
   const [editing, setEditing] = useState(false);
+  const [nftPickerOpen, setNftPickerOpen] = useState(false);
   const [draftUsername, setDraftUsername] = useState('');
   const [draftBio, setDraftBio] = useState('');
   const [draftXAccountUrl, setDraftXAccountUrl] = useState('');
@@ -179,89 +183,113 @@ function ProfilePage() {
     if (ok) setEditing(false);
   };
 
+  const pickProfileNft = async (url) => {
+    const ok = await saveProfilePictureUrl(url);
+    if (ok) refresh();
+  };
+
   return (
-    <section className="c-profile-page" aria-label="Profile page">
-      <article className="c-profile-card">
-        <div className="c-profile-card__banner" aria-hidden="true" />
-        <div className="c-profile-card__body">
-          <div className="c-profile-card__avatar" aria-label="Profile picture">
-            {profilePictureUrl ? <img src={profilePictureUrl} alt="" /> : null}
+    <>
+      <section className="c-profile-page" aria-label="Profile page">
+        <article className="c-profile-card">
+          <div className="c-profile-card__banner" aria-hidden="true" />
+          <div className="c-profile-card__body">
+            <div className="c-profile-card__avatar" aria-label="Profile picture">
+              {profilePictureUrl ? <img src={profilePictureUrl} alt="" /> : null}
+            </div>
+            <div className="c-profile-card__identity">
+              <h1 className="c-profile-card__name">{displayName}</h1>
+              <p className="c-profile-card__address" title={address ?? undefined}>
+                {formatWalletAddress(address)}
+              </p>
+              {bio ? <p className="c-profile-card__bio">{bio}</p> : null}
+              {xAccountUrl ? (
+                <a className="c-profile-card__x-link" href={xAccountUrl} target="_blank" rel="noreferrer">
+                  {xAccountUrl.replace(/^https?:\/\/(www\.)?/, '')}
+                </a>
+              ) : null}
+            </div>
           </div>
-          <div className="c-profile-card__identity">
-            <h1 className="c-profile-card__name">{displayName}</h1>
-            <p className="c-profile-card__address" title={address ?? undefined}>
-              {formatWalletAddress(address)}
-            </p>
-            {bio ? <p className="c-profile-card__bio">{bio}</p> : null}
-            {xAccountUrl ? (
-              <a className="c-profile-card__x-link" href={xAccountUrl} target="_blank" rel="noreferrer">
-                {xAccountUrl.replace(/^https?:\/\/(www\.)?/, '')}
-              </a>
-            ) : null}
+          <div className="c-profile-card__edit-area">
+            {!editing ? (
+              <button
+                type="button"
+                className="c-profile-card__edit-button"
+                onClick={beginEditing}
+                disabled={!address}
+              >
+                Edit Profile
+              </button>
+            ) : (
+              <form className="c-profile-card__form" onSubmit={saveEditing}>
+                <div className="c-profile-card__nft-row">
+                  <span>Profile NFT</span>
+                  <button
+                    type="button"
+                    className="c-profile-card__nft-button"
+                    onClick={() => setNftPickerOpen(true)}
+                    disabled={!address}
+                  >
+                    Select NFT from Wallet
+                  </button>
+                </div>
+                <label className="c-profile-card__field">
+                  <span>Username</span>
+                  <input
+                    value={draftUsername}
+                    onChange={(event) => setDraftUsername(event.target.value)}
+                    maxLength={32}
+                    placeholder="your_name"
+                    autoComplete="username"
+                    required
+                  />
+                </label>
+                <label className="c-profile-card__field">
+                  <span>Bio</span>
+                  <textarea
+                    value={draftBio}
+                    onChange={(event) => setDraftBio(event.target.value)}
+                    maxLength={200}
+                    placeholder="Tell people about yourself"
+                    rows={4}
+                  />
+                  <small>{draftBio.length}/200</small>
+                </label>
+                <label className="c-profile-card__field">
+                  <span>X Account</span>
+                  <input
+                    value={draftXAccountUrl}
+                    onChange={(event) => setDraftXAccountUrl(event.target.value)}
+                    placeholder="https://x.com/username"
+                    inputMode="url"
+                  />
+                </label>
+                {saveError ? <p className="c-profile-card__error">{saveError}</p> : null}
+                <div className="c-profile-card__actions">
+                  <button type="submit" className="c-profile-card__edit-button" disabled={saving}>
+                    {saving ? 'Updating...' : 'Confirm Updates'}
+                  </button>
+                  <button
+                    type="button"
+                    className="c-profile-card__cancel-button"
+                    onClick={cancelEditing}
+                    disabled={saving}
+                  >
+                    Cancel Updates
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
-        </div>
-        <div className="c-profile-card__edit-area">
-          {!editing ? (
-            <button
-              type="button"
-              className="c-profile-card__edit-button"
-              onClick={beginEditing}
-              disabled={!address}
-            >
-              Edit Profile
-            </button>
-          ) : (
-            <form className="c-profile-card__form" onSubmit={saveEditing}>
-              <label className="c-profile-card__field">
-                <span>Username</span>
-                <input
-                  value={draftUsername}
-                  onChange={(event) => setDraftUsername(event.target.value)}
-                  maxLength={32}
-                  placeholder="your_name"
-                  autoComplete="username"
-                  required
-                />
-              </label>
-              <label className="c-profile-card__field">
-                <span>Bio</span>
-                <textarea
-                  value={draftBio}
-                  onChange={(event) => setDraftBio(event.target.value)}
-                  maxLength={200}
-                  placeholder="Tell people about yourself"
-                  rows={4}
-                />
-                <small>{draftBio.length}/200</small>
-              </label>
-              <label className="c-profile-card__field">
-                <span>X Account</span>
-                <input
-                  value={draftXAccountUrl}
-                  onChange={(event) => setDraftXAccountUrl(event.target.value)}
-                  placeholder="https://x.com/username"
-                  inputMode="url"
-                />
-              </label>
-              {saveError ? <p className="c-profile-card__error">{saveError}</p> : null}
-              <div className="c-profile-card__actions">
-                <button type="submit" className="c-profile-card__edit-button" disabled={saving}>
-                  {saving ? 'Updating...' : 'Confirm Updates'}
-                </button>
-                <button
-                  type="button"
-                  className="c-profile-card__cancel-button"
-                  onClick={cancelEditing}
-                  disabled={saving}
-                >
-                  Cancel Updates
-                </button>
-              </div>
-            </form>
-          )}
-        </div>
-      </article>
-    </section>
+        </article>
+      </section>
+      <WalletNftAvatarModal
+        open={nftPickerOpen}
+        address={address}
+        onClose={() => setNftPickerOpen(false)}
+        onPick={pickProfileNft}
+      />
+    </>
   );
 }
 

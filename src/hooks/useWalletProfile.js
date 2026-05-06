@@ -315,13 +315,13 @@ export function useWalletProfile(address) {
   const saveProfilePictureUrl = useCallback(
     async (url) => {
       const trimmed = url?.trim();
-      if (!normalized || !trimmed || !username?.trim()) return false;
+      if (!normalized || !trimmed) return false;
       try {
         if (supabase && !skipSupabaseUserDataReads()) {
           const { error } = await supabase.from('user_data').upsert(
             {
               wallet_address: normalized,
-              username: username.trim(),
+              username: username?.trim() || null,
               profile_picture_url: trimmed,
             },
             { onConflict: 'wallet_address' }

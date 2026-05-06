@@ -406,6 +406,44 @@ a {
   font-weight: 900;
 }
 
+.c-profile-card__nft-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.045);
+  color: var(--color-text);
+  font-weight: 900;
+}
+
+.c-profile-card__nft-button {
+  display: inline-flex;
+  min-height: 2.45rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--space-md);
+  border: 1px solid rgba(114, 247, 239, 0.35);
+  border-radius: var(--radius-md);
+  background: rgba(114, 247, 239, 0.1);
+  color: var(--color-text);
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.c-profile-card__nft-button:hover,
+.c-profile-card__nft-button:focus-visible {
+  background: rgba(114, 247, 239, 0.18);
+}
+
+.c-profile-card__nft-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 .c-profile-card__field input,
 .c-profile-card__field textarea {
   width: 100%;
