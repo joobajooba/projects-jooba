@@ -340,6 +340,111 @@ a {
   letter-spacing: 0.04em;
 }
 
+.c-profile-card__bio {
+  max-width: 32rem;
+  margin: var(--space-sm) 0 0;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.c-profile-card__x-link {
+  display: inline-flex;
+  margin-top: var(--space-sm);
+  color: var(--color-gradient-cyan);
+  font-weight: 900;
+}
+
+.c-profile-card__x-link:hover,
+.c-profile-card__x-link:focus-visible {
+  color: var(--color-text);
+}
+
+.c-profile-card__edit-area {
+  padding: 0 var(--space-xl) var(--space-xl);
+}
+
+.c-profile-card__edit-button,
+.c-profile-card__cancel-button {
+  display: inline-flex;
+  min-height: 2.85rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--space-lg);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.c-profile-card__edit-button {
+  background: var(--color-button-bg);
+  color: var(--color-button-text);
+}
+
+.c-profile-card__cancel-button {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text);
+}
+
+.c-profile-card__edit-button:disabled,
+.c-profile-card__cancel-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.c-profile-card__form {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.c-profile-card__field {
+  display: grid;
+  gap: 0.45rem;
+  color: var(--color-text);
+  font-weight: 900;
+}
+
+.c-profile-card__field input,
+.c-profile-card__field textarea {
+  width: 100%;
+  padding: 0.85rem var(--space-md);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--color-text);
+  font: inherit;
+}
+
+.c-profile-card__field textarea {
+  resize: vertical;
+}
+
+.c-profile-card__field input:focus,
+.c-profile-card__field textarea:focus {
+  outline: 3px solid rgba(114, 247, 239, 0.28);
+  border-color: var(--color-gradient-cyan);
+}
+
+.c-profile-card__field small {
+  justify-self: end;
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 0.8rem;
+}
+
+.c-profile-card__error {
+  margin: 0;
+  color: var(--color-gradient-coral);
+  font-weight: 800;
+}
+
+.c-profile-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
 /* Components: modal */
 .c-modal {
   position: fixed;

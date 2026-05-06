@@ -93,10 +93,91 @@ function formatWalletAddress(address) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
+function normalizeXAccountUrl(raw) {
+  const trimmed = raw.trim();
+  if (!trimmed) return { ok: true, value: '' };
+
+  const possibleHandle = trimmed.replace(/^@/, '');
+  if (/^[a-zA-Z0-9_]{1,15}$/.test(possibleHandle)) {
+    return { ok: true, value: `https://x.com/${possibleHandle}` };
+  }
+
+  const withProtocol = /^[a-zA-Z][a-zA-Z\d+.-]*:/.test(trimmed) ? trimmed : `https://${trimmed}`;
+  try {
+    const url = new URL(withProtocol);
+    const host = url.hostname.replace(/^www\./, '');
+    if (host !== 'x.com' && host !== 'twitter.com') {
+      return { ok: false, message: 'Use an X/Twitter profile link' };
+    }
+    const [handle] = url.pathname.split('/').filter(Boolean);
+    if (!handle) {
+      return { ok: false, message: 'Use an X/Twitter profile link' };
+    }
+    return { ok: true, value: `https://x.com/${handle}` };
+  } catch {
+    return { ok: false, message: 'Use an X/Twitter profile link' };
+  }
+}
+
 function ProfilePage() {
   const { address, isConnected } = useAccount();
-  const { username, profilePictureUrl } = useWalletProfile(address);
+  const {
+    username,
+    profilePictureUrl,
+    bio,
+    xAccountUrl,
+    saveProfileDetails,
+    saveError,
+    setSaveError,
+  } = useWalletProfile(address);
+  const [editing, setEditing] = useState(false);
+  const [draftUsername, setDraftUsername] = useState('');
+  const [draftBio, setDraftBio] = useState('');
+  const [draftXAccountUrl, setDraftXAccountUrl] = useState('');
+  const [saving, setSaving] = useState(false);
   const displayName = username || (isConnected ? 'Unnamed Jooba' : 'Guest Profile');
+
+  useEffect(() => {
+    if (!editing) {
+      setDraftUsername(username ?? '');
+      setDraftBio(bio ?? '');
+      setDraftXAccountUrl(xAccountUrl ?? '');
+    }
+  }, [bio, editing, username, xAccountUrl]);
+
+  const beginEditing = () => {
+    setDraftUsername(username ?? '');
+    setDraftBio(bio ?? '');
+    setDraftXAccountUrl(xAccountUrl ?? '');
+    setSaveError(null);
+    setEditing(true);
+  };
+
+  const cancelEditing = () => {
+    setSaveError(null);
+    setEditing(false);
+  };
+
+  const saveEditing = async (event) => {
+    event.preventDefault();
+    if (!address) {
+      setSaveError('Connect your wallet to edit your profile');
+      return;
+    }
+    const xResult = normalizeXAccountUrl(draftXAccountUrl);
+    if (!xResult.ok) {
+      setSaveError(xResult.message);
+      return;
+    }
+    setSaving(true);
+    const ok = await saveProfileDetails({
+      username: draftUsername,
+      bio: draftBio,
+      xAccountUrl: xResult.value,
+    });
+    setSaving(false);
+    if (ok) setEditing(false);
+  };
 
   return (
     <section className="c-profile-page" aria-label="Profile page">
@@ -111,7 +192,73 @@ function ProfilePage() {
             <p className="c-profile-card__address" title={address ?? undefined}>
               {formatWalletAddress(address)}
             </p>
+            {bio ? <p className="c-profile-card__bio">{bio}</p> : null}
+            {xAccountUrl ? (
+              <a className="c-profile-card__x-link" href={xAccountUrl} target="_blank" rel="noreferrer">
+                {xAccountUrl.replace(/^https?:\/\/(www\.)?/, '')}
+              </a>
+            ) : null}
           </div>
+        </div>
+        <div className="c-profile-card__edit-area">
+          {!editing ? (
+            <button
+              type="button"
+              className="c-profile-card__edit-button"
+              onClick={beginEditing}
+              disabled={!address}
+            >
+              Edit Profile
+            </button>
+          ) : (
+            <form className="c-profile-card__form" onSubmit={saveEditing}>
+              <label className="c-profile-card__field">
+                <span>Username</span>
+                <input
+                  value={draftUsername}
+                  onChange={(event) => setDraftUsername(event.target.value)}
+                  maxLength={32}
+                  placeholder="your_name"
+                  autoComplete="username"
+                  required
+                />
+              </label>
+              <label className="c-profile-card__field">
+                <span>Bio</span>
+                <textarea
+                  value={draftBio}
+                  onChange={(event) => setDraftBio(event.target.value)}
+                  maxLength={200}
+                  placeholder="Tell people about yourself"
+                  rows={4}
+                />
+                <small>{draftBio.length}/200</small>
+              </label>
+              <label className="c-profile-card__field">
+                <span>X Account</span>
+                <input
+                  value={draftXAccountUrl}
+                  onChange={(event) => setDraftXAccountUrl(event.target.value)}
+                  placeholder="https://x.com/username"
+                  inputMode="url"
+                />
+              </label>
+              {saveError ? <p className="c-profile-card__error">{saveError}</p> : null}
+              <div className="c-profile-card__actions">
+                <button type="submit" className="c-profile-card__edit-button" disabled={saving}>
+                  {saving ? 'Updating...' : 'Confirm Updates'}
+                </button>
+                <button
+                  type="button"
+                  className="c-profile-card__cancel-button"
+                  onClick={cancelEditing}
+                  disabled={saving}
+                >
+                  Cancel Updates
+                </button>
+              </div>
+            </form>
+          )}
         </div>
       </article>
     </section>
