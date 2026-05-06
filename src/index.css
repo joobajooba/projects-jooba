@@ -649,7 +649,8 @@ a {
   background: var(--color-surface);
   box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.65);
   
-  animation: modalPopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: modalPopIn 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) forwards; /* animation with slight bounce */
+  /* animation: modalPopIn 0.5s cubic-bezier(0.3, 1, 0.5, 1) forwards; */ /* animation without slight bounce */
 }
 
 .c-profile-modal__image {
