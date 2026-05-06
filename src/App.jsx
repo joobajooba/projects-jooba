@@ -42,6 +42,29 @@ const HOME_SECTIONS = [
   { id: 'coming-soon', slug: 'deliveryservice', name: 'DeliveryService', image: '/section-art/coming-soon.png' },
 ];
 
+const TEAM_MEMBERS = [
+  {
+    name: 'J00BA',
+    role: 'WEB3 / Artist',
+    image: '/section-art/roadmap.png',
+  },
+  {
+    name: 'OkiDokie',
+    role: 'Sound Engineering',
+    image: '/team-okidokie.png',
+  },
+  {
+    name: 'Melvolio',
+    role: 'Developer',
+    image: '/team-melvolio.png',
+  },
+  {
+    name: 'Deliver-Service',
+    role: 'Developer',
+    image: '/section-art/coming-soon.png',
+  },
+];
+
 function NavIcon({ type }) {
   return (
     <svg className="c-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -100,6 +123,7 @@ function NavIcon({ type }) {
 function getCurrentPage() {
   if (window.location.hash === '#profile') return 'profile';
   if (window.location.hash === '#community') return 'community';
+  if (window.location.hash === '#the-team') return 'team';
   return 'home';
 }
 
@@ -418,6 +442,28 @@ function CommunityPage() {
   );
 }
 
+function TeamPage() {
+  return (
+    <section className="c-team-page" aria-label="Team page">
+      <div className="c-team-card">
+        <div className="c-team-card__header">
+          <p className="c-text c-text--eyebrow">Meet the builders</p>
+          <h1 className="c-team-card__title">The Team</h1>
+        </div>
+        <div className="c-team-grid">
+          {TEAM_MEMBERS.map((member) => (
+            <article key={member.name} className="c-team-member">
+              <img className="c-team-member__image" src={member.image} alt={`${member.name} portrait`} />
+              <h2 className="c-team-member__name">{member.name}</h2>
+              <p className="c-team-member__role">{member.role}</p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function App() {
   const [currentPage, setCurrentPage] = useState(getCurrentPage);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
@@ -488,6 +534,8 @@ export default function App() {
           <ProfilePage />
         ) : currentPage === 'community' ? (
           <CommunityPage />
+        ) : currentPage === 'team' ? (
+          <TeamPage />
         ) : (
           <>
             <section className="l-page__hero" aria-label="Featured 3D model">

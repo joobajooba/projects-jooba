@@ -534,6 +534,76 @@ a {
   font-weight: 900;
 }
 
+/* Components: team page */
+.c-team-page {
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  padding: calc(var(--marquee-height) + var(--space-xl)) var(--space-xl) var(--space-xl)
+    calc(var(--sidebar-compact-width) + var(--space-xl));
+}
+
+.c-team-card {
+  width: min(100%, 58rem);
+  padding: var(--space-xl);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-lg);
+  background: rgba(0, 0, 0, 0.72);
+  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.5);
+}
+
+.c-team-card__header {
+  margin-bottom: var(--space-xl);
+  text-align: center;
+}
+
+.c-team-card__title {
+  margin: 0;
+  color: var(--color-text);
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.c-team-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-xl);
+}
+
+.c-team-member {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-xs);
+  text-align: center;
+}
+
+.c-team-member__image {
+  width: clamp(8rem, 15vw, 11rem);
+  aspect-ratio: 1;
+  border: 0.25rem solid transparent;
+  border-radius: 50%;
+  background:
+    linear-gradient(var(--color-surface), var(--color-surface)) padding-box,
+    linear-gradient(135deg, var(--color-gradient-cyan), var(--color-gradient-coral)) border-box;
+  object-fit: cover;
+}
+
+.c-team-member__name {
+  margin: var(--space-sm) 0 0;
+  color: var(--color-text);
+  font-size: clamp(1.1rem, 2vw, 1.45rem);
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.c-team-member__role {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.98rem;
+  font-weight: 500;
+}
+
 .c-profile-card__edit-button,
 .c-profile-card__cancel-button {
   display: inline-flex;
@@ -1378,6 +1448,10 @@ a {
   .c-section-card:nth-child(2n) {
     border-right: 0;
   }
+
+  .c-team-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 520px) {
@@ -1410,6 +1484,10 @@ a {
   }
 
   .c-bops-section {
+    grid-template-columns: 1fr;
+  }
+
+  .c-team-grid {
     grid-template-columns: 1fr;
   }
 
