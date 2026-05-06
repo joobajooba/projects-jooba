@@ -539,10 +539,12 @@ a {
   opacity: 0.9;
   object-fit: cover;
   transform-origin: center;
-  transition: transform var(--transition-standard);
+  transition: transform 0.3s ease-out;
 }
 
-.c-section-card:hover .c-section-card__image {
+/* Hover effect stays active while pop up is open using OR logic gate */
+.c-section-card:hover .c-section-card__image,
+.c-section-card:focus-within .c-section-card__image {
   transform: scale(1.05);
 }
 
@@ -649,8 +651,8 @@ a {
   background: var(--color-surface);
   box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.65);
   
-  animation: modalPopIn 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) forwards; /* animation with slight bounce */
-  /* animation: modalPopIn 0.5s cubic-bezier(0.3, 1, 0.5, 1) forwards; */ /* animation without slight bounce */
+  /* animation: modalPopIn 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) forwards; */ /* animation with slight bounce */
+  animation: modalPopIn 0.4s cubic-bezier(0.3, 1, 0.5, 1) forwards;  /* animation without slight bounce */
 }
 
 .c-profile-modal__image {
