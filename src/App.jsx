@@ -194,9 +194,23 @@ function ProfilePage() {
         <article className="c-profile-card">
           <div className="c-profile-card__banner" aria-hidden="true" />
           <div className="c-profile-card__body">
-            <div className="c-profile-card__avatar" aria-label="Profile picture">
-              {profilePictureUrl ? <img src={profilePictureUrl} alt="" /> : null}
-            </div>
+            {editing ? (
+              <button
+                type="button"
+                className="c-profile-card__avatar c-profile-card__avatar--button"
+                onClick={() => setNftPickerOpen(true)}
+                disabled={!address}
+                aria-label="Choose NFT profile picture"
+                title="Choose NFT profile picture"
+              >
+                {profilePictureUrl ? <img src={profilePictureUrl} alt="" /> : null}
+                <span className="c-profile-card__avatar-edit">Select NFT</span>
+              </button>
+            ) : (
+              <div className="c-profile-card__avatar" aria-label="Profile picture">
+                {profilePictureUrl ? <img src={profilePictureUrl} alt="" /> : null}
+              </div>
+            )}
             <div className="c-profile-card__identity">
               <h1 className="c-profile-card__name">{displayName}</h1>
               <p className="c-profile-card__address" title={address ?? undefined}>
@@ -222,17 +236,6 @@ function ProfilePage() {
               </button>
             ) : (
               <form className="c-profile-card__form" onSubmit={saveEditing}>
-                <div className="c-profile-card__nft-row">
-                  <span>Profile NFT</span>
-                  <button
-                    type="button"
-                    className="c-profile-card__nft-button"
-                    onClick={() => setNftPickerOpen(true)}
-                    disabled={!address}
-                  >
-                    Select NFT from Wallet
-                  </button>
-                </div>
                 <label className="c-profile-card__field">
                   <span>Username</span>
                   <input
