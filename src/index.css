@@ -676,6 +676,21 @@ a {
   font-size: 1.15rem;
   font-weight: 900;
   line-height: 1;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transition: background 0.3s ease, opacity 0.3s ease, filter 0.3s ease;
+  opacity: 1; 
+}
+
+.c-profile-modal__close:hover {
+  opacity: 1;
+  background: rgba(255, 111, 97, 0.24);
+  
+  /* increase brightness on hover */
+  filter: brightness(1.2);
 }
 
 .c-profile-modal__image {
