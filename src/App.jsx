@@ -380,7 +380,7 @@ function CommunityPage() {
                 <tr>
                   <th scope="col">User</th>
                   <th scope="col">Wallet</th>
-                  <th scope="col">Member Since</th>
+                  <th scope="col">Membership Age (Days)</th>
                 </tr>
               </thead>
               <tbody>
