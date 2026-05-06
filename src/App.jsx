@@ -4,10 +4,12 @@ import CryptoWalletModal from './components/CryptoWalletModal';
 import ModelViewer from './components/ModelViewer';
 import WalletNftAvatarModal from './components/WalletNftAvatarModal';
 import { useWalletProfile } from './hooks/useWalletProfile';
+import { supabase } from './lib/supabaseClient';
 
 const NAV_ITEMS = [
   { id: 'crypto-wallet', label: 'Crypto Wallet', icon: 'wallet', type: 'wallet' },
   { id: 'profile', label: 'Profile', icon: 'profile', targetId: 'profile' },
+  { id: 'community', label: 'Community', icon: 'community', targetId: 'community' },
   { id: 'roadmap', label: 'Roadmap', icon: 'map', targetId: 'site-top' },
   { id: 'the-team', label: 'The Team', icon: 'team' },
   { id: 'bops', label: 'Bops', icon: 'trophy' },
@@ -71,6 +73,16 @@ function NavIcon({ type }) {
           <path d="M4.5 20a7.5 7.5 0 0 1 15 0" />
         </>
       )}
+      {type === 'community' && (
+        <>
+          <path d="M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+          <path d="M16 10a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
+          <path d="M3 20a5 5 0 0 1 10 0" />
+          <path d="M13.5 15a4.5 4.5 0 0 1 7.5 3.35V20" />
+          <path d="M18.5 13.25h2.5" />
+          <path d="M19.75 12v2.5" />
+        </>
+      )}
       {type === 'trophy' && (
         <>
           <path d="M8 4h8v5a4 4 0 0 1-8 0V4Z" />
@@ -86,7 +98,9 @@ function NavIcon({ type }) {
 }
 
 function getCurrentPage() {
-  return window.location.hash === '#profile' ? 'profile' : 'home';
+  if (window.location.hash === '#profile') return 'profile';
+  if (window.location.hash === '#community') return 'community';
+  return 'home';
 }
 
 function formatWalletAddress(address) {
@@ -296,6 +310,101 @@ function ProfilePage() {
   );
 }
 
+function CommunityPage() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadUsers() {
+      setLoading(true);
+      setError(null);
+
+      if (!supabase) {
+        setUsers([]);
+        setError('Supabase is not configured');
+        setLoading(false);
+        return;
+      }
+
+      const { data, error: loadError } = await supabase
+        .from('user_data')
+        .select('wallet_address, username, profile_picture_url')
+        .order('username', { ascending: true, nullsFirst: false });
+
+      if (cancelled) return;
+
+      if (loadError) {
+        setUsers([]);
+        setError(loadError.message || 'Could not load community users');
+      } else {
+        setUsers(data ?? []);
+      }
+      setLoading(false);
+    }
+
+    loadUsers();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return (
+    <section className="c-community-page" aria-label="Community page">
+      <div className="c-community-card">
+        <div className="c-community-card__header">
+          <p className="c-text c-text--eyebrow">Jooba Community</p>
+          <h1 className="c-community-card__title">Community</h1>
+        </div>
+
+        {loading ? <p className="c-community-card__status">Loading users...</p> : null}
+        {error ? <p className="c-community-card__error">{error}</p> : null}
+        {!loading && !error && users.length === 0 ? (
+          <p className="c-community-card__status">No community profiles yet.</p>
+        ) : null}
+
+        {!loading && !error && users.length > 0 ? (
+          <div className="c-community-table-wrap">
+            <table className="c-community-table">
+              <thead>
+                <tr>
+                  <th scope="col">User</th>
+                  <th scope="col">Wallet</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((user) => {
+                  const walletAddress = user.wallet_address ?? '';
+                  const username = user.username?.trim() || 'Unnamed Jooba';
+                  return (
+                    <tr key={walletAddress || username}>
+                      <td>
+                        <div className="c-community-user">
+                          <div className="c-community-user__avatar" aria-hidden="true">
+                            {user.profile_picture_url ? <img src={user.profile_picture_url} alt="" /> : null}
+                          </div>
+                          <span>{username}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <span className="c-community-wallet" title={walletAddress}>
+                          {walletAddress || 'No wallet'}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
 export default function App() {
   const [currentPage, setCurrentPage] = useState(getCurrentPage);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
@@ -364,6 +473,8 @@ export default function App() {
       <main className="l-page__content" aria-label="Main page content">
         {currentPage === 'profile' ? (
           <ProfilePage />
+        ) : currentPage === 'community' ? (
+          <CommunityPage />
         ) : (
           <>
             <section className="l-page__hero" aria-label="Featured 3D model">
