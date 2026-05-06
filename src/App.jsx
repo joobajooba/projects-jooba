@@ -1,9 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useAccount } from 'wagmi';
 import CryptoWalletModal from './components/CryptoWalletModal';
 import ModelViewer from './components/ModelViewer';
+import { useWalletProfile } from './hooks/useWalletProfile';
 
 const NAV_ITEMS = [
   { id: 'crypto-wallet', label: 'Crypto Wallet', icon: 'wallet', type: 'wallet' },
+  { id: 'profile', label: 'Profile', icon: 'profile', targetId: 'profile' },
   { id: 'roadmap', label: 'Roadmap', icon: 'map', targetId: 'site-top' },
   { id: 'the-team', label: 'The Team', icon: 'team' },
   { id: 'bops', label: 'Bops', icon: 'trophy' },
@@ -61,6 +64,12 @@ function NavIcon({ type }) {
           <path d="M14 14.5a4.75 4.75 0 0 1 6.5 4.5" />
         </>
       )}
+      {type === 'profile' && (
+        <>
+          <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+          <path d="M4.5 20a7.5 7.5 0 0 1 15 0" />
+        </>
+      )}
       {type === 'trophy' && (
         <>
           <path d="M8 4h8v5a4 4 0 0 1-8 0V4Z" />
@@ -75,11 +84,52 @@ function NavIcon({ type }) {
   );
 }
 
+function getCurrentPage() {
+  return window.location.hash === '#profile' ? 'profile' : 'home';
+}
+
+function formatWalletAddress(address) {
+  if (!address) return 'Wallet not connected';
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}
+
+function ProfilePage() {
+  const { address, isConnected } = useAccount();
+  const { username, profilePictureUrl } = useWalletProfile(address);
+  const displayName = username || (isConnected ? 'Unnamed Jooba' : 'Guest Profile');
+
+  return (
+    <section className="c-profile-page" aria-label="Profile page">
+      <article className="c-profile-card">
+        <div className="c-profile-card__banner" aria-hidden="true" />
+        <div className="c-profile-card__body">
+          <div className="c-profile-card__avatar" aria-label="Profile picture">
+            {profilePictureUrl ? <img src={profilePictureUrl} alt="" /> : null}
+          </div>
+          <div className="c-profile-card__identity">
+            <h1 className="c-profile-card__name">{displayName}</h1>
+            <p className="c-profile-card__address" title={address ?? undefined}>
+              {formatWalletAddress(address)}
+            </p>
+          </div>
+        </div>
+      </article>
+    </section>
+  );
+}
+
 export default function App() {
+  const [currentPage, setCurrentPage] = useState(getCurrentPage);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [isClosing, setIsClosing] = useState(false);
   const [twitterModalOpen, setTwitterModalOpen] = useState(false);
+
+  useEffect(() => {
+    const handleHashChange = () => setCurrentPage(getCurrentPage());
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   const openWalletModal = () => {
     setWalletModalOpen(true);
@@ -134,44 +184,50 @@ export default function App() {
       </aside>
 
       <main className="l-page__content" aria-label="Main page content">
-        <section className="l-page__hero" aria-label="Featured 3D model">
-          <ModelViewer src="/models/9419_model.glb" />
-        </section>
+        {currentPage === 'profile' ? (
+          <ProfilePage />
+        ) : (
+          <>
+            <section className="l-page__hero" aria-label="Featured 3D model">
+              <ModelViewer src="/models/9419_model.glb" />
+            </section>
 
-        <div className="c-section-divider" aria-hidden="true" />
+            <div className="c-section-divider" aria-hidden="true" />
 
-        <section className="c-section-grid" aria-label="Home sections">
-          {HOME_SECTIONS.map((profile) => (
-            <article
-              key={profile.id}
-              id={profile.id}
-              className="c-section-card"
-              aria-label={profile.name}
-            >
-              <button
-                type="button"
-                className="c-section-card__button"
-                onClick={() => openProfile(profile)}
-                aria-label={`Open ${profile.name} profile`}
-              >
-                <img
-                  className="c-section-card__image"
-                  src={profile.image}
-                  alt=""
-                  loading="lazy"
-                />
-              </button>
-            </article>
-          ))}
-        </section>
+            <section className="c-section-grid" aria-label="Home sections">
+              {HOME_SECTIONS.map((profile) => (
+                <article
+                  key={profile.id}
+                  id={profile.id}
+                  className="c-section-card"
+                  aria-label={profile.name}
+                >
+                  <button
+                    type="button"
+                    className="c-section-card__button"
+                    onClick={() => openProfile(profile)}
+                    aria-label={`Open ${profile.name} profile`}
+                  >
+                    <img
+                      className="c-section-card__image"
+                      src={profile.image}
+                      alt=""
+                      loading="lazy"
+                    />
+                  </button>
+                </article>
+              ))}
+            </section>
 
-        <section id="bops" className="c-bops-section" aria-label="Bops">
-          {BOP_SECTIONS.map((section) => (
-            <article key={section} className="c-bops-section__panel">
-              <h2 className="c-bops-section__title">{section}</h2>
-            </article>
-          ))}
-        </section>
+            <section id="bops" className="c-bops-section" aria-label="Bops">
+              {BOP_SECTIONS.map((section) => (
+                <article key={section} className="c-bops-section__panel">
+                  <h2 className="c-bops-section__title">{section}</h2>
+                </article>
+              ))}
+            </section>
+          </>
+        )}
       </main>
 
       {selectedProfile && (
