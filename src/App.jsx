@@ -6,13 +6,26 @@ import WalletNftAvatarModal from './components/WalletNftAvatarModal';
 import { useWalletProfile } from './hooks/useWalletProfile';
 import { supabase } from './lib/supabaseClient';
 
-const NAV_ITEMS = [
-  { id: 'crypto-wallet', label: 'Crypto Wallet', icon: 'wallet', type: 'wallet' },
-  { id: 'profile', label: 'Profile', icon: 'profile', targetId: 'profile' },
-  { id: 'community', label: 'Community', icon: 'community', targetId: 'community' },
-  { id: 'roadmap', label: 'Roadmap', icon: 'map', targetId: 'roadmap' },
-  { id: 'the-team', label: 'The Team', icon: 'team' },
-  { id: 'bops', label: 'Bops', icon: 'trophy' },
+const NAV_SECTIONS = [
+  {
+    title: 'Users',
+    items: [
+      { id: 'crypto-wallet', label: 'Crypto Wallet', icon: 'wallet', type: 'wallet' },
+      { id: 'profile', label: 'Profile', icon: 'profile', targetId: 'profile' },
+    ],
+  },
+  {
+    title: 'Overview',
+    items: [
+      { id: 'roadmap', label: 'Roadmap', icon: 'map', targetId: 'roadmap' },
+      { id: 'community', label: 'Community', icon: 'community', targetId: 'community' },
+      { id: 'the-team', label: 'The Team', icon: 'team' },
+    ],
+  },
+  {
+    title: 'The Project',
+    items: [{ id: 'bops', label: 'Bops', icon: 'trophy' }],
+  },
 ];
 
 const MARQUEE_ITEMS = Array.from({ length: 12 }, (_, index) => index);
@@ -470,18 +483,25 @@ export default function App() {
 
       <aside id="site-sidebar" className="c-sidebar" aria-label="Site navigation">
         <nav className="c-sidebar__nav">
-          {NAV_ITEMS.map((item) => (
-            item.type === 'wallet' ? (
-              <button key={item.id} type="button" className="c-sidebar__link c-sidebar__link--button u-text-bold" onClick={openWalletModal}>
-                <NavIcon type={item.icon} />
-                <span className="c-sidebar__label">{item.label}</span>
-              </button>
-            ) : (
-              <a key={item.id} className="c-sidebar__link u-text-bold" href={`#${item.targetId ?? item.id}`}>
-                <NavIcon type={item.icon} />
-                <span className="c-sidebar__label">{item.label}</span>
-              </a>
-            )
+          {NAV_SECTIONS.map((section) => (
+            <div key={section.title} className="c-sidebar__section">
+              <div className="c-sidebar__section-heading">
+                <span>{section.title}</span>
+              </div>
+              {section.items.map((item) => (
+                item.type === 'wallet' ? (
+                  <button key={item.id} type="button" className="c-sidebar__link c-sidebar__link--button u-text-bold" onClick={openWalletModal}>
+                    <NavIcon type={item.icon} />
+                    <span className="c-sidebar__label">{item.label}</span>
+                  </button>
+                ) : (
+                  <a key={item.id} className="c-sidebar__link u-text-bold" href={`#${item.targetId ?? item.id}`}>
+                    <NavIcon type={item.icon} />
+                    <span className="c-sidebar__label">{item.label}</span>
+                  </a>
+                )
+              ))}
+            </div>
           ))}
         </nav>
       </aside>
