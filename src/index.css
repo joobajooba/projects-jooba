@@ -93,6 +93,13 @@ a {
   padding: var(--marquee-height) var(--space-xl) var(--space-xl);
 }
 
+.c-roadmap-art {
+  display: block;
+  width: min(86vw, 58rem);
+  max-height: 82vh;
+  object-fit: contain;
+}
+
 /* Components: buttons */
 .c-button {
   display: inline-flex;

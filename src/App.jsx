@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
 import CryptoWalletModal from './components/CryptoWalletModal';
-import ModelViewer from './components/ModelViewer';
 import WalletNftAvatarModal from './components/WalletNftAvatarModal';
 import { useWalletProfile } from './hooks/useWalletProfile';
 import { supabase } from './lib/supabaseClient';
@@ -450,7 +449,7 @@ function TeamPage() {
 function RoadmapPage() {
   return (
     <section id="roadmap" className="l-page__hero" aria-label="Roadmap">
-      <ModelViewer src="/models/9419_model.glb" />
+      <img className="c-roadmap-art" src="/roadmap-art.png" alt="J00BA roadmap artwork" />
     </section>
   );
 }
