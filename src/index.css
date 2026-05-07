@@ -223,11 +223,20 @@ a {
 }
 
 .c-sidebar__section-heading span {
+  background: linear-gradient(
+    90deg,
+    var(--color-gradient-cyan),
+    var(--color-gradient-coral),
+    var(--color-gradient-navy)
+  );
+  background-clip: text;
+  color: transparent;
   opacity: 0;
   transform: translateX(-0.45rem);
   transition:
     opacity var(--transition-standard),
     transform var(--transition-standard);
+  -webkit-background-clip: text;
 }
 
 .c-sidebar:hover .c-sidebar__section-heading span,
