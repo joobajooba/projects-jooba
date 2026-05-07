@@ -41,6 +41,10 @@ const TEAM_MEMBERS = [
 ];
 
 function NavIcon({ type }) {
+  if (type === 'community') {
+    return <img className="c-sidebar__icon c-sidebar__icon--image" src="/nav-community.png" alt="" aria-hidden="true" />;
+  }
+
   return (
     <svg className="c-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       {type === 'wallet' && (
@@ -69,19 +73,6 @@ function NavIcon({ type }) {
         <>
           <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
           <path d="M4.5 20a7.5 7.5 0 0 1 15 0" />
-        </>
-      )}
-      {type === 'community' && (
-        <>
-          <path d="M12 13.25a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5Z" />
-          <path d="M6.75 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" />
-          <path d="M17.25 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" />
-          <path d="M6.75 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" />
-          <path d="M17.25 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" />
-          <path d="M8.35 7.15 10.3 9.1" />
-          <path d="M15.65 7.15 13.7 9.1" />
-          <path d="M8.35 16.85 10.3 14.9" />
-          <path d="M15.65 16.85 13.7 14.9" />
         </>
       )}
       {type === 'trophy' && (

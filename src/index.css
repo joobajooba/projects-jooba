@@ -237,6 +237,12 @@ a {
   stroke-width: 1.75;
 }
 
+.c-sidebar__icon--image {
+  object-fit: contain;
+  filter: invert(1);
+  stroke: none;
+}
+
 .c-sidebar__label {
   opacity: 0;
   transform: translateX(-0.45rem);
