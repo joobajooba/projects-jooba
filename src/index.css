@@ -1209,7 +1209,9 @@ a {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   min-height: 100dvh;
   border-bottom: var(--section-line-width) solid var(--color-text);
-  background: var(--color-page);
+  background:
+    radial-gradient(circle at 76% 28%, rgba(114, 247, 239, 0.18), transparent 32rem),
+    linear-gradient(135deg, #03050a 0%, #071827 48%, #02050b 100%);
   scroll-margin-top: var(--marquee-height);
 }
 
@@ -1224,13 +1226,254 @@ a {
   border-right: var(--section-line-width) solid var(--color-text);
 }
 
+.c-bops-section__panel--copy {
+  align-content: center;
+  justify-items: start;
+  gap: var(--space-md);
+}
+
+.c-bops-section__panel--hologram {
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(114, 247, 239, 0.08), rgba(114, 247, 239, 0.02)),
+    rgba(0, 255, 255, 0.03);
+}
+
 .c-bops-section__title {
   margin: 0;
   color: var(--color-text);
   font-size: clamp(1.75rem, 5vw, 4rem);
   font-weight: 900;
   line-height: 1;
-  text-align: center;
+  text-align: left;
+  text-shadow: 0 0 1.2rem rgba(114, 247, 239, 0.45);
+}
+
+.c-bops-section__lede {
+  max-width: 32rem;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  line-height: 1.55;
+}
+
+.c-hologram {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  justify-items: center;
+  width: min(100%, 35rem);
+  padding: clamp(1rem, 3vw, 2rem);
+  animation: hologramFloat 4.8s ease-in-out infinite;
+}
+
+.c-hologram__beam {
+  position: absolute;
+  top: 3%;
+  bottom: 10%;
+  z-index: -1;
+  width: 72%;
+  background: linear-gradient(90deg, transparent, rgba(94, 255, 255, 0.2), transparent);
+  clip-path: polygon(34% 0, 66% 0, 100% 100%, 0 100%);
+  filter: blur(0.6rem);
+  opacity: 0.82;
+  animation: hologramBeam 2s ease-in-out infinite;
+}
+
+.c-hologram__frame {
+  position: relative;
+  width: min(78vw, 24rem);
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border: 0.16rem solid rgba(119, 255, 255, 0.82);
+  border-radius: 1.4rem;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(196, 255, 255, 0.28), transparent 40%),
+    rgba(1, 22, 28, 0.72);
+  box-shadow:
+    0 0 1.2rem rgba(114, 247, 239, 0.75),
+    inset 0 0 2rem rgba(114, 247, 239, 0.28),
+    0 2rem 5rem rgba(0, 255, 255, 0.24);
+}
+
+.c-hologram__frame::before,
+.c-hologram__frame::after {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  content: '';
+  pointer-events: none;
+}
+
+.c-hologram__frame::before {
+  background: linear-gradient(90deg, transparent 0 47%, rgba(255, 255, 255, 0.34) 50%, transparent 53% 100%);
+  mix-blend-mode: screen;
+  opacity: 0.22;
+  transform: translateX(-120%);
+  animation: hologramSweep 3s linear infinite;
+}
+
+.c-hologram__frame::after {
+  border: 0.4rem solid rgba(114, 247, 239, 0.13);
+  border-radius: inherit;
+  box-shadow: inset 0 0 2rem rgba(114, 247, 239, 0.3);
+}
+
+.c-hologram__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  object-fit: cover;
+  filter: saturate(1.3) contrast(1.08) drop-shadow(0 0 1rem rgba(114, 247, 239, 0.55));
+  transform: scale(1.04) translateY(0.5rem);
+  transition:
+    opacity 360ms ease,
+    transform 520ms ease,
+    filter 520ms ease;
+}
+
+.c-hologram__image.is-active {
+  opacity: 0.88;
+  transform: scale(1) translateY(0);
+  animation: hologramFlicker 2s linear infinite;
+}
+
+.c-hologram__scanlines,
+.c-hologram__glitch {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.c-hologram__scanlines {
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.16) 0,
+      rgba(255, 255, 255, 0.16) 0.08rem,
+      transparent 0.08rem,
+      transparent 0.36rem
+    );
+  mix-blend-mode: screen;
+  opacity: 0.42;
+  animation: hologramScan 1.2s linear infinite;
+}
+
+.c-hologram__glitch {
+  background:
+    linear-gradient(90deg, rgba(0, 255, 255, 0.12), transparent 18%, rgba(255, 255, 255, 0.1) 42%, transparent 64%),
+    linear-gradient(180deg, transparent 0 44%, rgba(114, 247, 239, 0.36) 45% 47%, transparent 48% 100%);
+  opacity: 0;
+  mix-blend-mode: screen;
+  animation: hologramGlitch 2s steps(1, end) infinite;
+}
+
+.c-hologram__base {
+  position: relative;
+  width: min(88%, 26rem);
+  height: 4.2rem;
+  margin-top: -0.4rem;
+  border: 0.14rem solid rgba(114, 247, 239, 0.7);
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(114, 247, 239, 0.36), rgba(2, 23, 32, 0.84) 58%, transparent 72%);
+  box-shadow:
+    0 0 1rem rgba(114, 247, 239, 0.88),
+    0 0 3rem rgba(0, 255, 255, 0.45);
+}
+
+.c-hologram__base span {
+  position: absolute;
+  inset: 28% 16%;
+  border: 0.08rem solid rgba(211, 255, 255, 0.74);
+  border-radius: 50%;
+  animation: hologramBasePulse 2s ease-in-out infinite;
+}
+
+@keyframes hologramFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-0.7rem);
+  }
+}
+
+@keyframes hologramBeam {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scaleX(0.92);
+  }
+  50% {
+    opacity: 0.92;
+    transform: scaleX(1.05);
+  }
+}
+
+@keyframes hologramSweep {
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+@keyframes hologramFlicker {
+  0%,
+  100% {
+    opacity: 0.88;
+    filter: saturate(1.3) contrast(1.08) drop-shadow(0 0 1rem rgba(114, 247, 239, 0.55));
+  }
+  8%,
+  74% {
+    opacity: 0.74;
+    filter: saturate(1.6) contrast(1.2) hue-rotate(8deg) drop-shadow(0 0 1.4rem rgba(114, 247, 239, 0.78));
+  }
+  11%,
+  78% {
+    opacity: 0.92;
+  }
+}
+
+@keyframes hologramScan {
+  100% {
+    transform: translateY(0.36rem);
+  }
+}
+
+@keyframes hologramGlitch {
+  0%,
+  72%,
+  100% {
+    opacity: 0;
+    transform: translate(0);
+  }
+  73% {
+    opacity: 0.9;
+    transform: translate(-0.5rem, 0.2rem);
+  }
+  75% {
+    opacity: 0.28;
+    transform: translate(0.4rem, -0.15rem);
+  }
+  77% {
+    opacity: 0;
+    transform: translate(0);
+  }
+}
+
+@keyframes hologramBasePulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.94);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
 }
 
 /* Components: profile modal */

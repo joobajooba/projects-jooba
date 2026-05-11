@@ -52,6 +52,13 @@ const TEAM_MEMBERS = [
   },
 ];
 
+const BOPS_HOLOGRAM_SLIDES = [
+  { src: '/bops-hologram/bop-1.png', alt: 'Bop character portrait in sailor outfit' },
+  { src: '/bops-hologram/bop-2.png', alt: 'Bop character portrait with green hologram outline' },
+  { src: '/bops-hologram/bop-3.png', alt: 'Bop character portrait with glowing eyes' },
+  { src: '/bops-hologram/bop-4.png', alt: 'Red bop character portrait' },
+];
+
 function NavIcon({ type }) {
   if (type === 'community') {
     return <img className="c-sidebar__icon c-sidebar__icon--image" src="/nav-community.png" alt="" aria-hidden="true" />;
@@ -106,6 +113,7 @@ function getCurrentPage() {
   if (window.location.hash === '#profile') return 'profile';
   if (window.location.hash === '#community') return 'community';
   if (window.location.hash === '#the-team') return 'team';
+  if (window.location.hash === '#bops') return 'bops';
   return 'roadmap';
 }
 
@@ -454,6 +462,52 @@ function RoadmapPage() {
   );
 }
 
+function BopsPage() {
+  const [activeSlide, setActiveSlide] = useState(0);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setActiveSlide((currentSlide) => (currentSlide + 1) % BOPS_HOLOGRAM_SLIDES.length);
+    }, 2000);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
+
+  return (
+    <section id="bops" className="c-bops-section" aria-label="Bops hologram slideshow">
+      <div className="c-bops-section__panel c-bops-section__panel--copy">
+        <p className="c-text c-text--eyebrow">Jooba Labs transmission</p>
+        <h1 className="c-bops-section__title">Bops Hologram</h1>
+        <p className="c-bops-section__lede">
+          A cyan light chamber cycling featured Bops every two seconds with a flickering holo-field.
+        </p>
+      </div>
+
+      <div className="c-bops-section__panel c-bops-section__panel--hologram">
+        <div className="c-hologram" aria-live="polite">
+          <div className="c-hologram__beam" aria-hidden="true" />
+          <div className="c-hologram__frame">
+            {BOPS_HOLOGRAM_SLIDES.map((slide, index) => (
+              <img
+                key={slide.src}
+                className={`c-hologram__image${index === activeSlide ? ' is-active' : ''}`}
+                src={slide.src}
+                alt={index === activeSlide ? slide.alt : ''}
+                aria-hidden={index !== activeSlide}
+              />
+            ))}
+            <div className="c-hologram__scanlines" aria-hidden="true" />
+            <div className="c-hologram__glitch" aria-hidden="true" />
+          </div>
+          <div className="c-hologram__base" aria-hidden="true">
+            <span />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function App() {
   const [currentPage, setCurrentPage] = useState(getCurrentPage);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
@@ -512,6 +566,8 @@ export default function App() {
           <CommunityPage />
         ) : currentPage === 'team' ? (
           <TeamPage />
+        ) : currentPage === 'bops' ? (
+          <BopsPage />
         ) : (
           <RoadmapPage />
         )}
