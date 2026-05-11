@@ -477,9 +477,9 @@ function BopsPage() {
     <section id="bops" className="c-bops-section" aria-label="Bops hologram slideshow">
       <div className="c-bops-section__panel c-bops-section__panel--copy">
         <p className="c-text c-text--eyebrow">Jooba Labs transmission</p>
-        <h1 className="c-bops-section__title">Bops Hologram</h1>
+        <h1 className="c-bops-section__title">Bops Summoning</h1>
         <p className="c-bops-section__lede">
-          A cyan light chamber cycling featured Bops every two seconds with a flickering holo-field.
+          Bops are coming to Apechain, will you participate? Available for mint this Summer
         </p>
       </div>
 

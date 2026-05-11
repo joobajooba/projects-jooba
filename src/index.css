@@ -1206,8 +1206,9 @@ a {
 /* Components: bops section */
 .c-bops-section {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1.3fr) minmax(18rem, 0.7fr);
   min-height: 100dvh;
+  padding-left: calc(var(--sidebar-compact-width) + var(--space-xl));
   border-bottom: var(--section-line-width) solid var(--color-text);
   background:
     radial-gradient(circle at 76% 28%, rgba(114, 247, 239, 0.18), transparent 32rem),
@@ -1219,7 +1220,7 @@ a {
   display: grid;
   place-items: center;
   min-width: 0;
-  padding: var(--space-xl);
+  padding: var(--space-xl) clamp(var(--space-lg), 3vw, 3rem);
 }
 
 .c-bops-section__panel:first-child {
@@ -1234,6 +1235,8 @@ a {
 
 .c-bops-section__panel--hologram {
   overflow: hidden;
+  padding-right: clamp(var(--space-md), 2vw, var(--space-xl));
+  padding-left: clamp(var(--space-md), 2vw, var(--space-xl));
   background:
     linear-gradient(180deg, rgba(114, 247, 239, 0.08), rgba(114, 247, 239, 0.02)),
     rgba(0, 255, 255, 0.03);
