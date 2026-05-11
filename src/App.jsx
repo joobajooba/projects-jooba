@@ -476,7 +476,7 @@ function BopsPage() {
   return (
     <section id="bops" className="c-bops-section" aria-label="Bops hologram slideshow">
       <div className="c-bops-section__panel c-bops-section__panel--copy">
-        <p className="c-text c-text--eyebrow">Jooba Labs transmission</p>
+        <p className="c-text c-text--eyebrow">Studio J00BA</p>
         <h1 className="c-bops-section__title">Bops Summoning</h1>
         <p className="c-bops-section__lede">
           Bops are coming to Apechain, will you participate? Available for mint this Summer
