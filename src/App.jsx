@@ -481,6 +481,20 @@ function BopsPage() {
         <p className="c-bops-section__lede">
           Bops are coming to Apechain, will you participate? Available for mint this Summer
         </p>
+        <dl className="c-bops-mint-list" aria-label="Bops mint details">
+          <div className="c-bops-mint-list__item">
+            <dt>Mint Date</dt>
+            <dd>June / July</dd>
+          </div>
+          <div className="c-bops-mint-list__item">
+            <dt>Mint Price</dt>
+            <dd>TBC</dd>
+          </div>
+          <div className="c-bops-mint-list__item">
+            <dt>Total Supply</dt>
+            <dd>5555</dd>
+          </div>
+        </dl>
       </div>
 
       <div className="c-bops-section__panel c-bops-section__panel--hologram">

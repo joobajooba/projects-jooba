@@ -1260,6 +1260,44 @@ a {
   line-height: 1.55;
 }
 
+.c-bops-mint-list {
+  display: grid;
+  gap: 0.55rem;
+  width: min(100%, 28rem);
+  margin: var(--space-md) 0 0;
+  padding: var(--space-md);
+  border: 1px solid rgba(114, 247, 239, 0.38);
+  border-radius: var(--radius-md);
+  background: rgba(3, 18, 28, 0.48);
+  box-shadow: inset 0 0 1.4rem rgba(114, 247, 239, 0.08);
+}
+
+.c-bops-mint-list__item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-md);
+  align-items: center;
+  color: var(--color-text);
+  font-size: clamp(0.9rem, 1.3vw, 1rem);
+}
+
+.c-bops-mint-list__item dt,
+.c-bops-mint-list__item dd {
+  margin: 0;
+}
+
+.c-bops-mint-list__item dt {
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 800;
+}
+
+.c-bops-mint-list__item dd {
+  color: var(--color-gradient-cyan);
+  font-weight: 900;
+  text-align: right;
+  text-shadow: 0 0 0.8rem rgba(114, 247, 239, 0.42);
+}
+
 .c-hologram {
   position: relative;
   isolation: isolate;
