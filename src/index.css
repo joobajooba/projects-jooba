@@ -750,6 +750,69 @@ a {
   font-weight: 500;
 }
 
+/* Shared Bops-inspired styling for non-profile pages */
+.l-page__hero,
+.c-community-page,
+.c-team-page,
+.c-staking-page,
+.c-mba-license-page {
+  color: var(--color-text);
+  background:
+    radial-gradient(circle at 76% 28%, rgba(114, 247, 239, 0.18), transparent 32rem),
+    linear-gradient(135deg, #03050a 0%, #071827 48%, #02050b 100%);
+  scroll-margin-top: var(--marquee-height);
+}
+
+.c-community-card,
+.c-team-card,
+.c-staking-card {
+  border-color: rgba(114, 247, 239, 0.38);
+  background: rgba(3, 18, 28, 0.48);
+  box-shadow:
+    inset 0 0 1.4rem rgba(114, 247, 239, 0.08),
+    0 1.5rem 4rem rgba(0, 0, 0, 0.5);
+}
+
+.c-community-card__title,
+.c-team-card__title,
+.c-staking-card__title {
+  color: var(--color-text);
+  font-family: var(--font-body);
+  text-shadow: 0 0 1.2rem rgba(114, 247, 239, 0.45);
+}
+
+.c-community-card .c-text--eyebrow,
+.c-team-card .c-text--eyebrow,
+.c-community-table th,
+.c-team-member__role,
+.c-staking-card__text,
+.c-community-card__status {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.c-community-table-wrap {
+  border-color: rgba(114, 247, 239, 0.38);
+  background: rgba(3, 18, 28, 0.34);
+  box-shadow: inset 0 0 1.4rem rgba(114, 247, 239, 0.08);
+}
+
+.c-community-table td {
+  border-bottom-color: rgba(114, 247, 239, 0.16);
+}
+
+.c-community-member-days,
+.c-community-wallet,
+.c-team-member__name {
+  color: var(--color-gradient-cyan);
+}
+
+.c-mba-license-page__image {
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 0 2rem rgba(114, 247, 239, 0.18),
+    0 1.5rem 4rem rgba(0, 0, 0, 0.5);
+}
+
 .c-profile-card__edit-button,
 .c-profile-card__cancel-button {
   display: inline-flex;
