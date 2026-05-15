@@ -23,7 +23,10 @@ const NAV_SECTIONS = [
   },
   {
     title: 'The Project',
-    items: [{ id: 'bops', label: 'Bops', icon: 'trophy' }],
+    items: [
+      { id: 'bops', label: 'Bops', icon: 'trophy' },
+      { id: 'staking', label: 'Staking', icon: 'heart' },
+    ],
   },
 ];
 
@@ -104,6 +107,9 @@ function NavIcon({ type }) {
           <path d="M10 17h4" />
         </>
       )}
+      {type === 'heart' && (
+        <path d="M20.5 8.5c0 5-8.5 10-8.5 10s-8.5-5-8.5-10A4.5 4.5 0 0 1 12 5.9a4.5 4.5 0 0 1 8.5 2.6Z" />
+      )}
     </svg>
   );
 }
@@ -114,6 +120,7 @@ function getCurrentPage() {
   if (window.location.hash === '#community') return 'community';
   if (window.location.hash === '#the-team') return 'team';
   if (window.location.hash === '#bops') return 'bops';
+  if (window.location.hash === '#staking') return 'staking';
   return 'roadmap';
 }
 
@@ -523,6 +530,17 @@ function BopsPage() {
   );
 }
 
+function StakingPage() {
+  return (
+    <section id="staking" className="c-staking-page" aria-label="Staking page">
+      <article className="c-staking-card">
+        <h1 className="c-staking-card__title">Coming soon</h1>
+        <p className="c-staking-card__text">This is currently in development</p>
+      </article>
+    </section>
+  );
+}
+
 export default function App() {
   const [currentPage, setCurrentPage] = useState(getCurrentPage);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
@@ -584,6 +602,8 @@ export default function App() {
           <TeamPage />
         ) : currentPage === 'bops' ? (
           <BopsPage />
+        ) : currentPage === 'staking' ? (
+          <StakingPage />
         ) : (
           <RoadmapPage />
         )}

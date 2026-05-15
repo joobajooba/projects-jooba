@@ -623,6 +623,41 @@ a {
   font-weight: 900;
 }
 
+/* Components: staking page */
+.c-staking-page {
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  padding: calc(var(--marquee-height) + var(--space-xl)) var(--space-xl) var(--space-xl)
+    calc(var(--sidebar-compact-width) + var(--space-xl));
+}
+
+.c-staking-card {
+  width: min(100%, 34rem);
+  padding: var(--space-xl);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-lg);
+  background: rgba(0, 0, 0, 0.72);
+  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.5);
+  text-align: center;
+}
+
+.c-staking-card__title {
+  margin: 0;
+  color: var(--color-text);
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.c-staking-card__text {
+  margin: var(--space-md) 0 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  font-weight: 800;
+  line-height: 1.5;
+}
+
 /* Components: team page */
 .c-team-page {
   display: grid;
