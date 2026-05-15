@@ -28,6 +28,13 @@ const NAV_SECTIONS = [
       { id: 'staking', label: 'Staking', icon: 'heart' },
     ],
   },
+  {
+    title: 'Other',
+    items: [
+      { id: 'mba-license', label: 'MBA License', icon: 'verified' },
+      { id: 'trading-cards', label: 'Trading Cards', icon: 'cards' },
+    ],
+  },
 ];
 
 const MARQUEE_ITEMS = Array.from({ length: 12 }, (_, index) => index);
@@ -110,6 +117,19 @@ function NavIcon({ type }) {
       {type === 'heart' && (
         <path d="M20.5 8.5c0 5-8.5 10-8.5 10s-8.5-5-8.5-10A4.5 4.5 0 0 1 12 5.9a4.5 4.5 0 0 1 8.5 2.6Z" />
       )}
+      {type === 'verified' && (
+        <>
+          <path d="M12 3.5 14.2 5l2.65-.15.9 2.5 2.05 1.65-.75 2.55.75 2.55-2.05 1.65-.9 2.5-2.65-.15L12 20.5l-2.2-1.5-2.65.15-.9-2.5L4.2 15l.75-2.55L4.2 9.9l2.05-1.65.9-2.5L9.8 5 12 3.5Z" />
+          <path d="m8.7 12.2 2.1 2.1 4.5-4.6" />
+        </>
+      )}
+      {type === 'cards' && (
+        <>
+          <rect x="7" y="4" width="10" height="14" rx="1.5" />
+          <path d="M5 7.5 4.2 15a1.5 1.5 0 0 0 1.3 1.65l1.5.17" />
+          <path d="M17 7.18 18.5 7a1.5 1.5 0 0 1 1.65 1.3l.8 7.5a1.5 1.5 0 0 1-1.3 1.65l-2.65.29" />
+        </>
+      )}
     </svg>
   );
 }
@@ -121,6 +141,8 @@ function getCurrentPage() {
   if (window.location.hash === '#the-team') return 'team';
   if (window.location.hash === '#bops') return 'bops';
   if (window.location.hash === '#staking') return 'staking';
+  if (window.location.hash === '#mba-license') return 'mba-license';
+  if (window.location.hash === '#trading-cards') return 'trading-cards';
   return 'roadmap';
 }
 
@@ -541,6 +563,25 @@ function StakingPage() {
   );
 }
 
+function MbaLicensePage() {
+  return (
+    <section id="mba-license" className="c-mba-license-page" aria-label="MBA License page">
+      <img className="c-mba-license-page__image" src="/mba-license.png" alt="Made By Apes license certification mark" />
+    </section>
+  );
+}
+
+function TradingCardsPage() {
+  return (
+    <section id="trading-cards" className="c-staking-page" aria-label="Trading Cards page">
+      <article className="c-staking-card">
+        <h1 className="c-staking-card__title">Coming soon</h1>
+        <p className="c-staking-card__text">This is currently in development</p>
+      </article>
+    </section>
+  );
+}
+
 export default function App() {
   const [currentPage, setCurrentPage] = useState(getCurrentPage);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
@@ -604,6 +645,10 @@ export default function App() {
           <BopsPage />
         ) : currentPage === 'staking' ? (
           <StakingPage />
+        ) : currentPage === 'mba-license' ? (
+          <MbaLicensePage />
+        ) : currentPage === 'trading-cards' ? (
+          <TradingCardsPage />
         ) : (
           <RoadmapPage />
         )}

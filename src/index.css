@@ -658,6 +658,22 @@ a {
   line-height: 1.5;
 }
 
+/* Components: MBA license page */
+.c-mba-license-page {
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  padding: calc(var(--marquee-height) + var(--space-xl)) var(--space-xl) var(--space-xl)
+    calc(var(--sidebar-compact-width) + var(--space-xl));
+}
+
+.c-mba-license-page__image {
+  display: block;
+  width: min(100%, 42rem);
+  max-height: calc(100dvh - var(--marquee-height) - (var(--space-xl) * 2));
+  object-fit: contain;
+}
+
 /* Components: team page */
 .c-team-page {
   display: grid;
