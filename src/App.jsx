@@ -136,6 +136,7 @@ function NavIcon({ type }) {
 
 function getCurrentPage() {
   if (!window.location.hash || window.location.hash === '#roadmap') return 'roadmap';
+  if (window.location.hash.startsWith('#profile/')) return 'public-profile';
   if (window.location.hash === '#profile') return 'profile';
   if (window.location.hash === '#community') return 'community';
   if (window.location.hash === '#the-team') return 'team';
@@ -144,6 +145,18 @@ function getCurrentPage() {
   if (window.location.hash === '#mba-license') return 'mba-license';
   if (window.location.hash === '#trading-cards') return 'trading-cards';
   return 'roadmap';
+}
+
+function getPublicProfileAddress() {
+  const prefix = '#profile/';
+  if (!window.location.hash.startsWith(prefix)) return null;
+
+  try {
+    const address = decodeURIComponent(window.location.hash.slice(prefix.length)).trim();
+    return address || null;
+  } catch {
+    return null;
+  }
 }
 
 function formatWalletAddress(address) {
@@ -197,6 +210,7 @@ function ProfilePage() {
     saveError,
     setSaveError,
     refresh,
+    loading,
   } = useWalletProfile(address);
   const [editing, setEditing] = useState(false);
   const [nftPickerOpen, setNftPickerOpen] = useState(false);
@@ -279,7 +293,7 @@ function ProfilePage() {
             <div className="c-profile-card__identity">
               <h1 className="c-profile-card__name">{displayName}</h1>
               <p className="c-profile-card__address" title={address ?? undefined}>
-                {formatWalletAddress(address)}
+                {loading ? 'Loading profile...' : formatWalletAddress(address)}
               </p>
               {bio ? <p className="c-profile-card__bio">{bio}</p> : null}
               {xAccountUrl ? (
@@ -361,6 +375,36 @@ function ProfilePage() {
   );
 }
 
+function PublicProfilePage({ address }) {
+  const { username, profilePictureUrl, bio, xAccountUrl, loading } = useWalletProfile(address);
+  const displayName = username || (loading ? 'Loading profile...' : 'Unnamed Jooba');
+
+  return (
+    <section className="c-profile-page" aria-label="Public profile page">
+      <article className="c-profile-card">
+        <div className="c-profile-card__banner" aria-hidden="true" />
+        <div className="c-profile-card__body">
+          <div className="c-profile-card__avatar" aria-label="Profile picture">
+            {profilePictureUrl ? <img src={profilePictureUrl} alt="" /> : null}
+          </div>
+          <div className="c-profile-card__identity">
+            <h1 className="c-profile-card__name">{displayName}</h1>
+            <p className="c-profile-card__address" title={address ?? undefined}>
+              {loading ? 'Loading profile...' : formatWalletAddress(address)}
+            </p>
+            {bio ? <p className="c-profile-card__bio">{bio}</p> : null}
+            {xAccountUrl ? (
+              <a className="c-profile-card__x-link" href={xAccountUrl} target="_blank" rel="noreferrer">
+                {xAccountUrl.replace(/^https?:\/\/(www\.)?/, '')}
+              </a>
+            ) : null}
+          </div>
+        </div>
+      </article>
+    </section>
+  );
+}
+
 function CommunityPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -431,15 +475,26 @@ function CommunityPage() {
                   const walletAddress = user.wallet_address ?? '';
                   const username = user.username?.trim() || 'Unnamed Jooba';
                   const memberDays = getMembershipDays(user.first_logged_in_at);
+                  const profileHref = walletAddress ? `#profile/${encodeURIComponent(walletAddress)}` : '#community';
                   return (
-                    <tr key={walletAddress || username}>
+                    <tr
+                      key={walletAddress || username}
+                      className={walletAddress ? 'c-community-table__row c-community-table__row--link' : undefined}
+                      onClick={() => {
+                        if (walletAddress) window.location.hash = profileHref;
+                      }}
+                    >
                       <td>
-                        <div className="c-community-user">
+                        <a
+                          className="c-community-user c-community-user--link"
+                          href={profileHref}
+                          onClick={(event) => event.stopPropagation()}
+                        >
                           <div className="c-community-user__avatar" aria-hidden="true">
                             {user.profile_picture_url ? <img src={user.profile_picture_url} alt="" /> : null}
                           </div>
                           <span>{username}</span>
-                        </div>
+                        </a>
                       </td>
                       <td>
                         <span className="c-community-wallet" title={walletAddress}>
@@ -584,10 +639,14 @@ function TradingCardsPage() {
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState(getCurrentPage);
+  const [publicProfileAddress, setPublicProfileAddress] = useState(getPublicProfileAddress);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
 
   useEffect(() => {
-    const handleHashChange = () => setCurrentPage(getCurrentPage());
+    const handleHashChange = () => {
+      setCurrentPage(getCurrentPage());
+      setPublicProfileAddress(getPublicProfileAddress());
+    };
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
@@ -637,6 +696,8 @@ export default function App() {
       <main className="l-page__content" aria-label="Main page content">
         {currentPage === 'profile' ? (
           <ProfilePage />
+        ) : currentPage === 'public-profile' ? (
+          <PublicProfilePage address={publicProfileAddress} />
         ) : currentPage === 'community' ? (
           <CommunityPage />
         ) : currentPage === 'team' ? (

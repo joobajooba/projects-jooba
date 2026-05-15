@@ -570,11 +570,32 @@ a {
   border-bottom: 0;
 }
 
+.c-community-table__row--link {
+  cursor: pointer;
+  transition:
+    background var(--transition-standard),
+    color var(--transition-standard);
+}
+
+.c-community-table__row--link:hover,
+.c-community-table__row--link:focus-within {
+  background: rgba(114, 247, 239, 0.08);
+}
+
 .c-community-user {
   display: inline-flex;
   align-items: center;
   gap: var(--space-sm);
   font-weight: 900;
+}
+
+.c-community-user--link {
+  color: inherit;
+}
+
+.c-community-user--link:hover,
+.c-community-user--link:focus-visible {
+  color: var(--color-gradient-cyan);
 }
 
 .c-community-user__avatar {
@@ -750,8 +771,9 @@ a {
   font-weight: 500;
 }
 
-/* Shared Bops-inspired styling for non-profile pages */
+/* Shared Bops-inspired styling for app pages */
 .l-page__hero,
+.c-profile-page,
 .c-community-page,
 .c-team-page,
 .c-staking-page,
@@ -764,6 +786,7 @@ a {
 }
 
 .c-community-card,
+.c-profile-card,
 .c-team-card,
 .c-staking-card {
   border-color: rgba(114, 247, 239, 0.38);
@@ -773,7 +796,14 @@ a {
     0 1.5rem 4rem rgba(0, 0, 0, 0.5);
 }
 
+.c-profile-card__banner {
+  background:
+    radial-gradient(circle at 76% 28%, rgba(114, 247, 239, 0.32), transparent 20rem),
+    linear-gradient(135deg, #03050a 0%, #071827 48%, #02050b 100%);
+}
+
 .c-community-card__title,
+.c-profile-card__name,
 .c-team-card__title,
 .c-staking-card__title {
   color: var(--color-text);
@@ -784,6 +814,7 @@ a {
 .c-community-card .c-text--eyebrow,
 .c-team-card .c-text--eyebrow,
 .c-community-table th,
+.c-profile-card__address,
 .c-team-member__role,
 .c-staking-card__text,
 .c-community-card__status {
@@ -802,6 +833,7 @@ a {
 
 .c-community-member-days,
 .c-community-wallet,
+.c-profile-card__x-link,
 .c-team-member__name {
   color: var(--color-gradient-cyan);
 }
