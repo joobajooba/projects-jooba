@@ -732,6 +732,14 @@ a {
   gap: var(--space-xl);
 }
 
+.c-team-grid--three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.c-team-member__image--collection {
+  border-radius: var(--radius-lg);
+}
+
 .c-team-member {
   display: grid;
   justify-items: center;
@@ -1980,7 +1988,8 @@ a {
     border-right: 0;
   }
 
-  .c-team-grid {
+  .c-team-grid,
+  .c-team-grid--three {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -2022,7 +2031,8 @@ a {
     margin-left: var(--space-md);
   }
 
-  .c-team-grid {
+  .c-team-grid,
+  .c-team-grid--three {
     grid-template-columns: 1fr;
   }
 

@@ -32,7 +32,7 @@ const NAV_SECTIONS = [
     title: 'Other',
     items: [
       { id: 'mba-license', label: 'MBA License', icon: 'verified' },
-      { id: 'trading-cards', label: 'Trading Cards', icon: 'cards' },
+      { id: 'our-collection', label: 'Our Collection', icon: 'cards' },
     ],
   },
 ];
@@ -143,7 +143,7 @@ function getCurrentPage() {
   if (window.location.hash === '#bops') return 'bops';
   if (window.location.hash === '#staking') return 'staking';
   if (window.location.hash === '#mba-license') return 'mba-license';
-  if (window.location.hash === '#trading-cards') return 'trading-cards';
+  if (window.location.hash === '#our-collection') return 'our-collection';
   return 'roadmap';
 }
 
@@ -626,13 +626,33 @@ function MbaLicensePage() {
   );
 }
 
-function TradingCardsPage() {
+const COLLECTION_ITEMS = [
+  { name: 'Zard', image: '/collection-zard.png' },
+  { name: 'Typical Tigers', image: '/collection-typical-tigers.png' },
+  { name: 'Mimu', image: '/collection-mimu.png' },
+];
+
+function OurCollectionPage() {
   return (
-    <section id="trading-cards" className="c-staking-page" aria-label="Trading Cards page">
-      <article className="c-staking-card">
-        <h1 className="c-staking-card__title">Coming soon</h1>
-        <p className="c-staking-card__text">This is currently in development</p>
-      </article>
+    <section id="our-collection" className="c-team-page" aria-label="Our Collection page">
+      <div className="c-team-card">
+        <div className="c-team-card__header">
+          <p className="c-text c-text--eyebrow">Studio J00BA</p>
+          <h1 className="c-team-card__title">Our Collection</h1>
+        </div>
+        <div className="c-team-grid c-team-grid--three">
+          {COLLECTION_ITEMS.map((item) => (
+            <article key={item.name} className="c-team-member">
+              <img
+                className="c-team-member__image c-team-member__image--collection"
+                src={item.image}
+                alt={`${item.name} NFT`}
+              />
+              <h2 className="c-team-member__name">{item.name}</h2>
+            </article>
+          ))}
+        </div>
+      </div>
     </section>
   );
 }
@@ -708,8 +728,8 @@ export default function App() {
           <StakingPage />
         ) : currentPage === 'mba-license' ? (
           <MbaLicensePage />
-        ) : currentPage === 'trading-cards' ? (
-          <TradingCardsPage />
+        ) : currentPage === 'our-collection' ? (
+          <OurCollectionPage />
         ) : (
           <RoadmapPage />
         )}
