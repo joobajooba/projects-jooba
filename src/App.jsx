@@ -32,7 +32,6 @@ const NAV_SECTIONS = [
     title: 'Other',
     items: [
       { id: 'mba-license', label: 'MBA License', icon: 'verified' },
-      { id: 'our-collection', label: 'Apechain Portfolio', icon: 'cards' },
     ],
   },
 ];
@@ -123,13 +122,6 @@ function NavIcon({ type }) {
           <path d="m8.7 12.2 2.1 2.1 4.5-4.6" />
         </>
       )}
-      {type === 'cards' && (
-        <>
-          <rect x="7" y="4" width="10" height="14" rx="1.5" />
-          <path d="M5 7.5 4.2 15a1.5 1.5 0 0 0 1.3 1.65l1.5.17" />
-          <path d="M17 7.18 18.5 7a1.5 1.5 0 0 1 1.65 1.3l.8 7.5a1.5 1.5 0 0 1-1.3 1.65l-2.65.29" />
-        </>
-      )}
     </svg>
   );
 }
@@ -143,7 +135,6 @@ function getCurrentPage() {
   if (window.location.hash === '#bops') return 'bops';
   if (window.location.hash === '#staking') return 'staking';
   if (window.location.hash === '#mba-license') return 'mba-license';
-  if (window.location.hash === '#our-collection') return 'our-collection';
   return 'roadmap';
 }
 
@@ -626,42 +617,6 @@ function MbaLicensePage() {
   );
 }
 
-const COLLECTION_ITEMS = [
-  { name: 'Zards #3722', image: '/collection-zard.png' },
-  { name: 'Glyder #224', image: '/collection-glyder.png' },
-  { name: 'Trainer #916', image: '/collection-trainer.png' },
-  { name: 'Typical Tigers #4792', image: '/collection-typical-tigers.png' },
-  { name: 'MIMU #3875', image: '/collection-mimu.png' },
-  { name: 'OtherPets #4495', image: '/collection-otherpet.png' },
-  { name: 'GOATs #351', image: '/collection-goats.png' },
-  { name: 'Hoodlums #1365', image: '/collection-hoodlums.png' },
-];
-
-function OurCollectionPage() {
-  return (
-    <section id="our-collection" className="c-team-page" aria-label="Our Apechain Assets page">
-      <div className="c-team-card">
-        <div className="c-team-card__header">
-          <p className="c-text c-text--eyebrow">Studio J00BA</p>
-          <h1 className="c-team-card__title">Our Apechain Assets</h1>
-        </div>
-        <div className="c-team-grid">
-          {COLLECTION_ITEMS.map((item) => (
-            <article key={item.name} className="c-team-member">
-              <img
-                className="c-team-member__image c-team-member__image--collection"
-                src={item.image}
-                alt={`${item.name} NFT`}
-              />
-              <h2 className="c-team-member__name">{item.name}</h2>
-            </article>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 export default function App() {
   const [currentPage, setCurrentPage] = useState(getCurrentPage);
   const [publicProfileAddress, setPublicProfileAddress] = useState(getPublicProfileAddress);
@@ -733,8 +688,6 @@ export default function App() {
           <StakingPage />
         ) : currentPage === 'mba-license' ? (
           <MbaLicensePage />
-        ) : currentPage === 'our-collection' ? (
-          <OurCollectionPage />
         ) : (
           <RoadmapPage />
         )}
