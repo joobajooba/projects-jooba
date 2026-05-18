@@ -32,7 +32,7 @@ const NAV_SECTIONS = [
     title: 'Other',
     items: [
       { id: 'mba-license', label: 'MBA License', icon: 'verified' },
-      { id: 'our-collection', label: 'Our Collection', icon: 'cards' },
+      { id: 'our-collection', label: 'Apechain Portfolio', icon: 'cards' },
     ],
   },
 ];
@@ -627,20 +627,25 @@ function MbaLicensePage() {
 }
 
 const COLLECTION_ITEMS = [
-  { name: 'Zard', image: '/collection-zard.png' },
-  { name: 'Typical Tigers', image: '/collection-typical-tigers.png' },
-  { name: 'Mimu', image: '/collection-mimu.png' },
+  { name: 'Zards #3722', image: '/collection-zard.png' },
+  { name: 'Glyder #224', image: '/collection-glyder.png' },
+  { name: 'Trainer #916', image: '/collection-trainer.png' },
+  { name: 'Typical Tigers #4792', image: '/collection-typical-tigers.png' },
+  { name: 'MIMU #3875', image: '/collection-mimu.png' },
+  { name: 'OtherPets #4495', image: '/collection-otherpet.png' },
+  { name: 'GOATs #351', image: '/collection-goats.png' },
+  { name: 'Hoodlums #1365', image: '/collection-hoodlums.png' },
 ];
 
 function OurCollectionPage() {
   return (
-    <section id="our-collection" className="c-team-page" aria-label="Our Collection page">
+    <section id="our-collection" className="c-team-page" aria-label="Our Apechain Assets page">
       <div className="c-team-card">
         <div className="c-team-card__header">
           <p className="c-text c-text--eyebrow">Studio J00BA</p>
-          <h1 className="c-team-card__title">Our Collection</h1>
+          <h1 className="c-team-card__title">Our Apechain Assets</h1>
         </div>
-        <div className="c-team-grid c-team-grid--three">
+        <div className="c-team-grid">
           {COLLECTION_ITEMS.map((item) => (
             <article key={item.name} className="c-team-member">
               <img
