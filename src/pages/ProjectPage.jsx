@@ -149,6 +149,38 @@ export default function ProjectPage() {
         </div>
       </section>
 
+      <section className="c-project-scope" aria-labelledby="project-scope-title">
+        <h2 id="project-scope-title" className="c-project-scope__title">
+          Scope Definition
+        </h2>
+        <h3 className="c-project-scope__subtitle">Introduction</h3>
+        <p className="c-project-scope__text">
+          Our studio is developing an on-chain trading card game within the ApeChain ecosystem. In Proelium, players can
+          collect card sets, battle against others, and create unique 1/1 cards.
+        </p>
+        <p className="c-project-scope__text">
+          As lifelong fans of trading card games, our team has always wanted to build a game of our own, from designing
+          gameplay mechanics to creating original artwork. We believe there is no better time to build this experience than
+          alongside the continued growth of ApeChain and its community.
+        </p>
+        <p className="c-project-scope__text">
+          Proelium will primarily revolve around mintable card collections, obtained either through the minting of specific
+          Archetypes or by opening booster packs to collect cards from each Set. All collectible cards and unique minted
+          assets will be fully tradable on OpenSea and viewable both on the OpenSea marketplace and through our official
+          platform interface.
+        </p>
+        <p className="c-project-scope__text">
+          However, accessibility is a core part of our vision. To ensure anyone can participate, including players who may
+          miss mints or lack the funds to purchase collectible cards, we will provide preconstructed (\"precon\") decks with
+          non-limited cards available in infinite supply. These cards are designed purely for gameplay accessibility and
+          will not belong to official collectible Sets.
+        </p>
+        <p className="c-project-scope__text">
+          For more information on our development timeline and long-term vision, please see the project phases outlined
+          below.
+        </p>
+      </section>
+
       <div className="c-project-phases">
         {PHASES.map((phase, index) => (
           <section
