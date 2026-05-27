@@ -1,6 +1,6 @@
 .l-page {
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
   min-height: 100dvh;
   background: var(--page-gradient);
 }

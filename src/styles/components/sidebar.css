@@ -1,10 +1,16 @@
 .c-sidebar {
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
   flex-shrink: 0;
   width: var(--sidebar-width-collapsed);
+  height: 100dvh;
+  min-height: 100dvh;
   padding: var(--space-md) 0.45rem var(--space-lg);
   border-right: 2.5px solid var(--sidebar-outline);
   background: var(--page-gradient);
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   transition: width var(--sidebar-transition), box-shadow var(--sidebar-transition);
   z-index: 20;
 }
