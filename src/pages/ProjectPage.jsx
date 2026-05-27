@@ -1,18 +1,23 @@
-import { useRef } from 'react';
-import { getParallaxOffset, useMainScroll } from '../hooks/useScrollParallax';
+import { useCallback, useRef, useState } from 'react';
+import {
+  getCollageParallaxProgress,
+  getHeroParallaxY,
+  getLayerParallaxY,
+  useMainScroll,
+} from '../hooks/useScrollParallax';
 
 const CIRCLE_IMAGES = [
-  { src: '/project-circles/circle-1.png', alt: 'Project circle image 1', className: 'c-project-circle--one', speed: 0.34, depth: 1 },
-  { src: '/project-circles/circle-2.png', alt: 'Project circle image 2', className: 'c-project-circle--two', speed: 0.26, depth: 2 },
+  { src: '/project-circles/circle-1.png', alt: 'Project circle image 1', className: 'c-project-circle--one', speed: 1, depth: 1 },
+  { src: '/project-circles/circle-2.png', alt: 'Project circle image 2', className: 'c-project-circle--two', speed: 0.82, depth: 2 },
   {
     src: '/project-circles/circle-3.png',
     alt: 'Project circle image 3',
     className: 'c-project-circle--three',
-    speed: 0.2,
+    speed: 0.68,
     depth: 3,
   },
-  { src: '/project-circles/circle-4.png', alt: 'Project circle image 4', className: 'c-project-circle--four', speed: 0.14, depth: 4 },
-  { src: '/project-circles/circle-5.png', alt: 'Project circle image 5', className: 'c-project-circle--five', speed: 0.08, depth: 5 },
+  { src: '/project-circles/circle-4.png', alt: 'Project circle image 4', className: 'c-project-circle--four', speed: 0.9, depth: 4 },
+  { src: '/project-circles/circle-5.png', alt: 'Project circle image 5', className: 'c-project-circle--five', speed: 0.55, depth: 5 },
 ];
 
 const PHASES = [
@@ -29,13 +34,8 @@ const PHASES = [
   { title: 'Phase 7', subtitle: 'Proelium Release', text: 'Text placeholder.' },
 ];
 
-function parallaxMultiplier(depth) {
-  return 1.15 + (6 - depth) * 0.42;
-}
-
-function Circle({ src, alt, className, anchorRef, speed, depth, scrollY }) {
-  const base = anchorRef.current ? getParallaxOffset(anchorRef.current, speed) : 0;
-  const y = scrollY >= 0 ? base * parallaxMultiplier(depth) : 0;
+function Circle({ src, alt, className, progress, speed, depth }) {
+  const y = getLayerParallaxY(progress, speed, depth);
 
   return (
     <figure
@@ -51,11 +51,19 @@ function Circle({ src, alt, className, anchorRef, speed, depth, scrollY }) {
 export default function ProjectPage() {
   const heroRef = useRef(null);
   const collageRef = useRef(null);
+  const [collageReady, setCollageReady] = useState(false);
   const scrollY = useMainScroll();
 
-  const titleOffset = heroRef.current ? getParallaxOffset(heroRef.current, 0.04) : 0;
-  const subtitleOffset = heroRef.current ? getParallaxOffset(heroRef.current, 0.07) : 0;
-  const waveOffset = collageRef.current ? getParallaxOffset(collageRef.current, 0.03) : 0;
+  const setCollageRef = useCallback((node) => {
+    collageRef.current = node;
+    setCollageReady(Boolean(node));
+  }, []);
+
+  const collageProgress =
+    collageReady && collageRef.current ? getCollageParallaxProgress(collageRef.current, scrollY) : 0;
+  const titleOffset = heroRef.current ? getHeroParallaxY(collageRef.current ?? heroRef.current, scrollY, 0.5) : 0;
+  const subtitleOffset = heroRef.current ? getHeroParallaxY(collageRef.current ?? heroRef.current, scrollY, 0.85) : 0;
+  const waveOffset = collageRef.current ? getLayerParallaxY(collageProgress, 0.2, 3, 80) : 0;
 
   return (
     <section className="c-project-page" aria-label="The Project">
@@ -68,7 +76,7 @@ export default function ProjectPage() {
         </p>
       </header>
 
-      <section ref={collageRef} className="c-project-collage" aria-label="Project highlights">
+      <section ref={setCollageRef} className="c-project-collage" aria-label="Project highlights">
         <div className="c-project-collage__circles">
           {CIRCLE_IMAGES.map((image) => (
             <Circle
@@ -76,17 +84,22 @@ export default function ProjectPage() {
               src={image.src}
               alt={image.alt}
               className={image.className}
-              anchorRef={collageRef}
+              progress={collageProgress}
               speed={image.speed}
               depth={image.depth}
-              scrollY={scrollY}
             />
           ))}
         </div>
         <div className="c-project-transition" aria-hidden="true">
           <span className="c-project-transition__wave c-project-transition__wave--one" style={{ transform: `translate3d(0, ${waveOffset}px, 0)` }} />
-          <span className="c-project-transition__wave c-project-transition__wave--two" style={{ transform: `translate3d(0, ${waveOffset * 1.25}px, 0)` }} />
-          <span className="c-project-transition__wave c-project-transition__wave--three" style={{ transform: `translate3d(0, ${waveOffset * 1.5}px, 0)` }} />
+          <span
+            className="c-project-transition__wave c-project-transition__wave--two"
+            style={{ transform: `translate3d(0, ${waveOffset * 1.25}px, 0)` }}
+          />
+          <span
+            className="c-project-transition__wave c-project-transition__wave--three"
+            style={{ transform: `translate3d(0, ${waveOffset * 1.5}px, 0)` }}
+          />
         </div>
       </section>
 
