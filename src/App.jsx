@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useState } from 'react';
 import ProjectPage from './pages/ProjectPage';
+import TeamPage from './pages/TeamPage';
 
 const NAV_SECTIONS = [
   {
@@ -35,6 +36,7 @@ const NAV_SECTIONS = [
 function getPageFromHash() {
   const hash = window.location.hash.replace('#', '');
   if (hash === 'the-project') return 'the-project';
+  if (hash === 'the-team') return 'the-team';
   return 'home';
 }
 
@@ -155,7 +157,7 @@ export default function App() {
         </nav>
       </aside>
       <main className="l-page__main" aria-label="Main content">
-        {page === 'the-project' ? <ProjectPage /> : null}
+        {page === 'the-project' ? <ProjectPage /> : page === 'the-team' ? <TeamPage /> : null}
       </main>
     </div>
   );

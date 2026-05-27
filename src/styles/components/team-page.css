@@ -1,0 +1,60 @@
+.c-team-page {
+  min-height: 100%;
+  padding: clamp(2rem, 6vh, 4rem) clamp(1.25rem, 4vw, 3.5rem);
+}
+
+.c-team-grid {
+  max-width: 70rem;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1.5rem, 4vw, 2.5rem);
+  justify-items: center;
+}
+
+.c-team-card {
+  width: min(100%, 24rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.c-team-card__image {
+  width: min(100%, 22rem);
+  border-radius: 1rem;
+  object-fit: cover;
+  transition: transform 180ms ease;
+  transform-origin: center;
+}
+
+.c-team-card:hover .c-team-card__image,
+.c-team-card:focus-within .c-team-card__image {
+  transform: scale(1.04);
+}
+
+.c-team-card__name {
+  margin: 0.9rem 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.2rem, 2.8vw, 1.8rem);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.05em;
+  color: var(--color-accent-soft);
+  text-transform: uppercase;
+}
+
+.c-team-card__role {
+  margin: 0.35rem 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(0.75rem, 1.6vw, 0.95rem);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.08em;
+  color: rgba(229, 231, 235, 0.88);
+  text-transform: none;
+}
+
+@media (max-width: 860px) {
+  .c-team-grid {
+    grid-template-columns: 1fr;
+  }
+}
