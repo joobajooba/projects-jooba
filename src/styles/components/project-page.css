@@ -160,7 +160,7 @@
 }
 
 .c-project-phase {
-  width: min(48%, 34rem);
+  width: min(44%, 32rem);
   max-width: 100%;
   padding: 0;
   border: 0;
@@ -168,13 +168,13 @@
 
 .c-project-phase--left {
   align-self: flex-start;
-  margin-left: 0;
+  margin-left: clamp(1.25rem, 4vw, 2.75rem);
   margin-right: auto;
 }
 
 .c-project-phase--right {
   align-self: flex-end;
-  margin-right: 0;
+  margin-right: clamp(1.25rem, 4vw, 2.75rem);
   margin-left: auto;
   margin-top: clamp(1.5rem, 5vh, 3.5rem);
 }
@@ -200,6 +200,7 @@
 
 .c-project-phase__subtitle {
   margin: 0.2rem 0 0;
+  padding-left: clamp(1.25rem, 3.5vw, 2.25rem);
   font-family: var(--font-display);
   font-size: clamp(1.45rem, 4.8vw, 3rem);
   font-weight: var(--font-weight-bold);
@@ -212,6 +213,7 @@
 
 .c-project-phase__text {
   margin: 1.35rem 0 0;
+  padding-left: clamp(2.5rem, 7vw, 4.5rem);
   font-family: var(--font-display);
   font-size: clamp(0.62rem, 1.15vw, 0.78rem);
   font-weight: var(--font-weight-bold);
