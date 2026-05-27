@@ -100,7 +100,7 @@ export default function ProjectPage() {
 
       <section className="c-project-scope" aria-labelledby="project-scope-title">
         <h2 id="project-scope-title" className="c-project-scope__title">
-          Scope Definition
+          Proelium
         </h2>
         <h3 className="c-project-scope__subtitle">Introduction</h3>
         <p className="c-project-scope__text">
