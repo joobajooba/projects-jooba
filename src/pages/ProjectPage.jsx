@@ -1,46 +1,28 @@
 import { useRef } from 'react';
 import { getParallaxOffset, useMainScroll } from '../hooks/useScrollParallax';
 
-const PLACEHOLDER_BOXES = [
-  { id: 1, label: 'Placeholder 01', speeds: [0.08, 0.14, 0.2] },
-  { id: 2, label: 'Placeholder 02', speeds: [0.1, 0.18, 0.26] },
-  { id: 3, label: 'Placeholder 03', speeds: [0.12, 0.2, 0.28] },
-  { id: 4, label: 'Placeholder 04', speeds: [0.09, 0.16, 0.24] },
-  { id: 5, label: 'Placeholder 05', speeds: [0.11, 0.19, 0.27] },
+const CIRCLE_IMAGES = [
+  { src: '/project-circles/circle-1.png', alt: 'Project circle image 1', className: 'c-project-circle--one' },
+  { src: '/project-circles/circle-2.png', alt: 'Project circle image 2', className: 'c-project-circle--two' },
+  { src: '/project-circles/circle-3.png', alt: 'Project circle image 3', className: 'c-project-circle--three' },
+  { src: '/project-circles/circle-4.png', alt: 'Project circle image 4', className: 'c-project-circle--four' },
+  { src: '/project-circles/circle-5.png', alt: 'Project circle image 5', className: 'c-project-circle--five' },
 ];
 
-function ParallaxBox({ box, scrollY }) {
-  const rootRef = useRef(null);
-  const [slow, mid, fast] = box.speeds.map((speed) =>
-    scrollY >= 0 && rootRef.current ? getParallaxOffset(rootRef.current, speed) : 0,
-  );
+function Circle({ src, alt, className, anchorRef, speed, scrollY }) {
+  const offset = anchorRef.current ? getParallaxOffset(anchorRef.current, speed) : 0;
+  const y = scrollY >= 0 ? offset : 0;
 
   return (
-    <article ref={rootRef} className="c-project-box">
-      <div
-        className="c-project-box__orb c-project-box__orb--slow"
-        style={{ transform: `translate3d(-12%, ${slow}px, 0)` }}
-        aria-hidden="true"
-      />
-      <div
-        className="c-project-box__orb c-project-box__orb--mid"
-        style={{ transform: `translate3d(68%, ${mid}px, 0)` }}
-        aria-hidden="true"
-      />
-      <div
-        className="c-project-box__orb c-project-box__orb--fast"
-        style={{ transform: `translate3d(28%, ${fast}px, 0)` }}
-        aria-hidden="true"
-      />
-      <div className="c-project-box__panel" style={{ transform: `translate3d(0, ${mid * 0.35}px, 0)` }}>
-        <span className="c-project-box__label">{box.label}</span>
-      </div>
-    </article>
+    <figure className={`c-project-circle ${className}`} style={{ transform: `translate3d(0, ${y}px, 0)` }}>
+      <img src={src} alt={alt} loading="lazy" />
+    </figure>
   );
 }
 
 export default function ProjectPage() {
   const heroRef = useRef(null);
+  const collageRef = useRef(null);
   const scrollY = useMainScroll();
 
   const titleOffset = heroRef.current ? getParallaxOffset(heroRef.current, 0.04) : 0;
@@ -68,11 +50,54 @@ export default function ProjectPage() {
         </p>
       </header>
 
-      <div className="c-project-boxes">
-        {PLACEHOLDER_BOXES.map((box) => (
-          <ParallaxBox key={box.id} box={box} scrollY={scrollY} />
-        ))}
-      </div>
+      <section ref={collageRef} className="c-project-collage" aria-label="Project highlights">
+        <div className="c-project-collage__bg" aria-hidden="true" />
+        <h2 className="c-project-collage__kicker">Carefully crafted</h2>
+        <p className="c-project-collage__headline">Awe-inspiring experiences</p>
+
+        <div className="c-project-collage__circles" aria-hidden="false">
+          <Circle
+            src={CIRCLE_IMAGES[0].src}
+            alt={CIRCLE_IMAGES[0].alt}
+            className={CIRCLE_IMAGES[0].className}
+            anchorRef={collageRef}
+            speed={0.08}
+            scrollY={scrollY}
+          />
+          <Circle
+            src={CIRCLE_IMAGES[1].src}
+            alt={CIRCLE_IMAGES[1].alt}
+            className={CIRCLE_IMAGES[1].className}
+            anchorRef={collageRef}
+            speed={0.12}
+            scrollY={scrollY}
+          />
+          <Circle
+            src={CIRCLE_IMAGES[2].src}
+            alt={CIRCLE_IMAGES[2].alt}
+            className={CIRCLE_IMAGES[2].className}
+            anchorRef={collageRef}
+            speed={0.16}
+            scrollY={scrollY}
+          />
+          <Circle
+            src={CIRCLE_IMAGES[3].src}
+            alt={CIRCLE_IMAGES[3].alt}
+            className={CIRCLE_IMAGES[3].className}
+            anchorRef={collageRef}
+            speed={0.1}
+            scrollY={scrollY}
+          />
+          <Circle
+            src={CIRCLE_IMAGES[4].src}
+            alt={CIRCLE_IMAGES[4].alt}
+            className={CIRCLE_IMAGES[4].className}
+            anchorRef={collageRef}
+            speed={0.14}
+            scrollY={scrollY}
+          />
+        </div>
+      </section>
     </section>
   );
 }
