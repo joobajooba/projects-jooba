@@ -1,18 +1,9 @@
-import { useCallback, useRef } from 'react';
-import { getCollageParallaxProgress, getHeroParallaxY, getLayerParallaxY, useMainScroll } from '../hooks/useScrollParallax';
-
 const CIRCLE_IMAGES = [
-  { src: '/project-circles/circle-1.png', alt: 'Project circle image 1', className: 'c-project-circle--one', speed: 1, depth: 1 },
-  { src: '/project-circles/circle-2.png', alt: 'Project circle image 2', className: 'c-project-circle--two', speed: 0.82, depth: 2 },
-  {
-    src: '/project-circles/circle-3.png',
-    alt: 'Project circle image 3',
-    className: 'c-project-circle--three',
-    speed: 0.68,
-    depth: 3,
-  },
-  { src: '/project-circles/circle-4.png', alt: 'Project circle image 4', className: 'c-project-circle--four', speed: 0.9, depth: 4 },
-  { src: '/project-circles/circle-5.png', alt: 'Project circle image 5', className: 'c-project-circle--five', speed: 0.55, depth: 5 },
+  { src: '/project-circles/circle-1.png', alt: 'Project circle image 1', className: 'c-project-circle--one', depth: 1 },
+  { src: '/project-circles/circle-2.png', alt: 'Project circle image 2', className: 'c-project-circle--two', depth: 2 },
+  { src: '/project-circles/circle-3.png', alt: 'Project circle image 3', className: 'c-project-circle--three', depth: 3 },
+  { src: '/project-circles/circle-4.png', alt: 'Project circle image 4', className: 'c-project-circle--four', depth: 4 },
+  { src: '/project-circles/circle-5.png', alt: 'Project circle image 5', className: 'c-project-circle--five', depth: 5 },
 ];
 
 const PHASES = [
@@ -83,69 +74,27 @@ const PHASES = [
   },
 ];
 
-function Circle({ src, alt, className, progress, speed, depth }) {
-  const y = getLayerParallaxY(progress, speed, depth);
-
+function Circle({ src, alt, className, depth }) {
   return (
-    <figure
-      className={`c-project-circle ${className}`}
-      style={{ transform: `translate3d(0, ${y}px, 0)`, zIndex: depth }}
-      data-depth={depth}
-    >
+    <figure className={`c-project-circle ${className}`} style={{ zIndex: depth }} data-depth={depth}>
       <img src={src} alt={alt} loading="lazy" />
     </figure>
   );
 }
 
 export default function ProjectPage() {
-  const heroRef = useRef(null);
-  const collageRef = useRef(null);
-  const scrollY = useMainScroll();
-
-  const setCollageRef = useCallback((node) => {
-    collageRef.current = node;
-  }, []);
-
-  const collageProgress = collageRef.current ? getCollageParallaxProgress(collageRef.current, scrollY) : 0;
-  const titleOffset = getHeroParallaxY(collageProgress, 0.45);
-  const subtitleOffset = getHeroParallaxY(collageProgress, 0.75);
-  const waveOffset = getLayerParallaxY(collageProgress, 0.2, 3, 90);
-
   return (
     <section className="c-project-page" aria-label="The Project">
-      <header ref={heroRef} className="c-project-hero">
-        <h1 className="c-project-hero__title" style={{ transform: `translate3d(0, ${titleOffset}px, 0)` }}>
-          Studio XYZ
-        </h1>
-        <p className="c-project-hero__subtitle" style={{ transform: `translate3d(0, ${subtitleOffset}px, 0)` }}>
-          Built on Apechain
-        </p>
+      <header className="c-project-hero">
+        <h1 className="c-project-hero__title">Studio XYZ</h1>
+        <p className="c-project-hero__subtitle">Built on Apechain</p>
       </header>
 
-      <section ref={setCollageRef} className="c-project-collage" aria-label="Project highlights">
+      <section className="c-project-collage" aria-label="Project highlights">
         <div className="c-project-collage__circles">
           {CIRCLE_IMAGES.map((image) => (
-            <Circle
-              key={image.src}
-              src={image.src}
-              alt={image.alt}
-              className={image.className}
-              progress={collageProgress}
-              speed={image.speed}
-              depth={image.depth}
-            />
+            <Circle key={image.src} src={image.src} alt={image.alt} className={image.className} depth={image.depth} />
           ))}
-        </div>
-        <div className="c-project-transition" aria-hidden="true">
-          <span className="c-project-transition__wave c-project-transition__wave--one" style={{ transform: `translate3d(0, ${waveOffset}px, 0)` }} />
-          <span
-            className="c-project-transition__wave c-project-transition__wave--two"
-            style={{ transform: `translate3d(0, ${waveOffset * 1.25}px, 0)` }}
-          />
-          <span
-            className="c-project-transition__wave c-project-transition__wave--three"
-            style={{ transform: `translate3d(0, ${waveOffset * 1.5}px, 0)` }}
-          />
         </div>
       </section>
 

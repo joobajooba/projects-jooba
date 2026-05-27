@@ -26,7 +26,6 @@
   text-transform: uppercase;
   line-height: 0.88;
   color: var(--color-text-strong);
-  will-change: transform;
 }
 
 .c-project-hero__subtitle {
@@ -39,7 +38,6 @@
   text-transform: uppercase;
   line-height: 0.92;
   color: var(--color-text-strong);
-  will-change: transform;
 }
 
 .c-project-collage {
@@ -62,7 +60,6 @@
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(0, 0, 0, 0.25);
-  will-change: transform;
 }
 
 .c-project-circle img {
@@ -110,43 +107,6 @@
   height: clamp(6rem, 14vw, 10.5rem);
   right: 0;
   top: 2%;
-}
-
-.c-project-transition {
-  position: absolute;
-  left: -8%;
-  right: -8%;
-  bottom: -3.2rem;
-  height: 8.5rem;
-  pointer-events: none;
-  z-index: 6;
-  display: none;
-}
-
-.c-project-transition__wave {
-  position: absolute;
-  left: 0;
-  right: 0;
-  border-radius: 100% 100% 0 0;
-  will-change: transform;
-}
-
-.c-project-transition__wave--one {
-  height: 4.8rem;
-  bottom: 0;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.c-project-transition__wave--two {
-  height: 6.1rem;
-  bottom: 0.65rem;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.c-project-transition__wave--three {
-  height: 7.6rem;
-  bottom: 1.3rem;
-  background: rgba(255, 255, 255, 0.04);
 }
 
 .c-project-phases {
@@ -291,11 +251,3 @@
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .c-project-hero__title,
-  .c-project-hero__subtitle,
-  .c-project-circle,
-  .c-project-transition__wave {
-    transform: none !important;
-  }
-}

@@ -1,15 +1,20 @@
 .c-team-page {
-  min-height: 100%;
-  padding: clamp(2rem, 6vh, 4rem) clamp(1.25rem, 4vw, 3.5rem);
+  min-height: 100dvh;
+  padding: clamp(1rem, 3vh, 2rem) clamp(1.25rem, 4vw, 3.5rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .c-team-grid {
   max-width: 70rem;
+  width: 100%;
   margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(1.5rem, 4vw, 2.5rem);
   justify-items: center;
+  align-items: start;
 }
 
 .c-team-card {
@@ -21,7 +26,8 @@
 }
 
 .c-team-card__image {
-  width: min(100%, 22rem);
+  width: min(100%, 16rem);
+  aspect-ratio: 1 / 1;
   border-radius: 1rem;
   object-fit: cover;
   transition: transform 180ms ease;
