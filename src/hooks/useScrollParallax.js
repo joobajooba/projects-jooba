@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export function useMainScroll() {
   const [scrollY, setScrollY] = useState(0);
@@ -29,34 +29,48 @@ export function useMainScroll() {
   return scrollY;
 }
 
-function getSectionDocumentTop(sectionEl, scrollY) {
-  return sectionEl.getBoundingClientRect().top + scrollY;
-}
-
 /**
- * Progress 0 at the section's natural rest position (top of page / scroll back up).
- * Progress increases as the user scrolls down through the section — same idea as Wix/Awequatic layers.
+ * Awequatic-style: measure collage position on first layout, then move layers as
+ * the section travels upward through the viewport. Scrolling back restores baseline.
  */
-export function getCollageParallaxProgress(sectionEl, scrollY) {
-  if (!sectionEl) return 0;
+export function useCollageParallax(sectionRef, scrollY, ready) {
+  const baselineTopRef = useRef(null);
+  const [progress, setProgress] = useState(0);
 
-  const viewportHeight = window.innerHeight;
-  const sectionHeight = sectionEl.offsetHeight;
-  const sectionTop = getSectionDocumentTop(sectionEl, scrollY);
+  useEffect(() => {
+    if (!ready) return undefined;
 
-  const restScrollY = Math.max(0, sectionTop - viewportHeight * 0.32);
-  const travelDistance = sectionHeight + viewportHeight * 0.55;
-  const progress = (scrollY - restScrollY) / travelDistance;
+    const section = sectionRef.current;
+    if (!section) return undefined;
 
-  return Math.max(0, Math.min(1, progress));
+    if (baselineTopRef.current === null) {
+      baselineTopRef.current = section.getBoundingClientRect().top;
+    }
+
+    const top = section.getBoundingClientRect().top;
+    const travel = Math.max(section.offsetHeight * 0.95, window.innerHeight * 0.55);
+    const next = Math.max(0, Math.min(1, (baselineTopRef.current - top) / travel));
+    setProgress(next);
+
+    return undefined;
+  }, [scrollY, ready, sectionRef]);
+
+  useEffect(() => {
+    const resetBaseline = () => {
+      baselineTopRef.current = null;
+    };
+    window.addEventListener('resize', resetBaseline);
+    return () => window.removeEventListener('resize', resetBaseline);
+  }, []);
+
+  return progress;
 }
 
-export function getLayerParallaxY(progress, speed, depth, maxShift = 240) {
-  const depthBoost = 0.65 + (6 - depth) * 0.12;
+export function getLayerParallaxY(progress, speed, depth, maxShift = 320) {
+  const depthBoost = 0.7 + (6 - depth) * 0.14;
   return -progress * maxShift * speed * depthBoost;
 }
 
-export function getHeroParallaxY(sectionEl, scrollY, speed, maxShift = 48) {
-  const progress = getCollageParallaxProgress(sectionEl, scrollY);
+export function getHeroParallaxY(progress, speed, maxShift = 70) {
   return -progress * maxShift * speed;
 }
