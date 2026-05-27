@@ -97,6 +97,7 @@ export default function ProjectPage() {
           ))}
         </div>
       </section>
+      <hr className="c-project-section-divider" aria-hidden="true" />
 
       <section className="c-project-scope" aria-labelledby="project-scope-title">
         <h2 id="project-scope-title" className="c-project-scope__title">
@@ -129,6 +130,7 @@ export default function ProjectPage() {
           below.
         </p>
       </section>
+      <hr className="c-project-section-divider" aria-hidden="true" />
 
       <div className="c-project-phases">
         {PHASES.map((phase, index) => (
