@@ -226,7 +226,7 @@
   font-style: oblique;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--color-text-strong);
+  color: var(--color-accent-soft);
   line-height: 0.95;
 }
 
