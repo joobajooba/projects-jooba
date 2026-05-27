@@ -44,14 +44,14 @@
 
 .c-project-collage {
   position: relative;
-  min-height: 92vh;
-  padding: 0 0 7rem;
+  min-height: 40vh;
+  padding: 0 0 0.75rem;
   overflow: visible;
 }
 
 .c-project-collage__circles {
   position: relative;
-  height: clamp(22rem, 42vw, 32rem);
+  height: clamp(12rem, 22vw, 15rem);
   overflow: visible;
 }
 
@@ -81,35 +81,35 @@
   width: clamp(9rem, 22vw, 16rem);
   height: clamp(9rem, 22vw, 16rem);
   left: 2%;
-  top: 30%;
+  top: 8%;
 }
 
 .c-project-circle--two {
   width: clamp(7rem, 18vw, 13.5rem);
   height: clamp(7rem, 18vw, 13.5rem);
   left: 24%;
-  top: 54%;
+  top: 18%;
 }
 
 .c-project-circle--three {
   width: clamp(10rem, 26vw, 18rem);
   height: clamp(10rem, 26vw, 18rem);
   left: 38%;
-  top: 14%;
+  top: 0;
 }
 
 .c-project-circle--four {
   width: clamp(7.5rem, 18vw, 14rem);
   height: clamp(7.5rem, 18vw, 14rem);
   right: 8%;
-  top: 40%;
+  top: 14%;
 }
 
 .c-project-circle--five {
   width: clamp(6rem, 14vw, 10.5rem);
   height: clamp(6rem, 14vw, 10.5rem);
   right: 0;
-  top: 8%;
+  top: 2%;
 }
 
 .c-project-transition {
@@ -160,7 +160,7 @@
 }
 
 .c-project-scope {
-  margin: clamp(1rem, 2.5vh, 1.5rem) 0 clamp(2.5rem, 7vh, 4.75rem);
+  margin: 0 0 clamp(2.5rem, 7vh, 4.75rem);
   max-width: min(100%, 68rem);
 }
 
