@@ -19,14 +19,50 @@ const PHASES = [
   {
     title: 'Phase 1',
     subtitle: 'J00B-A Mint',
-    text: 'J00B-A mint is expected to run in July 2026 and will be minted using Apecoin. This collection of NFTs will be utilised for our on-chain game, and avatars for Otherside.',
+    textParts: [
+      { text: 'J00B-A', highlight: true },
+      { text: ' mint is expected to run in July 2026 and will be minted using ' },
+      { text: 'Apecoin', highlight: true },
+      { text: '. This collection of NFTs will be utilised for our on-chain game, and avatars for Otherside.' },
+    ],
   },
-  { title: 'Phase 2', subtitle: 'Proelium Packs', text: 'Text placeholder.' },
-  { title: 'Phase 23', subtitle: 'J00B-A Leader Creation', text: 'Text placeholder.' },
-  { title: 'Phase 4', subtitle: 'Proelium Packs', text: 'Text placeholder.' },
-  { title: 'Phase 5', subtitle: 'Deck Building + Collection', text: 'Text placeholder.' },
-  { title: 'Phase 6', subtitle: 'Proelium Beta', text: 'Text placeholder.' },
-  { title: 'Phase 7', subtitle: 'Proelium Release', text: 'Text placeholder.' },
+  {
+    title: 'Phase 2',
+    subtitle: 'Proelium Packs',
+    textParts: [
+      { text: 'Use ' },
+      { text: 'Apecoin', highlight: true },
+      { text: ' to buy packs to collect and use trading cards from Set-01. These will have further functionality in a later phase!' },
+    ],
+  },
+  {
+    title: 'Phase 3',
+    subtitle: 'J00B-A Leader Creation',
+    textParts: [
+      { text: 'Use your J00B-A mints to create a 1/1 Leader for Proelium that will be a tradeable assets alongside the rest of the card sets. This will also minted on Apechain.' },
+    ],
+  },
+  {
+    title: 'Phase 4',
+    subtitle: 'Deck Building + Collection',
+    textParts: [
+      { text: 'Use your cards to build and save decks in Proelium. You can also view your collection here to see what you are missing from each set.' },
+    ],
+  },
+  {
+    title: 'Phase 5',
+    subtitle: 'Proelium Beta',
+    textParts: [
+      { text: 'Our first playtests to be conducted for Proelium, a WL will be created at the time to have an organised group of test-users.' },
+    ],
+  },
+  {
+    title: 'Phase 6',
+    subtitle: 'Proelium Release',
+    textParts: [
+      { text: 'The official Proelium release, available for anyone to play, with pre-con decks avaialble for those who did not mint or open packs.' },
+    ],
+  },
 ];
 
 function Circle({ src, alt, className, progress, speed, depth }) {
@@ -107,7 +143,17 @@ export default function ProjectPage() {
                 {phase.title}
               </h2>
               <p className="c-project-phase__subtitle">{phase.subtitle}</p>
-              <p className="c-project-phase__text">{phase.text}</p>
+              <p className="c-project-phase__text">
+                {phase.textParts.map((part, partIndex) =>
+                  part.highlight ? (
+                    <span key={`${phase.title}-part-${partIndex}`} className="c-project-phase__text-highlight">
+                      {part.text}
+                    </span>
+                  ) : (
+                    <span key={`${phase.title}-part-${partIndex}`}>{part.text}</span>
+                  ),
+                )}
+              </p>
             </div>
           </section>
         ))}

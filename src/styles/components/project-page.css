@@ -224,6 +224,10 @@
   max-width: 26rem;
 }
 
+.c-project-phase__text-highlight {
+  color: var(--color-accent-soft);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .c-project-hero__title,
   .c-project-hero__subtitle,
