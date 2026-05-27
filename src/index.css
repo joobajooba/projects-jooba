@@ -4,6 +4,11 @@
   box-sizing: border-box;
 }
 
+:root {
+  --page-gradient: linear-gradient(160deg, #1a1a1a 0%, #2d2d2d 45%, #1f1f1f 100%);
+  --sidebar-outline: #3b82f6;
+}
+
 html,
 body,
 #root {
@@ -19,14 +24,29 @@ a {
 .l-page {
   display: flex;
   min-height: 100dvh;
+  background: var(--page-gradient);
 }
 
 .c-sidebar {
   flex-shrink: 0;
-  width: 13.5rem;
-  padding: 1.25rem 1rem;
-  border-right: 1px solid #3b82f6;
-  background: rgba(12, 12, 14, 0.55);
+  width: 14rem;
+  padding: 1rem 0.85rem 1.25rem;
+  border-right: 2.5px solid var(--sidebar-outline);
+  background: var(--page-gradient);
+}
+
+.c-sidebar__brand {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+  padding: 0 0.35rem;
+}
+
+.c-sidebar__logo {
+  display: block;
+  width: 5.5rem;
+  height: auto;
+  object-fit: contain;
 }
 
 .c-sidebar__nav {
@@ -43,6 +63,7 @@ a {
 
 .c-sidebar__heading {
   margin: 0;
+  padding: 0 0.35rem;
   font-family: system-ui, sans-serif;
   font-size: 0.7rem;
   font-weight: 700;
@@ -61,14 +82,31 @@ a {
 }
 
 .c-sidebar__link {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
   padding: 0.4rem 0.5rem;
   border-radius: 0.35rem;
   font-family: system-ui, sans-serif;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 600;
   color: #e5e7eb;
   transition: background-color 150ms ease, color 150ms ease;
+}
+
+.c-sidebar__icon {
+  flex-shrink: 0;
+  width: 1.1rem;
+  height: 1.1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.c-sidebar__label {
+  line-height: 1.2;
 }
 
 .c-sidebar__link:hover,
@@ -81,5 +119,5 @@ a {
 .l-page__main {
   flex: 1;
   min-height: 100dvh;
-  background: linear-gradient(160deg, #1a1a1a 0%, #2d2d2d 45%, #1f1f1f 100%);
+  background: var(--page-gradient);
 }
