@@ -31,6 +31,8 @@ const PHASES = [
   {
     title: 'Phase 2',
     subtitle: 'Proelium Packs',
+    imageSrc: '/phase-images/phase-2.png',
+    imageAlt: 'Phase 2 Proelium pack artwork',
     textParts: [
       { text: 'Use ' },
       { text: 'Apecoin', highlight: true },
