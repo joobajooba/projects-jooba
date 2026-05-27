@@ -33,14 +33,12 @@ function parallaxMultiplier(depth) {
   return 1.15 + (6 - depth) * 0.42;
 }
 
-function Circle({ src, alt, className, speed, depth, scrollY }) {
-  const circleRef = useRef(null);
-  const raw = circleRef.current ? getParallaxOffset(circleRef.current, speed) : 0;
-  const y = scrollY >= 0 ? raw * parallaxMultiplier(depth) : 0;
+function Circle({ src, alt, className, anchorRef, speed, depth, scrollY }) {
+  const base = anchorRef.current ? getParallaxOffset(anchorRef.current, speed) : 0;
+  const y = scrollY >= 0 ? base * parallaxMultiplier(depth) : 0;
 
   return (
     <figure
-      ref={circleRef}
       className={`c-project-circle ${className}`}
       style={{ transform: `translate3d(0, ${y}px, 0)`, zIndex: depth }}
       data-depth={depth}
@@ -78,6 +76,7 @@ export default function ProjectPage() {
               src={image.src}
               alt={image.alt}
               className={image.className}
+              anchorRef={collageRef}
               speed={image.speed}
               depth={image.depth}
               scrollY={scrollY}

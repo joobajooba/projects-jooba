@@ -29,11 +29,14 @@ export function useMainScroll() {
   return scrollY;
 }
 
-export function getParallaxOffset(element, speed) {
-  if (!element) return 0;
+/** Use a stable anchor element (not the moving target) so transforms reset when scrolling back up. */
+export function getParallaxOffset(anchorElement, speed) {
+  if (!anchorElement) return 0;
 
-  const rect = element.getBoundingClientRect();
-  const distance = window.innerHeight - rect.top;
+  const rect = anchorElement.getBoundingClientRect();
+  const scrolledIntoView = window.innerHeight - rect.top;
+  const maxTravel = window.innerHeight * 1.25;
+  const clamped = Math.max(-maxTravel, Math.min(maxTravel, scrolledIntoView));
 
-  return -distance * speed;
+  return -clamped * speed;
 }
