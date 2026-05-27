@@ -253,11 +253,23 @@
 }
 
 .c-project-phase__image {
-  width: clamp(7.5rem, 16vw, 13rem);
-  aspect-ratio: 1 / 1;
-  border-radius: 1rem;
+  width: clamp(24rem, 44vw, 42rem);
+  aspect-ratio: 16 / 5;
+  border-radius: 0.35rem;
   object-fit: cover;
   box-shadow: 0 16px 32px rgba(0, 0, 0, 0.42);
   border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+@media (max-width: 1100px) {
+  .c-project-phase--with-image {
+    width: min(92%, 60rem);
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .c-project-phase__image {
+    width: min(100%, 42rem);
+  }
 }
 

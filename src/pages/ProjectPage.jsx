@@ -10,6 +10,8 @@ const PHASES = [
   {
     title: 'Phase 1',
     subtitle: 'J00B-A Mint',
+    imageSrc: '/phase-images/phase-1-side-banner.png',
+    imageAlt: 'Phase 1 character lineup artwork',
     textParts: [
       { text: 'J00B-A', highlight: true },
       { text: ' mint is expected to run in July 2026 and will be minted using ' },
