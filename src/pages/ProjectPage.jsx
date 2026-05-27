@@ -23,10 +23,13 @@ function Circle({ src, alt, className, anchorRef, speed, scrollY }) {
 export default function ProjectPage() {
   const heroRef = useRef(null);
   const collageRef = useRef(null);
+  const phaseRef = useRef(null);
   const scrollY = useMainScroll();
 
   const titleOffset = heroRef.current ? getParallaxOffset(heroRef.current, 0.04) : 0;
   const subtitleOffset = heroRef.current ? getParallaxOffset(heroRef.current, 0.07) : 0;
+  const waveOffset = collageRef.current ? getParallaxOffset(collageRef.current, 0.03) : 0;
+  const phaseOffset = phaseRef.current ? getParallaxOffset(phaseRef.current, 0.02) : 0;
 
   return (
     <section className="c-project-page" aria-label="The Project">
@@ -53,12 +56,20 @@ export default function ProjectPage() {
             />
           ))}
         </div>
+        <div className="c-project-transition" aria-hidden="true">
+          <span className="c-project-transition__wave c-project-transition__wave--one" style={{ transform: `translate3d(0, ${waveOffset}px, 0)` }} />
+          <span className="c-project-transition__wave c-project-transition__wave--two" style={{ transform: `translate3d(0, ${waveOffset * 1.25}px, 0)` }} />
+          <span className="c-project-transition__wave c-project-transition__wave--three" style={{ transform: `translate3d(0, ${waveOffset * 1.5}px, 0)` }} />
+        </div>
       </section>
 
-      <section className="c-project-phase" aria-labelledby="project-phase-title">
-        <h2 id="project-phase-title" className="c-project-phase__title">
-          Phase 1 - J00B-A Mint
+      <section ref={phaseRef} className="c-project-phase" aria-labelledby="project-phase-title">
+        <h2 id="project-phase-title" className="c-project-phase__title" style={{ transform: `translate3d(0, ${phaseOffset}px, 0)` }}>
+          Phase 1
         </h2>
+        <p className="c-project-phase__subtitle" style={{ transform: `translate3d(0, ${phaseOffset * 1.2}px, 0)` }}>
+          J00B-A Mint
+        </p>
         <p className="c-project-phase__text">
           J00B-A mint is expected to run in July 2026 and will be minted using Apecoin. This collection of NFTs will be
           utilised for our on-chain game, and avatars for Otherside.
