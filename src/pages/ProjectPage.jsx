@@ -2,17 +2,17 @@ import { useRef } from 'react';
 import { getParallaxOffset, useMainScroll } from '../hooks/useScrollParallax';
 
 const CIRCLE_IMAGES = [
-  { src: '/project-circles/circle-1.png', alt: 'Project circle image 1', className: 'c-project-circle--one', speed: 0.11, depth: 3 },
-  { src: '/project-circles/circle-2.png', alt: 'Project circle image 2', className: 'c-project-circle--two', speed: 0.18, depth: 5 },
+  { src: '/project-circles/circle-1.png', alt: 'Project circle image 1', className: 'c-project-circle--one', speed: 0.34, depth: 1 },
+  { src: '/project-circles/circle-2.png', alt: 'Project circle image 2', className: 'c-project-circle--two', speed: 0.26, depth: 2 },
   {
     src: '/project-circles/circle-3.png',
     alt: 'Project circle image 3',
     className: 'c-project-circle--three',
-    speed: 0.24,
-    depth: 2,
+    speed: 0.2,
+    depth: 3,
   },
-  { src: '/project-circles/circle-4.png', alt: 'Project circle image 4', className: 'c-project-circle--four', speed: 0.15, depth: 4 },
-  { src: '/project-circles/circle-5.png', alt: 'Project circle image 5', className: 'c-project-circle--five', speed: 0.21, depth: 1 },
+  { src: '/project-circles/circle-4.png', alt: 'Project circle image 4', className: 'c-project-circle--four', speed: 0.14, depth: 4 },
+  { src: '/project-circles/circle-5.png', alt: 'Project circle image 5', className: 'c-project-circle--five', speed: 0.08, depth: 5 },
 ];
 
 const PHASES = [
@@ -29,14 +29,21 @@ const PHASES = [
   { title: 'Phase 7', subtitle: 'Proelium Release', text: 'Text placeholder.' },
 ];
 
-function Circle({ src, alt, className, anchorRef, speed, depth, scrollY }) {
-  const offset = anchorRef.current ? getParallaxOffset(anchorRef.current, speed) : 0;
-  const y = scrollY >= 0 ? offset * 1.55 : 0;
+function parallaxMultiplier(depth) {
+  return 1.15 + (6 - depth) * 0.42;
+}
+
+function Circle({ src, alt, className, speed, depth, scrollY }) {
+  const circleRef = useRef(null);
+  const raw = circleRef.current ? getParallaxOffset(circleRef.current, speed) : 0;
+  const y = scrollY >= 0 ? raw * parallaxMultiplier(depth) : 0;
 
   return (
     <figure
+      ref={circleRef}
       className={`c-project-circle ${className}`}
       style={{ transform: `translate3d(0, ${y}px, 0)`, zIndex: depth }}
+      data-depth={depth}
     >
       <img src={src} alt={alt} loading="lazy" />
     </figure>
@@ -46,13 +53,11 @@ function Circle({ src, alt, className, anchorRef, speed, depth, scrollY }) {
 export default function ProjectPage() {
   const heroRef = useRef(null);
   const collageRef = useRef(null);
-  const phaseRef = useRef(null);
   const scrollY = useMainScroll();
 
   const titleOffset = heroRef.current ? getParallaxOffset(heroRef.current, 0.04) : 0;
   const subtitleOffset = heroRef.current ? getParallaxOffset(heroRef.current, 0.07) : 0;
   const waveOffset = collageRef.current ? getParallaxOffset(collageRef.current, 0.03) : 0;
-  const phaseOffset = phaseRef.current ? getParallaxOffset(phaseRef.current, 0.02) : 0;
 
   return (
     <section className="c-project-page" aria-label="The Project">
@@ -73,7 +78,6 @@ export default function ProjectPage() {
               src={image.src}
               alt={image.alt}
               className={image.className}
-              anchorRef={collageRef}
               speed={image.speed}
               depth={image.depth}
               scrollY={scrollY}
@@ -91,24 +95,16 @@ export default function ProjectPage() {
         {PHASES.map((phase, index) => (
           <section
             key={phase.title + phase.subtitle}
-            ref={index === 0 ? phaseRef : null}
-            className="c-project-phase"
+            className={`c-project-phase${index % 2 === 1 ? ' c-project-phase--right' : ' c-project-phase--left'}`}
             aria-labelledby={`project-phase-title-${index}`}
           >
-            <h2
-              id={`project-phase-title-${index}`}
-              className="c-project-phase__title"
-              style={index === 0 ? { transform: `translate3d(0, ${phaseOffset}px, 0)` } : undefined}
-            >
-              {phase.title}
-            </h2>
-            <p
-              className="c-project-phase__subtitle"
-              style={index === 0 ? { transform: `translate3d(0, ${phaseOffset * 1.2}px, 0)` } : undefined}
-            >
-              {phase.subtitle}
-            </p>
-            <p className="c-project-phase__text">{phase.text}</p>
+            <div className="c-project-phase__content">
+              <h2 id={`project-phase-title-${index}`} className="c-project-phase__title">
+                {phase.title}
+              </h2>
+              <p className="c-project-phase__subtitle">{phase.subtitle}</p>
+              <p className="c-project-phase__text">{phase.text}</p>
+            </div>
           </section>
         ))}
       </div>
