@@ -19,6 +19,8 @@ const PHASES = [
   {
     title: 'Phase 1',
     subtitle: 'J00B-A Mint',
+    imageSrc: '/phase-images/phase-1.png',
+    imageAlt: 'Phase 1 J00B-A artwork',
     textParts: [
       { text: 'J00B-A', highlight: true },
       { text: ' mint is expected to run in July 2026 and will be minted using ' },
@@ -153,7 +155,7 @@ export default function ProjectPage() {
         {PHASES.map((phase, index) => (
           <section
             key={phase.title + phase.subtitle}
-            className={`c-project-phase${index % 2 === 1 ? ' c-project-phase--right' : ' c-project-phase--left'}`}
+            className={`c-project-phase${index % 2 === 1 ? ' c-project-phase--right' : ' c-project-phase--left'}${phase.imageSrc ? ' c-project-phase--with-image' : ''}`}
             aria-labelledby={`project-phase-title-${index}`}
           >
             <div className="c-project-phase__content">
@@ -173,6 +175,11 @@ export default function ProjectPage() {
                 )}
               </p>
             </div>
+            {phase.imageSrc ? (
+              <figure className="c-project-phase__image-wrap">
+                <img className="c-project-phase__image" src={phase.imageSrc} alt={phase.imageAlt ?? ''} loading="lazy" />
+              </figure>
+            ) : null}
           </section>
         ))}
       </div>
