@@ -52,7 +52,8 @@
 
 .c-project-collage__circles {
   position: relative;
-  height: clamp(18rem, 34vw, 24rem);
+  height: clamp(20rem, 38vw, 28rem);
+  overflow: visible;
 }
 
 .c-project-circle {
@@ -62,6 +63,7 @@
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(0, 0, 0, 0.2);
+  transition: transform 120ms linear;
   will-change: transform;
 }
 
@@ -75,36 +77,36 @@
 .c-project-circle--one {
   width: clamp(9rem, 22vw, 16rem);
   height: clamp(9rem, 22vw, 16rem);
-  left: 6%;
-  top: 20%;
+  left: 4%;
+  top: 24%;
 }
 
 .c-project-circle--two {
   width: clamp(7rem, 18vw, 13.5rem);
   height: clamp(7rem, 18vw, 13.5rem);
-  left: 34%;
-  top: 44%;
+  left: 27%;
+  top: 50%;
 }
 
 .c-project-circle--three {
   width: clamp(10rem, 26vw, 18rem);
   height: clamp(10rem, 26vw, 18rem);
-  left: 46%;
-  top: 22%;
+  left: 36%;
+  top: 18%;
 }
 
 .c-project-circle--four {
   width: clamp(7.5rem, 18vw, 14rem);
   height: clamp(7.5rem, 18vw, 14rem);
-  right: 6%;
-  top: 38%;
+  right: 10%;
+  top: 36%;
 }
 
 .c-project-circle--five {
   width: clamp(6rem, 14vw, 10.5rem);
   height: clamp(6rem, 14vw, 10.5rem);
-  right: 14%;
-  top: 16%;
+  right: 2%;
+  top: 10%;
 }
 
 .c-project-transition {
@@ -144,9 +146,15 @@
 
 .c-project-phase {
   max-width: 42rem;
-  margin-top: 0.75rem;
+  margin-top: 0.95rem;
   padding-top: 1.2rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.c-project-phases {
+  display: flex;
+  flex-direction: column;
+  gap: 1.9rem;
 }
 
 .c-project-phase__title {
