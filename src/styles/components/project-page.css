@@ -120,6 +120,7 @@
   height: 8.5rem;
   pointer-events: none;
   z-index: 6;
+  display: none;
 }
 
 .c-project-transition__wave {
