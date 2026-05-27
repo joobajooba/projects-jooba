@@ -156,11 +156,11 @@
   width: 100%;
   max-width: none;
   margin: 0;
-  padding-top: 1rem;
+  padding-top: 1.4rem;
 }
 
 .c-project-scope {
-  margin: clamp(1.25rem, 3vh, 2.25rem) 0 clamp(2rem, 6vh, 4rem);
+  margin: clamp(2rem, 5vh, 3rem) 0 clamp(2.5rem, 7vh, 4.75rem);
   max-width: min(100%, 68rem);
 }
 
