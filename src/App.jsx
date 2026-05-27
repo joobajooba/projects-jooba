@@ -106,7 +106,7 @@ export default function App() {
               <ul className="c-sidebar__list">
                 {section.items.map((item) => (
                   <li key={item.id}>
-                    <a className="c-sidebar__link" href={`#${item.id}`}>
+                    <a className="c-sidebar__link" href={`#${item.id}`} title={item.label}>
                       <NavIcon type={item.icon} />
                       <span className="c-sidebar__label">{item.label}</span>
                     </a>
