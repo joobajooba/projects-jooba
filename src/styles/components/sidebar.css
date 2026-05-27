@@ -151,7 +151,8 @@
 }
 
 .c-sidebar__link:hover,
-.c-sidebar__link:focus-visible {
+.c-sidebar__link:focus-visible,
+.c-sidebar__link.is-active {
   background: var(--color-accent-hover);
   color: var(--color-text-strong);
   outline: none;

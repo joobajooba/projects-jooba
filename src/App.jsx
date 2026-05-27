@@ -1,4 +1,5 @@
-import { Fragment } from 'react';
+import { Fragment, useEffect, useState } from 'react';
+import ProjectPage from './pages/ProjectPage';
 
 const NAV_SECTIONS = [
   {
@@ -30,6 +31,12 @@ const NAV_SECTIONS = [
     ],
   },
 ];
+
+function getPageFromHash() {
+  const hash = window.location.hash.replace('#', '');
+  if (hash === 'the-project') return 'the-project';
+  return 'home';
+}
 
 function NavIcon({ type }) {
   return (
@@ -104,6 +111,19 @@ function NavIcon({ type }) {
 }
 
 export default function App() {
+  const [page, setPage] = useState(getPageFromHash);
+
+  useEffect(() => {
+    const onHashChange = () => setPage(getPageFromHash());
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
+  useEffect(() => {
+    const main = document.querySelector('.l-page__main');
+    if (main) main.scrollTop = 0;
+  }, [page]);
+
   return (
     <div className="l-page">
       <aside className="c-sidebar" aria-label="Site navigation">
@@ -119,7 +139,11 @@ export default function App() {
                 <ul className="c-sidebar__list">
                   {section.items.map((item) => (
                     <li key={item.id}>
-                      <a className="c-sidebar__link" href={`#${item.id}`} title={item.label}>
+                      <a
+                        className={`c-sidebar__link${page === item.id ? ' is-active' : ''}`}
+                        href={`#${item.id}`}
+                        title={item.label}
+                      >
                         <NavIcon type={item.icon} />
                         <span className="c-sidebar__label">{item.label}</span>
                       </a>
@@ -131,7 +155,9 @@ export default function App() {
           ))}
         </nav>
       </aside>
-      <main className="l-page__main" aria-label="Main content" />
+      <main className="l-page__main" aria-label="Main content">
+        {page === 'the-project' ? <ProjectPage /> : null}
+      </main>
     </div>
   );
 }
