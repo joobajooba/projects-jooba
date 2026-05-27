@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export function useMainScroll() {
   const [scrollY, setScrollY] = useState(0);
@@ -29,48 +29,22 @@ export function useMainScroll() {
   return scrollY;
 }
 
-/**
- * Awequatic-style: measure collage position on first layout, then move layers as
- * the section travels upward through the viewport. Scrolling back restores baseline.
- */
-export function useCollageParallax(sectionRef, scrollY, ready) {
-  const baselineTopRef = useRef(null);
-  const [progress, setProgress] = useState(0);
+export function getCollageParallaxProgress(sectionEl, scrollY) {
+  if (!sectionEl) return 0;
 
-  useEffect(() => {
-    if (!ready) return undefined;
+  const sectionTopDoc = sectionEl.getBoundingClientRect().top + scrollY;
+  const start = sectionTopDoc - window.innerHeight * 0.25;
+  const travel = Math.max(sectionEl.offsetHeight * 0.95, window.innerHeight * 0.7);
+  const progress = (scrollY - start) / travel;
 
-    const section = sectionRef.current;
-    if (!section) return undefined;
-
-    if (baselineTopRef.current === null) {
-      baselineTopRef.current = section.getBoundingClientRect().top;
-    }
-
-    const top = section.getBoundingClientRect().top;
-    const travel = Math.max(section.offsetHeight * 0.95, window.innerHeight * 0.55);
-    const next = Math.max(0, Math.min(1, (baselineTopRef.current - top) / travel));
-    setProgress(next);
-
-    return undefined;
-  }, [scrollY, ready, sectionRef]);
-
-  useEffect(() => {
-    const resetBaseline = () => {
-      baselineTopRef.current = null;
-    };
-    window.addEventListener('resize', resetBaseline);
-    return () => window.removeEventListener('resize', resetBaseline);
-  }, []);
-
-  return progress;
+  return Math.max(0, Math.min(1, progress));
 }
 
-export function getLayerParallaxY(progress, speed, depth, maxShift = 320) {
-  const depthBoost = 0.7 + (6 - depth) * 0.14;
+export function getLayerParallaxY(progress, speed, depth, maxShift = 380) {
+  const depthBoost = 0.72 + (6 - depth) * 0.16;
   return -progress * maxShift * speed * depthBoost;
 }
 
-export function getHeroParallaxY(progress, speed, maxShift = 70) {
+export function getHeroParallaxY(progress, speed, maxShift = 84) {
   return -progress * maxShift * speed;
 }

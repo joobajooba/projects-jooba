@@ -1,5 +1,5 @@
-import { useCallback, useRef, useState } from 'react';
-import { getHeroParallaxY, getLayerParallaxY, useCollageParallax, useMainScroll } from '../hooks/useScrollParallax';
+import { useCallback, useRef } from 'react';
+import { getCollageParallaxProgress, getHeroParallaxY, getLayerParallaxY, useMainScroll } from '../hooks/useScrollParallax';
 
 const CIRCLE_IMAGES = [
   { src: '/project-circles/circle-1.png', alt: 'Project circle image 1', className: 'c-project-circle--one', speed: 1, depth: 1 },
@@ -46,15 +46,13 @@ function Circle({ src, alt, className, progress, speed, depth }) {
 export default function ProjectPage() {
   const heroRef = useRef(null);
   const collageRef = useRef(null);
-  const [collageReady, setCollageReady] = useState(false);
   const scrollY = useMainScroll();
 
   const setCollageRef = useCallback((node) => {
     collageRef.current = node;
-    setCollageReady(Boolean(node));
   }, []);
 
-  const collageProgress = useCollageParallax(collageRef, scrollY, collageReady);
+  const collageProgress = collageRef.current ? getCollageParallaxProgress(collageRef.current, scrollY) : 0;
   const titleOffset = getHeroParallaxY(collageProgress, 0.45);
   const subtitleOffset = getHeroParallaxY(collageProgress, 0.75);
   const waveOffset = getLayerParallaxY(collageProgress, 0.2, 3, 90);

@@ -19,7 +19,7 @@
 .c-project-hero__title {
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(3.25rem, 10.5vw, 7.25rem);
+  font-size: clamp(4rem, 12vw, 8.6rem);
   font-weight: var(--font-weight-bold);
   font-style: oblique;
   letter-spacing: 0.02em;
@@ -32,7 +32,7 @@
 .c-project-hero__subtitle {
   margin: 0.15rem 0 0;
   font-family: var(--font-display);
-  font-size: clamp(2rem, 6.8vw, 4.85rem);
+  font-size: clamp(2.25rem, 7.2vw, 5.2rem);
   font-weight: var(--font-weight-bold);
   font-style: oblique;
   letter-spacing: 0.03em;
