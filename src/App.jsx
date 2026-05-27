@@ -1,3 +1,5 @@
+import { Fragment } from 'react';
+
 const NAV_SECTIONS = [
   {
     title: 'Community',
@@ -109,20 +111,23 @@ export default function App() {
           <img className="c-sidebar__logo" src="/logo.png" alt="Jooba logo" />
         </div>
         <nav className="c-sidebar__nav">
-          {NAV_SECTIONS.map((section) => (
-            <div key={section.title} className="c-sidebar__section">
-              <h2 className="c-sidebar__heading">{section.title}</h2>
-              <ul className="c-sidebar__list">
-                {section.items.map((item) => (
-                  <li key={item.id}>
-                    <a className="c-sidebar__link" href={`#${item.id}`} title={item.label}>
-                      <NavIcon type={item.icon} />
-                      <span className="c-sidebar__label">{item.label}</span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          {NAV_SECTIONS.map((section, index) => (
+            <Fragment key={section.title}>
+              {index > 0 ? <hr className="c-sidebar__divider" aria-hidden="true" /> : null}
+              <div className="c-sidebar__section">
+                <h2 className="c-sidebar__heading">{section.title}</h2>
+                <ul className="c-sidebar__list">
+                  {section.items.map((item) => (
+                    <li key={item.id}>
+                      <a className="c-sidebar__link" href={`#${item.id}`} title={item.label}>
+                        <NavIcon type={item.icon} />
+                        <span className="c-sidebar__label">{item.label}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </Fragment>
           ))}
         </nav>
       </aside>

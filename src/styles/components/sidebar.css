@@ -37,7 +37,25 @@
 .c-sidebar__nav {
   display: flex;
   flex-direction: column;
+  gap: 0.45rem;
+}
+
+.c-sidebar:hover .c-sidebar__nav,
+.c-sidebar:focus-within .c-sidebar__nav {
   gap: var(--space-xl);
+}
+
+.c-sidebar__divider {
+  flex-shrink: 0;
+  height: 0;
+  margin: 0.35rem 0.4rem;
+  border: 0;
+  border-top: 2.5px solid var(--sidebar-outline);
+}
+
+.c-sidebar:hover .c-sidebar__divider,
+.c-sidebar:focus-within .c-sidebar__divider {
+  display: none;
 }
 
 .c-sidebar__section {
