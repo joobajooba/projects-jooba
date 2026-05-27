@@ -1,22 +1,3 @@
-/* CS Agerix — place Regular (and optional Bold) .woff2 files in /public/fonts/ */
-@font-face {
-  font-family: 'Agerix';
-  src:
-    url('/fonts/Agerix-Regular.woff2') format('woff2'),
-    url('/fonts/Agerix-Regular.woff') format('woff'),
-    url('/fonts/CSAgerix-Regular.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Agerix';
-  src:
-    url('/fonts/Agerix-Bold.woff2') format('woff2'),
-    url('/fonts/Agerix-Bold.woff') format('woff'),
-    url('/fonts/CSAgerix-Bold.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
+@import '@fontsource/orbitron/500.css';
+@import '@fontsource/orbitron/600.css';
+@import '@fontsource/orbitron/700.css';

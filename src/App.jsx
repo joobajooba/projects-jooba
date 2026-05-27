@@ -16,7 +16,11 @@ const NAV_SECTIONS = [
     ],
   },
   {
-    title: 'The Game',
+    title: 'NFT Drops',
+    items: [{ id: 'j00b-a', label: 'J00B-A', icon: 'nft' }],
+  },
+  {
+    title: 'Proelium',
     items: [
       { id: 'matchmaking', label: 'Matchmaking', icon: 'matchmaking' },
       { id: 'deck-builder', label: 'Deck Builder', icon: 'deck' },
@@ -86,6 +90,11 @@ function NavIcon({ type }) {
           <path d="M5 5.5h5v13H6.5a1.5 1.5 0 0 1-1.5-1.5V5.5Z" />
           <path d="M10 5.5h5v13h-3.5a1.5 1.5 0 0 1-1.5-1.5V5.5Z" />
           <path d="M15 5.5h4v13h-2.5a1.5 1.5 0 0 1-1.5-1.5V5.5Z" />
+        </>
+      )}
+      {type === 'nft' && (
+        <>
+          <path d="M12 3.5 14.8 8.2 20.5 9l-4.2 3.8 1.1 5.2L12 15.8l-5.4 2.2 1.1-5.2L3.5 9l5.7-.7L12 3.5Z" />
         </>
       )}
     </svg>
