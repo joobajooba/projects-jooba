@@ -54,10 +54,12 @@
 }
 
 .c-project-section-divider {
-  width: min(100%, 70rem);
+  display: block;
+  width: 100%;
+  height: 2px;
   margin: clamp(1.1rem, 3vh, 2rem) 0;
   border: 0;
-  border-top: 1px solid rgba(124, 166, 255, 0.45);
+  background: rgba(255, 255, 255, 0.85);
 }
 
 .c-project-circle {
