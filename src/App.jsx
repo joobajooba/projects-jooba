@@ -10,7 +10,7 @@ const NAV_SECTIONS = [
     title: 'Information',
     items: [
       { id: 'the-project', label: 'The Project', icon: 'project' },
-      { id: 'j00b-as', label: 'J00B-As', icon: 'badge' },
+      { id: 'minting-platform', label: 'Minting Platform', icon: 'badge' },
       { id: 'the-team', label: 'The Team', icon: 'team' },
       { id: 'useful-links', label: 'Useful Links', icon: 'link' },
     ],
