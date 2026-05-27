@@ -19,8 +19,6 @@ const PHASES = [
   {
     title: 'Phase 1',
     subtitle: 'J00B-A Mint',
-    imageSrc: '/phase-images/phase-1.png',
-    imageAlt: 'Phase 1 J00B-A artwork',
     textParts: [
       { text: 'J00B-A', highlight: true },
       { text: ' mint is expected to run in July 2026 and will be minted using ' },
@@ -31,8 +29,6 @@ const PHASES = [
   {
     title: 'Phase 2',
     subtitle: 'Proelium Packs',
-    imageSrc: '/phase-images/phase-2.png',
-    imageAlt: 'Phase 2 Proelium pack artwork',
     textParts: [
       { text: 'Use ' },
       { text: 'Apecoin', highlight: true },
