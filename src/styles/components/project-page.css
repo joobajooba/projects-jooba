@@ -153,31 +153,37 @@
   display: flex;
   flex-direction: column;
   gap: clamp(3.5rem, 10vh, 6.5rem);
-  max-width: 56rem;
-  margin: 0 auto;
+  width: 100%;
+  max-width: none;
+  margin: 0;
   padding-top: 1rem;
 }
 
 .c-project-phase {
-  width: min(100%, 26rem);
+  width: min(48%, 34rem);
+  max-width: 100%;
   padding: 0;
   border: 0;
 }
 
 .c-project-phase--left {
   align-self: flex-start;
+  margin-left: 0;
+  margin-right: auto;
 }
 
 .c-project-phase--right {
   align-self: flex-end;
+  margin-right: 0;
+  margin-left: auto;
   margin-top: clamp(1.5rem, 5vh, 3.5rem);
 }
 
 .c-project-phase__content {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
+  align-items: flex-start;
+  text-align: left;
 }
 
 .c-project-phase__title {
@@ -213,7 +219,7 @@
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: rgba(229, 231, 235, 0.82);
-  max-width: 22rem;
+  max-width: 26rem;
 }
 
 @media (prefers-reduced-motion: reduce) {
