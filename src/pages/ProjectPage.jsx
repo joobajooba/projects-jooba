@@ -27,21 +27,10 @@ export default function ProjectPage() {
 
   const titleOffset = heroRef.current ? getParallaxOffset(heroRef.current, 0.04) : 0;
   const subtitleOffset = heroRef.current ? getParallaxOffset(heroRef.current, 0.07) : 0;
-  const bubbleOffset = heroRef.current ? getParallaxOffset(heroRef.current, 0.12) : 0;
 
   return (
     <section className="c-project-page" aria-label="The Project">
       <header ref={heroRef} className="c-project-hero">
-        <div
-          className="c-project-hero__bubble c-project-hero__bubble--one"
-          style={{ transform: `translate3d(0, ${bubbleOffset}px, 0)` }}
-          aria-hidden="true"
-        />
-        <div
-          className="c-project-hero__bubble c-project-hero__bubble--two"
-          style={{ transform: `translate3d(0, ${bubbleOffset * 1.4}px, 0)` }}
-          aria-hidden="true"
-        />
         <h1 className="c-project-hero__title" style={{ transform: `translate3d(0, ${titleOffset}px, 0)` }}>
           Studio XYZ
         </h1>
@@ -51,52 +40,29 @@ export default function ProjectPage() {
       </header>
 
       <section ref={collageRef} className="c-project-collage" aria-label="Project highlights">
-        <div className="c-project-collage__bg" aria-hidden="true" />
-        <h2 className="c-project-collage__kicker">Carefully crafted</h2>
-        <p className="c-project-collage__headline">Awe-inspiring experiences</p>
-
-        <div className="c-project-collage__circles" aria-hidden="false">
-          <Circle
-            src={CIRCLE_IMAGES[0].src}
-            alt={CIRCLE_IMAGES[0].alt}
-            className={CIRCLE_IMAGES[0].className}
-            anchorRef={collageRef}
-            speed={0.08}
-            scrollY={scrollY}
-          />
-          <Circle
-            src={CIRCLE_IMAGES[1].src}
-            alt={CIRCLE_IMAGES[1].alt}
-            className={CIRCLE_IMAGES[1].className}
-            anchorRef={collageRef}
-            speed={0.12}
-            scrollY={scrollY}
-          />
-          <Circle
-            src={CIRCLE_IMAGES[2].src}
-            alt={CIRCLE_IMAGES[2].alt}
-            className={CIRCLE_IMAGES[2].className}
-            anchorRef={collageRef}
-            speed={0.16}
-            scrollY={scrollY}
-          />
-          <Circle
-            src={CIRCLE_IMAGES[3].src}
-            alt={CIRCLE_IMAGES[3].alt}
-            className={CIRCLE_IMAGES[3].className}
-            anchorRef={collageRef}
-            speed={0.1}
-            scrollY={scrollY}
-          />
-          <Circle
-            src={CIRCLE_IMAGES[4].src}
-            alt={CIRCLE_IMAGES[4].alt}
-            className={CIRCLE_IMAGES[4].className}
-            anchorRef={collageRef}
-            speed={0.14}
-            scrollY={scrollY}
-          />
+        <div className="c-project-collage__circles">
+          {CIRCLE_IMAGES.map((image, index) => (
+            <Circle
+              key={image.src}
+              src={image.src}
+              alt={image.alt}
+              className={image.className}
+              anchorRef={collageRef}
+              speed={[0.08, 0.12, 0.16, 0.1, 0.14][index]}
+              scrollY={scrollY}
+            />
+          ))}
         </div>
+      </section>
+
+      <section className="c-project-phase" aria-labelledby="project-phase-title">
+        <h2 id="project-phase-title" className="c-project-phase__title">
+          Phase 1 - J00B-A Mint
+        </h2>
+        <p className="c-project-phase__text">
+          J00B-A mint is expected to run in July 2026 and will be minted using Apecoin. This collection of NFTs will be
+          utilised for our on-chain game, and avatars for Otherside.
+        </p>
       </section>
     </section>
   );
