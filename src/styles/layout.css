@@ -1,11 +1,13 @@
 .l-page {
   display: flex;
+  align-items: flex-start;
   min-height: 100dvh;
   background: var(--page-gradient);
 }
 
 .l-page__main {
   flex: 1;
+  min-width: 0;
   min-height: 100dvh;
   background: var(--page-gradient);
 }

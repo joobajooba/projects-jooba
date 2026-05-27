@@ -120,8 +120,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const main = document.querySelector('.l-page__main');
-    if (main) main.scrollTop = 0;
+    window.scrollTo(0, 0);
   }, [page]);
 
   return (

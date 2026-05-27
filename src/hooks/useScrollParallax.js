@@ -1,18 +1,13 @@
 import { useEffect, useState } from 'react';
 
-const MAIN_SELECTOR = '.l-page__main';
-
 export function useMainScroll() {
   const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
-    const container = document.querySelector(MAIN_SELECTOR);
-    if (!container) return undefined;
-
     let frame = 0;
 
     const update = () => {
-      setScrollY(container.scrollTop);
+      setScrollY(window.scrollY);
       frame = 0;
     };
 
@@ -21,11 +16,11 @@ export function useMainScroll() {
     };
 
     update();
-    container.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onScroll, { passive: true });
 
     return () => {
-      container.removeEventListener('scroll', onScroll);
+      window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onScroll);
       if (frame) window.cancelAnimationFrame(frame);
     };
@@ -35,13 +30,10 @@ export function useMainScroll() {
 }
 
 export function getParallaxOffset(element, speed) {
-  const container = document.querySelector(MAIN_SELECTOR);
-  if (!element || !container) return 0;
+  if (!element) return 0;
 
-  const containerRect = container.getBoundingClientRect();
-  const elementRect = element.getBoundingClientRect();
-  const relativeTop = elementRect.top - containerRect.top;
-  const distance = container.clientHeight - relativeTop;
+  const rect = element.getBoundingClientRect();
+  const distance = window.innerHeight - rect.top;
 
   return -distance * speed;
 }
