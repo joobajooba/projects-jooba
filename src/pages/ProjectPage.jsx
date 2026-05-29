@@ -92,8 +92,8 @@ export default function ProjectPage() {
   return (
     <section className="c-project-page" aria-label="The Project">
       <header className="c-project-hero">
-        <h1 className="c-project-hero__title">Studio XYZ</h1>
-        <p className="c-project-hero__subtitle">Built on Apechain</p>
+        <h1 className="c-project-hero__title">Studio Rookus</h1>
+        <p className="c-project-hero__subtitle">Building on Apechain</p>
       </header>
 
       <section className="c-project-collage" aria-label="Project highlights">

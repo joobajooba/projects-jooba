@@ -79,6 +79,15 @@
   color: rgba(229, 231, 235, 0.55);
 }
 
+.c-minting-stages__limits {
+  font-family: var(--font-display);
+  font-size: clamp(0.62rem, 1.2vw, 0.75rem);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
+  color: var(--color-accent-soft);
+}
+
 .c-minting-card {
   width: 100%;
   display: grid;

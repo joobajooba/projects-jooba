@@ -5,13 +5,15 @@ const COLLECTION_STATS = [
   { label: 'MINTING SOON', tone: 'mint' },
 ];
 
+const STAGE_LIMITS = '(50 spots per community, 3 per wallet)';
+
 const STAGES = [
-  { title: 'Stage 1', description: 'wl (50 spots per community, 3 per wallet)' },
-  { title: 'Stage 2', description: 'npc, glyder, zards, mineboy (50 spots per community, 3 per wallet)' },
-  { title: 'Stage 3', description: 'bayc, mayc, geez, goats (50 spots per community, 3 per wallet)' },
-  { title: 'Stage 4', description: 'goji, hoodlums, typical tigers, otherpet (50 spots per community, 3 per wallet)' },
-  { title: 'Stage 5', description: 'jinkyz, punkbits, umbfmc, gobs (50 spots per community, 3 per wallet)' },
-  { title: 'Public', description: '(3 per wallet)' },
+  { title: 'Stage 1', description: 'wl', limits: STAGE_LIMITS },
+  { title: 'Stage 2', description: 'npc, glyder, zards, mineboy', limits: STAGE_LIMITS },
+  { title: 'Stage 3', description: 'bayc, mayc, geez, goats', limits: STAGE_LIMITS },
+  { title: 'Stage 4', description: 'goji, hoodlums, typical tigers, otherpet', limits: STAGE_LIMITS },
+  { title: 'Stage 5', description: 'jinkyz, punkbits, umbfmc, gobs', limits: STAGE_LIMITS },
+  { title: 'Public', limits: '(3 per wallet)' },
 ];
 
 export default function MintingPlatformPage() {
@@ -28,7 +30,7 @@ export default function MintingPlatformPage() {
                 <div className="c-minting-card__creator">
                   <img className="c-minting-card__creator-image" src="/minting-creator.png" alt="" aria-hidden="true" />
                   <span>
-                    by <strong>Studio XYZ</strong>
+                    by <strong>Studio Rookus</strong>
                   </span>
                 </div>
               </div>
@@ -55,7 +57,10 @@ export default function MintingPlatformPage() {
               <div key={stage.title} className="c-minting-stages__item">
                 <p className="c-minting-stages__line">
                   <span className="c-minting-stages__label">{stage.title}</span>
-                  <span className="c-minting-stages__description">{stage.description}</span>
+                  {stage.description ? (
+                    <span className="c-minting-stages__description">{stage.description}</span>
+                  ) : null}
+                  <span className="c-minting-stages__limits">{stage.limits}</span>
                 </p>
               </div>
             ))}
