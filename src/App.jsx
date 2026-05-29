@@ -29,6 +29,7 @@ const NAV_SECTIONS = [
       { id: 'matchmaking', label: 'Matchmaking', icon: 'matchmaking' },
       { id: 'deck-builder', label: 'Deck Builder', icon: 'deck' },
       { id: 'library', label: 'Library', icon: 'library' },
+      { id: 'game-guide', label: 'Game Guide', icon: 'library' },
     ],
   },
 ];
