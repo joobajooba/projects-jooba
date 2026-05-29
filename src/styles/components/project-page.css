@@ -87,63 +87,63 @@
   width: clamp(9rem, 22vw, 16rem);
   height: clamp(9rem, 22vw, 16rem);
   left: 2%;
-  top: 8%;
+  top: 14%;
 }
 
 .c-project-circle--two {
   width: clamp(7rem, 18vw, 13.5rem);
   height: clamp(7rem, 18vw, 13.5rem);
-  left: 24%;
-  top: 18%;
+  left: 25%;
+  top: 21%;
 }
 
 .c-project-circle--three {
   width: clamp(10rem, 26vw, 18rem);
   height: clamp(10rem, 26vw, 18rem);
-  left: 38%;
-  top: 0;
+  left: 41%;
+  top: 5%;
 }
 
 .c-project-circle--four {
   width: clamp(7.5rem, 18vw, 14rem);
   height: clamp(7.5rem, 18vw, 14rem);
-  right: 6%;
-  top: 18%;
+  left: 75%;
+  top: 20%;
 }
 
 .c-project-circle--five {
   width: clamp(6rem, 14vw, 10.5rem);
   height: clamp(6rem, 14vw, 10.5rem);
-  right: 9%;
-  top: -6%;
+  left: 88%;
+  top: 0;
 }
 
 .c-project-circle--six {
   width: clamp(6.5rem, 15vw, 11rem);
   height: clamp(6.5rem, 15vw, 11rem);
-  left: 14%;
-  top: -2%;
+  left: 15%;
+  top: 1%;
 }
 
 .c-project-circle--seven {
   width: clamp(5.5rem, 13vw, 9.25rem);
   height: clamp(5.5rem, 13vw, 9.25rem);
-  left: 57%;
-  top: 25%;
+  left: 56%;
+  top: 29%;
 }
 
 .c-project-circle--eight {
   width: clamp(6rem, 14vw, 10rem);
   height: clamp(6rem, 14vw, 10rem);
-  right: 22%;
-  top: 18%;
+  left: 66%;
+  top: 4%;
 }
 
 .c-project-circle--nine {
   width: clamp(7rem, 16vw, 11.75rem);
   height: clamp(7rem, 16vw, 11.75rem);
-  right: 15%;
-  top: 5%;
+  left: 73%;
+  top: -7%;
 }
 
 .c-project-phases {
