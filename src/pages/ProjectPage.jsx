@@ -4,6 +4,10 @@ const CIRCLE_IMAGES = [
   { src: '/project-circles/circle-3.png', alt: 'Project circle image 3', className: 'c-project-circle--three', depth: 3 },
   { src: '/project-circles/circle-4.png', alt: 'Project circle image 4', className: 'c-project-circle--four', depth: 4 },
   { src: '/project-circles/circle-5.png', alt: 'Project circle image 5', className: 'c-project-circle--five', depth: 5 },
+  { src: '/project-circles/circle-6.png', alt: 'Project circle image 6', className: 'c-project-circle--six', depth: 2 },
+  { src: '/project-circles/circle-7.png', alt: 'Project circle image 7', className: 'c-project-circle--seven', depth: 1 },
+  { src: '/project-circles/circle-8.png', alt: 'Project circle image 8', className: 'c-project-circle--eight', depth: 3 },
+  { src: '/project-circles/circle-9.png', alt: 'Project circle image 9', className: 'c-project-circle--nine', depth: 2 },
 ];
 
 const PHASES = [

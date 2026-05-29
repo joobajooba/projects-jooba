@@ -118,6 +118,34 @@
   top: 2%;
 }
 
+.c-project-circle--six {
+  width: clamp(6.5rem, 15vw, 11rem);
+  height: clamp(6.5rem, 15vw, 11rem);
+  left: 14%;
+  top: -2%;
+}
+
+.c-project-circle--seven {
+  width: clamp(5.5rem, 13vw, 9.25rem);
+  height: clamp(5.5rem, 13vw, 9.25rem);
+  left: 33%;
+  top: 30%;
+}
+
+.c-project-circle--eight {
+  width: clamp(6rem, 14vw, 10rem);
+  height: clamp(6rem, 14vw, 10rem);
+  right: 24%;
+  top: 28%;
+}
+
+.c-project-circle--nine {
+  width: clamp(7rem, 16vw, 11.75rem);
+  height: clamp(7rem, 16vw, 11.75rem);
+  right: 15%;
+  top: -5%;
+}
+
 .c-project-phases {
   display: flex;
   flex-direction: column;
