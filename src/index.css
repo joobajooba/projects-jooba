@@ -3,5 +3,6 @@
 @import './styles/base.css';
 @import './styles/layout.css';
 @import './styles/components/sidebar.css';
+@import './styles/components/minting-platform-page.css';
 @import './styles/components/project-page.css';
 @import './styles/components/team-page.css';
