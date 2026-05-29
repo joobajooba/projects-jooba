@@ -6,11 +6,12 @@ const COLLECTION_STATS = [
 ];
 
 const STAGES = [
-  { title: 'Stage 1', description: 'wl' },
-  { title: 'Stage 2', description: 'npc, glyder, zards, mineboy' },
-  { title: 'Stage 3', description: 'bayc, mayc, geez, goats' },
-  { title: 'Stage 4', description: 'goji, hoodlums, typical tigers, otherpet' },
-  { title: 'Stage 5', description: 'jinkyz, punkbits, umbfmc, gobs' },
+  { title: 'Stage 1', description: 'wl (50 spots per community, 3 per wallet)' },
+  { title: 'Stage 2', description: 'npc, glyder, zards, mineboy (50 spots per community, 3 per wallet)' },
+  { title: 'Stage 3', description: 'bayc, mayc, geez, goats (50 spots per community, 3 per wallet)' },
+  { title: 'Stage 4', description: 'goji, hoodlums, typical tigers, otherpet (50 spots per community, 3 per wallet)' },
+  { title: 'Stage 5', description: 'jinkyz, punkbits, umbfmc, gobs (50 spots per community, 3 per wallet)' },
+  { title: 'Public', description: '(3 per wallet)' },
 ];
 
 export default function MintingPlatformPage() {
