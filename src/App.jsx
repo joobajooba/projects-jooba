@@ -29,7 +29,7 @@ const NAV_SECTIONS = [
       { id: 'matchmaking', label: 'Matchmaking', icon: 'matchmaking' },
       { id: 'deck-builder', label: 'Deck Builder', icon: 'deck' },
       { id: 'library', label: 'Library', icon: 'library' },
-      { id: 'game-guide', label: 'Game Guide', icon: 'library' },
+      { id: 'game-guide', label: 'Game Guide', icon: 'document' },
     ],
   },
 ];
@@ -102,6 +102,14 @@ function NavIcon({ type }) {
           <path d="M5 5.5h5v13H6.5a1.5 1.5 0 0 1-1.5-1.5V5.5Z" />
           <path d="M10 5.5h5v13h-3.5a1.5 1.5 0 0 1-1.5-1.5V5.5Z" />
           <path d="M15 5.5h4v13h-2.5a1.5 1.5 0 0 1-1.5-1.5V5.5Z" />
+        </>
+      )}
+      {type === 'document' && (
+        <>
+          <path d="M6.5 3.5h7.25L18.5 8.25V19a1.5 1.5 0 0 1-1.5 1.5H6.5A1.5 1.5 0 0 1 5 19V5a1.5 1.5 0 0 1 1.5-1.5Z" />
+          <path d="M13.5 3.75V8.5h4.75" />
+          <path d="M8.5 12h7" />
+          <path d="M8.5 15.5h5.25" />
         </>
       )}
       {type === 'nft' && (
