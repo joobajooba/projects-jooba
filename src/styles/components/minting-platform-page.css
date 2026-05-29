@@ -9,9 +9,9 @@
 
 .c-minting-page__layout {
   width: 100%;
-  max-width: min(100%, 72rem);
+  max-width: min(100%, 128rem);
   display: grid;
-  grid-template-columns: min(100%, 42rem) minmax(0, 1fr);
+  grid-template-columns: min(100%, 42rem) minmax(0, 84rem);
   gap: clamp(1rem, 2.5vh, 1.5rem);
   align-items: stretch;
 }
@@ -54,7 +54,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 0.15rem;
+  gap: 0.5rem;
 }
 
 .c-minting-stages__item:first-child {
@@ -77,10 +77,6 @@
   letter-spacing: 0.06em;
   text-transform: lowercase;
   color: rgba(229, 231, 235, 0.55);
-}
-
-.c-minting-stages__separator {
-  color: rgba(229, 231, 235, 0.4);
 }
 
 .c-minting-card {

@@ -19,11 +19,11 @@ export default function MintingPlatformPage() {
       <div className="c-minting-page__layout">
         <div className="c-minting-page__main">
           <article className="c-minting-card">
-            <img className="c-minting-card__image" src="/minting-goji.png" alt="GOJI collection artwork" />
+            <img className="c-minting-card__image" src="/minting-goji.png" alt="J00B-As collection artwork" />
 
             <div className="c-minting-card__content">
               <div>
-                <h1 className="c-minting-card__title">GOJI</h1>
+                <h1 className="c-minting-card__title">J00B-As</h1>
                 <div className="c-minting-card__creator">
                   <img className="c-minting-card__creator-image" src="/minting-creator.png" alt="" aria-hidden="true" />
                   <span>
@@ -54,10 +54,6 @@ export default function MintingPlatformPage() {
               <div key={stage.title} className="c-minting-stages__item">
                 <p className="c-minting-stages__line">
                   <span className="c-minting-stages__label">{stage.title}</span>
-                  <span className="c-minting-stages__separator" aria-hidden="true">
-                    {' '}
-                    |{' '}
-                  </span>
                   <span className="c-minting-stages__description">{stage.description}</span>
                 </p>
               </div>
