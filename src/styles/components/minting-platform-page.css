@@ -8,10 +8,27 @@
 }
 
 .c-minting-page__layout {
-  width: min(100%, 42rem);
+  width: 100%;
+  max-width: min(100%, 72rem);
+  display: grid;
+  grid-template-columns: min(100%, 42rem) minmax(0, 1fr);
+  gap: clamp(1rem, 2.5vh, 1.5rem);
+  align-items: stretch;
+}
+
+.c-minting-page__main {
   display: flex;
   flex-direction: column;
   gap: clamp(1rem, 2.5vh, 1.5rem);
+  min-width: 0;
+}
+
+.c-minting-page__aside {
+  min-height: 100%;
+  border-radius: 0.7rem;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
 }
 
 .c-minting-stages {
@@ -32,18 +49,38 @@
   border-top: 1px solid rgba(255, 255, 255, 0.14);
 }
 
+.c-minting-stages__line {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.15rem;
+}
+
 .c-minting-stages__item:first-child {
   border-top: 0;
 }
 
 .c-minting-stages__label {
-  margin: 0;
   font-family: var(--font-display);
   font-size: clamp(0.78rem, 1.6vw, 0.95rem);
   font-weight: var(--font-weight-bold);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--color-text-strong);
+}
+
+.c-minting-stages__description {
+  font-family: var(--font-display);
+  font-size: clamp(0.62rem, 1.2vw, 0.75rem);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
+  color: rgba(229, 231, 235, 0.55);
+}
+
+.c-minting-stages__separator {
+  color: rgba(229, 231, 235, 0.4);
 }
 
 .c-minting-card {
@@ -154,6 +191,16 @@
 
 .c-minting-card__stat.is-mint {
   color: #34f5c5;
+}
+
+@media (max-width: 900px) {
+  .c-minting-page__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .c-minting-page__aside {
+    min-height: clamp(10rem, 24vh, 14rem);
+  }
 }
 
 @media (max-width: 680px) {
