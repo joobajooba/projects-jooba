@@ -55,13 +55,15 @@ export default function MintingPlatformPage() {
           <section className="c-minting-stages" aria-label="Minting stages">
             {STAGES.map((stage) => (
               <div key={stage.title} className="c-minting-stages__item">
-                <p className="c-minting-stages__line">
-                  <span className="c-minting-stages__label">{stage.title}</span>
-                  {stage.description ? (
-                    <span className="c-minting-stages__description">{stage.description}</span>
-                  ) : null}
-                  <span className="c-minting-stages__limits">{stage.limits}</span>
-                </p>
+                <div className="c-minting-stages__content">
+                  <p className="c-minting-stages__line">
+                    <span className="c-minting-stages__label">{stage.title}</span>
+                    {stage.description ? (
+                      <span className="c-minting-stages__description">{stage.description}</span>
+                    ) : null}
+                  </p>
+                  <p className="c-minting-stages__limits">{stage.limits}</p>
+                </div>
               </div>
             ))}
           </section>
