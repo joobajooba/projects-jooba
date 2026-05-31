@@ -8,7 +8,7 @@ const COLLECTION_STATS = [
 const STAGE_LIMITS = '(50 spots per community, 3 per wallet)';
 
 const STAGES = [
-  { title: 'Stage 1', description: 'wl', limits: STAGE_LIMITS },
+  { title: 'Stage 1', description: 'wl', limits: '(3per wallet)' },
   { title: 'Stage 2', description: 'npc, glyder, zards, mineboy', limits: STAGE_LIMITS },
   { title: 'Stage 3', description: 'bayc, mayc, geez, goats', limits: STAGE_LIMITS },
   { title: 'Stage 4', description: 'goji, hoodlums, typical tigers, otherpet', limits: STAGE_LIMITS },
