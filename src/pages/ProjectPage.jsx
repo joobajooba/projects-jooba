@@ -25,15 +25,6 @@ const PHASES = [
   },
   {
     title: 'Phase 2',
-    subtitle: 'Proelium Packs',
-    textParts: [
-      { text: 'Use ' },
-      { text: 'Apecoin', highlight: true },
-      { text: ' to buy packs to collect and use trading cards from Set-01. These will have further functionality in a later phase!' },
-    ],
-  },
-  {
-    title: 'Phase 3',
     subtitle: 'J00B-A Leader Creation',
     textParts: [
       { text: 'Use your ' },
@@ -43,6 +34,15 @@ const PHASES = [
       { text: ' for Proelium that will be a tradeable assets alongside the rest of the card sets. This will be ' },
       { text: 'minted', highlight: true },
       { text: ' on Apechain.' },
+    ],
+  },
+  {
+    title: 'Phase 3',
+    subtitle: 'Proelium Packs',
+    textParts: [
+      { text: 'Use ' },
+      { text: 'Apecoin', highlight: true },
+      { text: ' to buy packs to collect and use trading cards from Set-01. These will have further functionality in a later phase!' },
     ],
   },
   {
