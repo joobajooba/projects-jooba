@@ -2,6 +2,7 @@ import { Fragment, useEffect, useState } from 'react';
 import MintingPlatformPage from './pages/MintingPlatformPage';
 import ProjectPage from './pages/ProjectPage';
 import TeamPage from './pages/TeamPage';
+import UsefulLinksPage from './pages/UsefulLinksPage';
 
 const NAV_SECTIONS = [
   {
@@ -40,6 +41,7 @@ function getPageFromHash() {
   if (hash === 'the-project') return 'the-project';
   if (hash === 'minting-platform') return 'minting-platform';
   if (hash === 'the-team') return 'the-team';
+  if (hash === 'useful-links') return 'useful-links';
   return 'home';
 }
 
@@ -174,6 +176,8 @@ export default function App() {
           <MintingPlatformPage />
         ) : page === 'the-team' ? (
           <TeamPage />
+        ) : page === 'useful-links' ? (
+          <UsefulLinksPage />
         ) : null}
       </main>
     </div>
