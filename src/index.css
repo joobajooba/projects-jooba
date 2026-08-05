@@ -135,7 +135,7 @@ body {
   width: min(100%, 16rem);
   aspect-ratio: 1;
   margin-top: 0.35rem;
-  border: 2px solid rgba(255, 255, 255, 0.28);
+  border: 4px solid rgba(255, 255, 255, 0.28);
   border-radius: 2px;
   background: rgba(10, 8, 10, 0.55);
   box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.45);
