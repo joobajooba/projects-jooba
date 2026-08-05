@@ -14,30 +14,23 @@ function MenuIcon() {
   return (
     <svg
       className="sidebar-toggle__icon"
-      viewBox="0 0 24 24"
-      width="22"
-      height="22"
+      viewBox="0 0 16 16"
+      width="20"
+      height="20"
+      shapeRendering="crispEdges"
       aria-hidden="true"
       focusable="false"
     >
-      <rect
-        x="3"
-        y="3"
-        width="18"
-        height="18"
-        rx="4"
-        ry="4"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.75"
-      />
+      {/* Pixel rounded-square frame */}
       <path
-        d="M7.5 9h9M7.5 12h9M7.5 15h9"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
+        fill="currentColor"
+        fillRule="evenodd"
+        d="M4 2h8v1h1v1h1v8h-1v1h-1v1H4v-1H3v-1H2V4h1V3h1V2zm1 2v8h6V4H5z"
       />
+      {/* Three pixel menu lines */}
+      <rect x="5" y="6" width="6" height="1" fill="currentColor" />
+      <rect x="5" y="8" width="6" height="1" fill="currentColor" />
+      <rect x="5" y="10" width="6" height="1" fill="currentColor" />
     </svg>
   );
 }

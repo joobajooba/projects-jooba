@@ -35,16 +35,19 @@ body {
   width: 2.5rem;
   height: 2.5rem;
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 0.55rem;
+  border: 2px solid rgba(255, 255, 255, 0.28);
+  border-radius: 2px;
   background: rgba(255, 255, 255, 0.08);
   color: #f0f0f0;
   cursor: pointer;
+  image-rendering: pixelated;
   transition: background 160ms ease, border-color 160ms ease;
 }
 
 .sidebar-toggle__icon {
   display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
 .sidebar-toggle:hover {
