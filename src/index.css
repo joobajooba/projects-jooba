@@ -29,15 +29,22 @@ body {
 
 .sidebar-toggle {
   appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
   border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 0.55rem;
   background: rgba(255, 255, 255, 0.08);
   color: #f0f0f0;
-  font: inherit;
-  font-size: 0.95rem;
-  letter-spacing: 0.04em;
-  padding: 0.55rem 1rem;
   cursor: pointer;
   transition: background 160ms ease, border-color 160ms ease;
+}
+
+.sidebar-toggle__icon {
+  display: block;
 }
 
 .sidebar-toggle:hover {

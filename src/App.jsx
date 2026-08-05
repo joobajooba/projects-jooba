@@ -1,5 +1,37 @@
 import { useState } from 'react';
 
+function MenuIcon() {
+  return (
+    <svg
+      className="sidebar-toggle__icon"
+      viewBox="0 0 24 24"
+      width="22"
+      height="22"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <rect
+        x="3"
+        y="3"
+        width="18"
+        height="18"
+        rx="4"
+        ry="4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+      />
+      <path
+        d="M7.5 9h9M7.5 12h9M7.5 15h9"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -12,7 +44,7 @@ export default function App() {
           aria-label="Open sidebar"
           onClick={() => setSidebarOpen(true)}
         >
-          Open
+          <MenuIcon />
         </button>
       )}
 
@@ -26,7 +58,7 @@ export default function App() {
           aria-label="Close sidebar"
           onClick={() => setSidebarOpen(false)}
         >
-          Open
+          <MenuIcon />
         </button>
       </aside>
     </div>
