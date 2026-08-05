@@ -16,9 +16,69 @@ body {
   min-height: 100vh;
   background: linear-gradient(160deg, #2a2a2a 0%, #1a1a1a 45%, #0f0f0f 100%);
   background-attachment: fixed;
+  font-family: Georgia, 'Times New Roman', serif;
+  color: #e8e8e8;
 }
 
 .page {
+  position: relative;
   min-height: 100vh;
   width: 100%;
+  overflow: hidden;
+}
+
+.sidebar-toggle {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f0f0f0;
+  font: inherit;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  padding: 0.55rem 1rem;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.sidebar-toggle:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.sidebar-toggle:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.55);
+  outline-offset: 2px;
+}
+
+.sidebar-toggle--open {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 20;
+}
+
+.sidebar-toggle--close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 2;
+}
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 20%;
+  height: 100%;
+  background: linear-gradient(180deg, #323232 0%, #1f1f1f 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  transform: translateX(-100%);
+  transition: transform 220ms ease;
+  z-index: 30;
+  pointer-events: none;
+}
+
+.sidebar--open {
+  transform: translateX(0);
+  pointer-events: auto;
 }
