@@ -75,8 +75,11 @@ body {
   position: fixed;
   top: 0;
   left: 0;
+  display: flex;
+  flex-direction: column;
   width: 20%;
   height: 100%;
+  padding: 4.5rem 1.25rem 1.5rem;
   background: linear-gradient(180deg, #323232 0%, #1f1f1f 100%);
   border-right: 1px solid rgba(255, 255, 255, 0.08);
   transform: translateX(-100%);
@@ -88,4 +91,42 @@ body {
 .sidebar--open {
   transform: translateX(0);
   pointer-events: auto;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.sidebar-nav__link {
+  display: block;
+  padding: 0.7rem 0.85rem;
+  border-radius: 0.45rem;
+  color: rgba(240, 240, 240, 0.78);
+  text-decoration: none;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.sidebar-nav__link:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.sidebar-nav__link--active {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.sidebar-nav__link:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.55);
+  outline-offset: 2px;
+}
+
+.page-content,
+.blank-page {
+  min-height: 100vh;
+  width: 100%;
 }

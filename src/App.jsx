@@ -1,4 +1,14 @@
 import { useState } from 'react';
+import { NavLink, Outlet } from 'react-router-dom';
+
+const NAV_ITEMS = [
+  { label: 'Home', to: '/' },
+  { label: 'Info', to: '/info' },
+  { label: 'Collection', to: '/collection' },
+  { label: 'The Dungeon', to: '/the-dungeon' },
+  { label: 'Official Links', to: '/official-links' },
+  { label: 'FAQs', to: '/faqs' },
+];
 
 function MenuIcon() {
   return (
@@ -60,7 +70,27 @@ export default function App() {
         >
           <MenuIcon />
         </button>
+
+        <nav className="sidebar-nav" aria-label="Main">
+          {NAV_ITEMS.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.to === '/'}
+              className={({ isActive }) =>
+                `sidebar-nav__link${isActive ? ' sidebar-nav__link--active' : ''}`
+              }
+              onClick={() => setSidebarOpen(false)}
+            >
+              {item.label}
+            </NavLink>
+          ))}
+        </nav>
       </aside>
+
+      <main className="page-content">
+        <Outlet />
+      </main>
     </div>
   );
 }
