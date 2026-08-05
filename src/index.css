@@ -226,8 +226,30 @@ body {
 }
 
 .dm-modal__body {
-  min-height: 6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
   margin-top: 1rem;
+}
+
+.dm-modal__avatar {
+  display: block;
+  width: min(100%, 14rem);
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  user-select: none;
+}
+
+.dm-modal__credit {
+  font-family: 'Pixelify Sans', monospace;
+  font-size: clamp(1rem, 2.8vw, 1.15rem);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-align: center;
+  color: rgba(245, 245, 245, 0.92);
 }
 
 .home-walker {

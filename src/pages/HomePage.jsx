@@ -119,7 +119,15 @@ export default function HomePage() {
               ×
             </button>
             <h2 className="dm-modal__title">Dungeon Master</h2>
-            <div className="dm-modal__body" />
+            <div className="dm-modal__body">
+              <img
+                className="dm-modal__avatar"
+                src="/dm-creator.png"
+                alt="Collection creator J00BA"
+                draggable="false"
+              />
+              <p className="dm-modal__credit">Collection Creator | J00BA</p>
+            </div>
           </div>
         </div>
       )}
