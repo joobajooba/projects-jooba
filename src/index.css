@@ -55,12 +55,20 @@ body {
   min-height: 100dvh;
   width: 100%;
   overflow: hidden;
+  background-color: #1a1214;
+  background-image: url('/home-background.png');
+  background-size: cover;
+  background-position: center bottom;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
 .home-walker {
   position: absolute;
   left: 0;
   bottom: max(1.25rem, env(safe-area-inset-bottom));
+  z-index: 2;
   width: clamp(72px, 14vw, 110px);
   height: clamp(72px, 14vw, 110px);
   pointer-events: none;
