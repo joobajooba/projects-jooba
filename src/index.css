@@ -64,18 +64,35 @@ body {
   image-rendering: crisp-edges;
 }
 
-.home-banner {
+.home-titles {
   position: absolute;
   top: max(1.1rem, env(safe-area-inset-top));
   left: 50%;
   transform: translateX(-50%);
   z-index: 3;
   width: min(88vw, 34rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  pointer-events: none;
+}
+
+.home-banner {
+  width: 100%;
   height: auto;
   display: block;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
-  pointer-events: none;
+  user-select: none;
+}
+
+.home-frame {
+  width: 100%;
+  height: auto;
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
   user-select: none;
 }
 
