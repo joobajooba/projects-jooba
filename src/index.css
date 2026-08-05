@@ -1,9 +1,24 @@
-﻿@import './styles/tokens.css';
-@import './styles/fonts.css';
-@import './styles/base.css';
-@import './styles/layout.css';
-@import './styles/components/sidebar.css';
-@import './styles/components/minting-platform-page.css';
-@import './styles/components/project-page.css';
-@import './styles/components/team-page.css';
-@import './styles/components/useful-links-page.css';
+﻿*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  min-height: 100vh;
+  background: linear-gradient(160deg, #2a2a2a 0%, #1a1a1a 45%, #0f0f0f 100%);
+  background-attachment: fixed;
+}
+
+.page {
+  min-height: 100vh;
+  width: 100%;
+}

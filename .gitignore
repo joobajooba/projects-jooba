@@ -4,9 +4,3 @@ dist
 .env.local
 *.log
 .vscode
-# root copies (served from public/)
-/_9419.fbx
-/9419.glb
-/Yuga_9419_heart.jpg
-/Yuga_9419_wordle.png
-/9419_Wordle.png
