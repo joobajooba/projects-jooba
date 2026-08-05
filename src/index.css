@@ -24,7 +24,108 @@ body {
   position: relative;
   min-height: 100vh;
   width: 100%;
-  overflow: hidden;
+}
+
+.page-content {
+  min-height: 100vh;
+  width: 100%;
+  overflow-y: auto;
+}
+
+.blank-page {
+  min-height: 100vh;
+  width: 100%;
+}
+
+.faqs-page {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 4.5rem 1.5rem 3rem;
+}
+
+.faqs-page__inner {
+  width: min(100%, 42rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.faqs-page__title {
+  font-size: clamp(1.75rem, 4vw, 2.4rem);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-align: center;
+  color: #f5f5f5;
+}
+
+.faqs-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.faq-item {
+  width: 100%;
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.35);
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.faq-item--open {
+  border-color: rgba(255, 255, 255, 0.38);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.faq-item__trigger {
+  appearance: none;
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.95rem 1.1rem;
+  border: 0;
+  background: transparent;
+  color: #f0f0f0;
+  font: inherit;
+  font-size: clamp(1rem, 2.4vw, 1.15rem);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-align: left;
+  cursor: pointer;
+}
+
+.faq-item__trigger:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.55);
+  outline-offset: -2px;
+}
+
+.faq-item__question {
+  flex: 1;
+}
+
+.faq-item__icon {
+  flex-shrink: 0;
+  width: 1.25rem;
+  text-align: center;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.faq-item__answer {
+  padding: 0 1.1rem 1.05rem;
+  color: rgba(232, 232, 232, 0.82);
+  font-size: clamp(0.95rem, 2.2vw, 1.05rem);
+  line-height: 1.55;
+  letter-spacing: 0.01em;
 }
 
 .sidebar-toggle {
