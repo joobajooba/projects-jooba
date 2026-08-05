@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 const SLIDE_MS = 3500;
+const SHOW_SLIDESHOW = false;
 
 export default function HomePage() {
   const [dmOpen, setDmOpen] = useState(false);
@@ -19,6 +20,8 @@ export default function HomePage() {
   }, [dmOpen]);
 
   useEffect(() => {
+    if (!SHOW_SLIDESHOW) return undefined;
+
     let cancelled = false;
 
     fetch('/slideshow/manifest.json')
@@ -42,7 +45,7 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    if (slides.length < 2) return undefined;
+    if (!SHOW_SLIDESHOW || slides.length < 2) return undefined;
 
     const id = window.setInterval(() => {
       setSlideIndex((current) => (current + 1) % slides.length);
@@ -79,7 +82,7 @@ export default function HomePage() {
           </a>
         </div>
 
-        {slides.length > 0 && (
+        {SHOW_SLIDESHOW && slides.length > 0 && (
           <div className="home-slideshow" aria-label="IMPLINGZ preview">
             {slides.map((src, index) => (
               <img

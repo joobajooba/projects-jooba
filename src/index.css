@@ -49,6 +49,25 @@ body {
   width: 100%;
 }
 
+.coming-soon-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4.5rem 1.5rem 3rem;
+}
+
+.coming-soon-page__title {
+  font-family: 'Pixelify Sans', monospace;
+  font-size: clamp(1.8rem, 6vw, 3rem);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-align: center;
+  color: #f5f5f5;
+}
+
 .home-page {
   position: relative;
   min-height: 100vh;
