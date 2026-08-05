@@ -16,7 +16,7 @@ body {
   min-height: 100vh;
   background: linear-gradient(160deg, #2a2a2a 0%, #1a1a1a 45%, #0f0f0f 100%);
   background-attachment: fixed;
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: 'Pixelify Sans', monospace;
   color: #e8e8e8;
 }
 
