@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 
+const SLIDE_MS = 3500;
+
 export default function HomePage() {
   const [dmOpen, setDmOpen] = useState(false);
+  const [slides, setSlides] = useState([]);
+  const [slideIndex, setSlideIndex] = useState(0);
 
   useEffect(() => {
     if (!dmOpen) return undefined;
@@ -13,6 +17,39 @@ export default function HomePage() {
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [dmOpen]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch('/slideshow/manifest.json')
+      .then((response) => {
+        if (!response.ok) throw new Error('Failed to load slideshow');
+        return response.json();
+      })
+      .then((data) => {
+        if (cancelled) return;
+        const images = Array.isArray(data.images) ? data.images : [];
+        setSlides(images);
+        setSlideIndex(0);
+      })
+      .catch(() => {
+        if (!cancelled) setSlides([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (slides.length < 2) return undefined;
+
+    const id = window.setInterval(() => {
+      setSlideIndex((current) => (current + 1) % slides.length);
+    }, SLIDE_MS);
+
+    return () => window.clearInterval(id);
+  }, [slides]);
 
   return (
     <div className="home-page">
@@ -41,6 +78,22 @@ export default function HomePage() {
             Mint
           </a>
         </div>
+
+        {slides.length > 0 && (
+          <div className="home-slideshow" aria-label="IMPLINGZ preview">
+            {slides.map((src, index) => (
+              <img
+                key={src}
+                className={`home-slideshow__image${
+                  index === slideIndex ? ' home-slideshow__image--active' : ''
+                }`}
+                src={src}
+                alt=""
+                draggable="false"
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {dmOpen && (
