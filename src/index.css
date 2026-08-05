@@ -64,6 +64,21 @@ body {
   image-rendering: crisp-edges;
 }
 
+.home-banner {
+  position: absolute;
+  top: max(1.1rem, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  width: min(88vw, 34rem);
+  height: auto;
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  pointer-events: none;
+  user-select: none;
+}
+
 .home-walker {
   position: absolute;
   left: 0;
