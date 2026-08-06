@@ -33,7 +33,7 @@ const FAQS = [
   {
     question: 'Will there be royalties?',
     answer:
-      'Yes. Marketplace royalties help support the continued development of the IMPLINGz ecosystem and future updates.',
+      'Yes there will be royalties for holders coming soon!',
   },
   {
     question: 'Why should I own an IMPLING?',
