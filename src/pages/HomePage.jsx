@@ -5,19 +5,23 @@ const SHOW_SLIDESHOW = false;
 
 export default function HomePage() {
   const [dmOpen, setDmOpen] = useState(false);
+  const [mintClosedOpen, setMintClosedOpen] = useState(false);
   const [slides, setSlides] = useState([]);
   const [slideIndex, setSlideIndex] = useState(0);
 
   useEffect(() => {
-    if (!dmOpen) return undefined;
+    if (!dmOpen && !mintClosedOpen) return undefined;
 
     const onKeyDown = (event) => {
-      if (event.key === 'Escape') setDmOpen(false);
+      if (event.key === 'Escape') {
+        setDmOpen(false);
+        setMintClosedOpen(false);
+      }
     };
 
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [dmOpen]);
+  }, [dmOpen, mintClosedOpen]);
 
   useEffect(() => {
     if (!SHOW_SLIDESHOW) return undefined;
@@ -72,14 +76,13 @@ export default function HomePage() {
           >
             Dungeon Master
           </button>
-          <a
+          <button
+            type="button"
             className="home-action"
-            href="https://opensea.io/collection/implingz/overview"
-            target="_blank"
-            rel="noopener noreferrer"
+            onClick={() => setMintClosedOpen(true)}
           >
             Mint
-          </a>
+          </button>
         </div>
 
         {SHOW_SLIDESHOW && slides.length > 0 && (
@@ -130,6 +133,38 @@ export default function HomePage() {
                 draggable="false"
               />
               <p className="dm-modal__credit">Collection Creator | J00BA</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {mintClosedOpen && (
+        <div
+          className="dm-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Mint Status"
+        >
+          <button
+            type="button"
+            className="dm-modal__backdrop"
+            aria-label="Close"
+            onClick={() => setMintClosedOpen(false)}
+          />
+          <div className="dm-modal__panel">
+            <button
+              type="button"
+              className="dm-modal__close"
+              aria-label="Close popup"
+              onClick={() => setMintClosedOpen(false)}
+            >
+              ×
+            </button>
+            <h2 className="dm-modal__title">Mint Status</h2>
+            <div className="dm-modal__body">
+              <p className="dm-modal__credit" style={{ marginTop: '1rem', lineHeight: '1.6' }}>
+                Mint is now closed. Thank you everyone who participated.
+              </p>
             </div>
           </div>
         </div>
