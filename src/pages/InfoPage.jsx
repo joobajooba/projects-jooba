@@ -28,39 +28,68 @@ const INTRO_CONTENT = (
 const ROADMAP_ITEMS = [
   {
     title: 'Implingz Selection',
-    body:
-      'Choose the Impling you want at your side. Each holder picks their Implingz before stepping into a D&D-style adventure built around IMPLINGz as your guides.',
+    paragraphs: [
+      'Holders will be able to choose which Impling they want to take with them on their adventure. Adventures will be hosted directly on this webpage.',
+      'By connecting your wallet to the adventure site, you will be able to view the Impling NFTs held in your wallet and select one to accompany you. Your chosen Impling will become your guide as you progress through the adventure. A Rabby or MetaMask wallet is recommended for connecting to the adventure.',
+    ],
     image: '/roadmap/roadmap-imp.png',
     imageAlt: 'An Impling wearing 3D glasses and a flaming cap',
   },
   {
     title: 'Start Your Adventure',
-    body:
-      'Your Implingz are searching for the dungeons they lost along the way. Explore the wilds with them, track down hidden keeps, and push to claim what was lost.',
+    paragraphs: [
+      'Your Implingz are searching for the dungeons they lost along the way. Explore the wilds with them, track down hidden keeps, and push to claim what was lost through some mining tech inspired by UncleMac which was used on Mineboys. Hash mining is a process of searching for a specific matching hash. You use your IMPLINGZ to go adventuring and generate hashes using a changing number called a nonce. Each hash is checked until a matching hash is found. Your IMPLINGZ tier determines the speed at which hashes are generated, giving higher-tier IMPLINGZ a faster hash rate. When a winning hash is found, the smart contract verifies it, allowing you to use $DERP as gas to claim or acquire whatever reward has been discovered, such as NFTs or other in-game assets.',
+    ],
     image: '/roadmap/roadmap-map.png',
     imageAlt: 'A pixel art treasure map scroll',
   },
   {
     title: 'Events',
-    body:
-      'Face random encounters, trials, and surprises as you go deeper. Overcome each challenge to secure ground, and discover the dungeons piece by piece..',
+    paragraphs: [
+      'Face random encounters, trials, and surprises as you venture deeper into the dungeon. Every decision could change the course of your adventure, so pay attention and be prepared for whatever stands in your path.',
+      'As your adventure progresses, you may encounter different events and challenges. While the hash mining process is taking place, prompts may appear on screen, giving you decisions to make before continuing your journey. Choose carefully, overcome the challenges in front of you, and see how far you and your Impling can go. Will you become the 1 Adventurer among the Implingz?',
+    ],
     image: '/roadmap/roadmap-d20.gif',
     imageAlt: 'An animated pixel art D20 die spinning',
   },
   {
     title: 'Claimed Dungeons',
-    body:
-      'The keep is yours and the dungeon shall be claimed. You and your Impling earned it, you made them proud.',
+    paragraphs: [
+      'The keep is yours, and the dungeon shall be claimed. You and your Impling faced the adventure together, overcame the challenges, and made them proud.',
+    ],
+    extended: {
+      title: 'Extended Version',
+      paragraphs: [
+        'Make it to the end of your adventure and the dungeon will be yours to claim.',
+        'You and your chosen Impling have faced the dangers, overcome the challenges, and earned your place within the dungeon. What happens after you claim it, and what your dungeon can become, will be revealed at a later date. Your adventure is only the beginning.',
+      ],
+    },
     image: '/roadmap/roadmap-dungeon.png',
     imageAlt: 'A pixel art dungeon with mossy stone platforms',
     imageWide: true,
   },
 ];
 
-function RoadmapItemContent({ body, image, imageAlt, imageWide = false }) {
+function RoadmapItemContent({ paragraphs, extended, image, imageAlt, imageWide = false }) {
   return (
     <div className="info-roadmap-item">
-      <p className="info-roadmap-item__body">{body}</p>
+      <div className="info-roadmap-item__copy">
+        {paragraphs.map((paragraph) => (
+          <p key={paragraph} className="info-roadmap-item__body">
+            {paragraph}
+          </p>
+        ))}
+        {extended && (
+          <div className="info-roadmap-item__extended">
+            <h4 className="info-roadmap-item__extended-title">{extended.title}</h4>
+            {extended.paragraphs.map((paragraph) => (
+              <p key={paragraph} className="info-roadmap-item__body">
+                {paragraph}
+              </p>
+            ))}
+          </div>
+        )}
+      </div>
       {image && (
         <div className="info-roadmap-item__media">
           <img
@@ -83,7 +112,8 @@ function RoadmapContent() {
           title={item.title}
           content={
             <RoadmapItemContent
-              body={item.body}
+              paragraphs={item.paragraphs}
+              extended={item.extended}
               image={item.image}
               imageAlt={item.imageAlt}
               imageWide={item.imageWide}

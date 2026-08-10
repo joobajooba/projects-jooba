@@ -735,6 +735,27 @@ body {
   gap: 0.85rem;
 }
 
+.info-roadmap-item__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.info-roadmap-item__extended {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-top: 0.25rem;
+}
+
+.info-roadmap-item__extended-title {
+  margin: 0;
+  font-size: clamp(0.98rem, 2.5vw, 1.08rem);
+  font-weight: 700;
+  color: #f5f5f5;
+  letter-spacing: 0.02em;
+}
+
 .info-roadmap-item__media {
   display: flex;
   justify-content: center;
