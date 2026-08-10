@@ -61,8 +61,8 @@ const ROADMAP_ITEMS = [
       'Holders will be able to choose which Impling they want to take with them on their adventure. Adventures will be hosted directly on this webpage.',
       'By connecting your wallet to the adventure site, you will be able to view the Impling NFTs held in your wallet and select one to accompany you. Your chosen Impling will become your guide as you progress through the adventure. A Rabby or MetaMask wallet is recommended for connecting to the adventure.',
     ],
-    image: '/roadmap/roadmap-imp.png',
-    imageAlt: 'An Impling wearing 3D glasses and a flaming cap',
+    image: '/roadmap/roadmap-imp.gif',
+    imageAlt: 'An animated pixel art Impling walking',
   },
   {
     title: 'Start Your Adventure',
