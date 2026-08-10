@@ -29,28 +29,28 @@ const ROADMAP_ITEMS = [
   {
     title: 'Implingz Selection',
     body:
-      'Choose the Impling you want at your side. Each holder picks their champion before stepping into a D&D-style adventure built around your IMPLINGz.',
+      'Choose the Impling you want at your side. Each holder picks their Implingz before stepping into a D&D-style adventure built around IMPLINGz as your guides.',
     image: '/roadmap/roadmap-imp.png',
     imageAlt: 'An Impling wearing 3D glasses and a flaming cap',
   },
   {
     title: 'Start Your Adventure',
     body:
-      'Your Implingz are searching for the dungeons they lost along the way. Explore the wilds with them, track down hidden keeps, and push to claim what was taken.',
+      'Your Implingz are searching for the dungeons they lost along the way. Explore the wilds with them, track down hidden keeps, and push to claim what was lost.',
     image: '/roadmap/roadmap-map.png',
     imageAlt: 'A pixel art treasure map scroll',
   },
   {
     title: 'Events',
     body:
-      'Face random encounters, trials, and surprises as you go deeper. Overcome each challenge to secure ground—and win back the dungeons piece by piece.',
-    image: '/roadmap/roadmap-d20.png',
-    imageAlt: 'A pixel art D20 die',
+      'Face random encounters, trials, and surprises as you go deeper. Overcome each challenge to secure ground, and discover the dungeons piece by piece..',
+    image: '/roadmap/roadmap-d20.gif',
+    imageAlt: 'An animated pixel art D20 die spinning',
   },
   {
     title: 'Claimed Dungeons',
     body:
-      'The keep is yours and the dungeons are back where they belong. Your Impling earned it—and you made them proud.',
+      'The keep is yours and the dungeon shall be claimed. You and your Impling earned it, you made them proud.',
     image: '/roadmap/roadmap-dungeon.png',
     imageAlt: 'A pixel art dungeon with mossy stone platforms',
     imageWide: true,
