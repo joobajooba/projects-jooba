@@ -51,16 +51,23 @@ const ROADMAP_ITEMS = [
     title: 'Claimed Dungeons',
     body:
       'The keep is yours and the dungeons are back where they belong. Your Impling earned it—and you made them proud.',
+    image: '/roadmap/roadmap-dungeon.png',
+    imageAlt: 'A pixel art dungeon with mossy stone platforms',
+    imageWide: true,
   },
 ];
 
-function RoadmapItemContent({ body, image, imageAlt }) {
+function RoadmapItemContent({ body, image, imageAlt, imageWide = false }) {
   return (
     <div className="info-roadmap-item">
       <p className="info-roadmap-item__body">{body}</p>
       {image && (
         <div className="info-roadmap-item__media">
-          <img className="info-roadmap-item__image" src={image} alt={imageAlt} />
+          <img
+            className={`info-roadmap-item__image${imageWide ? ' info-roadmap-item__image--wide' : ''}`}
+            src={image}
+            alt={imageAlt}
+          />
         </div>
       )}
     </div>
@@ -79,6 +86,7 @@ function RoadmapContent() {
               body={item.body}
               image={item.image}
               imageAlt={item.imageAlt}
+              imageWide={item.imageWide}
             />
           }
           nested

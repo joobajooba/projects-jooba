@@ -752,6 +752,10 @@ body {
   image-rendering: crisp-edges;
 }
 
+.info-roadmap-item__image--wide {
+  width: min(100%, 14rem);
+}
+
 .info-roadmap-item__body {
   margin: 0;
   color: rgba(232, 232, 232, 0.82);
