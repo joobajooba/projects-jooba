@@ -74,7 +74,7 @@ export default function HomePage() {
             className="home-action"
             onClick={() => setDmOpen(true)}
           >
-            Dungeon Master
+            The Team
           </button>
           <button
             type="button"
@@ -107,7 +107,7 @@ export default function HomePage() {
           className="dm-modal"
           role="dialog"
           aria-modal="true"
-          aria-label="Dungeon Master"
+          aria-label="The Team"
         >
           <button
             type="button"
@@ -115,7 +115,7 @@ export default function HomePage() {
             aria-label="Close"
             onClick={() => setDmOpen(false)}
           />
-          <div className="dm-modal__panel">
+          <div className="dm-modal__panel dm-modal__panel--team">
             <button
               type="button"
               className="dm-modal__close"
@@ -124,15 +124,26 @@ export default function HomePage() {
             >
               ×
             </button>
-            <h2 className="dm-modal__title">Dungeon Master</h2>
-            <div className="dm-modal__body">
-              <img
-                className="dm-modal__avatar"
-                src="/dm-creator.png"
-                alt="Collection creator J00BA"
-                draggable="false"
-              />
-              <p className="dm-modal__credit">Collection Creator | J00BA</p>
+            <h2 className="dm-modal__title">The Team</h2>
+            <div className="dm-modal__body dm-modal__body--team">
+              <div className="dm-modal__member">
+                <img
+                  className="dm-modal__avatar"
+                  src="/dm-creator.png"
+                  alt="Collection creator J00BA"
+                  draggable="false"
+                />
+                <p className="dm-modal__credit">Collection Creator | J00BA</p>
+              </div>
+              <div className="dm-modal__member">
+                <img
+                  className="dm-modal__avatar"
+                  src="/team-jonnyd.png"
+                  alt="Community manager jonnyd"
+                  draggable="false"
+                />
+                <p className="dm-modal__credit">Community Manager | jonnyd</p>
+              </div>
             </div>
           </div>
         </div>

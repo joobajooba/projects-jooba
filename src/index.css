@@ -210,6 +210,10 @@ body {
   box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.5);
 }
 
+.dm-modal__panel--team {
+  width: min(100%, 36rem);
+}
+
 .dm-modal__close {
   appearance: none;
   position: absolute;
@@ -252,6 +256,23 @@ body {
   margin-top: 1rem;
 }
 
+.dm-modal__body--team {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 1.25rem 1.5rem;
+}
+
+.dm-modal__member {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1 1 10rem;
+  max-width: 14rem;
+}
+
 .dm-modal__avatar {
   display: block;
   width: min(100%, 14rem);
@@ -259,6 +280,8 @@ body {
   object-fit: cover;
   border-radius: 1rem;
   border: 2px solid rgba(255, 255, 255, 0.18);
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
   user-select: none;
 }
 
