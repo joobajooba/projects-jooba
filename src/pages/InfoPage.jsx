@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const HIGHLIGHT_PATTERN = /(\$DERP|\bIMPLINGZ?\b)/gi;
+const HIGHLIGHT_PATTERN = /(\$DERP|\bIMPLINGZ?\b|\bFREE\b)/gi;
 
 function highlightText(text) {
   return text.split(HIGHLIGHT_PATTERN).map((part, index) => {
@@ -8,6 +8,13 @@ function highlightText(text) {
     if (/^\$DERP$/i.test(part)) {
       return (
         <span key={`${part}-${index}`} className="info-highlight info-highlight--derp">
+          {part}
+        </span>
+      );
+    }
+    if (/^FREE$/i.test(part)) {
+      return (
+        <span key={`${part}-${index}`} className="info-highlight info-highlight--free">
           {part}
         </span>
       );
@@ -38,7 +45,7 @@ const INTRO_CONTENT = (
       <h3 className="info-content-title">The Plans</h3>
       <p className="info-content-body">
         {highlightText(
-          'IMPLINGz is more than just a collection of artwork. Each NFT will soon unlock functionality on this website, allowing holders to make use of their IMPLINGz in new ways as the project evolves. My goal is to continue expanding the collection and webpage with engaging on-chain features while creating additional value for holders, including community-focused royalty initiatives.'
+          'IMPLINGz is more than just a collection of artwork. Each NFT will soon unlock functionality on this website, allowing holders to make use of their IMPLINGz in new ways as the project evolves. My goal is to continue expanding the collection and webpage with engaging on-chain features while creating additional value for holders, including community-focused royalty initiatives. Anything Impling related and the functionality to come will be FREE, I will never charge to use my tools, all that is required is gas fees.'
         )}
       </p>
     </div>

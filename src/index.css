@@ -793,6 +793,10 @@ body {
   color: #b8ff2e;
 }
 
+.info-highlight--free {
+  color: #89d8ff;
+}
+
 /* Collection Page Styles */
 .collection-page {
   display: flex;
