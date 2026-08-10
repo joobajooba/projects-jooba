@@ -5,8 +5,7 @@ const TRAIT_CATEGORIES = ['Background', 'Body', 'Head', 'Back', 'Clothing', 'Eye
 
 export default function CollectionPage() {
   const [genSearch, setGenSearch] = useState('');
-  const [raritySearch, setRaritySearch] = useState('');
-  
+
   // Keep track of which traits are selected: { "Background": ["Obsidian", "Blue"], "Body": ["Red"] }
   const [selectedTraits, setSelectedTraits] = useState({});
   // Keep track of which trait accordion is open
@@ -69,21 +68,12 @@ export default function CollectionPage() {
   // Filter the items based on search and selected traits
   const filteredItems = useMemo(() => {
     return collectionData.filter((item) => {
-      // 1. Generation Number Search (Assuming Generation maps to token ID or is part of name)
+      // Generation Number Search (maps to token ID)
       if (genSearch && !item.id.toString().includes(genSearch)) {
         return false;
       }
 
-      // 2. Rarity Number Search (Assuming Rarity maps to Tier number)
-      if (raritySearch) {
-        const tierString = item.attributes['Tier'] || '';
-        // E.g., if tierString is "Tier 1", checking if it includes the rarity search
-        if (!tierString.includes(raritySearch)) {
-          return false;
-        }
-      }
-
-      // 3. Trait Checkboxes
+      // Trait Checkboxes
       for (const cat of TRAIT_CATEGORIES) {
         const selectedInCat = selectedTraits[cat];
         if (selectedInCat && selectedInCat.length > 0) {
@@ -95,7 +85,7 @@ export default function CollectionPage() {
 
       return true;
     });
-  }, [genSearch, raritySearch, selectedTraits]);
+  }, [genSearch, selectedTraits]);
 
   return (
     <div className="collection-page">
@@ -113,20 +103,6 @@ export default function CollectionPage() {
             placeholder="e.g. 1"
             value={genSearch}
             onChange={(e) => setGenSearch(e.target.value)}
-          />
-        </div>
-
-        <div className="collection-filter-group">
-          <label className="collection-filter-label" htmlFor="rarity-search">
-            Rarity Number
-          </label>
-          <input
-            id="rarity-search"
-            className="collection-filter-input"
-            type="number"
-            placeholder="e.g. 1"
-            value={raritySearch}
-            onChange={(e) => setRaritySearch(e.target.value)}
           />
         </div>
 
