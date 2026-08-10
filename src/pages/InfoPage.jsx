@@ -25,38 +25,43 @@ const INTRO_CONTENT = (
   </div>
 );
 
-const ROADMAP_CONTENT = (
-  <div className="info-content-wrapper">
-    <div className="info-content-section">
-      <h3 className="info-content-title">01 | IMPLINGz Mint</h3>
-      <p className="info-content-body">
-        The adventure begins.
-        <br /><br />
-        IMPLINGz launched with a free mint on OpenSea on 07/08/2026. The first step of the journey is complete. The Implingz have found their adventurers — now it’s time to discover where they’ll lead them.
-      </p>
-    </div>
+const ROADMAP_ITEMS = [
+  {
+    title: 'Implingz Selection',
+    body:
+      'Choose the Impling you want at your side. Each holder picks their champion before stepping into a D&D-style adventure built around your IMPLINGz.',
+  },
+  {
+    title: 'Start Your Adventure',
+    body:
+      'Your Implingz are searching for the dungeons they lost along the way. Explore the wilds with them, track down hidden keeps, and push to claim what was taken.',
+  },
+  {
+    title: 'Events',
+    body:
+      'Face random encounters, trials, and surprises as you go deeper. Overcome each challenge to secure ground—and win back the dungeons piece by piece.',
+  },
+  {
+    title: 'Claimed Dungeons',
+    body:
+      'The keep is yours and the dungeons are back where they belong. Your Impling earned it—and you made them proud.',
+  },
+];
 
-    <div className="info-content-section">
-      <h3 className="info-content-title">02 | Starting the Adventure</h3>
-      <p className="info-content-body">
-        Your Impling is your guide.
-        <br /><br />
-        The next chapter introduces a tool that lets holders take their IMPLINGz on adventures. Choose your path, explore the unknown and see what you can uncover along the way. Inspired by classic D&D campaigns, every journey has the potential for something unexpected. Who knows what you’ll find...?
-      </p>
+function RoadmapContent() {
+  return (
+    <div className="info-roadmap-list">
+      {ROADMAP_ITEMS.map((item) => (
+        <InfoBox
+          key={item.title}
+          title={item.title}
+          content={<p className="info-roadmap-item__body">{item.body}</p>}
+          nested
+        />
+      ))}
     </div>
-
-    <div className="info-content-section">
-      <h3 className="info-content-title">03 | The Dungeon</h3>
-      <p className="info-content-body">
-        So... you think you've got what it takes?
-        <br /><br />
-        The adventure goes deeper.
-        <br /><br />
-        We'll see.
-      </p>
-    </div>
-  </div>
-);
+  );
+}
 
 const BOXES = [
   {
@@ -65,15 +70,15 @@ const BOXES = [
   },
   {
     title: 'Roadmap',
-    content: ROADMAP_CONTENT,
+    content: <RoadmapContent />,
   },
 ];
 
-function InfoBox({ title, content }) {
+function InfoBox({ title, content, nested = false }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className={`faq-item${open ? ' faq-item--open' : ''}`}>
+    <div className={`faq-item${open ? ' faq-item--open' : ''}${nested ? ' faq-item--nested' : ''}`}>
       <button
         type="button"
         className="faq-item__trigger"
