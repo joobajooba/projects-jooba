@@ -86,15 +86,9 @@ const ROADMAP_ITEMS = [
   {
     title: 'Claimed Dungeons',
     paragraphs: [
-      'The keep is yours, and the dungeon shall be claimed. You and your Impling faced the adventure together, overcame the challenges, and made them proud.',
+      'The keep is yours, and the dungeon shall be claimed. You and your Impling faced the adventure together, overcame the challenges, and made them proud. Make it to the end of your adventure and the dungeon will be yours to claim using $DERP.',
+      'You and your chosen Impling have faced the dangers, overcome the challenges, and earned your place within the dungeon. What happens after you claim it, and what your dungeon can become, will be revealed at a later date. Your adventure is only the beginning and the rewards to come!',
     ],
-    extended: {
-      title: 'Extended Version',
-      paragraphs: [
-        'Make it to the end of your adventure and the dungeon will be yours to claim.',
-        'You and your chosen Impling have faced the dangers, overcome the challenges, and earned your place within the dungeon. What happens after you claim it, and what your dungeon can become, will be revealed at a later date. Your adventure is only the beginning.',
-      ],
-    },
     image: '/roadmap/roadmap-dungeon.png',
     imageAlt: 'A pixel art dungeon with mossy stone platforms',
     imageWide: true,
