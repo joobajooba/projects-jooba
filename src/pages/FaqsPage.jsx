@@ -2,9 +2,8 @@ import { useState } from 'react';
 
 const FAQS = [
   {
-    question: 'Where will IMPLINGz mint?',
-    answer:
-      'IMPLINGz will mint exclusively on OpenSea. The mint goes live on 7 August 2026 at 9:25 PM (GMT+1).',
+    question: 'Where were Implingz minted?',
+    answer: 'They were minted on Opensea as a Free mint on 7 August 2026.',
   },
   {
     question: 'Which blockchain are IMPLINGz on?',
@@ -12,14 +11,8 @@ const FAQS = [
       'IMPLINGz are fully on-chain NFTs built on the Robinhood Chain.',
   },
   {
-    question: 'Who can mint IMPLINGz?',
-    answer:
-      'The mint begins with a Pitboy holder whitelist, followed by a public sale. Each wallet can mint up to 10 IMPLINGz.',
-  },
-  {
     question: 'How much does it cost to mint?',
-    answer:
-      'Free mint. Minters only pay the required network transaction (gas) fees.',
+    answer: 'Mints will always be free, only gas is required.',
   },
   {
     question: 'How many IMPLINGz are there?',
@@ -39,11 +32,6 @@ const FAQS = [
     question: 'Why should I own an IMPLING?',
     answer:
       "IMPLINGz are more than collectibles, they're designed to be your guides, with future utility, community-focused experiences, and an expanding on-chain ecosystem.",
-  },
-  {
-    question: 'Is there a whitelist?',
-    answer:
-      'Yes. The first phase of the mint is reserved for eligible Pitboy holders before the collection opens to the public.',
   },
   {
     question: 'Where can I stay updated?',
