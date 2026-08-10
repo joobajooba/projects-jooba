@@ -142,7 +142,7 @@ function RoadmapContent() {
           key={item.title}
           title={
             <>
-              <strong>Stage {index + 1}</strong> {item.title}
+              <strong>Stage {index + 1}</strong> | {item.title}
             </>
           }
           content={
