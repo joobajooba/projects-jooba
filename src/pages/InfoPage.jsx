@@ -38,7 +38,9 @@ const ROADMAP_ITEMS = [
   {
     title: 'Start Your Adventure',
     paragraphs: [
-      'Your Implingz are searching for the dungeons they lost along the way. Explore the wilds with them, track down hidden keeps, and push to claim what was lost through some mining tech inspired by UncleMac which was used on Mineboys. Hash mining is a process of searching for a specific matching hash. You use your IMPLINGZ to go adventuring and generate hashes using a changing number called a nonce. Each hash is checked until a matching hash is found. Your IMPLINGZ tier determines the speed at which hashes are generated, giving higher-tier IMPLINGZ a faster hash rate. When a winning hash is found, the smart contract verifies it, allowing you to use $DERP as gas to claim or acquire whatever reward has been discovered, such as NFTs or other in-game assets.',
+      'Your Implingz are searching for the dungeons they lost along the way. Explore the wilds with them, track down hidden keeps, and push to claim what was lost through some mining tech inspired by UncleMac which was used on Mineboys.',
+      'Hash mining is a process of searching for a specific matching hash. You use your IMPLINGZ to go adventuring and generate hashes using a changing number called a nonce. Each hash is checked until a matching hash is found. Your IMPLINGZ tier determines the speed at which hashes are generated, giving higher-tier IMPLINGZ a faster hash rate.',
+      'When a winning hash is found, the smart contract verifies it, allowing you to use $DERP as gas to claim or acquire whatever reward has been discovered, such as NFTs or other in-game assets.',
     ],
     image: '/roadmap/roadmap-map.png',
     imageAlt: 'A pixel art treasure map scroll',
