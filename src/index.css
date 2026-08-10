@@ -729,6 +729,29 @@ body {
   padding-bottom: clamp(0.7rem, 2vw, 0.8rem);
 }
 
+.info-roadmap-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.info-roadmap-item__media {
+  display: flex;
+  justify-content: center;
+  padding-top: 0.15rem;
+}
+
+.info-roadmap-item__image {
+  display: block;
+  width: min(100%, 7.5rem);
+  height: auto;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-radius: 2px;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.35);
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
 .info-roadmap-item__body {
   margin: 0;
   color: rgba(232, 232, 232, 0.82);

@@ -30,16 +30,22 @@ const ROADMAP_ITEMS = [
     title: 'Implingz Selection',
     body:
       'Choose the Impling you want at your side. Each holder picks their champion before stepping into a D&D-style adventure built around your IMPLINGz.',
+    image: '/roadmap/roadmap-imp.png',
+    imageAlt: 'An Impling wearing 3D glasses and a flaming cap',
   },
   {
     title: 'Start Your Adventure',
     body:
       'Your Implingz are searching for the dungeons they lost along the way. Explore the wilds with them, track down hidden keeps, and push to claim what was taken.',
+    image: '/roadmap/roadmap-map.png',
+    imageAlt: 'A pixel art treasure map scroll',
   },
   {
     title: 'Events',
     body:
       'Face random encounters, trials, and surprises as you go deeper. Overcome each challenge to secure ground—and win back the dungeons piece by piece.',
+    image: '/roadmap/roadmap-d20.png',
+    imageAlt: 'A pixel art D20 die',
   },
   {
     title: 'Claimed Dungeons',
@@ -48,6 +54,19 @@ const ROADMAP_ITEMS = [
   },
 ];
 
+function RoadmapItemContent({ body, image, imageAlt }) {
+  return (
+    <div className="info-roadmap-item">
+      <p className="info-roadmap-item__body">{body}</p>
+      {image && (
+        <div className="info-roadmap-item__media">
+          <img className="info-roadmap-item__image" src={image} alt={imageAlt} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 function RoadmapContent() {
   return (
     <div className="info-roadmap-list">
@@ -55,7 +74,13 @@ function RoadmapContent() {
         <InfoBox
           key={item.title}
           title={item.title}
-          content={<p className="info-roadmap-item__body">{item.body}</p>}
+          content={
+            <RoadmapItemContent
+              body={item.body}
+              image={item.image}
+              imageAlt={item.imageAlt}
+            />
+          }
           nested
         />
       ))}
