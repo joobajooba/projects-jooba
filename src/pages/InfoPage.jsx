@@ -137,10 +137,14 @@ function RoadmapItemContent({ paragraphs, extended, image, imageAlt, imageWide =
 function RoadmapContent() {
   return (
     <div className="info-roadmap-list">
-      {ROADMAP_ITEMS.map((item) => (
+      {ROADMAP_ITEMS.map((item, index) => (
         <InfoBox
           key={item.title}
-          title={item.title}
+          title={
+            <>
+              <strong>Stage {index + 1}</strong> {item.title}
+            </>
+          }
           content={
             <RoadmapItemContent
               paragraphs={item.paragraphs}
