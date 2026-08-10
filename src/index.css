@@ -785,6 +785,14 @@ body {
   letter-spacing: 0.01em;
 }
 
+.info-highlight--impling {
+  color: #ff8a8a;
+}
+
+.info-highlight--derp {
+  color: #b8ff2e;
+}
+
 /* Collection Page Styles */
 .collection-page {
   display: flex;
