@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useOutletContext } from 'react-router-dom';
 
 const HIGHLIGHT_PATTERN = /(\$DERP|\bImp\b|\b4444\b|\bfree\b)/gi;
 
@@ -169,6 +170,11 @@ function FlowMap() {
 }
 
 function StartAdventurePanel() {
+  const { walletAccount, walletName } = useOutletContext();
+  const connectedAddress = walletAccount
+    ? `${walletAccount.slice(0, 6)}…${walletAccount.slice(-4)}`
+    : '';
+
   return (
     <section className="adventure-panel" aria-labelledby="start-adventure-title">
       <div className="adventure-party">
@@ -181,7 +187,9 @@ function StartAdventurePanel() {
         </div>
 
         <p className="adventure-party__help">
-          Connect your wallet, then choose up to three Impz to join the adventure.
+          {walletAccount
+            ? 'Choose up to three Impz from your connected wallet to join the adventure.'
+            : 'Use the wallet icon in the top-right, then choose up to three Impz to join the adventure.'}
         </p>
 
         <div className="adventure-party__slots" aria-label="Selected Impz">
@@ -191,6 +199,7 @@ function StartAdventurePanel() {
               type="button"
               className="adventure-party__slot"
               aria-label={`Select an Imp for slot ${slot}`}
+              disabled={!walletAccount}
             >
               <span className="adventure-party__slot-plus" aria-hidden="true">
                 +
@@ -200,9 +209,13 @@ function StartAdventurePanel() {
           ))}
         </div>
 
-        <button type="button" className="adventure-party__wallet-button">
-          Connect wallet
-        </button>
+        <div
+          className={`adventure-party__wallet-status${
+            walletAccount ? ' adventure-party__wallet-status--connected' : ''
+          }`}
+        >
+          {walletAccount ? `${walletName}: ${connectedAddress}` : 'Wallet not connected'}
+        </div>
       </div>
 
       <div className="adventure-chat">

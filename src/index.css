@@ -465,6 +465,163 @@ body {
   z-index: 20;
 }
 
+.wallet-connect {
+  position: fixed;
+  top: max(0.85rem, env(safe-area-inset-top));
+  right: max(0.85rem, env(safe-area-inset-right));
+  z-index: 25;
+}
+
+.wallet-connect__trigger {
+  appearance: none;
+  min-width: 2.75rem;
+  height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 0 0.65rem;
+  border: 2px solid rgba(255, 255, 255, 0.28);
+  border-radius: 2px;
+  background: rgba(30, 30, 30, 0.9);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.4);
+  color: #f0f0f0;
+  font: inherit;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.wallet-connect__trigger:hover {
+  border-color: rgba(184, 255, 46, 0.48);
+  background: rgba(48, 48, 48, 0.96);
+  color: #fff;
+}
+
+.wallet-connect__trigger--connected {
+  border-color: rgba(184, 255, 46, 0.5);
+  color: #d9ff91;
+}
+
+.wallet-connect__trigger:focus-visible,
+.wallet-connect__menu button:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.62);
+  outline-offset: 2px;
+}
+
+.wallet-connect__icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.wallet-connect__account {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.wallet-connect__menu {
+  position: absolute;
+  top: calc(100% + 0.65rem);
+  right: 0;
+  width: min(18rem, calc(100vw - 1.7rem));
+  padding: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-radius: 2px;
+  background: rgba(28, 28, 28, 0.98);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.45);
+}
+
+.wallet-connect__title,
+.wallet-connect__address {
+  color: #f5f5f5;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.wallet-connect__help {
+  margin-top: 0.25rem;
+  color: rgba(232, 232, 232, 0.64);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.wallet-connect__options {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.85rem;
+}
+
+.wallet-connect__options button,
+.wallet-connect__disconnect {
+  appearance: none;
+  width: 100%;
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 0.75rem;
+  border: 2px solid rgba(255, 255, 255, 0.16);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #f0f0f0;
+  font: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.wallet-connect__options button:hover,
+.wallet-connect__disconnect:hover {
+  border-color: rgba(184, 255, 46, 0.38);
+  background: rgba(184, 255, 46, 0.08);
+}
+
+.wallet-connect__options button:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
+.wallet-connect__option-mark {
+  width: 1.65rem;
+  height: 1.65rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  color: #b8ff2e;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.wallet-connect__eyebrow {
+  color: #b8ff2e;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.wallet-connect__address {
+  margin-top: 0.35rem;
+  font-size: 0.9rem;
+}
+
+.wallet-connect__disconnect {
+  justify-content: center;
+  margin-top: 0.85rem;
+  border-color: rgba(255, 138, 138, 0.26);
+  color: #ffabab;
+}
+
+.wallet-connect__error {
+  margin-top: 0.75rem;
+  color: #ffabab;
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
 .sidebar-toggle--close {
   position: absolute;
   top: max(0.85rem, env(safe-area-inset-top));
@@ -557,6 +714,11 @@ body {
 
   .sidebar-toggle {
     width: 3rem;
+    height: 3rem;
+  }
+
+  .wallet-connect__trigger {
+    min-width: 3rem;
     height: 3rem;
   }
 
@@ -1009,16 +1171,20 @@ body {
   cursor: pointer;
 }
 
-.adventure-party__slot:hover {
+.adventure-party__slot:hover:not(:disabled) {
   border-color: rgba(255, 138, 138, 0.52);
   background: rgba(255, 138, 138, 0.07);
   color: #f5f5f5;
 }
 
-.adventure-party__slot:focus-visible,
-.adventure-party__wallet-button:focus-visible {
+.adventure-party__slot:focus-visible {
   outline: 2px solid rgba(255, 255, 255, 0.6);
   outline-offset: 2px;
+}
+
+.adventure-party__slot:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .adventure-party__slot-plus {
@@ -1026,24 +1192,24 @@ body {
   line-height: 1;
 }
 
-.adventure-party__wallet-button {
-  appearance: none;
+.adventure-party__wallet-status {
   width: 100%;
-  min-height: 2.65rem;
   margin-top: 1rem;
-  padding: 0.65rem 0.85rem;
-  border: 2px solid rgba(184, 255, 46, 0.38);
+  padding: 0.65rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 2px;
-  background: rgba(184, 255, 46, 0.08);
-  color: #d9ff91;
-  font: inherit;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
+  background: rgba(0, 0, 0, 0.18);
+  color: rgba(232, 232, 232, 0.62);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  text-align: center;
+  overflow-wrap: anywhere;
 }
 
-.adventure-party__wallet-button:hover {
-  background: rgba(184, 255, 46, 0.14);
+.adventure-party__wallet-status--connected {
+  border-color: rgba(184, 255, 46, 0.32);
+  background: rgba(184, 255, 46, 0.06);
+  color: #d9ff91;
 }
 
 .adventure-chat {
