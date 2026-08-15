@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { AdventureInformation } from '../lib/adventureInformation';
 
 const HIGHLIGHT_PATTERN = /(\$DERP|\bIMPLINGZ?\b|\bFREE\b)/gi;
 
@@ -162,6 +163,10 @@ const BOXES = [
   {
     title: 'Roadmap',
     content: <RoadmapContent />,
+  },
+  {
+    title: 'Adventures',
+    content: <AdventureInformation />,
   },
 ];
 
