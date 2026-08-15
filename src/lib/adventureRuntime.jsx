@@ -67,8 +67,10 @@ export function AdventureRuntimeProvider({ walletAccount, children }) {
   const [dungeonImageUrl, setDungeonImageUrl] = useState('');
   const [dripMessage, setDripMessage] = useState('');
   const [runtimeError, setRuntimeError] = useState('');
+  const [miningPaused, setMiningPaused] = useState(false);
   const hashRateRef = useRef(3);
   const miningNonceRef = useRef(0);
+  const miningPausedRef = useRef(false);
 
   const adventureActive = Boolean(
     session && (session.status === 'running' || session.status === 'found')
@@ -76,6 +78,7 @@ export function AdventureRuntimeProvider({ walletAccount, children }) {
 
   hashRateRef.current = Math.max(1, hashesPerTickForParty(party));
   miningNonceRef.current = miningNonce;
+  miningPausedRef.current = miningPaused;
 
   const clearActiveAdventure = useCallback(() => {
     setSession(null);
@@ -85,6 +88,8 @@ export function AdventureRuntimeProvider({ walletAccount, children }) {
     miningNonceRef.current = 0;
     setDungeonImageUrl('');
     setDripMessage('');
+    setMiningPaused(false);
+    miningPausedRef.current = false;
     window.sessionStorage.removeItem(PARTY_STORAGE_KEY);
     window.sessionStorage.removeItem(NONCE_STORAGE_KEY);
   }, []);
@@ -230,6 +235,11 @@ export function AdventureRuntimeProvider({ walletAccount, children }) {
 
     async function mineLoop() {
       while (!cancelled) {
+        while (!cancelled && miningPausedRef.current) {
+          await new Promise((resolve) => window.setTimeout(resolve, 120));
+        }
+        if (cancelled) break;
+
         const batch = Math.max(1, hashRateRef.current);
         const startNonce = miningNonceRef.current;
         const result = await mineHashBatch({
@@ -273,6 +283,8 @@ export function AdventureRuntimeProvider({ walletAccount, children }) {
           break;
         }
 
+        if (miningPausedRef.current) continue;
+
         if (pendingChecked >= 2000) {
           reportMiningProgress(session.id, pendingChecked).catch(() => {});
           pendingChecked = 0;
@@ -302,6 +314,8 @@ export function AdventureRuntimeProvider({ walletAccount, children }) {
       runtimeError,
       setRuntimeError,
       adventureActive,
+      miningPaused,
+      setMiningPaused,
       hashRate: hashRateRef.current,
       beginAdventure,
       attachFoundState,
@@ -320,6 +334,7 @@ export function AdventureRuntimeProvider({ walletAccount, children }) {
       dripMessage,
       runtimeError,
       adventureActive,
+      miningPaused,
       beginAdventure,
       attachFoundState,
       endAdventure,

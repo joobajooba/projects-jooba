@@ -25,6 +25,86 @@ const HIGHLIGHT_PATTERN = /(\$DERP|\bImp\b|\b4444\b|\bfree\b)/gi;
 const IMPLINGZ_CONTRACT = '0x81d2d1f0e92285cdd22aa3cbc6956b6e1724d029';
 const OWNER_OF_SELECTOR = '0x6352211e';
 const COLLECTION_BY_ID = new Map(collection.map((impling) => [String(impling.id), impling]));
+const HASH_SIGNAL_COLS = 28;
+const HASH_SIGNAL_ROWS = 12;
+
+function HashSignalFlow({ active }) {
+  const canvasRef = useRef(null);
+  const levelsRef = useRef(Array.from({ length: HASH_SIGNAL_COLS }, () => 0.35));
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return undefined;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return undefined;
+
+    let frameId = 0;
+    let lastTick = 0;
+
+    function draw(now) {
+      frameId = window.requestAnimationFrame(draw);
+      if (!active) {
+        // Dim static bars while halted.
+        if (now - lastTick < 200) return;
+        lastTick = now;
+      } else if (now - lastTick < 45) {
+        return;
+      } else {
+        lastTick = now;
+        levelsRef.current = levelsRef.current.map((level, index) => {
+          const drift = (Math.random() - 0.48) * (active ? 0.42 : 0.08);
+          const neighbor =
+            levelsRef.current[(index + HASH_SIGNAL_COLS - 1) % HASH_SIGNAL_COLS] * 0.25;
+          return Math.max(0.08, Math.min(1, level * 0.72 + drift + neighbor * 0.2));
+        });
+      }
+
+      const width = canvas.width;
+      const height = canvas.height;
+      const cellW = width / HASH_SIGNAL_COLS;
+      const cellH = height / HASH_SIGNAL_ROWS;
+
+      ctx.fillStyle = '#120808';
+      ctx.fillRect(0, 0, width, height);
+
+      for (let col = 0; col < HASH_SIGNAL_COLS; col += 1) {
+        const lit = Math.max(1, Math.round(levelsRef.current[col] * HASH_SIGNAL_ROWS));
+        for (let row = 0; row < HASH_SIGNAL_ROWS; row += 1) {
+          const fromBottom = HASH_SIGNAL_ROWS - 1 - row;
+          if (fromBottom >= lit) continue;
+          const warm = (fromBottom / HASH_SIGNAL_ROWS + Math.random() * 0.35) > 0.55;
+          ctx.fillStyle = active
+            ? warm
+              ? '#ff3b3b'
+              : '#f4f4f4'
+            : warm
+              ? '#7a3030'
+              : '#6e6e6e';
+          ctx.fillRect(
+            Math.floor(col * cellW) + 1,
+            Math.floor(row * cellH) + 1,
+            Math.max(1, Math.floor(cellW) - 2),
+            Math.max(1, Math.floor(cellH) - 2)
+          );
+        }
+      }
+    }
+
+    frameId = window.requestAnimationFrame(draw);
+    return () => window.cancelAnimationFrame(frameId);
+  }, [active]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="adventure-mining__signal"
+      width={168}
+      height={72}
+      aria-hidden="true"
+    />
+  );
+}
 
 function highlightText(text) {
   return text.split(HIGHLIGHT_PATTERN).map((part, index) => {
@@ -428,6 +508,8 @@ function StartAdventurePanel() {
     runtimeError,
     setRuntimeError,
     adventureActive,
+    miningPaused,
+    setMiningPaused,
     beginAdventure,
     endAdventure,
     clearActiveAdventure,
@@ -472,6 +554,12 @@ function StartAdventurePanel() {
   const adventureStarted = adventureActive;
   const currentEncounter = encounterIndex === null ? null : DND_ENCOUNTERS[encounterIndex];
   const combinedError = startError || runtimeError;
+  const miningActive =
+    adventureStarted && session?.status === 'running' && !currentEncounter && !miningPaused;
+
+  useEffect(() => {
+    setMiningPaused(Boolean(currentEncounter) && session?.status === 'running');
+  }, [currentEncounter, session?.status, setMiningPaused]);
 
   useEffect(() => {
     clearAdventureTimers();
@@ -485,7 +573,8 @@ function StartAdventurePanel() {
     setMintStatus('');
     setMintedKeepUrl('');
     resumedSessionRef.current = '';
-  }, [walletAccount]);
+    setMiningPaused(false);
+  }, [walletAccount, setMiningPaused]);
 
   useEffect(() => {
     if (!adventureActive || !session?.id) return;
@@ -1064,6 +1153,7 @@ function StartAdventurePanel() {
         {dripMessage ? <p className="adventure-party__drip">{dripMessage}</p> : null}
       </div>
 
+      <div className="adventure-main">
       <div className="adventure-chat">
         <div className="adventure-panel__heading adventure-chat__heading">
           <div>
@@ -1106,7 +1196,9 @@ function StartAdventurePanel() {
               {adventureStarted
                 ? session?.status === 'found'
                   ? 'Keep found'
-                  : 'Mining…'
+                  : currentEncounter
+                    ? 'Halted'
+                    : 'Mining…'
                 : 'Not started'}
             </span>
           </div>
@@ -1164,18 +1256,24 @@ function StartAdventurePanel() {
 
         <div className="adventure-chat__controls">
           {currentEncounter ? (
-            <div className="adventure-chat__options" aria-label="Choose your response">
-              {currentEncounter.options.map((option) => (
-                <button
-                  key={`${encounterIndex}-${option.key}`}
-                  type="button"
-                  onClick={() => chooseAdventureOption(option)}
-                >
-                  <span>{option.key}</span>
-                  {option.label}
-                </button>
-              ))}
-            </div>
+            <>
+              <p className="adventure-chat__halted">
+                Hash finding halted, make a decision.
+              </p>
+              <p className="adventure-chat__decision-label">Make your decision.</p>
+              <div className="adventure-chat__options" aria-label="Choose your response">
+                {currentEncounter.options.map((option) => (
+                  <button
+                    key={`${encounterIndex}-${option.key}`}
+                    type="button"
+                    onClick={() => chooseAdventureOption(option)}
+                  >
+                    <span>{option.key}</span>
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </>
           ) : adventureStarted ? (
             <div className="adventure-chat__controls-waiting">
               The next encounter will emerge as your party explores the wilds.
@@ -1191,15 +1289,19 @@ function StartAdventurePanel() {
       {adventureStarted && session?.status === 'running' ? (
         <aside className="adventure-mining" aria-label="Hash mining">
           <p className="adventure-panel__eyebrow">Hash mining</p>
-          <h2>Searching nonces</h2>
+          <h2>Adventuring</h2>
           <p>
             {hashesChecked.toLocaleString()} hashes checked · {partyHashRate}/tick total
           </p>
+          <HashSignalFlow active={miningActive} />
           <p className="adventure-party__help">
-            Mining continues if you leave Adventures. A popup opens when a dungeon is found.
+            {currentEncounter
+              ? 'Hash finding is paused until you choose an option.'
+              : 'Mining continues if you leave Adventures. A popup opens when a dungeon is found.'}
           </p>
         </aside>
       ) : null}
+      </div>
 
       {session?.status === 'found' ? (
         <div
