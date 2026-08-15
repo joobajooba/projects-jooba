@@ -77,13 +77,6 @@ const ROADMAP_ITEMS = [
       'Your Implingz are searching for the dungeons they lost along the way. Explore the wilds with them, track down hidden keeps, and push to claim what was lost through some mining tech inspired by UncleMac which was used on Mineboys.',
       'Hash mining is a process of searching for a specific matching hash. You use your IMPLINGZ to go adventuring and generate hashes using a changing number called a nonce. Each hash is checked until a matching hash is found. Your IMPLINGZ tier determines the speed at which hashes are generated, giving higher-tier IMPLINGZ a faster hash rate.',
       'When a winning hash is found, the dungeon contract verifies it. Minting is free; you only pay ETH gas on Robinhood Chain to claim the keep.',
-    ],
-    image: '/roadmap/roadmap-map.gif',
-    imageAlt: 'An animated pixel art treasure map scroll',
-  },
-  {
-    title: 'Events',
-    paragraphs: [
       'Face random encounters, trials, and surprises as you venture deeper into the dungeon. Every decision could change the course of your adventure, so pay attention and be prepared for whatever stands in your path.',
       'As your adventure progresses, you may encounter different events and challenges. While the hash mining process is taking place, prompts may appear on screen, giving you decisions to make before continuing your journey. Choose carefully, overcome the challenges in front of you, and see how far you and your Impling can go. Will you become the 1 Adventurer among the Implingz?',
     ],
@@ -93,12 +86,11 @@ const ROADMAP_ITEMS = [
   {
     title: 'Claimed Dungeons',
     paragraphs: [
-      'You and your chosen Impling have faced the dangers, overcome the challenges, and earned your place within the dungeon. Claim it with a free mint (ETH gas only). OpenSea then reads the live contract and shows the revealed dungeon. List it on OpenSea in ETH if you want to trade.',
-      'Your adventure is only the beginning and the rewards to come!',
+      'You and your chosen Impling have faced the dangers, overcome the challenges, and earned your place within the dungeon, claimed with a free mint (ETH gas). OpenSea then reads the live contract and shows the revealed dungeon. List it on OpenSea in ETH if you want to trade.',
+      'Next steps will be revealed in the future.',
     ],
-    image: '/roadmap/roadmap-dungeon.png',
-    imageAlt: 'A pixel art dungeon with mossy stone platforms',
-    imageWide: true,
+    image: '/roadmap/roadmap-map.gif',
+    imageAlt: 'An animated pixel art treasure map scroll',
   },
 ];
 

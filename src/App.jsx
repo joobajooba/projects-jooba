@@ -81,15 +81,12 @@ function SettingsIcon() {
       aria-hidden="true"
       focusable="false"
     >
+      {/* Pixel cog wheel: eight teeth + rim + hub hole */}
       <path
         fill="currentColor"
-        d="M6 1h4v1h1v1h1v1h1v2h-1v1h-1v1H9v1H7V8H6V7H5V6H4V4h1V3h1V2h1V1zm1 4v2h2V5H7z"
+        fillRule="evenodd"
+        d="M7 1h2v2h2V2h1v1h1v2h-1v1h1v2h-1v1h1v2h-1v1h-1v1h-2v-1H7v1H5v-1H4v-1H3v-2h1V9H3V7h1V6H3V4h1V3h1V2h2v1zm0 4H6v1H5v2h1v1h1v1h2v-1h1V8h1V6h-1V5H9V4H7v1zm1 2h2v2H8V7z"
       />
-      <path
-        fill="currentColor"
-        d="M2 9h1v1h1v1h1v1h2v1h2v-1h2v-1h1v-1h1V9h1v2h-1v1h-1v1h-1v1H9v1H7v-1H5v-1H4v-1H3v-1H2V9z"
-      />
-      <rect x="7" y="10" width="2" height="2" fill="currentColor" />
     </svg>
   );
 }
