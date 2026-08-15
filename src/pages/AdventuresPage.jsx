@@ -70,6 +70,12 @@ const FLOW_STEPS = [
   },
 ];
 
+const ADVENTURE_VIEWS = [
+  { id: 'information', label: 'Information' },
+  { id: 'start', label: 'Start Adventure' },
+  { id: 'board', label: 'Adventure Board' },
+];
+
 function AdventureBox({ title, children, defaultOpen = false }) {
   const [open, setOpen] = useState(defaultOpen);
 
@@ -162,48 +168,189 @@ function FlowMap() {
   );
 }
 
+function StartAdventurePanel() {
+  return (
+    <section className="adventure-panel" aria-labelledby="start-adventure-title">
+      <div className="adventure-party">
+        <div className="adventure-panel__heading">
+          <div>
+            <p className="adventure-panel__eyebrow">Your party</p>
+            <h2 id="start-adventure-title">Select Impz</h2>
+          </div>
+          <span className="adventure-party__limit">Max 3</span>
+        </div>
+
+        <p className="adventure-party__help">
+          Connect your wallet, then choose up to three Impz to join the adventure.
+        </p>
+
+        <div className="adventure-party__slots" aria-label="Selected Impz">
+          {[1, 2, 3].map((slot) => (
+            <button
+              key={slot}
+              type="button"
+              className="adventure-party__slot"
+              aria-label={`Select an Imp for slot ${slot}`}
+            >
+              <span className="adventure-party__slot-plus" aria-hidden="true">
+                +
+              </span>
+              <span>Slot {slot}</span>
+            </button>
+          ))}
+        </div>
+
+        <button type="button" className="adventure-party__wallet-button">
+          Connect wallet
+        </button>
+      </div>
+
+      <div className="adventure-chat">
+        <div className="adventure-panel__heading adventure-chat__heading">
+          <div>
+            <p className="adventure-panel__eyebrow">Chapter 1</p>
+            <h2>D&amp;D Adventure</h2>
+          </div>
+          <span className="adventure-chat__status">Not started</span>
+        </div>
+
+        <div className="adventure-chat__window" aria-live="polite">
+          <div className="adventure-chat__empty">
+            <span className="adventure-chat__prompt" aria-hidden="true">
+              &gt;_
+            </span>
+            <h3>The wilds are waiting</h3>
+            <p>Select at least one Imp and connect your wallet to begin the adventure.</p>
+          </div>
+        </div>
+
+        <div className="adventure-chat__controls">
+          <input
+            type="text"
+            aria-label="Adventure response"
+            placeholder="Your response will appear here..."
+            disabled
+          />
+          <button type="button" disabled>
+            Send
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function AdventureBoard() {
+  return (
+    <section className="adventure-board" aria-labelledby="adventure-board-title">
+      <div className="adventure-board__header">
+        <div>
+          <p className="adventure-panel__eyebrow">All connected wallets</p>
+          <h2 id="adventure-board-title">Live Adventure Feed</h2>
+        </div>
+        <span className="adventure-board__live">
+          <span aria-hidden="true" />
+          Live
+        </span>
+      </div>
+
+      <div className="adventure-board__feed" aria-live="polite">
+        <div className="adventure-board__empty">
+          <span className="adventure-board__empty-mark" aria-hidden="true">
+            …
+          </span>
+          <h3>Waiting for adventure activity</h3>
+          <p>
+            Defeated enemies, discovered locations, found items, and other actions from connected
+            wallets will appear here as they happen.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function InformationView() {
+  return (
+    <>
+      <p className="adventures-page__intro">
+        {highlightText(
+          'Chapter 1 is one loop: an Imp goes into the wilds, hash mining uncovers a lost dungeon, and that keep is either minted or gone forever.'
+        )}
+      </p>
+
+      <div className="faqs-list">
+        <AdventureBox title="The loop" defaultOpen>
+          <LoopContent />
+        </AdventureBox>
+
+        <AdventureBox title="Chapter 1 flow map">
+          <FlowMap />
+        </AdventureBox>
+
+        <AdventureBox title="Supply rules">
+          <div className="adventures-rules">
+            <p>
+              {highlightText(
+                'Minting is free; the player only pays $DERP gas, and an Imp must still be on that adventure when the keep is claimed.'
+              )}
+            </p>
+            <p>
+              {highlightText(
+                'A minted keep takes the next slot in the 4444 supply. A discarded preview is deleted, is not stored, and does not count toward the supply.'
+              )}
+            </p>
+            <p>
+              {highlightText(
+                'Chapter 1 ends when the 4444th keep is minted, not when the 4444th winning hash is found.'
+              )}
+            </p>
+          </div>
+        </AdventureBox>
+      </div>
+    </>
+  );
+}
+
 export default function AdventuresPage() {
+  const [activeView, setActiveView] = useState('information');
+
   return (
     <div className="adventures-page">
       <div className="adventures-page__inner">
         <header className="adventures-page__header">
           <p className="adventures-page__eyebrow">Chapter 1</p>
           <h1 className="adventures-page__title">Adventures</h1>
-          <p className="adventures-page__intro">
-            {highlightText(
-              'Chapter 1 is one loop: an Imp goes into the wilds, hash mining uncovers a lost dungeon, and that keep is either minted or gone forever.'
-            )}
-          </p>
         </header>
 
-        <div className="faqs-list">
-          <AdventureBox title="The loop" defaultOpen>
-            <LoopContent />
-          </AdventureBox>
+        <div className="adventures-tabs" role="tablist" aria-label="Adventure page sections">
+          {ADVENTURE_VIEWS.map((view) => (
+            <button
+              key={view.id}
+              type="button"
+              role="tab"
+              id={`adventures-tab-${view.id}`}
+              aria-selected={activeView === view.id}
+              aria-controls="adventures-panel"
+              className={`adventures-tabs__button${
+                activeView === view.id ? ' adventures-tabs__button--active' : ''
+              }`}
+              onClick={() => setActiveView(view.id)}
+            >
+              {view.label}
+            </button>
+          ))}
+        </div>
 
-          <AdventureBox title="Chapter 1 flow map">
-            <FlowMap />
-          </AdventureBox>
-
-          <AdventureBox title="Supply rules">
-            <div className="adventures-rules">
-              <p>
-                {highlightText(
-                  'Minting is free; the player only pays $DERP gas, and an Imp must still be on that adventure when the keep is claimed.'
-                )}
-              </p>
-              <p>
-                {highlightText(
-                  'A minted keep takes the next slot in the 4444 supply. A discarded preview is deleted, is not stored, and does not count toward the supply.'
-                )}
-              </p>
-              <p>
-                {highlightText(
-                  'Chapter 1 ends when the 4444th keep is minted, not when the 4444th winning hash is found.'
-                )}
-              </p>
-            </div>
-          </AdventureBox>
+        <div
+          className="adventures-view"
+          role="tabpanel"
+          id="adventures-panel"
+          aria-labelledby={`adventures-tab-${activeView}`}
+        >
+          {activeView === 'information' && <InformationView />}
+          {activeView === 'start' && <StartAdventurePanel />}
+          {activeView === 'board' && <AdventureBoard />}
         </div>
       </div>
     </div>
