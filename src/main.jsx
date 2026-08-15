@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import App from './App';
 import HomePage from './pages/HomePage';
 import InfoPage from './pages/InfoPage';
+import AdventuresPage from './pages/AdventuresPage';
 import CollectionPage from './pages/CollectionPage';
 import TheDungeonPage from './pages/TheDungeonPage';
 import OfficialLinksPage from './pages/OfficialLinksPage';
@@ -17,6 +18,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/" element={<App />}>
           <Route index element={<HomePage />} />
           <Route path="info" element={<InfoPage />} />
+          <Route path="adventures" element={<AdventuresPage />} />
           <Route path="collection" element={<CollectionPage />} />
           <Route path="the-dungeon" element={<TheDungeonPage />} />
           <Route path="official-links" element={<OfficialLinksPage />} />

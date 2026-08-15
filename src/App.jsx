@@ -4,6 +4,7 @@ import { NavLink, Outlet } from 'react-router-dom';
 const NAV_ITEMS = [
   { label: 'Home', to: '/' },
   { label: 'Info', to: '/info' },
+  { label: 'Adventures', to: '/adventures' },
   { label: 'Collection', to: '/collection' },
   { label: 'The Dungeon', to: '/the-dungeon' },
   { label: 'Official Links', to: '/official-links' },
