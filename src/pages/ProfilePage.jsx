@@ -5,6 +5,7 @@ import collection from '../data/collection.json';
 import {
   buildProfileSignatureMessage,
   fetchCommunityProfiles,
+  formatAccountCreatedAt,
   requestProfileChallenge,
   saveCommunityProfile,
 } from '../lib/communityProfiles';
@@ -67,6 +68,7 @@ export default function ProfilePage() {
   const [saveStatus, setSaveStatus] = useState('');
   const [saving, setSaving] = useState(false);
   const [adventurer, setAdventurer] = useState(emptyAdventurerAccount());
+  const [joinedAt, setJoinedAt] = useState('');
 
   const selectedAvatar = useMemo(
     () => ownedImplingz.find((impling) => impling.id === profile.avatarId) ?? null,
@@ -93,6 +95,7 @@ export default function ProfilePage() {
       setAvatarPickerOpen(false);
       setSaveStatus('');
       setAdventurer(emptyAdventurerAccount());
+      setJoinedAt('');
       return undefined;
     }
 
@@ -155,6 +158,7 @@ export default function ProfilePage() {
           nickname: String(savedProfile.nickname ?? '').slice(0, 24),
           bio: String(savedProfile.bio ?? '').slice(0, 240),
         });
+        setJoinedAt(savedProfile.created_at || '');
       })
       .catch((error) => {
         if (error.name !== 'AbortError') {
@@ -196,7 +200,7 @@ export default function ProfilePage() {
       const signature = await signMessageAsync({ message: signatureMessage });
 
       setSaveStatus('Verifying your wallet and profile Imp…');
-      await saveCommunityProfile({
+      const saved = await saveCommunityProfile({
         walletAddress,
         nickname: normalizedProfile.nickname,
         bio: normalizedProfile.bio,
@@ -214,6 +218,7 @@ export default function ProfilePage() {
         // The shared Supabase profile remains the source of truth.
       }
       setProfile(normalizedProfile);
+      setJoinedAt(saved.profile?.created_at || joinedAt);
       setSaveStatus('Profile saved to the Community board.');
     } catch (error) {
       setSaveStatus(
@@ -278,6 +283,10 @@ export default function ProfilePage() {
               <div className="profile-summary__metric">
                 <span>Account level</span>
                 <strong>{adventurer.level}</strong>
+              </div>
+              <div className="profile-summary__metric">
+                <span>Joined</span>
+                <strong>{formatAccountCreatedAt(joinedAt || adventurer.created_at)}</strong>
               </div>
               <div className="profile-summary__xp">
                 <span>

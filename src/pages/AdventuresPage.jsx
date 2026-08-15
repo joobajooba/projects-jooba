@@ -26,111 +26,6 @@ const HIGHLIGHT_PATTERN = /(\$DERP|\bImp\b|\b4444\b|\bfree\b)/gi;
 const IMPLINGZ_CONTRACT = '0x81d2d1f0e92285cdd22aa3cbc6956b6e1724d029';
 const OWNER_OF_SELECTOR = '0x6352211e';
 const COLLECTION_BY_ID = new Map(collection.map((impling) => [String(impling.id), impling]));
-const HASH_SIGNAL_COLS = 42;
-const HASH_SIGNAL_ROWS = 9;
-const HASH_SIGNAL_PALETTE = [
-  '#1a0606',
-  '#3a0c0c',
-  '#6b1212',
-  '#a01818',
-  '#d42222',
-  '#ff2f2f',
-  '#ff5a5a',
-  '#ff8a8a',
-  '#ffe0e0',
-];
-const HASH_SIGNAL_WEIGHTS = [2, 4, 8, 14, 18, 20, 16, 10, 8];
-const HASH_SIGNAL_DIM_PALETTE = [
-  '#140808',
-  '#241010',
-  '#3a1818',
-  '#4e2020',
-  '#5c2626',
-  '#6a2c2c',
-  '#7a3838',
-  '#8a4848',
-  '#9a6868',
-];
-
-function pickHashSignalColor(random = Math.random) {
-  const total = HASH_SIGNAL_WEIGHTS.reduce((sum, weight) => sum + weight, 0);
-  let roll = random() * total;
-  for (let index = 0; index < HASH_SIGNAL_WEIGHTS.length; index += 1) {
-    roll -= HASH_SIGNAL_WEIGHTS[index];
-    if (roll <= 0) return index;
-  }
-  return HASH_SIGNAL_PALETTE.length - 1;
-}
-
-function HashSignalFlow({ active }) {
-  const canvasRef = useRef(null);
-  const cellsRef = useRef(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return undefined;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return undefined;
-
-    const cellCount = HASH_SIGNAL_COLS * HASH_SIGNAL_ROWS;
-    if (!cellsRef.current || cellsRef.current.length !== cellCount) {
-      cellsRef.current = Uint8Array.from({ length: cellCount }, () => pickHashSignalColor());
-    }
-
-    let frameId = 0;
-    let lastTick = 0;
-
-    function draw(now) {
-      frameId = window.requestAnimationFrame(draw);
-      const interval = active ? 55 : 180;
-      if (now - lastTick < interval) return;
-      lastTick = now;
-
-      const cells = cellsRef.current;
-      const refreshChance = active ? 0.22 : 0.04;
-      for (let index = 0; index < cells.length; index += 1) {
-        if (Math.random() < refreshChance) {
-          cells[index] = pickHashSignalColor();
-        }
-      }
-
-      const width = canvas.width;
-      const height = canvas.height;
-      const cellW = width / HASH_SIGNAL_COLS;
-      const cellH = height / HASH_SIGNAL_ROWS;
-      const palette = active ? HASH_SIGNAL_PALETTE : HASH_SIGNAL_DIM_PALETTE;
-
-      ctx.fillStyle = '#120606';
-      ctx.fillRect(0, 0, width, height);
-
-      for (let row = 0; row < HASH_SIGNAL_ROWS; row += 1) {
-        for (let col = 0; col < HASH_SIGNAL_COLS; col += 1) {
-          ctx.fillStyle = palette[cells[row * HASH_SIGNAL_COLS + col]];
-          ctx.fillRect(
-            Math.floor(col * cellW),
-            Math.floor(row * cellH),
-            Math.max(1, Math.ceil(cellW) + 1),
-            Math.max(1, Math.ceil(cellH) + 1)
-          );
-        }
-      }
-    }
-
-    frameId = window.requestAnimationFrame(draw);
-    return () => window.cancelAnimationFrame(frameId);
-  }, [active]);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      className="adventure-mining__signal"
-      width={252}
-      height={54}
-      aria-hidden="true"
-    />
-  );
-}
 
 function highlightText(text) {
   return text.split(HIGHLIGHT_PATTERN).map((part, index) => {
@@ -586,8 +481,6 @@ function AdventureSlot({
   const adventureStarted = Boolean(session);
   const currentEncounter = encounterIndex === null ? null : DND_ENCOUNTERS[encounterIndex];
   const combinedError = startError || (slotIndex === 0 ? runtimeError : '');
-  const miningActive =
-    adventureStarted && session?.status === 'running' && !currentEncounter && !run?.miningPaused;
   const adventureLabel = `Adventure ${slotIndex + 1}`;
   const partyNames = activeParty.map((impling) => `#${impling.id}`).join(', ');
 
@@ -1371,7 +1264,6 @@ function AdventureSlot({
           <p>
             {hashesChecked.toLocaleString()} hashes checked · {partyHashRate}/tick total
           </p>
-          <HashSignalFlow active={miningActive} />
           <p className="adventure-party__help">
             {currentEncounter
               ? 'Hash finding is paused until you choose an option.'

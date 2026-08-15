@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import collection from '../data/collection.json';
-import { fetchCommunityProfiles } from '../lib/communityProfiles';
+import { fetchCommunityProfiles, formatAccountCreatedAt } from '../lib/communityProfiles';
 import { fetchAdventurerAccount } from '../lib/adventuresApi';
 
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
@@ -38,6 +38,7 @@ export default function CommunityProfilePage() {
           ...savedProfile,
           xp: accountData?.account?.xp ?? savedProfile.xp ?? 0,
           level: accountData?.account?.level ?? savedProfile.level ?? 1,
+          created_at: savedProfile.created_at || accountData?.account?.created_at || null,
         });
       })
       .catch((requestError) => {
@@ -125,6 +126,10 @@ export default function CommunityProfilePage() {
                   <div>
                     <span>XP</span>
                     <strong>{profile.xp ?? 0}</strong>
+                  </div>
+                  <div>
+                    <span>Joined</span>
+                    <strong>{formatAccountCreatedAt(profile.created_at)}</strong>
                   </div>
                 </div>
               </section>

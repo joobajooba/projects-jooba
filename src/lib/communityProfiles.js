@@ -25,6 +25,17 @@ export function buildProfileSignatureMessage({
   })}`;
 }
 
+export function formatAccountCreatedAt(value) {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
 export async function fetchCommunityProfiles({ walletAddress = '', signal } = {}) {
   const url = new URL(COMMUNITY_PROFILES_API);
   if (walletAddress) url.searchParams.set('wallet', walletAddress);

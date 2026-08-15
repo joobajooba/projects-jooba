@@ -178,7 +178,7 @@ Deno.serve(async (request: Request) => {
       if (wallets.length > 0) {
         const { data: accounts, error: accountError } = await supabase
           .from("adventurer_accounts")
-          .select("wallet_address,xp,level,active_adventures")
+          .select("wallet_address,xp,level,active_adventures,created_at")
           .in("wallet_address", wallets);
         if (accountError) throw accountError;
         for (const account of accounts ?? []) {
@@ -187,12 +187,16 @@ Deno.serve(async (request: Request) => {
       }
 
       return json({
-        profiles: profiles.map((profile) => ({
-          ...profile,
-          xp: accountByWallet.get(profile.wallet_address)?.xp ?? 0,
-          level: accountByWallet.get(profile.wallet_address)?.level ?? 1,
-          active_adventures: accountByWallet.get(profile.wallet_address)?.active_adventures ?? 0,
-        })),
+        profiles: profiles.map((profile) => {
+          const account = accountByWallet.get(profile.wallet_address);
+          return {
+            ...profile,
+            xp: account?.xp ?? 0,
+            level: account?.level ?? 1,
+            active_adventures: account?.active_adventures ?? 0,
+            created_at: profile.created_at ?? account?.created_at ?? null,
+          };
+        }),
       });
     }
 
