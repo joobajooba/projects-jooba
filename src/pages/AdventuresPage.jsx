@@ -212,6 +212,9 @@ const ENCOUNTER_DELAY_MIN = 60_000;
 const ENCOUNTER_DELAY_MAX = 180_000;
 const IDLE_DELAY_MIN = 18_000;
 const IDLE_DELAY_MAX = 24_000;
+const IMP_SPEECH_DELAY_MIN = 20_000;
+const IMP_SPEECH_DELAY_MAX = 40_000;
+const IMP_SPEECH_THINKING_DELAY = 5_000;
 
 function randomDelay(minimum, maximum) {
   return Math.floor(Math.random() * (maximum - minimum + 1)) + minimum;
@@ -227,9 +230,8 @@ function randomIndex(length, excludedIndex = null) {
   return index;
 }
 
-function getImplingIdleQuote(tokenId, slotIndex) {
-  if (!tokenId) return 'Psst… pick an Imp.';
-  return IMPLING_IDLE_QUOTES[(Number(tokenId) + slotIndex * 3) % IMPLING_IDLE_QUOTES.length];
+function getInitialImplingQuoteIndex(tokenId, slotIndex) {
+  return (Number(tokenId) + slotIndex * 3) % IMPLING_IDLE_QUOTES.length;
 }
 
 function normalizeImageUrl(imageUrl) {
@@ -392,10 +394,20 @@ function StartAdventurePanel() {
   const [adventureStarted, setAdventureStarted] = useState(false);
   const [adventureMessages, setAdventureMessages] = useState([]);
   const [encounterIndex, setEncounterIndex] = useState(null);
+  const [impSpeechStates, setImpSpeechStates] = useState([
+    { quoteIndex: null, thinking: false },
+    { quoteIndex: null, thinking: false },
+    { quoteIndex: null, thinking: false },
+  ]);
   const chatEndRef = useRef(null);
   const nextEncounterTimerRef = useRef(null);
   const idleTimerRef = useRef(null);
   const lastIdleNarrationRef = useRef(null);
+  const impSpeechTimersRef = useRef([
+    { wait: null, change: null },
+    { wait: null, change: null },
+    { wait: null, change: null },
+  ]);
   const connectedAddress = walletAccount
     ? `${walletAccount.slice(0, 6)}…${walletAccount.slice(-4)}`
     : '';
@@ -444,6 +456,22 @@ function StartAdventurePanel() {
       window.clearTimeout(idleTimerRef.current);
     };
   }, [adventureStarted, encounterIndex]);
+
+  useEffect(() => {
+    clearImpSpeechTimers();
+    setImpSpeechStates(
+      selectedImplingz.map((impling, slotIndex) => ({
+        quoteIndex: impling ? getInitialImplingQuoteIndex(impling.id, slotIndex) : null,
+        thinking: false,
+      }))
+    );
+
+    selectedImplingz.forEach((impling, slotIndex) => {
+      if (impling) scheduleImpSpeechChange(slotIndex);
+    });
+
+    return clearImpSpeechTimers;
+  }, [selectedImplingz]);
 
   useEffect(
     () => () => {
@@ -507,6 +535,39 @@ function StartAdventurePanel() {
   function clearAdventureTimers() {
     window.clearTimeout(nextEncounterTimerRef.current);
     window.clearTimeout(idleTimerRef.current);
+  }
+
+  function clearImpSpeechTimers() {
+    impSpeechTimersRef.current.forEach((timers) => {
+      window.clearTimeout(timers.wait);
+      window.clearTimeout(timers.change);
+    });
+  }
+
+  function scheduleImpSpeechChange(slotIndex) {
+    const timers = impSpeechTimersRef.current[slotIndex];
+
+    timers.wait = window.setTimeout(() => {
+      setImpSpeechStates((states) =>
+        states.map((state, index) =>
+          index === slotIndex ? { ...state, thinking: true } : state
+        )
+      );
+
+      timers.change = window.setTimeout(() => {
+        setImpSpeechStates((states) =>
+          states.map((state, index) =>
+            index === slotIndex
+              ? {
+                  quoteIndex: randomIndex(IMPLING_IDLE_QUOTES.length, state.quoteIndex),
+                  thinking: false,
+                }
+              : state
+          )
+        );
+        scheduleImpSpeechChange(slotIndex);
+      }, IMP_SPEECH_THINKING_DELAY);
+    }, randomDelay(IMP_SPEECH_DELAY_MIN, IMP_SPEECH_DELAY_MAX));
   }
 
   function scheduleNextEncounter(excludedIndex = null) {
@@ -595,8 +656,25 @@ function StartAdventurePanel() {
                 className={`adventure-party__speech${
                   impling ? '' : ' adventure-party__speech--empty'
                 }`}
+                aria-live="polite"
               >
-                {getImplingIdleQuote(impling?.id, index)}
+                {impling ? (
+                  impSpeechStates[index]?.thinking ? (
+                    <span
+                      className="adventure-party__speech-loading"
+                      aria-label={`${impling.name} is thinking`}
+                    >
+                      <span />
+                      <span />
+                      <span />
+                    </span>
+                  ) : (
+                    IMPLING_IDLE_QUOTES[impSpeechStates[index]?.quoteIndex] ??
+                    IMPLING_IDLE_QUOTES[getInitialImplingQuoteIndex(impling.id, index)]
+                  )
+                ) : (
+                  'Psst… pick an Imp.'
+                )}
               </div>
               <button
                 type="button"

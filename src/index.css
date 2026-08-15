@@ -1191,6 +1191,29 @@ body {
   font-style: italic;
 }
 
+.adventure-party__speech-loading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.28rem;
+  margin: auto;
+}
+
+.adventure-party__speech-loading span {
+  width: 0.42rem;
+  height: 0.42rem;
+  background: #ff9c9c;
+  animation: adventure-typing 1.2s steps(2, end) infinite;
+}
+
+.adventure-party__speech-loading span:nth-child(2) {
+  animation-delay: 200ms;
+}
+
+.adventure-party__speech-loading span:nth-child(3) {
+  animation-delay: 400ms;
+}
+
 .adventure-party__slot {
   appearance: none;
   width: 4.75rem;
