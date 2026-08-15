@@ -3,7 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import { usePublicClient, useSignMessage, useWalletClient } from 'wagmi';
 import collection from '../data/collection.json';
 import { useAdventureRuntime } from '../lib/adventureRuntime';
-import { decorateAccount } from '../lib/adventurerProgress';
+import { decorateAccount, XP_DUNGEON_FOUND, XP_DUNGEON_MINTED } from '../lib/adventurerProgress';
 import {
   buildAdventureStartMessage,
   discardFoundDungeon,
@@ -595,6 +595,10 @@ function StartAdventurePanel() {
             type: 'system',
             text: 'A winning hash uncovered a lost keep. Inspect it, then mint or walk away.',
           },
+          {
+            type: 'xp',
+            text: `+${XP_DUNGEON_FOUND} XP`,
+          },
         ];
       });
     }
@@ -841,8 +845,11 @@ function StartAdventurePanel() {
         },
         {
           type: result.succeeded ? 'roll-success' : 'roll-failure',
-          text: `You rolled ${result.roll} on the D20 against DC ${result.dc} — ${rollResult}. +${result.xpAwarded} XP`,
+          text: `You rolled ${result.roll} on the D20 against DC ${result.dc} — ${rollResult}.`,
         },
+        ...(Number(result.xpAwarded) > 0
+          ? [{ type: 'xp', text: `+${result.xpAwarded} XP` }]
+          : []),
         {
           type: 'narrator',
           text: result.succeeded ? option.success : option.failure,
@@ -861,8 +868,14 @@ function StartAdventurePanel() {
       endAdventure({ account: data.account, session: data.session });
       clearAdventureTimers();
       setEncounterIndex(null);
-      setAdventureMessages([]);
-      setMintStatus('The preview was discarded and did not take a supply slot.');
+      setAdventureMessages((messages) => [
+        ...messages,
+        {
+          type: 'system',
+          text: 'The preview was discarded and did not take a supply slot.',
+        },
+      ]);
+      setMintStatus('');
       resumedSessionRef.current = '';
     } catch (error) {
       setStartError(error?.message || 'Could not discard this dungeon.');
@@ -894,18 +907,34 @@ function StartAdventurePanel() {
       const tokenId = tokenIdFromMintReceipt(receipt);
       if (tokenId) {
         const minted = await markDungeonMinted(session.id, tokenId);
+        const openSeaUrl = keepOpenSeaItemUrl(contractAddress, tokenId);
         endAdventure({ account: minted.account, session: minted.session });
-        setMintedKeepUrl(keepOpenSeaItemUrl(contractAddress, tokenId));
-        setMintStatus(
-          `Keep #${tokenId} minted. OpenSea will show the revealed dungeon. Transaction ${hash.slice(0, 10)}…`
-        );
+        setMintedKeepUrl(openSeaUrl);
+        setMintStatus('');
+        setAdventureMessages((messages) => [
+          ...messages,
+          {
+            type: 'mint',
+            text: `Keep #${tokenId} minted. OpenSea will show the revealed dungeon.`,
+          },
+          {
+            type: 'xp',
+            text: `+${XP_DUNGEON_MINTED} XP`,
+          },
+        ]);
       } else {
         setMintStatus(`Mint submitted. Transaction ${hash.slice(0, 10)}…`);
         clearActiveAdventure();
+        setAdventureMessages((messages) => [
+          ...messages,
+          {
+            type: 'mint',
+            text: `Mint submitted. Transaction ${hash.slice(0, 10)}…`,
+          },
+        ]);
       }
       clearAdventureTimers();
       setEncounterIndex(null);
-      setAdventureMessages([]);
       resumedSessionRef.current = '';
     } catch (error) {
       setMintStatus(error?.shortMessage || error?.message || 'Mint failed.');
@@ -930,21 +959,6 @@ function StartAdventurePanel() {
             ? 'Choose up to three Impz from your connected wallet to join the adventure.'
             : 'Use the wallet icon in the top-right, then choose up to three Impz to join the adventure.'}
         </p>
-        {activeParty.length ? (
-          <p className="adventure-party__help">
-            Hash rate {partyHashRate}/tick
-            {activeParty
-              .map((impling) => {
-                const tier = resolveImplingTier(impling) || 'Tier 1';
-                return ` · #${impling.id} ${tier} (${TIER_HASH_RATES[tier]}/tick)`;
-              })
-              .join('')}
-            {adventureStarted
-              ? ' · Mining keeps running while you visit other pages.'
-              : ''}
-          </p>
-        ) : null}
-        {mintStatus ? <p className="adventure-party__help">{mintStatus}</p> : null}
         {mintedKeepUrl ? (
           <p className="adventure-party__help">
             <a href={mintedKeepUrl} target="_blank" rel="noopener noreferrer">
@@ -954,30 +968,45 @@ function StartAdventurePanel() {
         ) : null}
 
         <div className="adventure-party__slots" aria-label="Selected Impz">
-          {selectedImplingz.map((impling, index) => (
+          {selectedImplingz.map((impling, index) => {
+            const tier = impling ? resolveImplingTier(impling) || 'Tier 1' : '';
+            const tickRate = tier ? TIER_HASH_RATES[tier] : 0;
+
+            return (
             <div key={index} className="adventure-party__member">
-              <div
-                className={`adventure-party__speech${
-                  impling ? '' : ' adventure-party__speech--empty'
-                }`}
-                aria-live="polite"
-              >
-                {impling ? (
-                  impSpeechStates[index]?.thinking ? (
-                    <span
-                      className="adventure-party__speech-loading"
-                      aria-label={`${impling.name} is thinking`}
-                    >
-                      <span />
-                      <span />
-                      <span />
-                    </span>
+              <div className="adventure-party__dialogue">
+                <div
+                  className={`adventure-party__speech${
+                    impling ? '' : ' adventure-party__speech--empty'
+                  }`}
+                  aria-live="polite"
+                >
+                  {impling ? (
+                    impSpeechStates[index]?.thinking ? (
+                      <span
+                        className="adventure-party__speech-loading"
+                        aria-label={`${impling.name} is thinking`}
+                      >
+                        <span />
+                        <span />
+                        <span />
+                      </span>
+                    ) : (
+                      IMPLING_IDLE_QUOTES[impSpeechStates[index]?.quoteIndex] ??
+                      IMPLING_IDLE_QUOTES[getInitialImplingQuoteIndex(impling.id, index)]
+                    )
                   ) : (
-                    IMPLING_IDLE_QUOTES[impSpeechStates[index]?.quoteIndex] ??
-                    IMPLING_IDLE_QUOTES[getInitialImplingQuoteIndex(impling.id, index)]
-                  )
+                    'Psst… pick an Imp.'
+                  )}
+                </div>
+                {impling ? (
+                  <p className="adventure-party__hash-rate">
+                    {tickRate}/tick · {tier}
+                  </p>
                 ) : (
-                  'Psst… pick an Imp.'
+                  <p className="adventure-party__hash-rate adventure-party__hash-rate--empty">
+                    —
+                  </p>
                 )}
               </div>
               <button
@@ -998,7 +1027,7 @@ function StartAdventurePanel() {
                     <img src={impling.image} alt="" />
                     <span className="adventure-party__slot-name">#{impling.id}</span>
                     <span className="adventure-party__slot-tier">
-                      {resolveImplingTier(impling) || 'Tier 1'}
+                      {tier}
                     </span>
                   </>
                 ) : (
@@ -1011,7 +1040,8 @@ function StartAdventurePanel() {
                 )}
               </button>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         <div
@@ -1079,7 +1109,7 @@ function StartAdventurePanel() {
           }`}
           aria-live="polite"
         >
-          {adventureStarted ? (
+          {adventureStarted || adventureMessages.length > 0 ? (
             <div className="adventure-chat__messages">
               {adventureMessages.map((message, index) => (
                 <div
@@ -1091,21 +1121,25 @@ function StartAdventurePanel() {
                       ? 'You'
                       : message.type.startsWith('roll')
                         ? 'D20'
-                        : message.type === 'system'
-                          ? 'Party'
-                          : 'Dungeon Master'}
+                        : message.type === 'xp'
+                          ? 'XP'
+                          : message.type === 'mint'
+                            ? 'Mint'
+                            : message.type === 'system'
+                              ? 'Party'
+                              : 'Dungeon Master'}
                   </span>
                   <p>{message.text}</p>
                 </div>
               ))}
-              {!currentEncounter && (
+              {adventureStarted && !currentEncounter && session?.status === 'running' ? (
                 <div className="adventure-chat__typing" aria-label="Dungeon Master is thinking">
                   <span />
                   <span />
                   <span />
                   <p>Dungeon Master is thinking…</p>
                 </div>
-              )}
+              ) : null}
               <div ref={chatEndRef} />
             </div>
           ) : (
@@ -1145,26 +1179,42 @@ function StartAdventurePanel() {
         </div>
       </div>
 
-      {adventureStarted ? (
+      {adventureStarted && session?.status === 'running' ? (
         <aside className="adventure-mining" aria-label="Hash mining">
           <p className="adventure-panel__eyebrow">Hash mining</p>
-          <h2>{session?.status === 'found' ? 'Dungeon found' : 'Searching nonces'}</h2>
+          <h2>Searching nonces</h2>
           <p>
-            {hashesChecked.toLocaleString()} hashes checked · {partyHashRate}/tick
-            {session?.winning_hash ? ` · ${session.winning_hash.slice(0, 10)}…` : ''}
+            {hashesChecked.toLocaleString()} hashes checked · {partyHashRate}/tick total
           </p>
           <p className="adventure-party__help">
-            Mining continues if you leave Adventures. It only stops when you stop the adventure,
-            walk away, or finish a mint.
+            Mining continues if you leave Adventures. A popup opens when a dungeon is found.
           </p>
-          {dungeonSvg ? (
-            <div
-              className="adventure-mining__map"
-              dangerouslySetInnerHTML={{ __html: dungeonSvg }}
-            />
-          ) : null}
-          {session?.status === 'found' ? (
-            <div className="adventure-mining__actions">
+        </aside>
+      ) : null}
+
+      {session?.status === 'found' ? (
+        <div
+          className="dungeon-found-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="dungeon-found-title"
+        >
+          <div className="dungeon-found-modal__panel">
+            <p className="adventure-panel__eyebrow">Dungeon found</p>
+            <h2 id="dungeon-found-title">A lost keep answers</h2>
+            <p>
+              Inspect the preview, then mint it as an NFT or walk away forever. Minting is free
+              aside from ETH gas.
+            </p>
+            {dungeonSvg ? (
+              <div
+                className="dungeon-found-modal__map"
+                dangerouslySetInnerHTML={{ __html: dungeonSvg }}
+              />
+            ) : (
+              <p className="adventure-party__help">Loading dungeon preview…</p>
+            )}
+            <div className="dungeon-found-modal__actions">
               <button type="button" onClick={handleMintDungeon}>
                 Mint keep
               </button>
@@ -1172,9 +1222,9 @@ function StartAdventurePanel() {
                 Walk away
               </button>
             </div>
-          ) : null}
-          {mintStatus ? <p>{mintStatus}</p> : null}
-        </aside>
+            {mintStatus ? <p className="dungeon-found-modal__status">{mintStatus}</p> : null}
+          </div>
+        </div>
       ) : null}
 
       {selectingSlot !== null && (

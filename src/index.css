@@ -1934,6 +1934,12 @@ body {
   gap: 0.65rem;
 }
 
+.adventure-party__dialogue {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
 .adventure-party__speech {
   position: relative;
   min-height: 3.25rem;
@@ -1964,6 +1970,19 @@ body {
 .adventure-party__speech--empty {
   color: rgba(232, 232, 232, 0.42);
   font-style: italic;
+}
+
+.adventure-party__hash-rate {
+  margin: 0;
+  padding-left: 0.15rem;
+  color: #d9ff91;
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.adventure-party__hash-rate--empty {
+  color: rgba(232, 232, 232, 0.35);
 }
 
 .adventure-party__speech-loading {
@@ -2413,6 +2432,19 @@ body {
 .adventure-chat__message--roll-failure {
   border-left-color: rgba(255, 138, 138, 0.55);
   background: rgba(255, 138, 138, 0.055);
+}
+
+.adventure-chat__message--xp,
+.adventure-chat__message--mint {
+  border-left-color: rgba(255, 214, 90, 0.75);
+  background: rgba(255, 214, 90, 0.08);
+}
+
+.adventure-chat__message--xp p,
+.adventure-chat__message--mint p,
+.adventure-chat__message--xp .adventure-chat__message-label,
+.adventure-chat__message--mint .adventure-chat__message-label {
+  color: #ffd65a;
 }
 
 .adventure-chat__message-label {
@@ -3210,7 +3242,8 @@ body {
 }
 
 .adventure-mining__actions button,
-.dungeon-page__seed input {
+.dungeon-page__seed input,
+.dungeon-found-modal__actions button {
   appearance: none;
   min-height: 2.5rem;
   padding: 0.5rem 0.8rem;
@@ -3219,6 +3252,67 @@ body {
   background: rgba(184, 255, 46, 0.08);
   color: #d9ff91;
   font: inherit;
+}
+
+.dungeon-found-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.dungeon-found-modal__panel {
+  width: min(100%, 34rem);
+  max-height: min(92vh, 44rem);
+  overflow: auto;
+  padding: 1.15rem 1.2rem 1.25rem;
+  border: 2px solid rgba(184, 255, 46, 0.35);
+  border-radius: 2px;
+  background: #171717;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+}
+
+.dungeon-found-modal__panel h2 {
+  margin: 0.2rem 0 0.55rem;
+  color: #f5f5f5;
+  font-size: 1.35rem;
+}
+
+.dungeon-found-modal__panel > p {
+  margin: 0;
+  color: rgba(232, 232, 232, 0.72);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.dungeon-found-modal__map {
+  margin-top: 0.9rem;
+  overflow: auto;
+  border: 1px solid rgba(184, 255, 46, 0.22);
+  background: #07070a;
+}
+
+.dungeon-found-modal__map svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+}
+
+.dungeon-found-modal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 1rem;
+}
+
+.dungeon-found-modal__status {
+  margin-top: 0.75rem;
+  color: rgba(232, 232, 232, 0.78);
+  font-size: 0.88rem;
 }
 
 .adventure-board__event {
