@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ConnectButton, useConnectModal } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 import { NavLink, Outlet } from 'react-router-dom';
@@ -17,6 +17,15 @@ const NAV_ITEMS = [
 ];
 
 const FONT_STORAGE_KEY = 'j00ba-font-mode';
+const VOLUME_STORAGE_KEY = 'j00ba-music-volume';
+const TRACK_STORAGE_KEY = 'j00ba-music-track';
+
+const PLAYLIST = [
+  { id: 'adventure-time', title: 'Adventure Time', src: '/audio/adventure-time.mp3' },
+  { id: 'dark-fantasy', title: 'Dark Fantasy', src: '/audio/dark-fantasy.mp3' },
+  { id: 'legend', title: 'Legend', src: '/audio/legend.mp3' },
+  { id: 'crawling-danger', title: 'Crawling Danger', src: '/audio/crawling-danger.mp3' },
+];
 
 function readFontMode() {
   try {
@@ -24,6 +33,28 @@ function readFontMode() {
     return value === 'readable' ? 'readable' : 'pixel';
   } catch {
     return 'pixel';
+  }
+}
+
+function readVolume() {
+  try {
+    const raw = window.localStorage.getItem(VOLUME_STORAGE_KEY);
+    if (raw === null) return 0.4;
+    const value = Number(raw);
+    if (!Number.isFinite(value)) return 0.4;
+    return Math.min(1, Math.max(0, value));
+  } catch {
+    return 0.4;
+  }
+}
+
+function readTrackIndex() {
+  try {
+    const value = Number(window.localStorage.getItem(TRACK_STORAGE_KEY));
+    if (!Number.isInteger(value) || value < 0 || value >= PLAYLIST.length) return 0;
+    return value;
+  } catch {
+    return 0;
   }
 }
 
@@ -65,27 +96,6 @@ function WalletIcon() {
         fill="currentColor"
         fillRule="evenodd"
         d="M2 3h11v2h1v8H2V3zm2 2v6h8V9H9V6h3V5H4zm6 2h4v3h-4V7zm1 1v1h2V8h-2z"
-      />
-    </svg>
-  );
-}
-
-function SettingsIcon() {
-  return (
-    <svg
-      className="site-settings__icon"
-      viewBox="0 0 16 16"
-      width="20"
-      height="20"
-      shapeRendering="crispEdges"
-      aria-hidden="true"
-      focusable="false"
-    >
-      {/* Pixel cog wheel: eight teeth + rim + hub hole */}
-      <path
-        fill="currentColor"
-        fillRule="evenodd"
-        d="M7 1h2v2h2V2h1v1h1v2h-1v1h1v2h-1v1h1v2h-1v1h-1v1h-2v-1H7v1H5v-1H4v-1H3v-2h1V9H3V7h1V6H3V4h1V3h1V2h2v1zm0 4H6v1H5v2h1v1h1v1h2v-1h1V8h1V6h-1V5H9V4H7v1zm1 2h2v2H8V7z"
       />
     </svg>
   );
@@ -145,7 +155,15 @@ function RainbowWalletButton() {
   );
 }
 
-function SiteSettingsModal({ fontMode, onClose, onFontModeChange }) {
+function SiteSettingsModal({
+  fontMode,
+  onClose,
+  onFontModeChange,
+  volume,
+  onVolumeChange,
+  trackTitle,
+  onSkipTrack,
+}) {
   return (
     <div
       className="site-settings-modal"
@@ -193,6 +211,33 @@ function SiteSettingsModal({ fontMode, onClose, onFontModeChange }) {
             </button>
           </div>
         </section>
+
+        <section className="site-settings-modal__section" aria-labelledby="sound-title">
+          <h3 id="sound-title">Sound settings</h3>
+          <p>Background music loops through the playlist. Adjust volume or skip tracks.</p>
+          <div className="site-settings-modal__now-playing">
+            <span className="site-settings-modal__track-label">Now playing</span>
+            <strong>{trackTitle}</strong>
+          </div>
+          <label className="site-settings-modal__volume">
+            <span>Volume {Math.round(volume * 100)}%</span>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              value={Math.round(volume * 100)}
+              onChange={(event) => onVolumeChange(Number(event.target.value) / 100)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(volume * 100)}
+              aria-label="Music volume"
+            />
+          </label>
+          <button type="button" className="site-settings-modal__skip" onClick={onSkipTrack}>
+            Skip song
+          </button>
+        </section>
       </div>
     </div>
   );
@@ -204,10 +249,35 @@ export default function App() {
   const [fontMode, setFontMode] = useState(() =>
     typeof window === 'undefined' ? 'pixel' : readFontMode()
   );
+  const [volume, setVolume] = useState(() =>
+    typeof window === 'undefined' ? 0.4 : readVolume()
+  );
+  const [trackIndex, setTrackIndex] = useState(() =>
+    typeof window === 'undefined' ? 0 : readTrackIndex()
+  );
+  const audioRef = useRef(null);
+  const unlockedRef = useRef(false);
   const { address, connector } = useAccount();
   const { openConnectModal } = useConnectModal();
   const walletAccount = address ?? '';
   const walletName = connector?.name ?? 'Wallet';
+  const currentTrack = PLAYLIST[trackIndex] ?? PLAYLIST[0];
+
+  const ensurePlayback = useCallback(async () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.volume = volume;
+    try {
+      await audio.play();
+      unlockedRef.current = true;
+    } catch {
+      // Browsers may block autoplay until a user gesture.
+    }
+  }, [volume]);
+
+  const skipTrack = useCallback(() => {
+    setTrackIndex((current) => (current + 1) % PLAYLIST.length);
+  }, []);
 
   useEffect(() => {
     document.documentElement.classList.toggle('font-readable', fontMode === 'readable');
@@ -218,8 +288,67 @@ export default function App() {
     }
   }, [fontMode]);
 
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(VOLUME_STORAGE_KEY, String(volume));
+    } catch {
+      // Ignore storage failures.
+    }
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+    }
+  }, [volume]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(TRACK_STORAGE_KEY, String(trackIndex));
+    } catch {
+      // Ignore storage failures.
+    }
+  }, [trackIndex]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return undefined;
+
+    audio.loop = false;
+    audio.src = currentTrack.src;
+    audio.load();
+    audio.volume = volume;
+
+    const handleEnded = () => {
+      setTrackIndex((current) => (current + 1) % PLAYLIST.length);
+    };
+    audio.addEventListener('ended', handleEnded);
+    ensurePlayback();
+
+    return () => {
+      audio.removeEventListener('ended', handleEnded);
+    };
+    // Reload only when the song changes; volume is applied in its own effect.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentTrack.src, ensurePlayback]);
+
+  useEffect(() => {
+    const unlock = () => {
+      unlockedRef.current = true;
+      ensurePlayback();
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('keydown', unlock);
+    };
+    window.addEventListener('pointerdown', unlock);
+    window.addEventListener('keydown', unlock);
+    ensurePlayback();
+    return () => {
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('keydown', unlock);
+    };
+  }, [ensurePlayback]);
+
   return (
     <div className="page">
+      <audio ref={audioRef} preload="auto" playsInline />
+
       {!sidebarOpen && (
         <button
           type="button"
@@ -234,13 +363,13 @@ export default function App() {
       <div className="top-actions">
         <button
           type="button"
-          className="site-settings__trigger"
+          className="site-settings__trigger site-settings__trigger--label"
           aria-label="Open settings"
           aria-haspopup="dialog"
           aria-expanded={settingsOpen}
           onClick={() => setSettingsOpen(true)}
         >
-          <SettingsIcon />
+          Settings
         </button>
         <RainbowWalletButton />
       </div>
@@ -250,6 +379,13 @@ export default function App() {
           fontMode={fontMode}
           onClose={() => setSettingsOpen(false)}
           onFontModeChange={setFontMode}
+          volume={volume}
+          onVolumeChange={setVolume}
+          trackTitle={currentTrack.title}
+          onSkipTrack={() => {
+            unlockedRef.current = true;
+            skipTrack();
+          }}
         />
       ) : null}
 

@@ -522,6 +522,16 @@ button:active:not(:disabled),
   cursor: pointer;
 }
 
+.site-settings__trigger--label {
+  width: auto;
+  min-width: 2.75rem;
+  padding: 0 0.75rem;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
 .site-settings__trigger:hover {
   border-color: rgba(184, 255, 46, 0.48);
   background: rgba(48, 48, 48, 0.96);
@@ -621,6 +631,63 @@ button:active:not(:disabled),
 .site-settings-modal__font-options button.is-active {
   border-color: rgba(184, 255, 46, 0.7);
   background: rgba(184, 255, 46, 0.16);
+  color: #d9ff91;
+}
+
+.site-settings-modal__now-playing {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-bottom: 0.85rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.site-settings-modal__track-label {
+  color: rgba(232, 232, 232, 0.55);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.site-settings-modal__now-playing strong {
+  color: #f5f5f5;
+  font-size: 0.98rem;
+}
+
+.site-settings-modal__volume {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-bottom: 0.75rem;
+  color: rgba(232, 232, 232, 0.82);
+  font-size: 0.88rem;
+}
+
+.site-settings-modal__volume input[type='range'] {
+  width: 100%;
+  accent-color: #ff5a5a;
+  cursor: pointer;
+}
+
+.site-settings-modal__skip {
+  appearance: none;
+  min-height: 2.55rem;
+  width: 100%;
+  padding: 0.55rem 0.8rem;
+  border: 2px solid rgba(184, 255, 46, 0.28);
+  border-radius: 10px;
+  background: rgba(184, 255, 46, 0.06);
+  color: #e8e8e8;
+  font: inherit;
+  cursor: pointer;
+}
+
+.site-settings-modal__skip:hover {
+  border-color: rgba(184, 255, 46, 0.55);
+  background: rgba(184, 255, 46, 0.12);
   color: #d9ff91;
 }
 
@@ -886,10 +953,15 @@ button:active:not(:disabled),
   }
 
   .wallet-connect__trigger,
-  .site-settings__trigger {
+  .site-settings__trigger:not(.site-settings__trigger--label) {
     min-width: 3rem;
     width: 3rem;
     height: 3rem;
+  }
+
+  .site-settings__trigger--label {
+    height: 3rem;
+    padding: 0 0.85rem;
   }
 
   .faqs-page {

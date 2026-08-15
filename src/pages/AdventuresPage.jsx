@@ -1526,7 +1526,7 @@ function InformationView() {
       </p>
 
       <div className="faqs-list">
-        <AdventureBox title="The loop" defaultOpen>
+        <AdventureBox title="The loop">
           <LoopContent />
         </AdventureBox>
 
@@ -1552,7 +1552,7 @@ function InformationView() {
               )}
             </p>
             <p>
-              After mint, OpenSea reads the live contract and shows the revealed dungeon. List and
+              During mint, OpenSea reads the live contract and shows the revealed dungeon. List and
               trade keeps there in ETH / WETH. $DERP is only used for optional adventure drips
               from the royalties pot.
             </p>
