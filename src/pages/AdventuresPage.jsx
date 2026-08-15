@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import collection from '../data/collection.json';
 
@@ -80,6 +80,104 @@ const ADVENTURE_VIEWS = [
   { id: 'information', label: 'Information' },
   { id: 'start', label: 'Start Adventure' },
   { id: 'board', label: 'Adventure Board' },
+];
+
+const DND_ENCOUNTERS = [
+  {
+    prompt: 'A goblin scout steps onto the trail and raises a rusted blade. What do you do?',
+    options: [
+      {
+        key: 'A',
+        label: 'Fight it',
+        dc: 10,
+        success: 'Your Imp strikes first. The goblin flees and drops a scrap of dungeon map.',
+        failure: 'The goblin lands a glancing blow before your party drives it back into the brush.',
+      },
+      {
+        key: 'B',
+        label: 'Flee into the woods',
+        dc: 8,
+        success: 'Your party disappears between the trees before the goblin can sound an alarm.',
+        failure: 'A snapped branch gives you away. You escape, but the goblin warns the road ahead.',
+      },
+    ],
+  },
+  {
+    prompt: 'A broken rope bridge hangs over a black ravine. The map points to the far side.',
+    options: [
+      {
+        key: 'A',
+        label: 'Leap across',
+        dc: 13,
+        success: 'You clear the gap and pull the rest of the party safely across.',
+        failure: 'The ledge crumbles. You catch the rope and climb back up, shaken but alive.',
+      },
+      {
+        key: 'B',
+        label: 'Repair the bridge',
+        dc: 9,
+        success: 'Your careful knots hold. The party crosses without drawing attention.',
+        failure: 'The old rope tears. You lose time searching for another secure anchor.',
+      },
+    ],
+  },
+  {
+    prompt: 'Ancient runes glow across a sealed stone archway. Something is moving behind it.',
+    options: [
+      {
+        key: 'A',
+        label: 'Study the runes',
+        dc: 11,
+        success: 'The symbols reveal a safe phrase and the archway opens without a sound.',
+        failure: 'The runes flare red. A distant bell echoes through the buried halls.',
+      },
+      {
+        key: 'B',
+        label: 'Force the door',
+        dc: 14,
+        success: 'Stone cracks beneath your combined strength, revealing a forgotten passage.',
+        failure: 'The door holds and dust rains from the ceiling. Something heard the impact.',
+      },
+    ],
+  },
+  {
+    prompt: 'A skeletal guardian blocks the final stair, clutching a key carved from obsidian.',
+    options: [
+      {
+        key: 'A',
+        label: 'Challenge the guardian',
+        dc: 12,
+        success: 'The guardian falls apart. The obsidian key remains warm in your hand.',
+        failure: 'Its shield turns your attack. Your party retreats and searches for an opening.',
+      },
+      {
+        key: 'B',
+        label: 'Distract and steal the key',
+        dc: 13,
+        success: 'Your feint works. An Imp slips behind the guardian and takes the key.',
+        failure: 'The guardian sees through the trick and seals the stair behind its shield.',
+      },
+    ],
+  },
+  {
+    prompt: 'The obsidian key hums beside an unmarked dungeon gate. How will you enter?',
+    options: [
+      {
+        key: 'A',
+        label: 'Turn the key',
+        dc: 7,
+        success: 'The lost keep answers. Its buried halls begin to form beyond the gate.',
+        failure: 'The lock resists. You steady the key and feel another route awaken nearby.',
+      },
+      {
+        key: 'B',
+        label: 'Search for traps first',
+        dc: 10,
+        success: 'You uncover a hidden ward and disable it before opening the dungeon gate.',
+        failure: 'No trap is found, but the delay draws restless shapes toward your torchlight.',
+      },
+    ],
+  },
 ];
 
 function normalizeImageUrl(imageUrl) {
@@ -239,16 +337,29 @@ function StartAdventurePanel() {
   const [implingzLoading, setImplingzLoading] = useState(false);
   const [implingzError, setImplingzError] = useState('');
   const [verifyingTokenId, setVerifyingTokenId] = useState('');
+  const [adventureStarted, setAdventureStarted] = useState(false);
+  const [adventureMessages, setAdventureMessages] = useState([]);
+  const [encounterIndex, setEncounterIndex] = useState(0);
+  const chatEndRef = useRef(null);
   const connectedAddress = walletAccount
     ? `${walletAccount.slice(0, 6)}…${walletAccount.slice(-4)}`
     : '';
+  const selectedParty = selectedImplingz.filter(Boolean);
+  const currentEncounter = DND_ENCOUNTERS[encounterIndex];
 
   useEffect(() => {
     setSelectedImplingz([null, null, null]);
     setOwnedImplingz([]);
     setSelectingSlot(null);
     setImplingzError('');
+    setAdventureStarted(false);
+    setAdventureMessages([]);
+    setEncounterIndex(0);
   }, [walletAccount]);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [adventureMessages]);
 
   async function openImplingSelector(slotIndex) {
     if (!walletAccount) return;
@@ -302,6 +413,58 @@ function StartAdventurePanel() {
     setSelectingSlot(null);
   }
 
+  function startAdventure() {
+    if (selectedParty.length === 0) return;
+
+    const partyNames = selectedParty.map((impling) => `#${impling.id}`).join(', ');
+    setAdventureStarted(true);
+    setEncounterIndex(0);
+    setAdventureMessages([
+      {
+        type: 'narrator',
+        text: 'Your adventure for the lost dungeons has commenced.',
+      },
+      {
+        type: 'system',
+        text: `IMPLINGZ ${partyNames} enter the wilds. Their search for a forgotten keep begins now.`,
+      },
+      {
+        type: 'encounter',
+        text: DND_ENCOUNTERS[0].prompt,
+      },
+    ]);
+  }
+
+  function chooseAdventureOption(option) {
+    if (!adventureStarted) return;
+
+    const roll = Math.floor(Math.random() * 20) + 1;
+    const succeeded = roll === 20 || (roll !== 1 && roll >= option.dc);
+    const nextEncounterIndex = (encounterIndex + 1) % DND_ENCOUNTERS.length;
+    const rollResult = succeeded ? 'Success' : 'Failure';
+
+    setAdventureMessages((messages) => [
+      ...messages,
+      {
+        type: 'choice',
+        text: `${option.key} | ${option.label}`,
+      },
+      {
+        type: succeeded ? 'roll-success' : 'roll-failure',
+        text: `You rolled ${roll} on the D20 against DC ${option.dc} — ${rollResult}.`,
+      },
+      {
+        type: 'narrator',
+        text: succeeded ? option.success : option.failure,
+      },
+      {
+        type: 'encounter',
+        text: DND_ENCOUNTERS[nextEncounterIndex].prompt,
+      },
+    ]);
+    setEncounterIndex(nextEncounterIndex);
+  }
+
   return (
     <section className="adventure-panel" aria-labelledby="start-adventure-title">
       <div className="adventure-party">
@@ -332,7 +495,7 @@ function StartAdventurePanel() {
                   ? `Change ${impling.name} in slot ${index + 1}`
                   : `Select an Imp for slot ${index + 1}`
               }
-              disabled={!walletAccount}
+              disabled={!walletAccount || adventureStarted}
               onClick={() => openImplingSelector(index)}
             >
               {impling ? (
@@ -367,29 +530,82 @@ function StartAdventurePanel() {
             <p className="adventure-panel__eyebrow">Chapter 1</p>
             <h2>D&amp;D Adventure</h2>
           </div>
-          <span className="adventure-chat__status">Not started</span>
-        </div>
-
-        <div className="adventure-chat__window" aria-live="polite">
-          <div className="adventure-chat__empty">
-            <span className="adventure-chat__prompt" aria-hidden="true">
-              &gt;_
+          <div className="adventure-chat__heading-actions">
+            <button
+              type="button"
+              className="adventure-chat__start"
+              disabled={selectedParty.length === 0 || adventureStarted}
+              onClick={startAdventure}
+            >
+              {adventureStarted ? 'Adventure running' : 'Start Adventure'}
+            </button>
+            <span
+              className={`adventure-chat__status${
+                adventureStarted ? ' adventure-chat__status--started' : ''
+              }`}
+            >
+              {adventureStarted ? 'Started' : 'Not started'}
             </span>
-            <h3>The wilds are waiting</h3>
-            <p>Select at least one Imp and connect your wallet to begin the adventure.</p>
           </div>
         </div>
 
+        <div
+          className={`adventure-chat__window${
+            adventureStarted ? ' adventure-chat__window--active' : ''
+          }`}
+          aria-live="polite"
+        >
+          {adventureStarted ? (
+            <div className="adventure-chat__messages">
+              {adventureMessages.map((message, index) => (
+                <div
+                  key={`${message.type}-${index}`}
+                  className={`adventure-chat__message adventure-chat__message--${message.type}`}
+                >
+                  <span className="adventure-chat__message-label">
+                    {message.type === 'choice'
+                      ? 'You'
+                      : message.type.startsWith('roll')
+                        ? 'D20'
+                        : message.type === 'system'
+                          ? 'Party'
+                          : 'Dungeon Master'}
+                  </span>
+                  <p>{message.text}</p>
+                </div>
+              ))}
+              <div ref={chatEndRef} />
+            </div>
+          ) : (
+            <div className="adventure-chat__empty">
+              <span className="adventure-chat__prompt" aria-hidden="true">
+                &gt;_
+              </span>
+              <h3>The wilds are waiting</h3>
+              <p>Select at least one Imp, then start the adventure.</p>
+            </div>
+          )}
+        </div>
+
         <div className="adventure-chat__controls">
-          <input
-            type="text"
-            aria-label="Adventure response"
-            placeholder="Your response will appear here..."
-            disabled
-          />
-          <button type="button" disabled>
-            Send
-          </button>
+          {adventureStarted ? (
+            <div className="adventure-chat__options" aria-label="Choose your response">
+              {currentEncounter.options.map((option) => (
+                <button
+                  key={`${encounterIndex}-${option.key}`}
+                  type="button"
+                  onClick={() => chooseAdventureOption(option)}
+                >
+                  <span>{option.key}</span>
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="adventure-chat__controls-help">
+              Adventure choices will appear here after you start.
+            </p>
+          )}
         </div>
       </div>
 

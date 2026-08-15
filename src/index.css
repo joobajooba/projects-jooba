@@ -1431,14 +1431,62 @@ body {
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
+.adventure-chat__heading-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.adventure-chat__start {
+  appearance: none;
+  min-height: 2rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid rgba(184, 255, 46, 0.4);
+  border-radius: 2px;
+  background: rgba(184, 255, 46, 0.08);
+  color: #d9ff91;
+  font: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.adventure-chat__start:hover:not(:disabled) {
+  background: rgba(184, 255, 46, 0.15);
+}
+
+.adventure-chat__start:focus-visible,
+.adventure-chat__options button:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.62);
+  outline-offset: 2px;
+}
+
+.adventure-chat__start:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.adventure-chat__status--started {
+  border-color: rgba(184, 255, 46, 0.32);
+  color: #b8ff2e;
+}
+
 .adventure-chat__window {
   min-height: 25rem;
+  max-height: 32rem;
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1.25rem;
   background: rgba(0, 0, 0, 0.24);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.adventure-chat__window--active {
+  align-items: flex-start;
+  justify-content: flex-start;
 }
 
 .adventure-chat__empty {
@@ -1467,38 +1515,126 @@ body {
   line-height: 1.55;
 }
 
+.adventure-chat__messages {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.adventure-chat__message {
+  width: min(100%, 36rem);
+  padding: 0.7rem 0.8rem;
+  border-left: 2px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.adventure-chat__message--choice {
+  align-self: flex-end;
+  border-right: 2px solid rgba(137, 216, 255, 0.42);
+  border-left: 0;
+  background: rgba(137, 216, 255, 0.06);
+  text-align: right;
+}
+
+.adventure-chat__message--encounter {
+  border-left-color: rgba(255, 138, 138, 0.5);
+  background: rgba(255, 138, 138, 0.06);
+}
+
+.adventure-chat__message--system {
+  border-left-color: rgba(137, 216, 255, 0.42);
+}
+
+.adventure-chat__message--roll-success {
+  border-left-color: rgba(184, 255, 46, 0.55);
+  background: rgba(184, 255, 46, 0.055);
+}
+
+.adventure-chat__message--roll-failure {
+  border-left-color: rgba(255, 138, 138, 0.55);
+  background: rgba(255, 138, 138, 0.055);
+}
+
+.adventure-chat__message-label {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: rgba(232, 232, 232, 0.56);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.adventure-chat__message--roll-success .adventure-chat__message-label {
+  color: #b8ff2e;
+}
+
+.adventure-chat__message--roll-failure .adventure-chat__message-label {
+  color: #ff9c9c;
+}
+
+.adventure-chat__message p {
+  color: rgba(240, 240, 240, 0.84);
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
 .adventure-chat__controls {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.55rem;
   padding-top: 0.85rem;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-.adventure-chat__controls input,
-.adventure-chat__controls button {
+.adventure-chat__options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.adventure-chat__options button {
+  appearance: none;
   min-height: 2.65rem;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.6rem 0.75rem;
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 2px;
   background: rgba(0, 0, 0, 0.2);
-  color: rgba(232, 232, 232, 0.58);
+  color: rgba(240, 240, 240, 0.82);
   font: inherit;
   font-size: 0.82rem;
+  text-align: left;
+  cursor: pointer;
 }
 
-.adventure-chat__controls input {
-  min-width: 0;
+.adventure-chat__options button:hover {
+  border-color: rgba(137, 216, 255, 0.46);
+  background: rgba(137, 216, 255, 0.07);
+}
+
+.adventure-chat__options button span {
+  width: 1.55rem;
+  height: 1.55rem;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(137, 216, 255, 0.42);
+  color: #89d8ff;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.adventure-chat__controls-help {
+  min-height: 2.65rem;
+  display: flex;
+  align-items: center;
   padding: 0.6rem 0.75rem;
-}
-
-.adventure-chat__controls button {
-  padding: 0.6rem 0.9rem;
-}
-
-.adventure-chat__controls input:disabled,
-.adventure-chat__controls button:disabled {
-  cursor: not-allowed;
-  opacity: 0.62;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.18);
+  color: rgba(232, 232, 232, 0.48);
+  font-size: 0.78rem;
 }
 
 .adventure-board {
@@ -1778,6 +1914,19 @@ body {
 
   .adventure-chat__window {
     min-height: 20rem;
+  }
+
+  .adventure-chat__heading {
+    flex-direction: column;
+  }
+
+  .adventure-chat__heading-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .adventure-chat__options {
+    grid-template-columns: 1fr;
   }
 
   .adventures-flow__branches {
