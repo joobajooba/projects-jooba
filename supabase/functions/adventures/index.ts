@@ -26,7 +26,13 @@ const LEVELS = [
   { level: 3, xp: 1500, slots: 3 },
   { level: 4, xp: 4000, slots: 4 },
   { level: 5, xp: 8000, slots: 5 },
+  { level: 6, xp: 14000, slots: 5 },
+  { level: 7, xp: 22000, slots: 5 },
+  { level: 8, xp: 32000, slots: 5 },
+  { level: 9, xp: 45000, slots: 5 },
+  { level: 10, xp: 60000, slots: 5 },
 ];
+const MAX_LEVEL = 10;
 const ENCOUNTERS = [
   { options: [{ key: "A", dc: 10 }, { key: "B", dc: 8 }] },
   { options: [{ key: "A", dc: 13 }, { key: "B", dc: 9 }] },
@@ -45,7 +51,10 @@ function progressFromXp(xp = 0) {
   for (const row of LEVELS) {
     if (safeXp >= row.xp) current = row;
   }
-  const next = LEVELS.find((row) => row.level === current.level + 1) ?? null;
+  const next =
+    current.level >= MAX_LEVEL
+      ? null
+      : LEVELS.find((row) => row.level === current.level + 1) ?? null;
   return {
     xp: safeXp,
     level: current.level,
@@ -266,6 +275,19 @@ Deno.serve(async (request: Request) => {
           error: `Level ${account.level} can run ${account.slots} adventure${account.slots === 1 ? "" : "s"} at a time.`,
           account,
         }, 409);
+      }
+
+      const { data: activeSessions, error: activeError } = await supabase
+        .from("adventure_sessions")
+        .select("party_token_ids")
+        .eq("wallet_address", walletAddress)
+        .in("status", ["running", "found"]);
+      if (activeError) throw activeError;
+      const usedTokenIds = new Set(
+        (activeSessions ?? []).flatMap((row) => row.party_token_ids ?? []).map((id) => String(id)),
+      );
+      if (partyTokenIds.some((id) => usedTokenIds.has(String(id)))) {
+        return json({ error: "That IMPLINGZ is already on another adventure." }, 409);
       }
 
       const secret = randomSecret();

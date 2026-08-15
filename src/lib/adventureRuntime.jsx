@@ -11,8 +11,8 @@ import { hashesPerTickForParty, mineHashBatch, resolveImplingTier } from './hash
 
 const AdventureRuntimeContext = createContext(null);
 
-const PARTY_STORAGE_KEY = 'implingz-active-adventure-party';
-const NONCE_STORAGE_KEY = 'implingz-active-adventure-nonce';
+const PARTY_STORAGE_KEY = 'implingz-active-adventure-parties';
+const NONCE_STORAGE_KEY = 'implingz-active-adventure-nonces';
 const COLLECTION_BY_ID = new Map(collection.map((impling) => [String(impling.id), impling]));
 
 function readJson(key, fallback) {
@@ -28,7 +28,23 @@ function writeJson(key, value) {
   window.sessionStorage.setItem(key, JSON.stringify(value));
 }
 
-function enrichPartyMember(member) {
+function migratePartyStore(raw) {
+  if (!raw) return {};
+  if (raw.sessionId && Array.isArray(raw.party)) {
+    return { [raw.sessionId]: raw.party };
+  }
+  return raw;
+}
+
+function migrateNonceStore(raw) {
+  if (!raw) return {};
+  if (raw.sessionId) {
+    return { [raw.sessionId]: Number(raw.nonce) || 0 };
+  }
+  return raw;
+}
+
+export function enrichPartyMember(member) {
   if (!member) return null;
   const local = COLLECTION_BY_ID.get(String(member.id));
   const tier =
@@ -45,7 +61,7 @@ function enrichPartyMember(member) {
   };
 }
 
-function partyFromTokenIds(tokenIds = []) {
+export function partyFromTokenIds(tokenIds = []) {
   return tokenIds.map((tokenId) => {
     const local = COLLECTION_BY_ID.get(String(tokenId));
     return enrichPartyMember({
@@ -58,129 +74,169 @@ function partyFromTokenIds(tokenIds = []) {
   });
 }
 
+function createRun(session, partyMembers = []) {
+  return {
+    session,
+    party: (partyMembers ?? []).map(enrichPartyMember).filter(Boolean),
+    hashesChecked: Number(session?.hashes_checked ?? 0),
+    miningNonce: 0,
+    dungeonImageUrl: session?.dungeon_seed
+      ? `/api/dungeon-preview?seed=${encodeURIComponent(session.dungeon_seed)}&format=png`
+      : '',
+    miningPaused: false,
+  };
+}
+
+function previewUrlForSeed(seed) {
+  if (!seed) return '';
+  return `/api/dungeon-preview?seed=${encodeURIComponent(seed)}&format=png`;
+}
+
 export function AdventureRuntimeProvider({ walletAccount, children }) {
   const [adventurer, setAdventurer] = useState(() => emptyAdventurerAccount());
-  const [session, setSession] = useState(null);
-  const [party, setParty] = useState([]);
-  const [hashesChecked, setHashesChecked] = useState(0);
-  const [miningNonce, setMiningNonce] = useState(0);
-  const [dungeonImageUrl, setDungeonImageUrl] = useState('');
+  const [adventures, setAdventures] = useState([]);
   const [dripMessage, setDripMessage] = useState('');
   const [runtimeError, setRuntimeError] = useState('');
-  const [miningPaused, setMiningPaused] = useState(false);
-  const hashRateRef = useRef(3);
-  const miningNonceRef = useRef(0);
-  const miningPausedRef = useRef(false);
+  const adventuresRef = useRef([]);
+  const pausedIdsRef = useRef(new Set());
+  const nonceMapRef = useRef({});
 
-  const adventureActive = Boolean(
-    session && (session.status === 'running' || session.status === 'found')
+  adventuresRef.current = adventures;
+
+  const busyTokenIds = useMemo(() => {
+    const ids = new Set();
+    adventures.forEach((run) => {
+      (run.party ?? []).forEach((member) => ids.add(String(member.id)));
+      (run.session?.party_token_ids ?? []).forEach((id) => ids.add(String(id)));
+    });
+    return ids;
+  }, [adventures]);
+
+  const foundAdventure = useMemo(
+    () => adventures.find((run) => run.session?.status === 'found') ?? null,
+    [adventures]
   );
 
-  hashRateRef.current = Math.max(1, hashesPerTickForParty(party));
-  miningNonceRef.current = miningNonce;
-  miningPausedRef.current = miningPaused;
+  const persistNonce = useCallback((sessionId, nonce) => {
+    nonceMapRef.current = { ...nonceMapRef.current, [sessionId]: nonce };
+    writeJson(NONCE_STORAGE_KEY, nonceMapRef.current);
+  }, []);
+
+  const persistParties = useCallback((nextAdventures) => {
+    const parties = {};
+    nextAdventures.forEach((run) => {
+      if (run.session?.id) parties[run.session.id] = run.party;
+    });
+    writeJson(PARTY_STORAGE_KEY, parties);
+  }, []);
+
+  const updateRun = useCallback((sessionId, patch) => {
+    setAdventures((current) => {
+      const next = current.map((run) => {
+        if (run.session?.id !== sessionId) return run;
+        const updated = typeof patch === 'function' ? patch(run) : { ...run, ...patch };
+        return updated;
+      });
+      persistParties(next);
+      return next;
+    });
+  }, [persistParties]);
+
+  const removeRun = useCallback((sessionId) => {
+    setAdventures((current) => {
+      const next = current.filter((run) => run.session?.id !== sessionId);
+      persistParties(next);
+      const nextNonces = { ...nonceMapRef.current };
+      delete nextNonces[sessionId];
+      nonceMapRef.current = nextNonces;
+      writeJson(NONCE_STORAGE_KEY, nextNonces);
+      pausedIdsRef.current.delete(sessionId);
+      return next;
+    });
+  }, [persistParties]);
 
   const clearActiveAdventure = useCallback(() => {
-    setSession(null);
-    setParty([]);
-    setHashesChecked(0);
-    setMiningNonce(0);
-    miningNonceRef.current = 0;
-    setDungeonImageUrl('');
+    setAdventures([]);
     setDripMessage('');
-    setMiningPaused(false);
-    miningPausedRef.current = false;
+    pausedIdsRef.current = new Set();
+    nonceMapRef.current = {};
     window.sessionStorage.removeItem(PARTY_STORAGE_KEY);
     window.sessionStorage.removeItem(NONCE_STORAGE_KEY);
   }, []);
 
-  const loadDungeonPreview = useCallback(async (seed) => {
-    if (!seed) {
-      setDungeonImageUrl('');
-      return;
-    }
-    setDungeonImageUrl(
-      `/api/dungeon-preview?seed=${encodeURIComponent(seed)}&format=png`
-    );
-  }, []);
+  const setMiningPaused = useCallback((sessionId, paused) => {
+    if (!sessionId) return;
+    if (paused) pausedIdsRef.current.add(sessionId);
+    else pausedIdsRef.current.delete(sessionId);
+    updateRun(sessionId, { miningPaused: Boolean(paused) });
+  }, [updateRun]);
 
   const beginAdventure = useCallback(
     ({ account, session: nextSession, partyMembers }) => {
-      const enrichedParty = (partyMembers ?? []).map(enrichPartyMember).filter(Boolean);
+      const run = createRun(nextSession, partyMembers);
       setAdventurer(decorateAccount(account));
-      setSession(nextSession);
-      setParty(enrichedParty);
-      setHashesChecked(Number(nextSession?.hashes_checked ?? 0));
-      setMiningNonce(0);
-      miningNonceRef.current = 0;
-      setDungeonImageUrl('');
-      setDripMessage('');
       setRuntimeError('');
-      writeJson(PARTY_STORAGE_KEY, {
-        sessionId: nextSession.id,
-        party: enrichedParty,
+      setAdventures((current) => {
+        const without = current.filter((row) => row.session?.id !== nextSession.id);
+        const next = [...without, run];
+        persistParties(next);
+        return next;
       });
-      writeJson(NONCE_STORAGE_KEY, { sessionId: nextSession.id, nonce: 0 });
+      persistNonce(nextSession.id, 0);
     },
-    []
+    [persistNonce, persistParties]
   );
 
-  const attachFoundState = useCallback(
-    async ({ account, session: nextSession, drip }) => {
-      setAdventurer(decorateAccount(account));
-      setSession(nextSession);
-      setHashesChecked(Number(nextSession?.hashes_checked ?? hashesChecked));
-      if (drip) {
-        setDripMessage(`${drip.amount} $DERP is queued from the royalties pot.`);
-      }
-      await loadDungeonPreview(nextSession?.dungeon_seed);
-    },
-    [hashesChecked, loadDungeonPreview]
-  );
-
-  const endAdventure = useCallback(
-    ({ account, session: nextSession, message } = {}) => {
-      if (account) setAdventurer(decorateAccount(account));
-      if (nextSession) setSession(nextSession);
-      else clearActiveAdventure();
-      if (
-        !nextSession ||
-        !['running', 'found'].includes(nextSession.status)
-      ) {
-        clearActiveAdventure();
-      }
-      if (message) setDripMessage('');
-      setRuntimeError(message || '');
-    },
-    [clearActiveAdventure]
-  );
-
-  const stopAdventure = useCallback(async () => {
-    if (!session?.id) {
-      clearActiveAdventure();
+  const stopAdventure = useCallback(async (sessionId) => {
+    const targetId = sessionId || adventuresRef.current[0]?.session?.id;
+    if (!targetId) return { ok: true };
+    const run = adventuresRef.current.find((row) => row.session?.id === targetId);
+    if (!run || !['running', 'found'].includes(run.session.status)) {
+      removeRun(targetId);
       return { ok: true };
     }
-    if (!['running', 'found'].includes(session.status)) {
-      clearActiveAdventure();
-      return { ok: true };
-    }
-    const data = await abandonAdventure(session.id);
+    const data = await abandonAdventure(targetId);
     setAdventurer(decorateAccount(data.account));
-    clearActiveAdventure();
+    removeRun(targetId);
     return data;
-  }, [clearActiveAdventure, session]);
+  }, [removeRun]);
 
   const resumeAfterWalkAway = useCallback(
     ({ account, session: nextSession, nextNonce }) => {
       const nonce = Math.max(0, Number(nextNonce) || 0);
       setAdventurer(decorateAccount(account));
-      setSession(nextSession);
-      setDungeonImageUrl('');
-      setMiningNonce(nonce);
-      miningNonceRef.current = nonce;
-      writeJson(NONCE_STORAGE_KEY, { sessionId: nextSession.id, nonce });
+      persistNonce(nextSession.id, nonce);
+      updateRun(nextSession.id, (run) => ({
+        ...run,
+        session: nextSession,
+        miningNonce: nonce,
+        dungeonImageUrl: '',
+        miningPaused: false,
+      }));
+      pausedIdsRef.current.delete(nextSession.id);
     },
-    []
+    [persistNonce, updateRun]
+  );
+
+  const replaceSession = useCallback(
+    ({ account, session: nextSession, drip, hashesChecked }) => {
+      if (account) setAdventurer(decorateAccount(account));
+      if (drip) {
+        setDripMessage(`${drip.amount} $DERP is queued from the royalties pot.`);
+      }
+      if (!nextSession) return;
+      if (!['running', 'found'].includes(nextSession.status)) {
+        removeRun(nextSession.id);
+        return;
+      }
+      updateRun(nextSession.id, (run) => ({
+        ...run,
+        session: nextSession,
+        hashesChecked: Number(hashesChecked ?? run.hashesChecked),
+        dungeonImageUrl: previewUrlForSeed(nextSession.dungeon_seed) || run.dungeonImageUrl,
+      }));
+    },
+    [removeRun, updateRun]
   );
 
   useEffect(() => {
@@ -194,154 +250,163 @@ export function AdventureRuntimeProvider({ walletAccount, children }) {
     fetchAdventurerAccount(walletAccount, { signal: controller.signal })
       .then((data) => {
         setAdventurer(decorateAccount(data.account));
-        const active = (data.sessions ?? []).find(
+        const active = (data.sessions ?? []).filter(
           (row) => row.status === 'running' || row.status === 'found'
         );
-        if (!active) {
+        if (!active.length) {
           clearActiveAdventure();
           return;
         }
 
-        const storedParty = readJson(PARTY_STORAGE_KEY, null);
-        const restoredParty =
-          storedParty?.sessionId === active.id && Array.isArray(storedParty.party)
-            ? storedParty.party.map(enrichPartyMember)
-            : partyFromTokenIds(active.party_token_ids ?? []);
+        const storedParties = migratePartyStore(readJson(PARTY_STORAGE_KEY, {}));
+        const storedNonces = migrateNonceStore(readJson(NONCE_STORAGE_KEY, {}));
+        nonceMapRef.current = storedNonces;
 
-        const storedNonce = readJson(NONCE_STORAGE_KEY, null);
-        const nextNonce =
-          storedNonce?.sessionId === active.id ? Number(storedNonce.nonce) || 0 : 0;
+        const restored = active.map((session) => {
+          const storedParty = storedParties?.[session.id];
+          const party = Array.isArray(storedParty)
+            ? storedParty.map(enrichPartyMember)
+            : partyFromTokenIds(session.party_token_ids ?? []);
+          const nonce = Number(storedNonces?.[session.id]) || 0;
+          return {
+            ...createRun(session, party),
+            miningNonce: nonce,
+          };
+        });
 
-        setSession(active);
-        setParty(restoredParty);
-        setHashesChecked(Number(active.hashes_checked ?? 0));
-        setMiningNonce(nextNonce);
-        miningNonceRef.current = nextNonce;
-        writeJson(PARTY_STORAGE_KEY, { sessionId: active.id, party: restoredParty });
-        if (active.dungeon_seed) loadDungeonPreview(active.dungeon_seed);
+        setAdventures(restored);
+        persistParties(restored);
+        writeJson(NONCE_STORAGE_KEY, storedNonces);
       })
       .catch(() => {
         setAdventurer(emptyAdventurerAccount(walletAccount.toLowerCase()));
       });
 
     return () => controller.abort();
-  }, [walletAccount, clearActiveAdventure, loadDungeonPreview]);
+  }, [walletAccount, clearActiveAdventure, persistParties]);
+
+  const runningKey = adventures
+    .filter((run) => run.session?.status === 'running')
+    .map((run) => run.session.id)
+    .join('|');
 
   useEffect(() => {
-    if (!session?.id || session.status !== 'running') return undefined;
+    const runningIds = runningKey ? runningKey.split('|') : [];
+    if (!runningIds.length) return undefined;
 
     let cancelled = false;
-    let pendingChecked = 0;
 
-    async function mineLoop() {
-      while (!cancelled) {
-        while (!cancelled && miningPausedRef.current) {
-          await new Promise((resolve) => window.setTimeout(resolve, 120));
-        }
-        if (cancelled) break;
+    runningIds.forEach((sessionId) => {
+      let pendingChecked = 0;
 
-        const batch = Math.max(1, hashRateRef.current);
-        const startNonce = miningNonceRef.current;
-        const result = await mineHashBatch({
-          sessionId: session.id,
-          startNonce,
-          count: batch,
-        });
-
-        if (cancelled) break;
-
-        // Not found: result.nonce is already the next nonce to try.
-        // Found: result.nonce is the winning nonce; mining stops after submit.
-        const nextNonce = result.found ? result.nonce + 1 : result.nonce;
-        miningNonceRef.current = nextNonce;
-        setMiningNonce(nextNonce);
-        writeJson(NONCE_STORAGE_KEY, { sessionId: session.id, nonce: nextNonce });
-
-        pendingChecked += result.checked;
-        setHashesChecked((current) => current + result.checked);
-
-        if (result.found) {
-          try {
-            const submitted = await submitWinningHash(session.id, {
-              nonce: String(result.nonce),
-              hash: result.hash,
-            });
-            if (cancelled) break;
-            setSession(submitted.session);
-            setAdventurer(decorateAccount(submitted.account));
-            if (submitted.drip) {
-              setDripMessage(
-                `${submitted.drip.amount} $DERP is queued from the royalties pot.`
-              );
-            }
-            await loadDungeonPreview(submitted.session.dungeon_seed);
-          } catch (error) {
-            if (!cancelled) {
-              setRuntimeError(error?.message || 'The winning hash could not be verified.');
-            }
+      async function mineLoop() {
+        while (!cancelled) {
+          while (!cancelled && pausedIdsRef.current.has(sessionId)) {
+            await new Promise((resolve) => window.setTimeout(resolve, 120));
           }
-          break;
+          if (cancelled) break;
+
+          const run = adventuresRef.current.find((row) => row.session?.id === sessionId);
+          if (!run || run.session.status !== 'running') break;
+
+          const batch = Math.max(1, hashesPerTickForParty(run.party));
+          const startNonce = nonceMapRef.current[sessionId] ?? run.miningNonce ?? 0;
+          const result = await mineHashBatch({
+            sessionId,
+            startNonce,
+            count: batch,
+          });
+
+          if (cancelled) break;
+
+          const nextNonce = result.found ? result.nonce + 1 : result.nonce;
+          persistNonce(sessionId, nextNonce);
+          pendingChecked += result.checked;
+          updateRun(sessionId, (current) => ({
+            ...current,
+            miningNonce: nextNonce,
+            hashesChecked: current.hashesChecked + result.checked,
+          }));
+
+          if (result.found) {
+            try {
+              const submitted = await submitWinningHash(sessionId, {
+                nonce: String(result.nonce),
+                hash: result.hash,
+              });
+              if (cancelled) break;
+              setAdventurer(decorateAccount(submitted.account));
+              if (submitted.drip) {
+                setDripMessage(
+                  `${submitted.drip.amount} $DERP is queued from the royalties pot.`
+                );
+              }
+              updateRun(sessionId, (current) => ({
+                ...current,
+                session: submitted.session,
+                dungeonImageUrl: previewUrlForSeed(submitted.session.dungeon_seed),
+              }));
+            } catch (error) {
+              if (!cancelled) {
+                setRuntimeError(error?.message || 'The winning hash could not be verified.');
+              }
+            }
+            break;
+          }
+
+          if (pausedIdsRef.current.has(sessionId)) continue;
+
+          if (pendingChecked >= 2000) {
+            reportMiningProgress(sessionId, pendingChecked).catch(() => {});
+            pendingChecked = 0;
+          }
+
+          await new Promise((resolve) => window.setTimeout(resolve, 16));
         }
-
-        if (miningPausedRef.current) continue;
-
-        if (pendingChecked >= 2000) {
-          reportMiningProgress(session.id, pendingChecked).catch(() => {});
-          pendingChecked = 0;
-        }
-
-        await new Promise((resolve) => window.setTimeout(resolve, 16));
       }
-    }
 
-    mineLoop();
+      mineLoop();
+    });
+
     return () => {
       cancelled = true;
     };
-  }, [session?.id, session?.status, loadDungeonPreview]);
+  }, [runningKey, persistNonce, updateRun]);
 
   const value = useMemo(
     () => ({
       adventurer,
       setAdventurer,
-      session,
-      setSession,
-      party,
-      hashesChecked,
-      dungeonImageUrl,
+      adventures,
+      foundAdventure,
+      busyTokenIds,
       dripMessage,
       setDripMessage,
       runtimeError,
       setRuntimeError,
-      adventureActive,
-      miningPaused,
+      adventureActive: adventures.length > 0,
       setMiningPaused,
-      hashRate: hashRateRef.current,
       beginAdventure,
-      attachFoundState,
-      endAdventure,
-      clearActiveAdventure,
       stopAdventure,
       resumeAfterWalkAway,
-      loadDungeonPreview,
+      replaceSession,
+      removeRun,
+      clearActiveAdventure,
     }),
     [
       adventurer,
-      session,
-      party,
-      hashesChecked,
-      dungeonImageUrl,
+      adventures,
+      foundAdventure,
+      busyTokenIds,
       dripMessage,
       runtimeError,
-      adventureActive,
-      miningPaused,
+      setMiningPaused,
       beginAdventure,
-      attachFoundState,
-      endAdventure,
-      clearActiveAdventure,
       stopAdventure,
       resumeAfterWalkAway,
-      loadDungeonPreview,
+      replaceSession,
+      removeRun,
+      clearActiveAdventure,
     ]
   );
 
