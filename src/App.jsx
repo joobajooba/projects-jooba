@@ -19,6 +19,8 @@ const NAV_ITEMS = [
 const FONT_STORAGE_KEY = 'j00ba-font-mode';
 const VOLUME_STORAGE_KEY = 'j00ba-music-volume';
 const TRACK_STORAGE_KEY = 'j00ba-music-track';
+const MUSIC_ENABLED_STORAGE_KEY = 'j00ba-music-enabled';
+const DEFAULT_VOLUME = 0.15;
 
 const PLAYLIST = [
   { id: 'adventure-time', title: 'Adventure Time', src: '/audio/adventure-time.mp3' },
@@ -39,12 +41,21 @@ function readFontMode() {
 function readVolume() {
   try {
     const raw = window.localStorage.getItem(VOLUME_STORAGE_KEY);
-    if (raw === null) return 0.4;
+    if (raw === null) return DEFAULT_VOLUME;
     const value = Number(raw);
-    if (!Number.isFinite(value)) return 0.4;
+    if (!Number.isFinite(value)) return DEFAULT_VOLUME;
     return Math.min(1, Math.max(0, value));
   } catch {
-    return 0.4;
+    return DEFAULT_VOLUME;
+  }
+}
+
+function readMusicEnabled() {
+  try {
+    const value = window.localStorage.getItem(MUSIC_ENABLED_STORAGE_KEY);
+    return value !== '0';
+  } catch {
+    return true;
   }
 }
 
@@ -155,6 +166,33 @@ function RainbowWalletButton() {
   );
 }
 
+function SettingsSection({ id, title, children }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <section
+      className={`site-settings-modal__section${open ? ' is-open' : ''}`}
+      aria-labelledby={id}
+    >
+      <button
+        type="button"
+        className="site-settings-modal__section-toggle"
+        aria-expanded={open}
+        aria-controls={`${id}-body`}
+        onClick={() => setOpen((value) => !value)}
+      >
+        <h3 id={id}>{title}</h3>
+        <span aria-hidden="true">{open ? '−' : '+'}</span>
+      </button>
+      {open ? (
+        <div id={`${id}-body`} className="site-settings-modal__section-body">
+          {children}
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
 function SiteSettingsModal({
   fontMode,
   onClose,
@@ -162,7 +200,10 @@ function SiteSettingsModal({
   volume,
   onVolumeChange,
   trackTitle,
-  onSkipTrack,
+  musicEnabled,
+  onPrevTrack,
+  onNextTrack,
+  onToggleMusic,
 }) {
   return (
     <div
@@ -186,8 +227,7 @@ function SiteSettingsModal({
           </button>
         </div>
 
-        <section className="site-settings-modal__section" aria-labelledby="accessibility-title">
-          <h3 id="accessibility-title">Accessibility</h3>
+        <SettingsSection id="accessibility-title" title="Accessibility">
           <p>
             Switch site text between the pixel font and a simple Arial font that is easier to
             read.
@@ -210,13 +250,14 @@ function SiteSettingsModal({
               Pixel art font
             </button>
           </div>
-        </section>
+        </SettingsSection>
 
-        <section className="site-settings-modal__section" aria-labelledby="sound-title">
-          <h3 id="sound-title">Sound settings</h3>
-          <p>Background music loops through the playlist. Adjust volume or skip tracks.</p>
+        <SettingsSection id="sound-title" title="Sound settings">
+          <p>Background music loops through the playlist. Adjust volume or change tracks.</p>
           <div className="site-settings-modal__now-playing">
-            <span className="site-settings-modal__track-label">Now playing</span>
+            <span className="site-settings-modal__track-label">
+              {musicEnabled ? 'Now playing' : 'Stopped'}
+            </span>
             <strong>{trackTitle}</strong>
           </div>
           <label className="site-settings-modal__volume">
@@ -234,10 +275,18 @@ function SiteSettingsModal({
               aria-label="Music volume"
             />
           </label>
-          <button type="button" className="site-settings-modal__skip" onClick={onSkipTrack}>
-            Skip song
-          </button>
-        </section>
+          <div className="site-settings-modal__transport">
+            <button type="button" onClick={onPrevTrack} aria-label="Previous song">
+              ←
+            </button>
+            <button type="button" onClick={onToggleMusic}>
+              {musicEnabled ? 'Stop' : 'Play'}
+            </button>
+            <button type="button" onClick={onNextTrack} aria-label="Next song">
+              →
+            </button>
+          </div>
+        </SettingsSection>
       </div>
     </div>
   );
@@ -250,23 +299,32 @@ export default function App() {
     typeof window === 'undefined' ? 'pixel' : readFontMode()
   );
   const [volume, setVolume] = useState(() =>
-    typeof window === 'undefined' ? 0.4 : readVolume()
+    typeof window === 'undefined' ? DEFAULT_VOLUME : readVolume()
   );
   const [trackIndex, setTrackIndex] = useState(() =>
     typeof window === 'undefined' ? 0 : readTrackIndex()
   );
+  const [musicEnabled, setMusicEnabled] = useState(() =>
+    typeof window === 'undefined' ? true : readMusicEnabled()
+  );
   const audioRef = useRef(null);
   const unlockedRef = useRef(false);
+  const musicEnabledRef = useRef(true);
   const { address, connector } = useAccount();
   const { openConnectModal } = useConnectModal();
   const walletAccount = address ?? '';
   const walletName = connector?.name ?? 'Wallet';
   const currentTrack = PLAYLIST[trackIndex] ?? PLAYLIST[0];
+  musicEnabledRef.current = musicEnabled;
 
   const ensurePlayback = useCallback(async () => {
     const audio = audioRef.current;
     if (!audio) return;
     audio.volume = volume;
+    if (!musicEnabledRef.current) {
+      audio.pause();
+      return;
+    }
     try {
       await audio.play();
       unlockedRef.current = true;
@@ -275,8 +333,14 @@ export default function App() {
     }
   }, [volume]);
 
-  const skipTrack = useCallback(() => {
-    setTrackIndex((current) => (current + 1) % PLAYLIST.length);
+  const changeTrack = useCallback((direction) => {
+    unlockedRef.current = true;
+    setTrackIndex((current) => (current + direction + PLAYLIST.length) % PLAYLIST.length);
+  }, []);
+
+  const toggleMusic = useCallback(() => {
+    unlockedRef.current = true;
+    setMusicEnabled((current) => !current);
   }, []);
 
   useEffect(() => {
@@ -306,6 +370,21 @@ export default function App() {
       // Ignore storage failures.
     }
   }, [trackIndex]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(MUSIC_ENABLED_STORAGE_KEY, musicEnabled ? '1' : '0');
+    } catch {
+      // Ignore storage failures.
+    }
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (musicEnabled) {
+      ensurePlayback();
+    } else {
+      audio.pause();
+    }
+  }, [musicEnabled, ensurePlayback]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -382,10 +461,10 @@ export default function App() {
           volume={volume}
           onVolumeChange={setVolume}
           trackTitle={currentTrack.title}
-          onSkipTrack={() => {
-            unlockedRef.current = true;
-            skipTrack();
-          }}
+          musicEnabled={musicEnabled}
+          onPrevTrack={() => changeTrack(-1)}
+          onNextTrack={() => changeTrack(1)}
+          onToggleMusic={toggleMusic}
         />
       ) : null}
 

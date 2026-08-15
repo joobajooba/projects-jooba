@@ -14,6 +14,7 @@ import {
   resolveAdventurePrompt,
   startAdventureSession,
 } from '../lib/adventuresApi';
+import { fetchCommunityProfiles } from '../lib/communityProfiles';
 import {
   hashesPerTickForParty,
   resolveImplingTier,
@@ -1460,14 +1461,57 @@ function StartAdventurePanel() {
   );
 }
 
+function shortenAddress(address = '') {
+  if (!address) return '—';
+  return `${address.slice(0, 6)}…${address.slice(-4)}`;
+}
+
+function formatBoardTime(value) {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function formatDungeonFound(event) {
+  if (event?.dungeon_seed) {
+    const seed = String(event.dungeon_seed);
+    return seed.startsWith('0x') ? `${seed.slice(0, 10)}…` : seed.slice(0, 10);
+  }
+  if (event?.status === 'found' || event?.status === 'minted') return 'Yes';
+  return '—';
+}
+
 function AdventureBoard() {
   const [events, setEvents] = useState([]);
+  const [profilesByWallet, setProfilesByWallet] = useState({});
 
   useEffect(() => {
     const controller = new AbortController();
-    fetchAdventureBoard({ signal: controller.signal })
-      .then(setEvents)
-      .catch(() => setEvents([]));
+    Promise.all([
+      fetchAdventureBoard({ signal: controller.signal }),
+      fetchCommunityProfiles({ signal: controller.signal }).catch(() => []),
+    ])
+      .then(([boardEvents, profiles]) => {
+        setEvents(boardEvents);
+        setProfilesByWallet(
+          Object.fromEntries(
+            (profiles ?? []).map((profile) => [
+              String(profile.wallet_address || '').toLowerCase(),
+              profile,
+            ])
+          )
+        );
+      })
+      .catch(() => {
+        setEvents([]);
+        setProfilesByWallet({});
+      });
     return () => controller.abort();
   }, []);
 
@@ -1497,19 +1541,54 @@ function AdventureBoard() {
             </p>
           </div>
         ) : (
-          events.map((event) => (
-            <article key={event.id} className="adventure-board__event">
-              <strong>{event.status}</strong>
-              <span>
-                {event.wallet_address.slice(0, 6)}…{event.wallet_address.slice(-4)}
-              </span>
-              <p>
-                {event.dungeon_seed
-                  ? `Seed ${event.dungeon_seed.slice(0, 10)}…`
-                  : `${event.xp_awarded ?? 0} XP earned`}
-              </p>
-            </article>
-          ))
+          <div className="adventure-board__table-wrap">
+            <table className="adventure-board__table">
+              <thead>
+                <tr>
+                  <th scope="col">Profile pic</th>
+                  <th scope="col">Name</th>
+                  <th scope="col">Wallet address</th>
+                  <th scope="col">Dungeon found</th>
+                  <th scope="col">XP earned</th>
+                  <th scope="col">Time found</th>
+                </tr>
+              </thead>
+              <tbody>
+                {events.map((event) => {
+                  const wallet = String(event.wallet_address || '').toLowerCase();
+                  const profile = profilesByWallet[wallet];
+                  const avatar = COLLECTION_BY_ID.get(String(profile?.avatar_token_id ?? ''));
+
+                  return (
+                    <tr key={event.id}>
+                      <td>
+                        <div className="adventure-board__avatar">
+                          {avatar ? (
+                            <img src={avatar.image} alt={avatar.name} />
+                          ) : (
+                            <span aria-hidden="true">?</span>
+                          )}
+                        </div>
+                      </td>
+                      <td>
+                        <strong>{profile?.nickname || 'Unnamed Adventurer'}</strong>
+                      </td>
+                      <td>
+                        <span className="adventure-board__address">
+                          {shortenAddress(event.wallet_address)}
+                        </span>
+                      </td>
+                      <td>{formatDungeonFound(event)}</td>
+                      <td className="adventure-board__xp">{event.xp_awarded ?? 0}</td>
+                      <td>
+                        {formatBoardTime(event.updated_at || event.ended_at || event.started_at)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </section>
