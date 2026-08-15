@@ -212,8 +212,8 @@ const ENCOUNTER_DELAY_MIN = 60_000;
 const ENCOUNTER_DELAY_MAX = 180_000;
 const IDLE_DELAY_MIN = 18_000;
 const IDLE_DELAY_MAX = 24_000;
-const IMP_SPEECH_DELAY_MIN = 20_000;
-const IMP_SPEECH_DELAY_MAX = 40_000;
+const IMP_SPEECH_DELAY_MIN = 10_000;
+const IMP_SPEECH_DELAY_MAX = 30_000;
 const IMP_SPEECH_THINKING_DELAY = 5_000;
 
 function randomDelay(minimum, maximum) {
@@ -232,6 +232,18 @@ function randomIndex(length, excludedIndex = null) {
 
 function getInitialImplingQuoteIndex(tokenId, slotIndex) {
   return (Number(tokenId) + slotIndex * 3) % IMPLING_IDLE_QUOTES.length;
+}
+
+function getUniqueQuoteIndex(excludedIndexes, preferredIndex = null) {
+  const availableIndexes = IMPLING_IDLE_QUOTES.map((_, index) => index).filter(
+    (index) => !excludedIndexes.has(index)
+  );
+
+  if (preferredIndex !== null && availableIndexes.includes(preferredIndex)) {
+    return preferredIndex;
+  }
+
+  return availableIndexes[Math.floor(Math.random() * availableIndexes.length)];
 }
 
 function normalizeImageUrl(imageUrl) {
@@ -459,12 +471,19 @@ function StartAdventurePanel() {
 
   useEffect(() => {
     clearImpSpeechTimers();
-    setImpSpeechStates(
-      selectedImplingz.map((impling, slotIndex) => ({
-        quoteIndex: impling ? getInitialImplingQuoteIndex(impling.id, slotIndex) : null,
-        thinking: false,
-      }))
-    );
+    const usedQuoteIndexes = new Set();
+    const initialSpeechStates = selectedImplingz.map((impling, slotIndex) => {
+      if (!impling) return { quoteIndex: null, thinking: false };
+
+      const quoteIndex = getUniqueQuoteIndex(
+        usedQuoteIndexes,
+        getInitialImplingQuoteIndex(impling.id, slotIndex)
+      );
+      usedQuoteIndexes.add(quoteIndex);
+
+      return { quoteIndex, thinking: false };
+    });
+    setImpSpeechStates(initialSpeechStates);
 
     selectedImplingz.forEach((impling, slotIndex) => {
       if (impling) scheduleImpSpeechChange(slotIndex);
@@ -516,6 +535,22 @@ function StartAdventurePanel() {
       setSelectedImplingz((current) =>
         current.map((selected, index) => (index === selectingSlot ? impling : selected))
       );
+      setImpSpeechStates((states) => {
+        const usedQuoteIndexes = new Set(
+          states
+            .filter((_, index) => index !== selectingSlot)
+            .map((state) => state.quoteIndex)
+            .filter((quoteIndex) => quoteIndex !== null)
+        );
+        const quoteIndex = getUniqueQuoteIndex(
+          usedQuoteIndexes,
+          getInitialImplingQuoteIndex(impling.id, selectingSlot)
+        );
+
+        return states.map((state, index) =>
+          index === selectingSlot ? { quoteIndex, thinking: false } : state
+        );
+      });
       setSelectingSlot(null);
     } catch (error) {
       setImplingzError(error?.message || 'Could not verify ownership of this IMPLINGZ.');
@@ -528,6 +563,11 @@ function StartAdventurePanel() {
     if (selectingSlot === null) return;
     setSelectedImplingz((current) =>
       current.map((selected, index) => (index === selectingSlot ? null : selected))
+    );
+    setImpSpeechStates((states) =>
+      states.map((state, index) =>
+        index === selectingSlot ? { quoteIndex: null, thinking: false } : state
+      )
     );
     setSelectingSlot(null);
   }
@@ -555,16 +595,25 @@ function StartAdventurePanel() {
       );
 
       timers.change = window.setTimeout(() => {
-        setImpSpeechStates((states) =>
-          states.map((state, index) =>
+        setImpSpeechStates((states) => {
+          const excludedQuoteIndexes = new Set(
+            states
+              .filter((_, index) => index !== slotIndex)
+              .map((state) => state.quoteIndex)
+              .filter((quoteIndex) => quoteIndex !== null)
+          );
+          excludedQuoteIndexes.add(states[slotIndex].quoteIndex);
+          const nextQuoteIndex = getUniqueQuoteIndex(excludedQuoteIndexes);
+
+          return states.map((state, index) =>
             index === slotIndex
               ? {
-                  quoteIndex: randomIndex(IMPLING_IDLE_QUOTES.length, state.quoteIndex),
+                  quoteIndex: nextQuoteIndex,
                   thinking: false,
                 }
               : state
-          )
-        );
+          );
+        });
         scheduleImpSpeechChange(slotIndex);
       }, IMP_SPEECH_THINKING_DELAY);
     }, randomDelay(IMP_SPEECH_DELAY_MIN, IMP_SPEECH_DELAY_MAX));
