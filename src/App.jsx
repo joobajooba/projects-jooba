@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { ConnectButton, useConnectModal } from '@rainbow-me/rainbowkit';
+import { useAccount } from 'wagmi';
 import { NavLink, Outlet } from 'react-router-dom';
 
 const NAV_ITEMS = [
@@ -12,18 +14,6 @@ const NAV_ITEMS = [
   { label: 'Official Links', to: '/official-links' },
   { label: 'FAQs', to: '/faqs' },
 ];
-
-const ROBINHOOD_CHAIN = {
-  chainId: '0x1237',
-  chainName: 'Robinhood Chain',
-  nativeCurrency: {
-    name: 'Ether',
-    symbol: 'ETH',
-    decimals: 18,
-  },
-  rpcUrls: ['https://rpc.mainnet.chain.robinhood.com'],
-  blockExplorerUrls: ['https://robinhoodchain.blockscout.com'],
-};
 
 function MenuIcon() {
   return (
@@ -70,123 +60,66 @@ function WalletIcon() {
   );
 }
 
-function getInjectedProviders() {
-  if (typeof window === 'undefined' || !window.ethereum) return [];
-  return window.ethereum.providers?.length ? window.ethereum.providers : [window.ethereum];
-}
+function RainbowWalletButton() {
+  return (
+    <ConnectButton.Custom>
+      {({ account, chain, openAccountModal, openChainModal, openConnectModal, mounted }) => {
+        const ready = mounted;
+        const connected = ready && account && chain;
+        const wrongNetwork = connected && chain.unsupported;
+        const openModal = !connected
+          ? openConnectModal
+          : wrongNetwork
+            ? openChainModal
+            : openAccountModal;
 
-function findWalletProvider(walletType) {
-  const providers = getInjectedProviders();
-
-  if (walletType === 'rabby') {
-    return providers.find((provider) => provider.isRabby);
-  }
-
-  return providers.find((provider) => provider.isMetaMask && !provider.isRabby);
-}
-
-function shortenAddress(address) {
-  return `${address.slice(0, 6)}…${address.slice(-4)}`;
-}
-
-async function switchToRobinhoodChain(provider) {
-  const currentChainId = await provider.request({ method: 'eth_chainId' });
-  if (currentChainId?.toLowerCase() === ROBINHOOD_CHAIN.chainId) return;
-
-  try {
-    await provider.request({
-      method: 'wallet_switchEthereumChain',
-      params: [{ chainId: ROBINHOOD_CHAIN.chainId }],
-    });
-  } catch (error) {
-    if (error?.code !== 4902) throw error;
-
-    await provider.request({
-      method: 'wallet_addEthereumChain',
-      params: [ROBINHOOD_CHAIN],
-    });
-  }
+        return (
+          <div
+            className="wallet-connect"
+            {...(!ready && {
+              'aria-hidden': true,
+              style: {
+                opacity: 0,
+                pointerEvents: 'none',
+                userSelect: 'none',
+              },
+            })}
+          >
+            <button
+              type="button"
+              className={`wallet-connect__trigger${
+                connected ? ' wallet-connect__trigger--connected' : ''
+              }${wrongNetwork ? ' wallet-connect__trigger--wrong-network' : ''}`}
+              aria-label={
+                !connected
+                  ? 'Connect wallet'
+                  : wrongNetwork
+                    ? 'Switch to Robinhood Chain'
+                    : `Wallet connected: ${account.address}`
+              }
+              aria-haspopup="dialog"
+              onClick={openModal}
+            >
+              <WalletIcon />
+              {connected && (
+                <span className="wallet-connect__account">
+                  {wrongNetwork ? 'Wrong network' : account.displayName}
+                </span>
+              )}
+            </button>
+          </div>
+        );
+      }}
+    </ConnectButton.Custom>
+  );
 }
 
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [walletMenuOpen, setWalletMenuOpen] = useState(false);
-  const [walletAccount, setWalletAccount] = useState('');
-  const [walletName, setWalletName] = useState('');
-  const [walletProvider, setWalletProvider] = useState(null);
-  const [walletError, setWalletError] = useState('');
-  const [walletConnecting, setWalletConnecting] = useState(false);
-
-  useEffect(() => {
-    if (!walletProvider?.on) return undefined;
-
-    const handleAccountsChanged = (accounts) => {
-      const nextAccount = accounts?.[0] ?? '';
-      setWalletAccount(nextAccount);
-
-      if (!nextAccount) {
-        setWalletName('');
-        setWalletProvider(null);
-      }
-    };
-
-    const handleChainChanged = () => {
-      setWalletError('');
-    };
-
-    walletProvider.on('accountsChanged', handleAccountsChanged);
-    walletProvider.on('chainChanged', handleChainChanged);
-
-    return () => {
-      walletProvider.removeListener?.('accountsChanged', handleAccountsChanged);
-      walletProvider.removeListener?.('chainChanged', handleChainChanged);
-    };
-  }, [walletProvider]);
-
-  async function connectWallet(walletType) {
-    const provider = findWalletProvider(walletType);
-    const displayName = walletType === 'rabby' ? 'Rabby' : 'MetaMask';
-
-    if (!provider) {
-      setWalletError(`${displayName} was not detected. Install or enable the wallet extension.`);
-      return;
-    }
-
-    setWalletConnecting(true);
-    setWalletError('');
-
-    try {
-      const accounts = await provider.request({ method: 'eth_requestAccounts' });
-      const account = accounts?.[0];
-
-      if (!account) {
-        throw new Error('No wallet account was returned.');
-      }
-
-      await switchToRobinhoodChain(provider);
-
-      setWalletAccount(account);
-      setWalletName(displayName);
-      setWalletProvider(provider);
-      setWalletMenuOpen(false);
-    } catch (error) {
-      setWalletError(
-        error?.code === 4001
-          ? 'Wallet connection was cancelled.'
-          : error?.message || `Could not connect to ${displayName}.`
-      );
-    } finally {
-      setWalletConnecting(false);
-    }
-  }
-
-  function disconnectWallet() {
-    setWalletAccount('');
-    setWalletName('');
-    setWalletProvider(null);
-    setWalletError('');
-    setWalletMenuOpen(false);
-  }
+  const { address, connector } = useAccount();
+  const { openConnectModal } = useConnectModal();
+  const walletAccount = address ?? '';
+  const walletName = connector?.name ?? 'Wallet';
 
   return (
     <div className="page">
@@ -201,76 +134,7 @@ export default function App() {
         </button>
       )}
 
-      <div className="wallet-connect">
-        <button
-          type="button"
-          className={`wallet-connect__trigger${
-            walletAccount ? ' wallet-connect__trigger--connected' : ''
-          }`}
-          aria-label={walletAccount ? `Wallet connected: ${walletAccount}` : 'Connect wallet'}
-          aria-expanded={walletMenuOpen}
-          aria-haspopup="dialog"
-          onClick={() => {
-            setWalletMenuOpen((open) => !open);
-            setWalletError('');
-          }}
-        >
-          <WalletIcon />
-          {walletAccount && (
-            <span className="wallet-connect__account">{shortenAddress(walletAccount)}</span>
-          )}
-        </button>
-
-        {walletMenuOpen && (
-          <div className="wallet-connect__menu" role="dialog" aria-label="Connect a wallet">
-            {walletAccount ? (
-              <>
-                <p className="wallet-connect__eyebrow">Connected with {walletName}</p>
-                <p className="wallet-connect__address">{shortenAddress(walletAccount)}</p>
-                <button
-                  type="button"
-                  className="wallet-connect__disconnect"
-                  onClick={disconnectWallet}
-                >
-                  Disconnect
-                </button>
-              </>
-            ) : (
-              <>
-                <p className="wallet-connect__title">Connect wallet</p>
-                <p className="wallet-connect__help">Choose an installed browser wallet.</p>
-                <div className="wallet-connect__options">
-                  <button
-                    type="button"
-                    onClick={() => connectWallet('rabby')}
-                    disabled={walletConnecting}
-                  >
-                    <span className="wallet-connect__option-mark" aria-hidden="true">
-                      R
-                    </span>
-                    Rabby
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => connectWallet('metamask')}
-                    disabled={walletConnecting}
-                  >
-                    <span className="wallet-connect__option-mark" aria-hidden="true">
-                      M
-                    </span>
-                    MetaMask
-                  </button>
-                </div>
-                {walletError && (
-                  <p className="wallet-connect__error" role="alert">
-                    {walletError}
-                  </p>
-                )}
-              </>
-            )}
-          </div>
-        )}
-      </div>
+      <RainbowWalletButton />
 
       <aside
         className={`sidebar${sidebarOpen ? ' sidebar--open' : ''}`}
@@ -311,11 +175,7 @@ export default function App() {
           context={{
             walletAccount,
             walletName,
-            walletProvider,
-            openWalletMenu: () => {
-              setWalletError('');
-              setWalletMenuOpen(true);
-            },
+            openWalletMenu: () => openConnectModal?.(),
           }}
         />
       </main>

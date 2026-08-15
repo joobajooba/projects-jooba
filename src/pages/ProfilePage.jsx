@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
+import { useSignMessage } from 'wagmi';
 import collection from '../data/collection.json';
 import {
   buildProfileSignatureMessage,
@@ -48,7 +49,8 @@ function mapOwnedImplingz(items) {
 }
 
 export default function ProfilePage() {
-  const { walletAccount, walletName, walletProvider, openWalletMenu } = useOutletContext();
+  const { walletAccount, walletName, openWalletMenu } = useOutletContext();
+  const { signMessageAsync } = useSignMessage();
   const [profile, setProfile] = useState(EMPTY_PROFILE);
   const [ownedImplingz, setOwnedImplingz] = useState([]);
   const [implingzLoading, setImplingzLoading] = useState(false);
@@ -139,7 +141,7 @@ export default function ProfilePage() {
 
   async function saveProfile(event) {
     event.preventDefault();
-    if (!walletAccount || !walletProvider || saving) return;
+    if (!walletAccount || saving) return;
 
     const normalizedProfile = {
       avatarId: profile.avatarId,
@@ -160,10 +162,7 @@ export default function ProfilePage() {
         avatarTokenId: normalizedProfile.avatarId || null,
         nonce,
       });
-      const signature = await walletProvider.request({
-        method: 'personal_sign',
-        params: [signatureMessage, walletAccount],
-      });
+      const signature = await signMessageAsync({ message: signatureMessage });
 
       setSaveStatus('Verifying your wallet and profile Imp…');
       await saveCommunityProfile({

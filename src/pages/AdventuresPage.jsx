@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
+import { usePublicClient } from 'wagmi';
 import collection from '../data/collection.json';
 
 const HIGHLIGHT_PATTERN = /(\$DERP|\bImp\b|\b4444\b|\bfree\b)/gi;
 const IMPLINGZ_CONTRACT = '0x81d2d1f0e92285cdd22aa3cbc6956b6e1724d029';
-const ROBINHOOD_CHAIN_ID = '0x1237';
 const OWNER_OF_SELECTOR = '0x6352211e';
 const COLLECTION_BY_ID = new Map(collection.map((impling) => [String(impling.id), impling]));
 
@@ -281,25 +281,16 @@ async function fetchOwnedImplingz(walletAccount) {
   return [...uniqueInstances.values()].sort((a, b) => Number(a.id) - Number(b.id));
 }
 
-async function verifyImplingOwnership(provider, walletAccount, tokenId) {
-  const chainId = await provider.request({ method: 'eth_chainId' });
-  if (chainId?.toLowerCase() !== ROBINHOOD_CHAIN_ID) {
-    throw new Error('Switch your wallet to Robinhood Chain and try again.');
-  }
-
+async function verifyImplingOwnership(publicClient, walletAccount, tokenId) {
   const encodedTokenId = BigInt(tokenId).toString(16).padStart(64, '0');
-  const result = await provider.request({
-    method: 'eth_call',
-    params: [
-      {
-        to: IMPLINGZ_CONTRACT,
-        data: `${OWNER_OF_SELECTOR}${encodedTokenId}`,
-      },
-      'latest',
-    ],
+  const { data } = await publicClient.call({
+    to: IMPLINGZ_CONTRACT,
+    data: `${OWNER_OF_SELECTOR}${encodedTokenId}`,
   });
 
-  const owner = `0x${result.slice(-40)}`.toLowerCase();
+  if (!data) throw new Error('The IMPLINGZ contract did not return an owner.');
+
+  const owner = `0x${data.slice(-40)}`.toLowerCase();
   return owner === walletAccount.toLowerCase();
 }
 
@@ -396,7 +387,8 @@ function FlowMap() {
 }
 
 function StartAdventurePanel() {
-  const { walletAccount, walletName, walletProvider } = useOutletContext();
+  const { walletAccount, walletName } = useOutletContext();
+  const publicClient = usePublicClient({ chainId: 4663 });
   const [selectedImplingz, setSelectedImplingz] = useState([null, null, null]);
   const [selectingSlot, setSelectingSlot] = useState(null);
   const [ownedImplingz, setOwnedImplingz] = useState([]);
@@ -516,14 +508,14 @@ function StartAdventurePanel() {
   }
 
   async function selectImpling(impling) {
-    if (!walletProvider || selectingSlot === null) return;
+    if (!publicClient || selectingSlot === null) return;
 
     setVerifyingTokenId(impling.id);
     setImplingzError('');
 
     try {
       const stillOwned = await verifyImplingOwnership(
-        walletProvider,
+        publicClient,
         walletAccount,
         impling.id
       );
