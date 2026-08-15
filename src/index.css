@@ -3560,13 +3560,21 @@ button:active:not(:disabled),
   color: #ccc;
 }
 
-.adventures-gate {
+.adventures-gate,
+.adventures-gate-modal {
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 4.5rem 1.5rem 3rem;
+}
+
+.adventures-gate-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(0, 0, 0, 0.72);
 }
 
 .adventures-gate__panel {
@@ -3635,11 +3643,16 @@ button:active:not(:disabled),
   color: #ff8a8a !important;
 }
 
+.adventures-gate__actions {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
 .adventures-gate__panel button {
   appearance: none;
   width: 100%;
   min-height: 2.75rem;
-  margin-top: 1rem;
   padding: 0.65rem 0.9rem;
   border: 2px solid rgba(184, 255, 46, 0.38);
   border-radius: 2px;
@@ -3803,6 +3816,16 @@ button:active:not(:disabled),
 
 .dungeon-page__inner {
   width: min(100%, 64rem);
+}
+
+.dungeon-page__inner--soon {
+  width: min(100%, 36rem);
+  margin-top: 4rem;
+  padding: clamp(1.25rem, 4vw, 2rem);
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.35);
 }
 
 .dungeon-page__header h1 {

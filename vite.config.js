@@ -54,7 +54,33 @@ function localAdventureApis() {
         const url = new URL(req.url || '/', 'http://localhost');
 
         if (url.pathname === '/api/adventures-gate') {
-          sendJson(res, 200, { unlocked: true });
+          if (req.method === 'GET') {
+            sendJson(res, 200, { unlocked: false });
+            return;
+          }
+
+          if (req.method === 'POST') {
+            const chunks = [];
+            req.on('data', (chunk) => chunks.push(chunk));
+            req.on('end', () => {
+              let body = {};
+              try {
+                body = JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}');
+              } catch {
+                body = {};
+              }
+              const password = String(body.password || '');
+              const expected = process.env.ADVENTURES_GATE_PASSWORD || '0101';
+              if (password === expected) {
+                sendJson(res, 200, { unlocked: true });
+                return;
+              }
+              sendJson(res, 401, { unlocked: false, error: 'Incorrect password.' });
+            });
+            return;
+          }
+
+          sendJson(res, 405, { error: 'Method not allowed.' });
           return;
         }
 

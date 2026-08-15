@@ -1,14 +1,19 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
+import { useOutletContext } from 'react-router-dom';
 
 const AdventuresPage = lazy(() => import('./AdventuresPage'));
 
+const BYPASS_WALLET = '0xfe9d3889b5e36b3216a756e0c752220dbf24dac8';
+
 export default function AdventuresGatePage() {
+  const { walletAccount, openWalletMenu } = useOutletContext();
   const [unlocked, setUnlocked] = useState(false);
   const [checking, setChecking] = useState(true);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const promptedRef = useRef(false);
+  const walletBypass = String(walletAccount || '').toLowerCase() === BYPASS_WALLET;
+  const allowed = unlocked || walletBypass;
 
   useEffect(() => {
     let cancelled = false;
@@ -30,7 +35,10 @@ export default function AdventuresGatePage() {
     };
   }, []);
 
-  async function submitPassword(value) {
+  async function handleSubmit(event) {
+    event.preventDefault();
+    if (!password || submitting) return;
+
     setSubmitting(true);
     setError('');
 
@@ -39,54 +47,25 @@ export default function AdventuresGatePage() {
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: value }),
+        body: JSON.stringify({ password }),
       });
       const data = await response.json();
 
       if (!response.ok || !data.unlocked) {
         setError(data.error || 'Incorrect password.');
         setPassword('');
-        return false;
+        return;
       }
 
       setUnlocked(true);
-      return true;
     } catch {
       setError('Could not check the password. Try again.');
-      return false;
     } finally {
       setSubmitting(false);
     }
   }
 
-  useEffect(() => {
-    if (checking || unlocked || submitting || promptedRef.current) return;
-
-    promptedRef.current = true;
-    const value = window.prompt('Work in progress');
-    if (value) {
-      submitPassword(value);
-    }
-  }, [checking, unlocked, submitting]);
-
-  async function handleSubmit(event) {
-    event.preventDefault();
-    await submitPassword(password);
-  }
-
-  if (checking) {
-    return (
-      <div className="adventures-gate">
-        <div className="adventures-gate__panel">
-          <p className="adventures-gate__eyebrow">Adventures</p>
-          <h1>Work in progress</h1>
-          <p>Checking access…</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (unlocked) {
+  if (allowed) {
     return (
       <Suspense
         fallback={
@@ -105,11 +84,15 @@ export default function AdventuresGatePage() {
   }
 
   return (
-    <div className="adventures-gate">
+    <div className="adventures-gate-modal" role="dialog" aria-modal="true" aria-labelledby="adventures-wip-title">
       <form className="adventures-gate__panel" onSubmit={handleSubmit}>
         <p className="adventures-gate__eyebrow">Adventures</p>
-        <h1>Work in progress</h1>
-        <p>Enter the access password to open this page.</p>
+        <h1 id="adventures-wip-title">Work in progress</h1>
+        <p>
+          {checking
+            ? 'Checking access…'
+            : 'This page is still being built. Enter the password, or connect the allowed wallet to bypass.'}
+        </p>
         <label className="adventures-gate__field">
           <span>Password</span>
           <input
@@ -118,13 +101,21 @@ export default function AdventuresGatePage() {
             autoComplete="off"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            disabled={submitting}
+            disabled={submitting || checking}
           />
         </label>
         {error ? <p className="adventures-gate__error">{error}</p> : null}
-        <button type="submit" disabled={submitting || !password}>
-          {submitting ? 'Checking…' : 'Open Adventures'}
-        </button>
+        {walletAccount && !walletBypass ? (
+          <p className="adventures-gate__error">This connected wallet cannot bypass the gate.</p>
+        ) : null}
+        <div className="adventures-gate__actions">
+          <button type="submit" disabled={submitting || checking || !password}>
+            {submitting ? 'Checking…' : 'Open Adventures'}
+          </button>
+          <button type="button" onClick={() => openWalletMenu?.()} disabled={checking}>
+            {walletAccount ? 'Switch wallet' : 'Connect wallet'}
+          </button>
+        </div>
       </form>
     </div>
   );
