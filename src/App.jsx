@@ -11,6 +11,18 @@ const NAV_ITEMS = [
   { label: 'FAQs', to: '/faqs' },
 ];
 
+const ROBINHOOD_CHAIN = {
+  chainId: '0x1237',
+  chainName: 'Robinhood Chain',
+  nativeCurrency: {
+    name: 'Ether',
+    symbol: 'ETH',
+    decimals: 18,
+  },
+  rpcUrls: ['https://rpc.mainnet.chain.robinhood.com'],
+  blockExplorerUrls: ['https://robinhoodchain.blockscout.com'],
+};
+
 function MenuIcon() {
   return (
     <svg
@@ -75,6 +87,25 @@ function shortenAddress(address) {
   return `${address.slice(0, 6)}…${address.slice(-4)}`;
 }
 
+async function switchToRobinhoodChain(provider) {
+  const currentChainId = await provider.request({ method: 'eth_chainId' });
+  if (currentChainId?.toLowerCase() === ROBINHOOD_CHAIN.chainId) return;
+
+  try {
+    await provider.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: ROBINHOOD_CHAIN.chainId }],
+    });
+  } catch (error) {
+    if (error?.code !== 4902) throw error;
+
+    await provider.request({
+      method: 'wallet_addEthereumChain',
+      params: [ROBINHOOD_CHAIN],
+    });
+  }
+}
+
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [walletMenuOpen, setWalletMenuOpen] = useState(false);
@@ -97,10 +128,16 @@ export default function App() {
       }
     };
 
+    const handleChainChanged = () => {
+      setWalletError('');
+    };
+
     walletProvider.on('accountsChanged', handleAccountsChanged);
+    walletProvider.on('chainChanged', handleChainChanged);
 
     return () => {
       walletProvider.removeListener?.('accountsChanged', handleAccountsChanged);
+      walletProvider.removeListener?.('chainChanged', handleChainChanged);
     };
   }, [walletProvider]);
 
@@ -123,6 +160,8 @@ export default function App() {
       if (!account) {
         throw new Error('No wallet account was returned.');
       }
+
+      await switchToRobinhoodChain(provider);
 
       setWalletAccount(account);
       setWalletName(displayName);
@@ -262,7 +301,7 @@ export default function App() {
       </aside>
 
       <main className="page-content">
-        <Outlet context={{ walletAccount, walletName }} />
+        <Outlet context={{ walletAccount, walletName, walletProvider }} />
       </main>
     </div>
   );

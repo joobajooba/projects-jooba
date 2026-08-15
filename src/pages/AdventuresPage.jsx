@@ -1,7 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
+import collection from '../data/collection.json';
 
 const HIGHLIGHT_PATTERN = /(\$DERP|\bImp\b|\b4444\b|\bfree\b)/gi;
+const IMPLINGZ_CONTRACT = '0x81d2d1f0e92285cdd22aa3cbc6956b6e1724d029';
+const ROBINHOOD_CHAIN_ID = '0x1237';
+const BLOCKSCOUT_API = 'https://robinhoodchain.blockscout.com/api/v2';
+const OWNER_OF_SELECTOR = '0x6352211e';
+const COLLECTION_BY_ID = new Map(collection.map((impling) => [String(impling.id), impling]));
 
 function highlightText(text) {
   return text.split(HIGHLIGHT_PATTERN).map((part, index) => {
@@ -76,6 +82,81 @@ const ADVENTURE_VIEWS = [
   { id: 'start', label: 'Start Adventure' },
   { id: 'board', label: 'Adventure Board' },
 ];
+
+function normalizeImageUrl(imageUrl) {
+  if (!imageUrl) return '';
+  if (imageUrl.startsWith('ipfs://')) {
+    return `https://dweb.link/ipfs/${imageUrl.slice('ipfs://'.length)}`;
+  }
+  return imageUrl;
+}
+
+async function fetchOwnedImplingz(walletAccount) {
+  const url = new URL(`${BLOCKSCOUT_API}/tokens/${IMPLINGZ_CONTRACT}/instances`);
+  url.searchParams.set('holder_address_hash', walletAccount);
+
+  const instances = [];
+  let page = 0;
+
+  while (page < 50) {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error('Could not load IMPLINGz from Blockscout.');
+    }
+
+    const data = await response.json();
+    instances.push(...(data.items ?? []));
+
+    if (!data.next_page_params) break;
+
+    Object.entries(data.next_page_params).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) {
+        url.searchParams.set(key, String(value));
+      }
+    });
+    page += 1;
+  }
+
+  const uniqueInstances = new Map();
+
+  instances.forEach((instance) => {
+    const tokenId = String(instance.id);
+    const localImpling = COLLECTION_BY_ID.get(tokenId);
+
+    uniqueInstances.set(tokenId, {
+      id: tokenId,
+      name: localImpling?.name ?? instance.metadata?.name ?? `IMPLINGZ #${tokenId}`,
+      image:
+        localImpling?.image ??
+        normalizeImageUrl(instance.image_url || instance.metadata?.image || ''),
+      tier: localImpling?.attributes?.Tier ?? '',
+    });
+  });
+
+  return [...uniqueInstances.values()].sort((a, b) => Number(a.id) - Number(b.id));
+}
+
+async function verifyImplingOwnership(provider, walletAccount, tokenId) {
+  const chainId = await provider.request({ method: 'eth_chainId' });
+  if (chainId?.toLowerCase() !== ROBINHOOD_CHAIN_ID) {
+    throw new Error('Switch your wallet to Robinhood Chain and try again.');
+  }
+
+  const encodedTokenId = BigInt(tokenId).toString(16).padStart(64, '0');
+  const result = await provider.request({
+    method: 'eth_call',
+    params: [
+      {
+        to: IMPLINGZ_CONTRACT,
+        data: `${OWNER_OF_SELECTOR}${encodedTokenId}`,
+      },
+      'latest',
+    ],
+  });
+
+  const owner = `0x${result.slice(-40)}`.toLowerCase();
+  return owner === walletAccount.toLowerCase();
+}
 
 function AdventureBox({ title, children, defaultOpen = false }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -170,10 +251,75 @@ function FlowMap() {
 }
 
 function StartAdventurePanel() {
-  const { walletAccount, walletName } = useOutletContext();
+  const { walletAccount, walletName, walletProvider } = useOutletContext();
+  const [selectedImplingz, setSelectedImplingz] = useState([null, null, null]);
+  const [selectingSlot, setSelectingSlot] = useState(null);
+  const [ownedImplingz, setOwnedImplingz] = useState([]);
+  const [implingzLoading, setImplingzLoading] = useState(false);
+  const [implingzError, setImplingzError] = useState('');
+  const [verifyingTokenId, setVerifyingTokenId] = useState('');
   const connectedAddress = walletAccount
     ? `${walletAccount.slice(0, 6)}…${walletAccount.slice(-4)}`
     : '';
+
+  useEffect(() => {
+    setSelectedImplingz([null, null, null]);
+    setOwnedImplingz([]);
+    setSelectingSlot(null);
+    setImplingzError('');
+  }, [walletAccount]);
+
+  async function openImplingSelector(slotIndex) {
+    if (!walletAccount) return;
+
+    setSelectingSlot(slotIndex);
+    setImplingzLoading(true);
+    setImplingzError('');
+
+    try {
+      setOwnedImplingz(await fetchOwnedImplingz(walletAccount));
+    } catch (error) {
+      setImplingzError(error?.message || 'Could not load your IMPLINGz.');
+    } finally {
+      setImplingzLoading(false);
+    }
+  }
+
+  async function selectImpling(impling) {
+    if (!walletProvider || selectingSlot === null) return;
+
+    setVerifyingTokenId(impling.id);
+    setImplingzError('');
+
+    try {
+      const stillOwned = await verifyImplingOwnership(
+        walletProvider,
+        walletAccount,
+        impling.id
+      );
+
+      if (!stillOwned) {
+        throw new Error(`IMPLINGZ #${impling.id} is no longer held by this wallet.`);
+      }
+
+      setSelectedImplingz((current) =>
+        current.map((selected, index) => (index === selectingSlot ? impling : selected))
+      );
+      setSelectingSlot(null);
+    } catch (error) {
+      setImplingzError(error?.message || 'Could not verify ownership of this IMPLINGZ.');
+    } finally {
+      setVerifyingTokenId('');
+    }
+  }
+
+  function clearSelectingSlot() {
+    if (selectingSlot === null) return;
+    setSelectedImplingz((current) =>
+      current.map((selected, index) => (index === selectingSlot ? null : selected))
+    );
+    setSelectingSlot(null);
+  }
 
   return (
     <section className="adventure-panel" aria-labelledby="start-adventure-title">
@@ -193,18 +339,34 @@ function StartAdventurePanel() {
         </p>
 
         <div className="adventure-party__slots" aria-label="Selected Impz">
-          {[1, 2, 3].map((slot) => (
+          {selectedImplingz.map((impling, index) => (
             <button
-              key={slot}
+              key={index}
               type="button"
-              className="adventure-party__slot"
-              aria-label={`Select an Imp for slot ${slot}`}
+              className={`adventure-party__slot${
+                impling ? ' adventure-party__slot--selected' : ''
+              }`}
+              aria-label={
+                impling
+                  ? `Change ${impling.name} in slot ${index + 1}`
+                  : `Select an Imp for slot ${index + 1}`
+              }
               disabled={!walletAccount}
+              onClick={() => openImplingSelector(index)}
             >
-              <span className="adventure-party__slot-plus" aria-hidden="true">
-                +
-              </span>
-              <span>Slot {slot}</span>
+              {impling ? (
+                <>
+                  <img src={impling.image} alt="" />
+                  <span className="adventure-party__slot-name">#{impling.id}</span>
+                </>
+              ) : (
+                <>
+                  <span className="adventure-party__slot-plus" aria-hidden="true">
+                    +
+                  </span>
+                  <span>Slot {index + 1}</span>
+                </>
+              )}
             </button>
           ))}
         </div>
@@ -249,6 +411,96 @@ function StartAdventurePanel() {
           </button>
         </div>
       </div>
+
+      {selectingSlot !== null && (
+        <div
+          className="impling-selector"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="impling-selector-title"
+        >
+          <div className="impling-selector__panel">
+            <div className="impling-selector__header">
+              <div>
+                <p className="adventure-panel__eyebrow">Slot {selectingSlot + 1}</p>
+                <h2 id="impling-selector-title">Choose an IMPLINGZ</h2>
+              </div>
+              <button
+                type="button"
+                className="impling-selector__close"
+                aria-label="Close Impling selector"
+                onClick={() => setSelectingSlot(null)}
+              >
+                ×
+              </button>
+            </div>
+
+            <p className="impling-selector__help">
+              Only IMPLINGz currently held by {connectedAddress} are shown.
+            </p>
+
+            <div className="impling-selector__content">
+              {implingzLoading && <p className="impling-selector__message">Loading IMPLINGz…</p>}
+
+              {!implingzLoading && implingzError && (
+                <p className="impling-selector__message impling-selector__message--error" role="alert">
+                  {implingzError}
+                </p>
+              )}
+
+              {!implingzLoading && !implingzError && ownedImplingz.length === 0 && (
+                <p className="impling-selector__message">
+                  No IMPLINGz were found in this wallet.
+                </p>
+              )}
+
+              {!implingzLoading && ownedImplingz.length > 0 && (
+                <div className="impling-selector__grid">
+                  {ownedImplingz.map((impling) => {
+                    const selectedElsewhere = selectedImplingz.some(
+                      (selected, index) =>
+                        index !== selectingSlot && selected?.id === impling.id
+                    );
+                    const selectedHere = selectedImplingz[selectingSlot]?.id === impling.id;
+
+                    return (
+                      <button
+                        key={impling.id}
+                        type="button"
+                        className={`impling-selector__card${
+                          selectedHere ? ' impling-selector__card--selected' : ''
+                        }`}
+                        disabled={selectedElsewhere || Boolean(verifyingTokenId)}
+                        onClick={() => selectImpling(impling)}
+                      >
+                        <img src={impling.image} alt={impling.name} />
+                        <span className="impling-selector__card-name">{impling.name}</span>
+                        <span className="impling-selector__card-tier">
+                          {verifyingTokenId === impling.id
+                            ? 'Verifying…'
+                            : selectedElsewhere
+                              ? 'Already selected'
+                              : impling.tier || 'Owned'}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {selectedImplingz[selectingSlot] && (
+              <button
+                type="button"
+                className="impling-selector__clear"
+                onClick={clearSelectingSlot}
+              >
+                Clear slot
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </section>
   );
 }
