@@ -10,6 +10,7 @@ import {
 } from '../lib/communityProfiles';
 import { decorateAccount, emptyAdventurerAccount } from '../lib/adventurerProgress';
 import { fetchAdventurerAccount } from '../lib/adventuresApi';
+import { resolveImplingTier } from '../lib/hashMining';
 
 const COLLECTION_BY_ID = new Map(collection.map((impling) => [String(impling.id), impling]));
 const EMPTY_PROFILE = {
@@ -43,7 +44,12 @@ function mapOwnedImplingz(items) {
       image:
         localImpling?.image ??
         normalizeImageUrl(instance.image_url || instance.metadata?.image || ''),
-      tier: localImpling?.attributes?.Tier ?? '',
+      tier:
+        resolveImplingTier(localImpling) ||
+        resolveImplingTier({
+          attributes: instance.metadata?.attributes,
+        }) ||
+        'Tier 1',
     });
   });
 

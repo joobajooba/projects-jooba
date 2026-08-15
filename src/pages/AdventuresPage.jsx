@@ -2,21 +2,23 @@ import { useEffect, useRef, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { usePublicClient, useSignMessage, useWalletClient } from 'wagmi';
 import collection from '../data/collection.json';
-import { decorateAccount, emptyAdventurerAccount } from '../lib/adventurerProgress';
+import { useAdventureRuntime } from '../lib/adventureRuntime';
+import { decorateAccount } from '../lib/adventurerProgress';
 import {
   buildAdventureStartMessage,
   discardFoundDungeon,
-  fetchAdventurerAccount,
   fetchAdventureBoard,
   markDungeonMinted,
-  reportMiningProgress,
   requestAdventureChallenge,
   requestDungeonMint,
   resolveAdventurePrompt,
   startAdventureSession,
-  submitWinningHash,
 } from '../lib/adventuresApi';
-import { hashesPerTickForParty, mineHashBatch } from '../lib/hashMining';
+import {
+  hashesPerTickForParty,
+  resolveImplingTier,
+  TIER_HASH_RATES,
+} from '../lib/hashMining';
 import { DUNGEON_KEEP_ABI, keepOpenSeaItemUrl, tokenIdFromMintReceipt } from '../lib/dungeonKeep';
 
 const HIGHLIGHT_PATTERN = /(\$DERP|\bImp\b|\b4444\b|\bfree\b)/gi;
@@ -290,7 +292,14 @@ async function fetchOwnedImplingz(walletAccount) {
       image:
         localImpling?.image ??
         normalizeImageUrl(instance.image_url || instance.metadata?.image || ''),
-      tier: localImpling?.attributes?.Tier ?? '',
+      tier:
+        resolveImplingTier(localImpling) ||
+        resolveImplingTier({
+          attributes: instance.metadata?.attributes,
+          tier: instance.metadata?.attributes?.Tier,
+        }) ||
+        'Tier 1',
+      attributes: localImpling?.attributes ?? instance.metadata?.attributes,
     });
   });
 
@@ -407,22 +416,35 @@ function StartAdventurePanel() {
   const publicClient = usePublicClient({ chainId: 4663 });
   const { data: walletClient } = useWalletClient({ chainId: 4663 });
   const { signMessageAsync } = useSignMessage();
+  const {
+    adventurer,
+    setAdventurer,
+    session,
+    party,
+    hashesChecked,
+    dungeonSvg,
+    dripMessage,
+    setDripMessage,
+    runtimeError,
+    setRuntimeError,
+    adventureActive,
+    beginAdventure,
+    endAdventure,
+    clearActiveAdventure,
+    stopAdventure,
+  } = useAdventureRuntime();
+
   const [selectedImplingz, setSelectedImplingz] = useState([null, null, null]);
   const [selectingSlot, setSelectingSlot] = useState(null);
   const [ownedImplingz, setOwnedImplingz] = useState([]);
   const [implingzLoading, setImplingzLoading] = useState(false);
   const [implingzError, setImplingzError] = useState('');
   const [verifyingTokenId, setVerifyingTokenId] = useState('');
-  const [adventureStarted, setAdventureStarted] = useState(false);
   const [adventureMessages, setAdventureMessages] = useState([]);
   const [encounterIndex, setEncounterIndex] = useState(null);
-  const [adventurer, setAdventurer] = useState(emptyAdventurerAccount());
-  const [session, setSession] = useState(null);
-  const [hashesChecked, setHashesChecked] = useState(0);
-  const [dungeonSvg, setDungeonSvg] = useState('');
   const [startError, setStartError] = useState('');
   const [starting, setStarting] = useState(false);
-  const [dripMessage, setDripMessage] = useState('');
+  const [stopping, setStopping] = useState(false);
   const [mintStatus, setMintStatus] = useState('');
   const [mintedKeepUrl, setMintedKeepUrl] = useState('');
   const [impSpeechStates, setImpSpeechStates] = useState([
@@ -434,6 +456,7 @@ function StartAdventurePanel() {
   const nextEncounterTimerRef = useRef(null);
   const idleTimerRef = useRef(null);
   const lastIdleNarrationRef = useRef(null);
+  const resumedSessionRef = useRef('');
   const impSpeechTimersRef = useRef([
     { wait: null, change: null },
     { wait: null, change: null },
@@ -443,9 +466,11 @@ function StartAdventurePanel() {
     ? `${walletAccount.slice(0, 6)}…${walletAccount.slice(-4)}`
     : '';
   const selectedParty = selectedImplingz.filter(Boolean);
-  const hashRateRef = useRef(12);
-  hashRateRef.current = hashesPerTickForParty(selectedParty);
+  const activeParty = party.length ? party : selectedParty;
+  const partyHashRate = hashesPerTickForParty(activeParty);
+  const adventureStarted = adventureActive;
   const currentEncounter = encounterIndex === null ? null : DND_ENCOUNTERS[encounterIndex];
+  const combinedError = startError || runtimeError;
 
   useEffect(() => {
     clearAdventureTimers();
@@ -453,47 +478,55 @@ function StartAdventurePanel() {
     setOwnedImplingz([]);
     setSelectingSlot(null);
     setImplingzError('');
-    setAdventureStarted(false);
     setAdventureMessages([]);
     setEncounterIndex(null);
-    setSession(null);
-    setHashesChecked(0);
-    setDungeonSvg('');
     setStartError('');
-    setDripMessage('');
     setMintStatus('');
-    setAdventurer(emptyAdventurerAccount(walletAccount?.toLowerCase() ?? ''));
+    setMintedKeepUrl('');
+    resumedSessionRef.current = '';
   }, [walletAccount]);
 
   useEffect(() => {
-    if (!walletAccount) return undefined;
-    const controller = new AbortController();
-    fetchAdventurerAccount(walletAccount, { signal: controller.signal })
-      .then((data) => {
-        setAdventurer(decorateAccount(data.account));
-        const active = (data.sessions ?? []).find((row) => row.status === 'running' || row.status === 'found');
-        if (active) {
-          setSession(active);
-          setAdventureStarted(true);
-          setHashesChecked(Number(active.hashes_checked ?? 0));
-          if (active.dungeon_seed) {
-            fetch(`/api/dungeon-preview?seed=${encodeURIComponent(active.dungeon_seed)}`)
-              .then((response) => response.json())
-              .then((preview) => setDungeonSvg(preview.svg || ''))
-              .catch(() => {});
-          }
-        }
-      })
-      .catch(() => {});
-    return () => controller.abort();
-  }, [walletAccount]);
+    if (!adventureActive || !session?.id) return;
+
+    if (party.length) {
+      const nextSlots = [null, null, null];
+      party.slice(0, 3).forEach((impling, index) => {
+        nextSlots[index] = impling;
+      });
+      setSelectedImplingz(nextSlots);
+    }
+
+    if (resumedSessionRef.current === session.id) return;
+    resumedSessionRef.current = session.id;
+
+    const partyNames = (party.length ? party : selectedParty)
+      .map((impling) => `#${impling.id}`)
+      .join(', ');
+
+    setAdventureMessages([
+      {
+        type: 'system',
+        text:
+          session.status === 'found'
+            ? 'Your party already uncovered a keep. Inspect it, then mint or walk away.'
+            : `Adventure still running${partyNames ? ` with IMPLINGz ${partyNames}` : ''}. Mining continues while you browse other pages.`,
+      },
+    ]);
+    setEncounterIndex(null);
+    if (session.status === 'running') {
+      scheduleNextEncounter();
+    }
+  }, [adventureActive, session?.id, session?.status, party]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [adventureMessages, encounterIndex]);
 
   useEffect(() => {
-    if (!adventureStarted || encounterIndex !== null) return undefined;
+    if (!adventureStarted || encounterIndex !== null || session?.status !== 'running') {
+      return undefined;
+    }
 
     function scheduleIdleNarration() {
       idleTimerRef.current = window.setTimeout(() => {
@@ -518,7 +551,7 @@ function StartAdventurePanel() {
     return () => {
       window.clearTimeout(idleTimerRef.current);
     };
-  }, [adventureStarted, encounterIndex]);
+  }, [adventureStarted, encounterIndex, session?.status]);
 
   useEffect(() => {
     clearImpSpeechTimers();
@@ -550,8 +583,25 @@ function StartAdventurePanel() {
     []
   );
 
+  useEffect(() => {
+    if (session?.status === 'found') {
+      setAdventureMessages((messages) => {
+        if (messages.some((message) => message.text?.includes('uncovered a lost keep'))) {
+          return messages;
+        }
+        return [
+          ...messages,
+          {
+            type: 'system',
+            text: 'A winning hash uncovered a lost keep. Inspect it, then mint or walk away.',
+          },
+        ];
+      });
+    }
+  }, [session?.status]);
+
   async function openImplingSelector(slotIndex) {
-    if (!walletAccount) return;
+    if (!walletAccount || adventureStarted) return;
 
     setSelectingSlot(slotIndex);
     setImplingzLoading(true);
@@ -583,8 +633,11 @@ function StartAdventurePanel() {
         throw new Error(`IMPLINGZ #${impling.id} is no longer held by this wallet.`);
       }
 
+      const tier = resolveImplingTier(impling) || 'Tier 1';
+      const selected = { ...impling, tier };
+
       setSelectedImplingz((current) =>
-        current.map((selected, index) => (index === selectingSlot ? impling : selected))
+        current.map((entry, index) => (index === selectingSlot ? selected : entry))
       );
       setImpSpeechStates((states) => {
         const usedQuoteIndexes = new Set(
@@ -687,78 +740,22 @@ function StartAdventurePanel() {
     }, randomDelay(ENCOUNTER_DELAY_MIN, ENCOUNTER_DELAY_MAX));
   }
 
-  useEffect(() => {
-    if (!session?.id || session.status !== 'running') return undefined;
-
-    let cancelled = false;
-    let nonce = 0;
-    let pendingChecked = 0;
-
-    async function mineLoop() {
-      while (!cancelled) {
-        const batch = Math.max(8, hashRateRef.current);
-        const result = await mineHashBatch({
-          sessionId: session.id,
-          startNonce: nonce,
-          count: batch,
-        });
-        nonce = result.nonce;
-        pendingChecked += result.checked;
-        setHashesChecked((current) => current + result.checked);
-
-        if (result.found) {
-          try {
-            const submitted = await submitWinningHash(session.id, {
-              nonce: String(result.nonce),
-              hash: result.hash,
-            });
-            setSession(submitted.session);
-            setAdventurer(decorateAccount(submitted.account));
-            if (submitted.drip) {
-              setDripMessage(`${submitted.drip.amount} $DERP is queued from the royalties pot.`);
-            }
-            const preview = await fetch(
-              `/api/dungeon-preview?seed=${encodeURIComponent(submitted.session.dungeon_seed)}`
-            ).then((response) => response.json());
-            setDungeonSvg(preview.svg || '');
-            setAdventureMessages((messages) => [
-              ...messages,
-              {
-                type: 'system',
-                text: 'A winning hash uncovered a lost keep. Inspect it, then mint or walk away.',
-              },
-            ]);
-          } catch (error) {
-            setStartError(error?.message || 'The winning hash could not be verified.');
-          }
-          break;
-        }
-
-        if (pendingChecked >= 2000) {
-          reportMiningProgress(session.id, pendingChecked).catch(() => {});
-          pendingChecked = 0;
-        }
-
-        await new Promise((resolve) => window.setTimeout(resolve, 16));
-      }
-    }
-
-    mineLoop();
-    return () => {
-      cancelled = true;
-    };
-  }, [session?.id, session?.status]);
-
   async function startAdventure() {
-    if (selectedParty.length === 0 || !walletAccount || starting) return;
+    if (selectedParty.length === 0 || !walletAccount || starting || adventureStarted) return;
 
     setStarting(true);
     setStartError('');
+    setRuntimeError('');
     setDripMessage('');
     setMintStatus('');
+    setMintedKeepUrl('');
 
     try {
-      const partyTokenIds = selectedParty.map((impling) => String(impling.id));
+      const enrichedParty = selectedParty.map((impling) => ({
+        ...impling,
+        tier: resolveImplingTier(impling) || 'Tier 1',
+      }));
+      const partyTokenIds = enrichedParty.map((impling) => String(impling.id));
       const { nonce } = await requestAdventureChallenge(walletAccount);
       const signature = await signMessageAsync({
         message: buildAdventureStartMessage({
@@ -774,12 +771,13 @@ function StartAdventurePanel() {
         signature,
       });
 
-      const partyNames = selectedParty.map((impling) => `#${impling.id}`).join(', ');
-      setAdventurer(decorateAccount(data.account));
-      setSession(data.session);
-      setHashesChecked(0);
-      setDungeonSvg('');
-      setAdventureStarted(true);
+      const partyNames = enrichedParty.map((impling) => `#${impling.id}`).join(', ');
+      beginAdventure({
+        account: data.account,
+        session: data.session,
+        partyMembers: enrichedParty,
+      });
+      resumedSessionRef.current = data.session.id;
       setEncounterIndex(null);
       setAdventureMessages([
         {
@@ -788,7 +786,7 @@ function StartAdventurePanel() {
         },
         {
           type: 'system',
-          text: `IMPLINGZ ${partyNames} enter the wilds. Their search for a forgotten keep begins now.`,
+          text: `IMPLINGZ ${partyNames} enter the wilds at ${hashesPerTickForParty(enrichedParty)} hashes/tick. Mining keeps running if you leave this page.`,
         },
       ]);
       scheduleNextEncounter();
@@ -796,6 +794,24 @@ function StartAdventurePanel() {
       setStartError(error?.shortMessage || error?.message || 'Could not start the adventure.');
     } finally {
       setStarting(false);
+    }
+  }
+
+  async function handleStopAdventure() {
+    if (!adventureStarted || stopping) return;
+    setStopping(true);
+    setStartError('');
+    try {
+      await stopAdventure();
+      clearAdventureTimers();
+      setEncounterIndex(null);
+      setAdventureMessages([]);
+      setMintStatus('Adventure stopped. Mining ended and the slot is free again.');
+      resumedSessionRef.current = '';
+    } catch (error) {
+      setStartError(error?.message || 'Could not stop the adventure.');
+    } finally {
+      setStopping(false);
     }
   }
 
@@ -842,10 +858,12 @@ function StartAdventurePanel() {
     if (!session?.id) return;
     try {
       const data = await discardFoundDungeon(session.id);
-      setAdventurer(decorateAccount(data.account));
-      setSession(data.session);
-      setAdventureStarted(false);
+      endAdventure({ account: data.account, session: data.session });
+      clearAdventureTimers();
+      setEncounterIndex(null);
+      setAdventureMessages([]);
       setMintStatus('The preview was discarded and did not take a supply slot.');
+      resumedSessionRef.current = '';
     } catch (error) {
       setStartError(error?.message || 'Could not discard this dungeon.');
     }
@@ -876,16 +894,19 @@ function StartAdventurePanel() {
       const tokenId = tokenIdFromMintReceipt(receipt);
       if (tokenId) {
         const minted = await markDungeonMinted(session.id, tokenId);
-        setAdventurer(decorateAccount(minted.account));
-        setSession(minted.session);
+        endAdventure({ account: minted.account, session: minted.session });
         setMintedKeepUrl(keepOpenSeaItemUrl(contractAddress, tokenId));
         setMintStatus(
           `Keep #${tokenId} minted. OpenSea will show the revealed dungeon. Transaction ${hash.slice(0, 10)}…`
         );
       } else {
         setMintStatus(`Mint submitted. Transaction ${hash.slice(0, 10)}…`);
+        clearActiveAdventure();
       }
-      setAdventureStarted(false);
+      clearAdventureTimers();
+      setEncounterIndex(null);
+      setAdventureMessages([]);
+      resumedSessionRef.current = '';
     } catch (error) {
       setMintStatus(error?.shortMessage || error?.message || 'Mint failed.');
     }
@@ -909,6 +930,20 @@ function StartAdventurePanel() {
             ? 'Choose up to three Impz from your connected wallet to join the adventure.'
             : 'Use the wallet icon in the top-right, then choose up to three Impz to join the adventure.'}
         </p>
+        {activeParty.length ? (
+          <p className="adventure-party__help">
+            Hash rate {partyHashRate}/tick
+            {activeParty
+              .map((impling) => {
+                const tier = resolveImplingTier(impling) || 'Tier 1';
+                return ` · #${impling.id} ${tier} (${TIER_HASH_RATES[tier]}/tick)`;
+              })
+              .join('')}
+            {adventureStarted
+              ? ' · Mining keeps running while you visit other pages.'
+              : ''}
+          </p>
+        ) : null}
         {mintStatus ? <p className="adventure-party__help">{mintStatus}</p> : null}
         {mintedKeepUrl ? (
           <p className="adventure-party__help">
@@ -962,6 +997,9 @@ function StartAdventurePanel() {
                   <>
                     <img src={impling.image} alt="" />
                     <span className="adventure-party__slot-name">#{impling.id}</span>
+                    <span className="adventure-party__slot-tier">
+                      {resolveImplingTier(impling) || 'Tier 1'}
+                    </span>
                   </>
                 ) : (
                   <>
@@ -983,7 +1021,7 @@ function StartAdventurePanel() {
         >
           {walletAccount ? `${walletName}: ${connectedAddress}` : 'Wallet not connected'}
         </div>
-        {startError ? <p className="adventure-party__error">{startError}</p> : null}
+        {combinedError ? <p className="adventure-party__error">{combinedError}</p> : null}
         {dripMessage ? <p className="adventure-party__drip">{dripMessage}</p> : null}
       </div>
 
@@ -994,31 +1032,43 @@ function StartAdventurePanel() {
             <h2>D&amp;D Adventure</h2>
           </div>
           <div className="adventure-chat__heading-actions">
-            <button
-              type="button"
-              className="adventure-chat__start"
-              disabled={
-                selectedParty.length === 0 ||
-                adventureStarted ||
-                starting ||
-                adventurer.active_adventures >= adventurer.slots
-              }
-              onClick={startAdventure}
-            >
-              {starting
-                ? 'Signing…'
-                : adventureStarted
-                  ? 'Adventure running'
+            {adventureStarted ? (
+              <button
+                type="button"
+                className="adventure-chat__start"
+                disabled={stopping}
+                onClick={handleStopAdventure}
+              >
+                {stopping ? 'Stopping…' : 'Stop Adventure'}
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="adventure-chat__start"
+                disabled={
+                  selectedParty.length === 0 ||
+                  starting ||
+                  adventurer.active_adventures >= adventurer.slots
+                }
+                onClick={startAdventure}
+              >
+                {starting
+                  ? 'Signing…'
                   : adventurer.active_adventures >= adventurer.slots
                     ? 'No free slots'
                     : 'Start Adventure'}
-            </button>
+              </button>
+            )}
             <span
               className={`adventure-chat__status${
                 adventureStarted ? ' adventure-chat__status--started' : ''
               }`}
             >
-              {adventureStarted ? 'Started' : 'Not started'}
+              {adventureStarted
+                ? session?.status === 'found'
+                  ? 'Keep found'
+                  : 'Mining…'
+                : 'Not started'}
             </span>
           </div>
         </div>
@@ -1100,8 +1150,12 @@ function StartAdventurePanel() {
           <p className="adventure-panel__eyebrow">Hash mining</p>
           <h2>{session?.status === 'found' ? 'Dungeon found' : 'Searching nonces'}</h2>
           <p>
-            {hashesChecked.toLocaleString()} hashes checked
+            {hashesChecked.toLocaleString()} hashes checked · {partyHashRate}/tick
             {session?.winning_hash ? ` · ${session.winning_hash.slice(0, 10)}…` : ''}
+          </p>
+          <p className="adventure-party__help">
+            Mining continues if you leave Adventures. It only stops when you stop the adventure,
+            walk away, or finish a mint.
           </p>
           {dungeonSvg ? (
             <div

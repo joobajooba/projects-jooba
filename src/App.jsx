@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ConnectButton, useConnectModal } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 import { NavLink, Outlet } from 'react-router-dom';
+import { AdventureRuntimeProvider } from './lib/adventureRuntime';
 
 const NAV_ITEMS = [
   { label: 'Profile', to: '/profile', featured: true },
@@ -171,13 +172,15 @@ export default function App() {
       </aside>
 
       <main className="page-content">
-        <Outlet
-          context={{
-            walletAccount,
-            walletName,
-            openWalletMenu: () => openConnectModal?.(),
-          }}
-        />
+        <AdventureRuntimeProvider walletAccount={walletAccount}>
+          <Outlet
+            context={{
+              walletAccount,
+              walletName,
+              openWalletMenu: () => openConnectModal?.(),
+            }}
+          />
+        </AdventureRuntimeProvider>
       </main>
     </div>
   );
