@@ -1,8 +1,13 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "functions": {
+    "api/dungeon-preview.js": {
+      "includeFiles": "{Tiles/**,api/lib/**,scripts/**,dungeon_generator/**}"
+    }
+  },
   "rewrites": [
     { "source": "/api/keep/:id", "destination": "/api/keep?id=:id" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }
