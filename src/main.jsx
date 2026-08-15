@@ -11,7 +11,7 @@ import CommunityPage from './pages/CommunityPage';
 import CommunityProfilePage from './pages/CommunityProfilePage';
 import HomePage from './pages/HomePage';
 import InfoPage from './pages/InfoPage';
-import AdventuresPage from './pages/AdventuresPage';
+import AdventuresGatePage from './pages/AdventuresGatePage';
 import CollectionPage from './pages/CollectionPage';
 import TheDungeonPage from './pages/TheDungeonPage';
 import OfficialLinksPage from './pages/OfficialLinksPage';
@@ -41,7 +41,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
                 <Route path="community" element={<CommunityPage />} />
                 <Route path="community/:walletAddress" element={<CommunityProfilePage />} />
                 <Route path="info" element={<InfoPage />} />
-                <Route path="adventures" element={<AdventuresPage />} />
+                <Route path="adventures" element={<AdventuresGatePage />} />
                 <Route path="collection" element={<CollectionPage />} />
                 <Route path="the-dungeon" element={<TheDungeonPage />} />
                 <Route path="official-links" element={<OfficialLinksPage />} />

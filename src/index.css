@@ -3026,6 +3026,105 @@ body {
   color: #ccc;
 }
 
+.adventures-gate {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4.5rem 1.5rem 3rem;
+}
+
+.adventures-gate__panel {
+  width: min(100%, 28rem);
+  padding: clamp(1.25rem, 4vw, 2rem);
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.35);
+  text-align: center;
+}
+
+.adventures-gate__eyebrow {
+  margin-bottom: 0.35rem;
+  color: #ff8a8a;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.adventures-gate__panel h1 {
+  color: #f5f5f5;
+  font-size: clamp(1.8rem, 6vw, 2.6rem);
+}
+
+.adventures-gate__panel p {
+  margin-top: 0.55rem;
+  color: rgba(232, 232, 232, 0.68);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.adventures-gate__field {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: 1.15rem;
+  text-align: left;
+}
+
+.adventures-gate__field span {
+  color: rgba(232, 232, 232, 0.72);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.adventures-gate__field input {
+  appearance: none;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.65rem 0.8rem;
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.28);
+  color: #f5f5f5;
+  font: inherit;
+}
+
+.adventures-gate__field input:focus {
+  outline: none;
+  border-color: rgba(184, 255, 46, 0.55);
+}
+
+.adventures-gate__error {
+  color: #ff8a8a !important;
+}
+
+.adventures-gate__panel button {
+  appearance: none;
+  width: 100%;
+  min-height: 2.75rem;
+  margin-top: 1rem;
+  padding: 0.65rem 0.9rem;
+  border: 2px solid rgba(184, 255, 46, 0.38);
+  border-radius: 2px;
+  background: rgba(184, 255, 46, 0.08);
+  color: #d9ff91;
+  font: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.adventures-gate__panel button:hover:not(:disabled) {
+  background: rgba(184, 255, 46, 0.14);
+}
+
+.adventures-gate__panel button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
 @media (max-width: 900px) {
   .collection-page {
     flex-direction: column;
