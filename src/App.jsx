@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 
 const NAV_ITEMS = [
+  { label: 'Profile', to: '/profile', featured: true },
   { label: 'Home', to: '/' },
   { label: 'Info', to: '/info' },
   { label: 'Adventures', to: '/adventures' },
@@ -290,18 +291,32 @@ export default function App() {
               to={item.to}
               end={item.to === '/'}
               className={({ isActive }) =>
-                `sidebar-nav__link${isActive ? ' sidebar-nav__link--active' : ''}`
+                `sidebar-nav__link${isActive ? ' sidebar-nav__link--active' : ''}${
+                  item.featured ? ' sidebar-nav__link--profile' : ''
+                }`
               }
               onClick={() => setSidebarOpen(false)}
             >
-              {item.label}
+              <span className={item.featured ? 'sidebar-nav__profile-label' : undefined}>
+                {item.label}
+              </span>
             </NavLink>
           ))}
         </nav>
       </aside>
 
       <main className="page-content">
-        <Outlet context={{ walletAccount, walletName, walletProvider }} />
+        <Outlet
+          context={{
+            walletAccount,
+            walletName,
+            walletProvider,
+            openWalletMenu: () => {
+              setWalletError('');
+              setWalletMenuOpen(true);
+            },
+          }}
+        />
       </main>
     </div>
   );
