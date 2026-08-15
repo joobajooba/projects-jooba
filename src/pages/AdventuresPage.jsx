@@ -180,6 +180,38 @@ const DND_ENCOUNTERS = [
   },
 ];
 
+const IDLE_NARRATIONS = [
+  'Wind moves through the black pines, carrying the smell of rain and old stone.',
+  'Your torchlight catches distant eyes before they vanish into the undergrowth.',
+  'The path narrows between moss-covered ruins that predate every map you carry.',
+  'Somewhere beneath your feet, water echoes through a buried chamber.',
+  'Your Impz pause as a flock of pale birds erupts from the canopy ahead.',
+  'A cold mist rolls across the trail and curls around the party’s boots.',
+  'Faded carvings along the roadside point toward a kingdom erased from memory.',
+  'The wilds fall silent for a moment, as though something nearby is listening.',
+  'Loose stones tumble down a distant slope, but no traveller appears.',
+  'Moonlight breaks through the clouds and reveals old tracks crossing your path.',
+];
+
+const ENCOUNTER_DELAY_MIN = 60_000;
+const ENCOUNTER_DELAY_MAX = 180_000;
+const IDLE_DELAY_MIN = 18_000;
+const IDLE_DELAY_MAX = 24_000;
+
+function randomDelay(minimum, maximum) {
+  return Math.floor(Math.random() * (maximum - minimum + 1)) + minimum;
+}
+
+function randomIndex(length, excludedIndex = null) {
+  if (length <= 1) return 0;
+
+  let index = Math.floor(Math.random() * length);
+  while (index === excludedIndex) {
+    index = Math.floor(Math.random() * length);
+  }
+  return index;
+}
+
 function normalizeImageUrl(imageUrl) {
   if (!imageUrl) return '';
   if (imageUrl.startsWith('ipfs://')) {
@@ -339,27 +371,66 @@ function StartAdventurePanel() {
   const [verifyingTokenId, setVerifyingTokenId] = useState('');
   const [adventureStarted, setAdventureStarted] = useState(false);
   const [adventureMessages, setAdventureMessages] = useState([]);
-  const [encounterIndex, setEncounterIndex] = useState(0);
+  const [encounterIndex, setEncounterIndex] = useState(null);
   const chatEndRef = useRef(null);
+  const nextEncounterTimerRef = useRef(null);
+  const idleTimerRef = useRef(null);
+  const lastIdleNarrationRef = useRef(null);
   const connectedAddress = walletAccount
     ? `${walletAccount.slice(0, 6)}…${walletAccount.slice(-4)}`
     : '';
   const selectedParty = selectedImplingz.filter(Boolean);
-  const currentEncounter = DND_ENCOUNTERS[encounterIndex];
+  const currentEncounter = encounterIndex === null ? null : DND_ENCOUNTERS[encounterIndex];
 
   useEffect(() => {
+    clearAdventureTimers();
     setSelectedImplingz([null, null, null]);
     setOwnedImplingz([]);
     setSelectingSlot(null);
     setImplingzError('');
     setAdventureStarted(false);
     setAdventureMessages([]);
-    setEncounterIndex(0);
+    setEncounterIndex(null);
   }, [walletAccount]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }, [adventureMessages]);
+  }, [adventureMessages, encounterIndex]);
+
+  useEffect(() => {
+    if (!adventureStarted || encounterIndex !== null) return undefined;
+
+    function scheduleIdleNarration() {
+      idleTimerRef.current = window.setTimeout(() => {
+        const narrationIndex = randomIndex(
+          IDLE_NARRATIONS.length,
+          lastIdleNarrationRef.current
+        );
+        lastIdleNarrationRef.current = narrationIndex;
+        setAdventureMessages((messages) => [
+          ...messages,
+          {
+            type: 'idle',
+            text: IDLE_NARRATIONS[narrationIndex],
+          },
+        ]);
+        scheduleIdleNarration();
+      }, randomDelay(IDLE_DELAY_MIN, IDLE_DELAY_MAX));
+    }
+
+    scheduleIdleNarration();
+
+    return () => {
+      window.clearTimeout(idleTimerRef.current);
+    };
+  }, [adventureStarted, encounterIndex]);
+
+  useEffect(
+    () => () => {
+      clearAdventureTimers();
+    },
+    []
+  );
 
   async function openImplingSelector(slotIndex) {
     if (!walletAccount) return;
@@ -413,12 +484,34 @@ function StartAdventurePanel() {
     setSelectingSlot(null);
   }
 
+  function clearAdventureTimers() {
+    window.clearTimeout(nextEncounterTimerRef.current);
+    window.clearTimeout(idleTimerRef.current);
+  }
+
+  function scheduleNextEncounter(excludedIndex = null) {
+    window.clearTimeout(nextEncounterTimerRef.current);
+    setEncounterIndex(null);
+
+    nextEncounterTimerRef.current = window.setTimeout(() => {
+      const nextIndex = randomIndex(DND_ENCOUNTERS.length, excludedIndex);
+      setEncounterIndex(nextIndex);
+      setAdventureMessages((messages) => [
+        ...messages,
+        {
+          type: 'encounter',
+          text: DND_ENCOUNTERS[nextIndex].prompt,
+        },
+      ]);
+    }, randomDelay(ENCOUNTER_DELAY_MIN, ENCOUNTER_DELAY_MAX));
+  }
+
   function startAdventure() {
     if (selectedParty.length === 0) return;
 
     const partyNames = selectedParty.map((impling) => `#${impling.id}`).join(', ');
     setAdventureStarted(true);
-    setEncounterIndex(0);
+    setEncounterIndex(null);
     setAdventureMessages([
       {
         type: 'narrator',
@@ -428,19 +521,16 @@ function StartAdventurePanel() {
         type: 'system',
         text: `IMPLINGZ ${partyNames} enter the wilds. Their search for a forgotten keep begins now.`,
       },
-      {
-        type: 'encounter',
-        text: DND_ENCOUNTERS[0].prompt,
-      },
     ]);
+    scheduleNextEncounter();
   }
 
   function chooseAdventureOption(option) {
-    if (!adventureStarted) return;
+    if (!adventureStarted || encounterIndex === null) return;
 
     const roll = Math.floor(Math.random() * 20) + 1;
     const succeeded = roll === 20 || (roll !== 1 && roll >= option.dc);
-    const nextEncounterIndex = (encounterIndex + 1) % DND_ENCOUNTERS.length;
+    const completedEncounterIndex = encounterIndex;
     const rollResult = succeeded ? 'Success' : 'Failure';
 
     setAdventureMessages((messages) => [
@@ -457,12 +547,8 @@ function StartAdventurePanel() {
         type: 'narrator',
         text: succeeded ? option.success : option.failure,
       },
-      {
-        type: 'encounter',
-        text: DND_ENCOUNTERS[nextEncounterIndex].prompt,
-      },
     ]);
-    setEncounterIndex(nextEncounterIndex);
+    scheduleNextEncounter(completedEncounterIndex);
   }
 
   return (
@@ -574,6 +660,14 @@ function StartAdventurePanel() {
                   <p>{message.text}</p>
                 </div>
               ))}
+              {!currentEncounter && (
+                <div className="adventure-chat__typing" aria-label="Dungeon Master is thinking">
+                  <span />
+                  <span />
+                  <span />
+                  <p>Dungeon Master is thinking…</p>
+                </div>
+              )}
               <div ref={chatEndRef} />
             </div>
           ) : (
@@ -588,7 +682,7 @@ function StartAdventurePanel() {
         </div>
 
         <div className="adventure-chat__controls">
-          {adventureStarted ? (
+          {currentEncounter ? (
             <div className="adventure-chat__options" aria-label="Choose your response">
               {currentEncounter.options.map((option) => (
                 <button
@@ -600,6 +694,10 @@ function StartAdventurePanel() {
                   {option.label}
                 </button>
               ))}
+            </div>
+          ) : adventureStarted ? (
+            <div className="adventure-chat__controls-waiting">
+              The next encounter will emerge as your party explores the wilds.
             </div>
           ) : (
             <p className="adventure-chat__controls-help">
