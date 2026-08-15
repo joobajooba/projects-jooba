@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import collection from '../data/collection.json';
+import {
+  buildProfileSignatureMessage,
+  fetchCommunityProfiles,
+  requestProfileChallenge,
+  saveCommunityProfile,
+} from '../lib/communityProfiles';
 
 const COLLECTION_BY_ID = new Map(collection.map((impling) => [String(impling.id), impling]));
 const EMPTY_PROFILE = {
@@ -42,13 +48,14 @@ function mapOwnedImplingz(items) {
 }
 
 export default function ProfilePage() {
-  const { walletAccount, walletName, openWalletMenu } = useOutletContext();
+  const { walletAccount, walletName, walletProvider, openWalletMenu } = useOutletContext();
   const [profile, setProfile] = useState(EMPTY_PROFILE);
   const [ownedImplingz, setOwnedImplingz] = useState([]);
   const [implingzLoading, setImplingzLoading] = useState(false);
   const [implingzError, setImplingzError] = useState('');
   const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const selectedAvatar = useMemo(
     () => ownedImplingz.find((impling) => impling.id === profile.avatarId) ?? null,
@@ -107,6 +114,21 @@ export default function ProfilePage() {
         if (!controller.signal.aborted) setImplingzLoading(false);
       });
 
+    fetchCommunityProfiles({ walletAddress: walletAccount, signal: controller.signal })
+      .then(([savedProfile]) => {
+        if (!savedProfile) return;
+        setProfile({
+          avatarId: String(savedProfile.avatar_token_id ?? ''),
+          nickname: String(savedProfile.nickname ?? '').slice(0, 24),
+          bio: String(savedProfile.bio ?? '').slice(0, 240),
+        });
+      })
+      .catch((error) => {
+        if (error.name !== 'AbortError') {
+          setSaveStatus('Your shared profile could not be loaded. Local details are shown.');
+        }
+      });
+
     return () => controller.abort();
   }, [walletAccount]);
 
@@ -115,9 +137,9 @@ export default function ProfilePage() {
     setSaveStatus('');
   }
 
-  function saveProfile(event) {
+  async function saveProfile(event) {
     event.preventDefault();
-    if (!walletAccount) return;
+    if (!walletAccount || !walletProvider || saving) return;
 
     const normalizedProfile = {
       avatarId: profile.avatarId,
@@ -125,15 +147,52 @@ export default function ProfilePage() {
       bio: profile.bio.trim(),
     };
 
+    setSaving(true);
+    setSaveStatus('Preparing a wallet signature…');
+
     try {
-      window.localStorage.setItem(
-        `implingz-profile:${walletAccount.toLowerCase()}`,
-        JSON.stringify(normalizedProfile)
-      );
+      const walletAddress = walletAccount.toLowerCase();
+      const { nonce } = await requestProfileChallenge(walletAddress);
+      const signatureMessage = buildProfileSignatureMessage({
+        walletAddress,
+        nickname: normalizedProfile.nickname,
+        bio: normalizedProfile.bio,
+        avatarTokenId: normalizedProfile.avatarId || null,
+        nonce,
+      });
+      const signature = await walletProvider.request({
+        method: 'personal_sign',
+        params: [signatureMessage, walletAccount],
+      });
+
+      setSaveStatus('Verifying your wallet and profile Imp…');
+      await saveCommunityProfile({
+        walletAddress,
+        nickname: normalizedProfile.nickname,
+        bio: normalizedProfile.bio,
+        avatarTokenId: normalizedProfile.avatarId || null,
+        nonce,
+        signature,
+      });
+
+      try {
+        window.localStorage.setItem(
+          `implingz-profile:${walletAddress}`,
+          JSON.stringify(normalizedProfile)
+        );
+      } catch {
+        // The shared Supabase profile remains the source of truth.
+      }
       setProfile(normalizedProfile);
-      setSaveStatus('Profile saved in this browser.');
-    } catch {
-      setSaveStatus('This browser could not save your profile.');
+      setSaveStatus('Profile saved to the Community board.');
+    } catch (error) {
+      setSaveStatus(
+        error?.code === 4001
+          ? 'Profile signing was cancelled.'
+          : error?.message || 'Your profile could not be saved.'
+      );
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -227,7 +286,9 @@ export default function ProfilePage() {
               </label>
 
               <div className="profile-form__actions">
-                <button type="submit">Save profile</button>
+                <button type="submit" disabled={saving}>
+                  {saving ? 'Saving…' : 'Save profile'}
+                </button>
                 {saveStatus && <p role="status">{saveStatus}</p>}
               </div>
             </form>

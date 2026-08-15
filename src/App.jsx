@@ -3,6 +3,7 @@ import { NavLink, Outlet } from 'react-router-dom';
 
 const NAV_ITEMS = [
   { label: 'Profile', to: '/profile', featured: true },
+  { label: 'Community', to: '/community' },
   { label: 'Home', to: '/' },
   { label: 'Info', to: '/info' },
   { label: 'Adventures', to: '/adventures' },

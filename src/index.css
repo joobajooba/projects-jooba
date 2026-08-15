@@ -681,10 +681,7 @@ body {
 
 .sidebar-nav__profile-label {
   display: inline-block;
-  background: linear-gradient(90deg, #ff6262 0%, #b17dff 52%, #65c8ff 100%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
+  color: #fff;
   font-weight: 700;
   letter-spacing: 0.06em;
 }
@@ -1097,6 +1094,11 @@ body {
   background: rgba(184, 255, 46, 0.14);
 }
 
+.profile-form__actions button:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
 .profile-layout {
   display: grid;
   grid-template-columns: minmax(14rem, 17rem) minmax(0, 1fr);
@@ -1391,8 +1393,132 @@ body {
   font-size: 0.68rem;
 }
 
+/* Community Page Styles */
+.community-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 4.5rem clamp(1rem, 4vw, 1.5rem) 3rem;
+  padding-left: max(clamp(1rem, 4vw, 1.5rem), env(safe-area-inset-left));
+  padding-right: max(clamp(1rem, 4vw, 1.5rem), env(safe-area-inset-right));
+  padding-bottom: max(3rem, env(safe-area-inset-bottom));
+}
+
+.community-page__inner {
+  width: min(100%, 62rem);
+}
+
+.community-page__header {
+  text-align: center;
+}
+
+.community-page__header h1 {
+  color: #f5f5f5;
+  font-size: clamp(1.7rem, 5vw, 2.5rem);
+  letter-spacing: 0.06em;
+}
+
+.community-page__header > p:last-child {
+  margin-top: 0.45rem;
+  color: rgba(232, 232, 232, 0.68);
+  font-size: 0.92rem;
+}
+
+.community-directory {
+  margin-top: 2rem;
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.35);
+}
+
+.community-directory__message {
+  padding: 2rem 1rem;
+  color: rgba(232, 232, 232, 0.68);
+  font-size: 0.86rem;
+  text-align: center;
+}
+
+.community-directory__message--error {
+  color: #ffabab;
+}
+
+.community-directory__table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.community-directory__table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #f0f0f0;
+  text-align: left;
+}
+
+.community-directory__table th,
+.community-directory__table td {
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  vertical-align: middle;
+}
+
+.community-directory__table th {
+  color: rgba(232, 232, 232, 0.58);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.community-directory__table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.community-directory__table tbody tr:hover {
+  background: rgba(137, 216, 255, 0.04);
+}
+
+.community-directory__avatar {
+  width: 3.5rem;
+  height: 3.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(184, 255, 46, 0.32);
+  background: rgba(0, 0, 0, 0.24);
+  color: rgba(232, 232, 232, 0.48);
+}
+
+.community-directory__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.community-directory__table strong {
+  font-size: 0.86rem;
+}
+
+.community-directory__table a {
+  color: #89d8ff;
+  font-size: 0.76rem;
+  text-decoration: none;
+}
+
+.community-directory__table a:hover {
+  text-decoration: underline;
+}
+
+.community-directory__address-short {
+  display: none;
+}
+
 @media (max-width: 640px) {
-  .profile-page {
+  .profile-page,
+  .community-page {
     padding-top: 5rem;
   }
 
@@ -1409,6 +1535,19 @@ body {
   .profile-form__actions {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .community-directory__table th,
+  .community-directory__table td {
+    padding: 0.7rem;
+  }
+
+  .community-directory__address-full {
+    display: none;
+  }
+
+  .community-directory__address-short {
+    display: inline;
   }
 }
 
