@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import collection from '../data/collection.json';
 import { fetchCommunityProfiles } from '../lib/communityProfiles';
 
@@ -9,6 +10,7 @@ function shortenAddress(address) {
 }
 
 export default function CommunityPage() {
+  const navigate = useNavigate();
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -29,6 +31,10 @@ export default function CommunityPage() {
 
     return () => controller.abort();
   }, []);
+
+  function openProfile(walletAddress) {
+    navigate(`/community/${walletAddress}`);
+  }
 
   return (
     <div className="community-page">
@@ -62,6 +68,9 @@ export default function CommunityPage() {
                     <th scope="col">Profile pic</th>
                     <th scope="col">Nickname</th>
                     <th scope="col">Public address</th>
+                    <th scope="col">Tier 1</th>
+                    <th scope="col">Tier 2</th>
+                    <th scope="col">Tier 3</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -69,7 +78,20 @@ export default function CommunityPage() {
                     const avatar = COLLECTION_BY_ID.get(String(profile.avatar_token_id ?? ''));
 
                     return (
-                      <tr key={profile.wallet_address}>
+                      <tr
+                        key={profile.wallet_address}
+                        className="community-directory__row"
+                        role="link"
+                        tabIndex={0}
+                        aria-label={`View ${profile.nickname || shortenAddress(profile.wallet_address)}'s profile`}
+                        onClick={() => openProfile(profile.wallet_address)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            openProfile(profile.wallet_address);
+                          }
+                        }}
+                      >
                         <td>
                           <div className="community-directory__avatar">
                             {avatar ? (
@@ -83,20 +105,13 @@ export default function CommunityPage() {
                           <strong>{profile.nickname || 'Unnamed Adventurer'}</strong>
                         </td>
                         <td>
-                          <a
-                            href={`https://robinhoodchain.blockscout.com/address/${profile.wallet_address}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            aria-label={`View wallet ${profile.wallet_address} on Blockscout`}
-                          >
-                            <span className="community-directory__address-full">
-                              {profile.wallet_address}
-                            </span>
-                            <span className="community-directory__address-short">
-                              {shortenAddress(profile.wallet_address)}
-                            </span>
-                          </a>
+                          <span className="community-directory__address">
+                            {shortenAddress(profile.wallet_address)}
+                          </span>
                         </td>
+                        <td className="community-directory__count">{profile.tier_1_count ?? 0}</td>
+                        <td className="community-directory__count">{profile.tier_2_count ?? 0}</td>
+                        <td className="community-directory__count">{profile.tier_3_count ?? 0}</td>
                       </tr>
                     );
                   })}

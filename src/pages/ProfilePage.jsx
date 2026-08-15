@@ -63,6 +63,19 @@ export default function ProfilePage() {
     () => ownedImplingz.find((impling) => impling.id === profile.avatarId) ?? null,
     [ownedImplingz, profile.avatarId]
   );
+  const tierCounts = useMemo(
+    () =>
+      ownedImplingz.reduce(
+        (counts, impling) => {
+          if (impling.tier === 'Tier 1') counts.tier1 += 1;
+          if (impling.tier === 'Tier 2') counts.tier2 += 1;
+          if (impling.tier === 'Tier 3') counts.tier3 += 1;
+          return counts;
+        },
+        { tier1: 0, tier2: 0, tier3: 0 }
+      ),
+    [ownedImplingz]
+  );
 
   useEffect(() => {
     if (!walletAccount) {
@@ -242,6 +255,21 @@ export default function ProfilePage() {
               <div className="profile-summary__metric">
                 <span>Total IMPLINGz</span>
                 <strong>{implingzLoading ? '…' : ownedImplingz.length}</strong>
+              </div>
+
+              <div className="profile-summary__tiers" aria-label="IMPLINGZ tier totals">
+                <div>
+                  <span>Tier 1</span>
+                  <strong>{implingzLoading ? '…' : tierCounts.tier1}</strong>
+                </div>
+                <div>
+                  <span>Tier 2</span>
+                  <strong>{implingzLoading ? '…' : tierCounts.tier2}</strong>
+                </div>
+                <div>
+                  <span>Tier 3</span>
+                  <strong>{implingzLoading ? '…' : tierCounts.tier3}</strong>
+                </div>
               </div>
 
               {implingzError && (

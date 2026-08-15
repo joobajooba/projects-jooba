@@ -8,6 +8,7 @@ import '@rainbow-me/rainbowkit/styles.css';
 import App from './App';
 import ProfilePage from './pages/ProfilePage';
 import CommunityPage from './pages/CommunityPage';
+import CommunityProfilePage from './pages/CommunityProfilePage';
 import HomePage from './pages/HomePage';
 import InfoPage from './pages/InfoPage';
 import AdventuresPage from './pages/AdventuresPage';
@@ -38,6 +39,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
                 <Route index element={<HomePage />} />
                 <Route path="profile" element={<ProfilePage />} />
                 <Route path="community" element={<CommunityPage />} />
+                <Route path="community/:walletAddress" element={<CommunityProfilePage />} />
                 <Route path="info" element={<InfoPage />} />
                 <Route path="adventures" element={<AdventuresPage />} />
                 <Route path="collection" element={<CollectionPage />} />
