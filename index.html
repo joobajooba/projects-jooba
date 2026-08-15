@@ -12,6 +12,13 @@
     />
   </head>
   <body>
+    <script>
+      try {
+        if (localStorage.getItem('j00ba-font-mode') === 'readable') {
+          document.documentElement.classList.add('font-readable');
+        }
+      } catch (error) {}
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

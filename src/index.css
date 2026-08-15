@@ -28,6 +28,33 @@ body {
   color: #e8e8e8;
 }
 
+html.font-readable,
+html.font-readable body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+html.font-readable body * {
+  font-family: inherit !important;
+}
+
+button,
+.sidebar-nav__link,
+.adventures-tabs__button {
+  transition:
+    transform 90ms ease,
+    box-shadow 90ms ease,
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+button:active:not(:disabled),
+.sidebar-nav__link:active,
+.adventures-tabs__button:active {
+  transform: translate(2px, 2px) scale(0.985);
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.35) !important;
+}
+
 .page {
   position: relative;
   min-height: 100vh;
@@ -466,10 +493,135 @@ body {
 }
 
 .wallet-connect {
+  position: static;
+  z-index: auto;
+}
+
+.top-actions {
   position: fixed;
   top: max(0.85rem, env(safe-area-inset-top));
   right: max(0.85rem, env(safe-area-inset-right));
   z-index: 25;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.site-settings__trigger {
+  appearance: none;
+  width: 2.75rem;
+  height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255, 255, 255, 0.28);
+  border-radius: 2px;
+  background: rgba(30, 30, 30, 0.9);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.4);
+  color: #f0f0f0;
+  cursor: pointer;
+}
+
+.site-settings__trigger:hover {
+  border-color: rgba(184, 255, 46, 0.48);
+  background: rgba(48, 48, 48, 0.96);
+  color: #fff;
+}
+
+.site-settings__icon {
+  width: 20px;
+  height: 20px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.site-settings-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.site-settings-modal__panel {
+  width: min(100%, 26rem);
+  padding: 1.15rem 1.2rem 1.25rem;
+  border: 2px solid rgba(184, 255, 46, 0.35);
+  border-radius: 16px;
+  background: #171717;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+}
+
+.site-settings-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.site-settings-modal__header h2 {
+  margin: 0.15rem 0 0;
+  color: #f5f5f5;
+  font-size: 1.25rem;
+}
+
+.site-settings-modal__close {
+  appearance: none;
+  min-height: 2.2rem;
+  padding: 0.35rem 0.7rem;
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #f0f0f0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.site-settings-modal__section {
+  margin-top: 1rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.site-settings-modal__section h3 {
+  margin: 0 0 0.4rem;
+  color: #ff8a8a;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.site-settings-modal__section p {
+  margin: 0 0 0.85rem;
+  color: rgba(232, 232, 232, 0.72);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.site-settings-modal__font-options {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.site-settings-modal__font-options button {
+  appearance: none;
+  min-height: 2.55rem;
+  padding: 0.55rem 0.8rem;
+  border: 2px solid rgba(184, 255, 46, 0.28);
+  border-radius: 10px;
+  background: rgba(184, 255, 46, 0.06);
+  color: #e8e8e8;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.site-settings-modal__font-options button.is-active {
+  border-color: rgba(184, 255, 46, 0.7);
+  background: rgba(184, 255, 46, 0.16);
+  color: #d9ff91;
 }
 
 .wallet-connect__trigger {
@@ -734,8 +886,10 @@ body {
     height: 3rem;
   }
 
-  .wallet-connect__trigger {
+  .wallet-connect__trigger,
+  .site-settings__trigger {
     min-width: 3rem;
+    width: 3rem;
     height: 3rem;
   }
 
@@ -3292,7 +3446,7 @@ body {
   min-height: 2.5rem;
   padding: 0.5rem 0.8rem;
   border: 2px solid rgba(184, 255, 46, 0.38);
-  border-radius: 2px;
+  border-radius: 12px;
   background: rgba(184, 255, 46, 0.08);
   color: #d9ff91;
   font: inherit;
@@ -3314,7 +3468,7 @@ body {
   overflow: auto;
   padding: 1.15rem 1.2rem 1.25rem;
   border: 2px solid rgba(184, 255, 46, 0.35);
-  border-radius: 2px;
+  border-radius: 18px;
   background: #171717;
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
 }
@@ -3338,6 +3492,7 @@ body {
   height: auto;
   margin-top: 0.9rem;
   border: 1px solid rgba(184, 255, 46, 0.22);
+  border-radius: 12px;
   background: #07070a;
   image-rendering: pixelated;
 }

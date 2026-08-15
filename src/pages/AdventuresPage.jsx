@@ -25,12 +25,12 @@ const HIGHLIGHT_PATTERN = /(\$DERP|\bImp\b|\b4444\b|\bfree\b)/gi;
 const IMPLINGZ_CONTRACT = '0x81d2d1f0e92285cdd22aa3cbc6956b6e1724d029';
 const OWNER_OF_SELECTOR = '0x6352211e';
 const COLLECTION_BY_ID = new Map(collection.map((impling) => [String(impling.id), impling]));
-const HASH_SIGNAL_COLS = 28;
-const HASH_SIGNAL_ROWS = 12;
+const HASH_SIGNAL_COLS = 56;
+const HASH_SIGNAL_ROWS = 28;
 
 function HashSignalFlow({ active }) {
   const canvasRef = useRef(null);
-  const levelsRef = useRef(Array.from({ length: HASH_SIGNAL_COLS }, () => 0.35));
+  const fieldRef = useRef(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -39,25 +39,36 @@ function HashSignalFlow({ active }) {
     const ctx = canvas.getContext('2d');
     if (!ctx) return undefined;
 
+    const cellCount = HASH_SIGNAL_COLS * HASH_SIGNAL_ROWS;
+    if (!fieldRef.current || fieldRef.current.length !== cellCount) {
+      fieldRef.current = Float32Array.from({ length: cellCount }, () => Math.random());
+    }
+
     let frameId = 0;
     let lastTick = 0;
+    let phase = 0;
 
     function draw(now) {
       frameId = window.requestAnimationFrame(draw);
-      if (!active) {
-        // Dim static bars while halted.
-        if (now - lastTick < 200) return;
-        lastTick = now;
-      } else if (now - lastTick < 45) {
-        return;
-      } else {
-        lastTick = now;
-        levelsRef.current = levelsRef.current.map((level, index) => {
-          const drift = (Math.random() - 0.48) * (active ? 0.42 : 0.08);
-          const neighbor =
-            levelsRef.current[(index + HASH_SIGNAL_COLS - 1) % HASH_SIGNAL_COLS] * 0.25;
-          return Math.max(0.08, Math.min(1, level * 0.72 + drift + neighbor * 0.2));
-        });
+      const interval = active ? 32 : 160;
+      if (now - lastTick < interval) return;
+      lastTick = now;
+      phase += active ? 0.18 : 0.04;
+
+      const field = fieldRef.current;
+      for (let col = 0; col < HASH_SIGNAL_COLS; col += 1) {
+        const wave =
+          0.55 +
+          0.35 * Math.sin(phase + col * 0.28) +
+          0.2 * Math.sin(phase * 1.7 + col * 0.11);
+        for (let row = HASH_SIGNAL_ROWS - 1; row >= 0; row -= 1) {
+          const index = row * HASH_SIGNAL_COLS + col;
+          const below =
+            row < HASH_SIGNAL_ROWS - 1 ? field[index + HASH_SIGNAL_COLS] : wave;
+          const jitter = active ? (Math.random() - 0.42) * 0.55 : (Math.random() - 0.5) * 0.08;
+          const next = below * 0.62 + wave * 0.22 + jitter;
+          field[index] = Math.max(0, Math.min(1.35, next));
+        }
       }
 
       const width = canvas.width;
@@ -65,27 +76,32 @@ function HashSignalFlow({ active }) {
       const cellW = width / HASH_SIGNAL_COLS;
       const cellH = height / HASH_SIGNAL_ROWS;
 
-      ctx.fillStyle = '#120808';
+      ctx.fillStyle = '#100606';
       ctx.fillRect(0, 0, width, height);
 
-      for (let col = 0; col < HASH_SIGNAL_COLS; col += 1) {
-        const lit = Math.max(1, Math.round(levelsRef.current[col] * HASH_SIGNAL_ROWS));
-        for (let row = 0; row < HASH_SIGNAL_ROWS; row += 1) {
-          const fromBottom = HASH_SIGNAL_ROWS - 1 - row;
-          if (fromBottom >= lit) continue;
-          const warm = (fromBottom / HASH_SIGNAL_ROWS + Math.random() * 0.35) > 0.55;
-          ctx.fillStyle = active
-            ? warm
-              ? '#ff3b3b'
-              : '#f4f4f4'
-            : warm
-              ? '#7a3030'
-              : '#6e6e6e';
+      for (let row = 0; row < HASH_SIGNAL_ROWS; row += 1) {
+        for (let col = 0; col < HASH_SIGNAL_COLS; col += 1) {
+          const value = field[row * HASH_SIGNAL_COLS + col];
+          if (value < 0.18) continue;
+
+          // Bias heavily toward red so the panel reads as hundreds of red sparks.
+          const redChance = active ? 0.78 : 0.62;
+          const isRed = Math.random() < redChance || value > 0.85;
+          if (active) {
+            ctx.fillStyle = isRed
+              ? value > 1
+                ? '#ff6a6a'
+                : '#ff2a2a'
+              : '#f2f2f2';
+          } else {
+            ctx.fillStyle = isRed ? '#6e2a2a' : '#5a5a5a';
+          }
+
           ctx.fillRect(
-            Math.floor(col * cellW) + 1,
-            Math.floor(row * cellH) + 1,
-            Math.max(1, Math.floor(cellW) - 2),
-            Math.max(1, Math.floor(cellH) - 2)
+            Math.floor(col * cellW),
+            Math.floor(row * cellH),
+            Math.max(1, Math.ceil(cellW)),
+            Math.max(1, Math.ceil(cellH))
           );
         }
       }
@@ -99,8 +115,8 @@ function HashSignalFlow({ active }) {
     <canvas
       ref={canvasRef}
       className="adventure-mining__signal"
-      width={168}
-      height={72}
+      width={224}
+      height={112}
       aria-hidden="true"
     />
   );

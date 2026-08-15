@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ConnectButton, useConnectModal } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 import { NavLink, Outlet } from 'react-router-dom';
@@ -16,6 +16,17 @@ const NAV_ITEMS = [
   { label: 'FAQs', to: '/faqs' },
 ];
 
+const FONT_STORAGE_KEY = 'j00ba-font-mode';
+
+function readFontMode() {
+  try {
+    const value = window.localStorage.getItem(FONT_STORAGE_KEY);
+    return value === 'readable' ? 'readable' : 'pixel';
+  } catch {
+    return 'pixel';
+  }
+}
+
 function MenuIcon() {
   return (
     <svg
@@ -27,13 +38,11 @@ function MenuIcon() {
       aria-hidden="true"
       focusable="false"
     >
-      {/* Pixel rounded-square frame */}
       <path
         fill="currentColor"
         fillRule="evenodd"
         d="M4 2h8v1h1v1h1v8h-1v1h-1v1H4v-1H3v-1H2V4h1V3h1V2zm1 2v8h6V4H5z"
       />
-      {/* Three pixel menu lines */}
       <rect x="5" y="6" width="6" height="1" fill="currentColor" />
       <rect x="5" y="8" width="6" height="1" fill="currentColor" />
       <rect x="5" y="10" width="6" height="1" fill="currentColor" />
@@ -57,6 +66,30 @@ function WalletIcon() {
         fillRule="evenodd"
         d="M2 3h11v2h1v8H2V3zm2 2v6h8V9H9V6h3V5H4zm6 2h4v3h-4V7zm1 1v1h2V8h-2z"
       />
+    </svg>
+  );
+}
+
+function SettingsIcon() {
+  return (
+    <svg
+      className="site-settings__icon"
+      viewBox="0 0 16 16"
+      width="20"
+      height="20"
+      shapeRendering="crispEdges"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path
+        fill="currentColor"
+        d="M6 1h4v1h1v1h1v1h1v2h-1v1h-1v1H9v1H7V8H6V7H5V6H4V4h1V3h1V2h1V1zm1 4v2h2V5H7z"
+      />
+      <path
+        fill="currentColor"
+        d="M2 9h1v1h1v1h1v1h2v1h2v-1h2v-1h1v-1h1V9h1v2h-1v1h-1v1h-1v1H9v1H7v-1H5v-1H4v-1H3v-1H2V9z"
+      />
+      <rect x="7" y="10" width="2" height="2" fill="currentColor" />
     </svg>
   );
 }
@@ -115,12 +148,78 @@ function RainbowWalletButton() {
   );
 }
 
+function SiteSettingsModal({ fontMode, onClose, onFontModeChange }) {
+  return (
+    <div
+      className="site-settings-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="site-settings-title"
+      onClick={onClose}
+    >
+      <div
+        className="site-settings-modal__panel"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="site-settings-modal__header">
+          <div>
+            <p className="adventure-panel__eyebrow">Preferences</p>
+            <h2 id="site-settings-title">Settings</h2>
+          </div>
+          <button type="button" className="site-settings-modal__close" onClick={onClose}>
+            Close
+          </button>
+        </div>
+
+        <section className="site-settings-modal__section" aria-labelledby="accessibility-title">
+          <h3 id="accessibility-title">Accessibility</h3>
+          <p>
+            Switch site text between the pixel font and a simple Arial font that is easier to
+            read.
+          </p>
+          <div className="site-settings-modal__font-options">
+            <button
+              type="button"
+              className={fontMode === 'readable' ? 'is-active' : undefined}
+              aria-pressed={fontMode === 'readable'}
+              onClick={() => onFontModeChange('readable')}
+            >
+              Simple Arial font
+            </button>
+            <button
+              type="button"
+              className={fontMode === 'pixel' ? 'is-active' : undefined}
+              aria-pressed={fontMode === 'pixel'}
+              onClick={() => onFontModeChange('pixel')}
+            >
+              Pixel art font
+            </button>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [fontMode, setFontMode] = useState(() =>
+    typeof window === 'undefined' ? 'pixel' : readFontMode()
+  );
   const { address, connector } = useAccount();
   const { openConnectModal } = useConnectModal();
   const walletAccount = address ?? '';
   const walletName = connector?.name ?? 'Wallet';
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('font-readable', fontMode === 'readable');
+    try {
+      window.localStorage.setItem(FONT_STORAGE_KEY, fontMode);
+    } catch {
+      // Ignore storage failures.
+    }
+  }, [fontMode]);
 
   return (
     <div className="page">
@@ -135,7 +234,27 @@ export default function App() {
         </button>
       )}
 
-      <RainbowWalletButton />
+      <div className="top-actions">
+        <button
+          type="button"
+          className="site-settings__trigger"
+          aria-label="Open settings"
+          aria-haspopup="dialog"
+          aria-expanded={settingsOpen}
+          onClick={() => setSettingsOpen(true)}
+        >
+          <SettingsIcon />
+        </button>
+        <RainbowWalletButton />
+      </div>
+
+      {settingsOpen ? (
+        <SiteSettingsModal
+          fontMode={fontMode}
+          onClose={() => setSettingsOpen(false)}
+          onFontModeChange={setFontMode}
+        />
+      ) : null}
 
       <aside
         className={`sidebar${sidebarOpen ? ' sidebar--open' : ''}`}
