@@ -8,6 +8,8 @@ import {
   requestProfileChallenge,
   saveCommunityProfile,
 } from '../lib/communityProfiles';
+import { decorateAccount, emptyAdventurerAccount } from '../lib/adventurerProgress';
+import { fetchAdventurerAccount } from '../lib/adventuresApi';
 
 const COLLECTION_BY_ID = new Map(collection.map((impling) => [String(impling.id), impling]));
 const EMPTY_PROFILE = {
@@ -58,6 +60,7 @@ export default function ProfilePage() {
   const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
   const [saving, setSaving] = useState(false);
+  const [adventurer, setAdventurer] = useState(emptyAdventurerAccount());
 
   const selectedAvatar = useMemo(
     () => ownedImplingz.find((impling) => impling.id === profile.avatarId) ?? null,
@@ -83,6 +86,7 @@ export default function ProfilePage() {
       setOwnedImplingz([]);
       setAvatarPickerOpen(false);
       setSaveStatus('');
+      setAdventurer(emptyAdventurerAccount());
       return undefined;
     }
 
@@ -102,6 +106,14 @@ export default function ProfilePage() {
 
     setImplingzLoading(true);
     setImplingzError('');
+
+    fetchAdventurerAccount(walletAccount, { signal: controller.signal })
+      .then((data) => {
+        setAdventurer(decorateAccount(data.account));
+      })
+      .catch(() => {
+        setAdventurer(emptyAdventurerAccount(walletAccount.toLowerCase()));
+      });
 
     fetch(`/api/implingz?owner=${encodeURIComponent(walletAccount)}`, {
       signal: controller.signal,
@@ -255,6 +267,23 @@ export default function ProfilePage() {
               <div className="profile-summary__metric">
                 <span>Total IMPLINGz</span>
                 <strong>{implingzLoading ? '…' : ownedImplingz.length}</strong>
+              </div>
+
+              <div className="profile-summary__metric">
+                <span>Account level</span>
+                <strong>{adventurer.level}</strong>
+              </div>
+              <div className="profile-summary__xp">
+                <span>
+                  {adventurer.xp} XP
+                  {adventurer.nextLevelXp ? ` / ${adventurer.nextLevelXp}` : ''}
+                </span>
+                <span>
+                  {adventurer.active_adventures}/{adventurer.slots} adventures
+                </span>
+              </div>
+              <div className="profile-summary__xp-bar" aria-hidden="true">
+                <span style={{ width: `${Math.round((adventurer.progressRatio ?? 0) * 100)}%` }} />
               </div>
 
               <div className="profile-summary__tiers" aria-label="IMPLINGZ tier totals">

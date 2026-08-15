@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import collection from '../data/collection.json';
 import { fetchCommunityProfiles } from '../lib/communityProfiles';
+import { fetchAdventurerAccount } from '../lib/adventuresApi';
 
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 const COLLECTION_BY_ID = new Map(collection.map((impling) => [String(impling.id), impling]));
@@ -27,10 +28,17 @@ export default function CommunityProfilePage() {
     setLoading(true);
     setError('');
 
-    fetchCommunityProfiles({ walletAddress, signal: controller.signal })
-      .then(([savedProfile]) => {
+    Promise.all([
+      fetchCommunityProfiles({ walletAddress, signal: controller.signal }),
+      fetchAdventurerAccount(walletAddress, { signal: controller.signal }).catch(() => null),
+    ])
+      .then(([[savedProfile], accountData]) => {
         if (!savedProfile) throw new Error('This adventurer has not saved a community profile.');
-        setProfile(savedProfile);
+        setProfile({
+          ...savedProfile,
+          xp: accountData?.account?.xp ?? savedProfile.xp ?? 0,
+          level: accountData?.account?.level ?? savedProfile.level ?? 1,
+        });
       })
       .catch((requestError) => {
         if (requestError.name !== 'AbortError') {
@@ -109,6 +117,14 @@ export default function CommunityProfilePage() {
                   <div>
                     <span>Tier 3</span>
                     <strong>{profile.tier_3_count ?? 0}</strong>
+                  </div>
+                  <div>
+                    <span>Level</span>
+                    <strong>{profile.level ?? 1}</strong>
+                  </div>
+                  <div>
+                    <span>XP</span>
+                    <strong>{profile.xp ?? 0}</strong>
                   </div>
                 </div>
               </section>

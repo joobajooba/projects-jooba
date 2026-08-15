@@ -168,10 +168,32 @@ Deno.serve(async (request: Request) => {
           .select(PROFILE_COLUMNS)
           .single();
         if (updateError) throw updateError;
-        profiles.push(updated);
+        profiles.push({
+          ...updated,
+        });
       }
 
-      return json({ profiles });
+      const wallets = profiles.map((profile) => profile.wallet_address);
+      const accountByWallet = new Map();
+      if (wallets.length > 0) {
+        const { data: accounts, error: accountError } = await supabase
+          .from("adventurer_accounts")
+          .select("wallet_address,xp,level,active_adventures")
+          .in("wallet_address", wallets);
+        if (accountError) throw accountError;
+        for (const account of accounts ?? []) {
+          accountByWallet.set(account.wallet_address, account);
+        }
+      }
+
+      return json({
+        profiles: profiles.map((profile) => ({
+          ...profile,
+          xp: accountByWallet.get(profile.wallet_address)?.xp ?? 0,
+          level: accountByWallet.get(profile.wallet_address)?.level ?? 1,
+          active_adventures: accountByWallet.get(profile.wallet_address)?.active_adventures ?? 0,
+        })),
+      });
     }
 
     if (request.method !== "POST") {
@@ -262,6 +284,10 @@ Deno.serve(async (request: Request) => {
       .single();
 
     if (profileError) throw profileError;
+    await supabase.from("adventurer_accounts").upsert(
+      { wallet_address: walletAddress, updated_at: new Date().toISOString() },
+      { onConflict: "wallet_address", ignoreDuplicates: true },
+    );
     return json({ profile });
   } catch (error) {
     console.error("community-profiles error", error);

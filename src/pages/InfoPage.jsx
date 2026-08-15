@@ -76,7 +76,7 @@ const ROADMAP_ITEMS = [
     paragraphs: [
       'Your Implingz are searching for the dungeons they lost along the way. Explore the wilds with them, track down hidden keeps, and push to claim what was lost through some mining tech inspired by UncleMac which was used on Mineboys.',
       'Hash mining is a process of searching for a specific matching hash. You use your IMPLINGZ to go adventuring and generate hashes using a changing number called a nonce. Each hash is checked until a matching hash is found. Your IMPLINGZ tier determines the speed at which hashes are generated, giving higher-tier IMPLINGZ a faster hash rate.',
-      'When a winning hash is found, the smart contract verifies it, allowing you to use $DERP as gas to claim or acquire whatever reward has been discovered, such as NFTs or other in-game assets.',
+      'When a winning hash is found, the dungeon contract verifies it. Minting is free; you only pay ETH gas on Robinhood Chain to claim the keep.',
     ],
     image: '/roadmap/roadmap-map.gif',
     imageAlt: 'An animated pixel art treasure map scroll',
@@ -93,8 +93,8 @@ const ROADMAP_ITEMS = [
   {
     title: 'Claimed Dungeons',
     paragraphs: [
-      'The keep is yours, and the dungeon shall be claimed. You and your Impling faced the adventure together, overcame the challenges, and made them proud. Make it to the end of your adventure and the dungeon will be yours to claim using $DERP.',
-      'You and your chosen Impling have faced the dangers, overcome the challenges, and earned your place within the dungeon. What happens after you claim it, and what your dungeon can become, will be revealed at a later date. Your adventure is only the beginning and the rewards to come!',
+      'You and your chosen Impling have faced the dangers, overcome the challenges, and earned your place within the dungeon. Claim it with a free mint (ETH gas only). OpenSea then reads the live contract and shows the revealed dungeon. List it on OpenSea in ETH if you want to trade.',
+      'Your adventure is only the beginning and the rewards to come!',
     ],
     image: '/roadmap/roadmap-dungeon.png',
     imageAlt: 'A pixel art dungeon with mossy stone platforms',

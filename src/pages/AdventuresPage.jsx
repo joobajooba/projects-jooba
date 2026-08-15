@@ -1,7 +1,23 @@
 import { useEffect, useRef, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { usePublicClient } from 'wagmi';
+import { usePublicClient, useSignMessage, useWalletClient } from 'wagmi';
 import collection from '../data/collection.json';
+import { decorateAccount, emptyAdventurerAccount } from '../lib/adventurerProgress';
+import {
+  buildAdventureStartMessage,
+  discardFoundDungeon,
+  fetchAdventurerAccount,
+  fetchAdventureBoard,
+  markDungeonMinted,
+  reportMiningProgress,
+  requestAdventureChallenge,
+  requestDungeonMint,
+  resolveAdventurePrompt,
+  startAdventureSession,
+  submitWinningHash,
+} from '../lib/adventuresApi';
+import { hashesPerTickForParty, mineHashBatch } from '../lib/hashMining';
+import { DUNGEON_KEEP_ABI, keepOpenSeaItemUrl, tokenIdFromMintReceipt } from '../lib/dungeonKeep';
 
 const HIGHLIGHT_PATTERN = /(\$DERP|\bImp\b|\b4444\b|\bfree\b)/gi;
 const IMPLINGZ_CONTRACT = '0x81d2d1f0e92285cdd22aa3cbc6956b6e1724d029';
@@ -37,7 +53,7 @@ const LOOP_ITEMS = [
   },
   {
     title: 'Enter the wilds',
-    body: 'Crossing lands, clearing obstacles, and events provide the D&D skin. In the background, the client mines nonces in a Mineboys-style search until a winning hash hits.',
+    body: 'Prompts can award account XP, and a small $DERP drip may come from the royalties pot. In the background, the client mines nonces until a winning hash hits.',
   },
   {
     title: 'Uncover a dungeon',
@@ -45,7 +61,7 @@ const LOOP_ITEMS = [
   },
   {
     title: 'Make the final choice',
-    body: 'Mint the keep or walk away forever. Minting is free apart from $DERP gas, and the same Imp must still be on the adventure.',
+    body: 'Mint the keep or walk away forever. Minting is free apart from ETH gas. After mint, OpenSea reads the contract and shows the revealed dungeon, which you can list in ETH.',
   },
 ];
 
@@ -365,7 +381,7 @@ function FlowMap() {
           <article className="adventures-flow__branch adventures-flow__branch--mint">
             <span className="adventures-flow__branch-tag">Mint</span>
             <h3>Claim the keep</h3>
-            <p>{highlightText('Free mint + $DERP gas. Imp must still be adventuring.')}</p>
+            <p>{highlightText('Free mint + ETH gas. OpenSea then shows the revealed dungeon.')}</p>
             <strong>{highlightText('Takes the next slot in the 4444 supply.')}</strong>
           </article>
 
@@ -389,6 +405,8 @@ function FlowMap() {
 function StartAdventurePanel() {
   const { walletAccount, walletName } = useOutletContext();
   const publicClient = usePublicClient({ chainId: 4663 });
+  const { data: walletClient } = useWalletClient({ chainId: 4663 });
+  const { signMessageAsync } = useSignMessage();
   const [selectedImplingz, setSelectedImplingz] = useState([null, null, null]);
   const [selectingSlot, setSelectingSlot] = useState(null);
   const [ownedImplingz, setOwnedImplingz] = useState([]);
@@ -398,6 +416,15 @@ function StartAdventurePanel() {
   const [adventureStarted, setAdventureStarted] = useState(false);
   const [adventureMessages, setAdventureMessages] = useState([]);
   const [encounterIndex, setEncounterIndex] = useState(null);
+  const [adventurer, setAdventurer] = useState(emptyAdventurerAccount());
+  const [session, setSession] = useState(null);
+  const [hashesChecked, setHashesChecked] = useState(0);
+  const [dungeonSvg, setDungeonSvg] = useState('');
+  const [startError, setStartError] = useState('');
+  const [starting, setStarting] = useState(false);
+  const [dripMessage, setDripMessage] = useState('');
+  const [mintStatus, setMintStatus] = useState('');
+  const [mintedKeepUrl, setMintedKeepUrl] = useState('');
   const [impSpeechStates, setImpSpeechStates] = useState([
     { quoteIndex: null, thinking: false },
     { quoteIndex: null, thinking: false },
@@ -416,6 +443,8 @@ function StartAdventurePanel() {
     ? `${walletAccount.slice(0, 6)}…${walletAccount.slice(-4)}`
     : '';
   const selectedParty = selectedImplingz.filter(Boolean);
+  const hashRateRef = useRef(12);
+  hashRateRef.current = hashesPerTickForParty(selectedParty);
   const currentEncounter = encounterIndex === null ? null : DND_ENCOUNTERS[encounterIndex];
 
   useEffect(() => {
@@ -427,6 +456,36 @@ function StartAdventurePanel() {
     setAdventureStarted(false);
     setAdventureMessages([]);
     setEncounterIndex(null);
+    setSession(null);
+    setHashesChecked(0);
+    setDungeonSvg('');
+    setStartError('');
+    setDripMessage('');
+    setMintStatus('');
+    setAdventurer(emptyAdventurerAccount(walletAccount?.toLowerCase() ?? ''));
+  }, [walletAccount]);
+
+  useEffect(() => {
+    if (!walletAccount) return undefined;
+    const controller = new AbortController();
+    fetchAdventurerAccount(walletAccount, { signal: controller.signal })
+      .then((data) => {
+        setAdventurer(decorateAccount(data.account));
+        const active = (data.sessions ?? []).find((row) => row.status === 'running' || row.status === 'found');
+        if (active) {
+          setSession(active);
+          setAdventureStarted(true);
+          setHashesChecked(Number(active.hashes_checked ?? 0));
+          if (active.dungeon_seed) {
+            fetch(`/api/dungeon-preview?seed=${encodeURIComponent(active.dungeon_seed)}`)
+              .then((response) => response.json())
+              .then((preview) => setDungeonSvg(preview.svg || ''))
+              .catch(() => {});
+          }
+        }
+      })
+      .catch(() => {});
+    return () => controller.abort();
   }, [walletAccount]);
 
   useEffect(() => {
@@ -628,49 +687,208 @@ function StartAdventurePanel() {
     }, randomDelay(ENCOUNTER_DELAY_MIN, ENCOUNTER_DELAY_MAX));
   }
 
-  function startAdventure() {
-    if (selectedParty.length === 0) return;
+  useEffect(() => {
+    if (!session?.id || session.status !== 'running') return undefined;
 
-    const partyNames = selectedParty.map((impling) => `#${impling.id}`).join(', ');
-    setAdventureStarted(true);
-    setEncounterIndex(null);
-    setAdventureMessages([
-      {
-        type: 'narrator',
-        text: 'Your adventure for the lost dungeons has commenced.',
-      },
-      {
-        type: 'system',
-        text: `IMPLINGZ ${partyNames} enter the wilds. Their search for a forgotten keep begins now.`,
-      },
-    ]);
-    scheduleNextEncounter();
+    let cancelled = false;
+    let nonce = 0;
+    let pendingChecked = 0;
+
+    async function mineLoop() {
+      while (!cancelled) {
+        const batch = Math.max(8, hashRateRef.current);
+        const result = await mineHashBatch({
+          sessionId: session.id,
+          startNonce: nonce,
+          count: batch,
+        });
+        nonce = result.nonce;
+        pendingChecked += result.checked;
+        setHashesChecked((current) => current + result.checked);
+
+        if (result.found) {
+          try {
+            const submitted = await submitWinningHash(session.id, {
+              nonce: String(result.nonce),
+              hash: result.hash,
+            });
+            setSession(submitted.session);
+            setAdventurer(decorateAccount(submitted.account));
+            if (submitted.drip) {
+              setDripMessage(`${submitted.drip.amount} $DERP is queued from the royalties pot.`);
+            }
+            const preview = await fetch(
+              `/api/dungeon-preview?seed=${encodeURIComponent(submitted.session.dungeon_seed)}`
+            ).then((response) => response.json());
+            setDungeonSvg(preview.svg || '');
+            setAdventureMessages((messages) => [
+              ...messages,
+              {
+                type: 'system',
+                text: 'A winning hash uncovered a lost keep. Inspect it, then mint or walk away.',
+              },
+            ]);
+          } catch (error) {
+            setStartError(error?.message || 'The winning hash could not be verified.');
+          }
+          break;
+        }
+
+        if (pendingChecked >= 2000) {
+          reportMiningProgress(session.id, pendingChecked).catch(() => {});
+          pendingChecked = 0;
+        }
+
+        await new Promise((resolve) => window.setTimeout(resolve, 16));
+      }
+    }
+
+    mineLoop();
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.id, session?.status]);
+
+  async function startAdventure() {
+    if (selectedParty.length === 0 || !walletAccount || starting) return;
+
+    setStarting(true);
+    setStartError('');
+    setDripMessage('');
+    setMintStatus('');
+
+    try {
+      const partyTokenIds = selectedParty.map((impling) => String(impling.id));
+      const { nonce } = await requestAdventureChallenge(walletAccount);
+      const signature = await signMessageAsync({
+        message: buildAdventureStartMessage({
+          walletAddress: walletAccount,
+          partyTokenIds,
+          nonce,
+        }),
+      });
+      const data = await startAdventureSession({
+        walletAddress: walletAccount,
+        partyTokenIds,
+        nonce,
+        signature,
+      });
+
+      const partyNames = selectedParty.map((impling) => `#${impling.id}`).join(', ');
+      setAdventurer(decorateAccount(data.account));
+      setSession(data.session);
+      setHashesChecked(0);
+      setDungeonSvg('');
+      setAdventureStarted(true);
+      setEncounterIndex(null);
+      setAdventureMessages([
+        {
+          type: 'narrator',
+          text: 'Your adventure for the lost dungeons has commenced.',
+        },
+        {
+          type: 'system',
+          text: `IMPLINGZ ${partyNames} enter the wilds. Their search for a forgotten keep begins now.`,
+        },
+      ]);
+      scheduleNextEncounter();
+    } catch (error) {
+      setStartError(error?.shortMessage || error?.message || 'Could not start the adventure.');
+    } finally {
+      setStarting(false);
+    }
   }
 
-  function chooseAdventureOption(option) {
-    if (!adventureStarted || encounterIndex === null) return;
+  async function chooseAdventureOption(option) {
+    if (!adventureStarted || encounterIndex === null || !session?.id) return;
 
-    const roll = Math.floor(Math.random() * 20) + 1;
-    const succeeded = roll === 20 || (roll !== 1 && roll >= option.dc);
     const completedEncounterIndex = encounterIndex;
-    const rollResult = succeeded ? 'Success' : 'Failure';
+    try {
+      const result = await resolveAdventurePrompt(session.id, {
+        encounterIndex,
+        optionKey: option.key,
+      });
+      const rollResult = result.succeeded ? 'Success' : 'Failure';
+      setAdventurer(decorateAccount(result.account));
+      if (result.drip) {
+        setDripMessage(
+          result.drip.status === 'skipped_empty_pot'
+            ? `A ${result.drip.amount} $DERP drip rolled, but the pot is empty.`
+            : `${result.drip.amount} $DERP is queued from the royalties pot.`
+        );
+      }
+      setAdventureMessages((messages) => [
+        ...messages,
+        {
+          type: 'choice',
+          text: `${option.key} | ${option.label}`,
+        },
+        {
+          type: result.succeeded ? 'roll-success' : 'roll-failure',
+          text: `You rolled ${result.roll} on the D20 against DC ${result.dc} — ${rollResult}. +${result.xpAwarded} XP`,
+        },
+        {
+          type: 'narrator',
+          text: result.succeeded ? option.success : option.failure,
+        },
+      ]);
+      scheduleNextEncounter(completedEncounterIndex);
+    } catch (error) {
+      setStartError(error?.message || 'The encounter could not be resolved.');
+    }
+  }
 
-    setAdventureMessages((messages) => [
-      ...messages,
-      {
-        type: 'choice',
-        text: `${option.key} | ${option.label}`,
-      },
-      {
-        type: succeeded ? 'roll-success' : 'roll-failure',
-        text: `You rolled ${roll} on the D20 against DC ${option.dc} — ${rollResult}.`,
-      },
-      {
-        type: 'narrator',
-        text: succeeded ? option.success : option.failure,
-      },
-    ]);
-    scheduleNextEncounter(completedEncounterIndex);
+  async function handleDiscardDungeon() {
+    if (!session?.id) return;
+    try {
+      const data = await discardFoundDungeon(session.id);
+      setAdventurer(decorateAccount(data.account));
+      setSession(data.session);
+      setAdventureStarted(false);
+      setMintStatus('The preview was discarded and did not take a supply slot.');
+    } catch (error) {
+      setStartError(error?.message || 'Could not discard this dungeon.');
+    }
+  }
+
+  async function handleMintDungeon() {
+    if (!session?.id) return;
+    setMintStatus('Preparing mint voucher…');
+    try {
+      const data = await requestDungeonMint(session.id);
+      const contractAddress =
+        data.contractAddress || import.meta.env.VITE_DUNGEON_KEEP_ADDRESS || '';
+
+      if (!contractAddress || !data.signature || !walletClient) {
+        setMintStatus(
+          'Keep found. The free-mint contract is not live yet, so this preview is held on your session until minting opens. Gas will be ETH.'
+        );
+        return;
+      }
+
+      const hash = await walletClient.writeContract({
+        address: contractAddress,
+        abi: DUNGEON_KEEP_ABI,
+        functionName: 'mint',
+        args: [BigInt(data.voucher.seed), BigInt(data.voucher.deadline), data.signature],
+      });
+      const receipt = await publicClient.waitForTransactionReceipt({ hash });
+      const tokenId = tokenIdFromMintReceipt(receipt);
+      if (tokenId) {
+        const minted = await markDungeonMinted(session.id, tokenId);
+        setAdventurer(decorateAccount(minted.account));
+        setSession(minted.session);
+        setMintedKeepUrl(keepOpenSeaItemUrl(contractAddress, tokenId));
+        setMintStatus(
+          `Keep #${tokenId} minted. OpenSea will show the revealed dungeon. Transaction ${hash.slice(0, 10)}…`
+        );
+      } else {
+        setMintStatus(`Mint submitted. Transaction ${hash.slice(0, 10)}…`);
+      }
+      setAdventureStarted(false);
+    } catch (error) {
+      setMintStatus(error?.shortMessage || error?.message || 'Mint failed.');
+    }
   }
 
   return (
@@ -681,7 +899,9 @@ function StartAdventurePanel() {
             <p className="adventure-panel__eyebrow">Your party</p>
             <h2 id="start-adventure-title">Select Impz</h2>
           </div>
-          <span className="adventure-party__limit">Max 3</span>
+          <span className="adventure-party__limit">
+            Lv {adventurer.level} · {adventurer.active_adventures}/{adventurer.slots} adventures
+          </span>
         </div>
 
         <p className="adventure-party__help">
@@ -689,6 +909,14 @@ function StartAdventurePanel() {
             ? 'Choose up to three Impz from your connected wallet to join the adventure.'
             : 'Use the wallet icon in the top-right, then choose up to three Impz to join the adventure.'}
         </p>
+        {mintStatus ? <p className="adventure-party__help">{mintStatus}</p> : null}
+        {mintedKeepUrl ? (
+          <p className="adventure-party__help">
+            <a href={mintedKeepUrl} target="_blank" rel="noopener noreferrer">
+              View / list this keep on OpenSea
+            </a>
+          </p>
+        ) : null}
 
         <div className="adventure-party__slots" aria-label="Selected Impz">
           {selectedImplingz.map((impling, index) => (
@@ -755,6 +983,8 @@ function StartAdventurePanel() {
         >
           {walletAccount ? `${walletName}: ${connectedAddress}` : 'Wallet not connected'}
         </div>
+        {startError ? <p className="adventure-party__error">{startError}</p> : null}
+        {dripMessage ? <p className="adventure-party__drip">{dripMessage}</p> : null}
       </div>
 
       <div className="adventure-chat">
@@ -767,10 +997,21 @@ function StartAdventurePanel() {
             <button
               type="button"
               className="adventure-chat__start"
-              disabled={selectedParty.length === 0 || adventureStarted}
+              disabled={
+                selectedParty.length === 0 ||
+                adventureStarted ||
+                starting ||
+                adventurer.active_adventures >= adventurer.slots
+              }
               onClick={startAdventure}
             >
-              {adventureStarted ? 'Adventure running' : 'Start Adventure'}
+              {starting
+                ? 'Signing…'
+                : adventureStarted
+                  ? 'Adventure running'
+                  : adventurer.active_adventures >= adventurer.slots
+                    ? 'No free slots'
+                    : 'Start Adventure'}
             </button>
             <span
               className={`adventure-chat__status${
@@ -853,6 +1094,34 @@ function StartAdventurePanel() {
           )}
         </div>
       </div>
+
+      {adventureStarted ? (
+        <aside className="adventure-mining" aria-label="Hash mining">
+          <p className="adventure-panel__eyebrow">Hash mining</p>
+          <h2>{session?.status === 'found' ? 'Dungeon found' : 'Searching nonces'}</h2>
+          <p>
+            {hashesChecked.toLocaleString()} hashes checked
+            {session?.winning_hash ? ` · ${session.winning_hash.slice(0, 10)}…` : ''}
+          </p>
+          {dungeonSvg ? (
+            <div
+              className="adventure-mining__map"
+              dangerouslySetInnerHTML={{ __html: dungeonSvg }}
+            />
+          ) : null}
+          {session?.status === 'found' ? (
+            <div className="adventure-mining__actions">
+              <button type="button" onClick={handleMintDungeon}>
+                Mint keep
+              </button>
+              <button type="button" onClick={handleDiscardDungeon}>
+                Walk away
+              </button>
+            </div>
+          ) : null}
+          {mintStatus ? <p>{mintStatus}</p> : null}
+        </aside>
+      ) : null}
 
       {selectingSlot !== null && (
         <div
@@ -948,6 +1217,16 @@ function StartAdventurePanel() {
 }
 
 function AdventureBoard() {
+  const [events, setEvents] = useState([]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchAdventureBoard({ signal: controller.signal })
+      .then(setEvents)
+      .catch(() => setEvents([]));
+    return () => controller.abort();
+  }, []);
+
   return (
     <section className="adventure-board" aria-labelledby="adventure-board-title">
       <div className="adventure-board__header">
@@ -962,16 +1241,32 @@ function AdventureBoard() {
       </div>
 
       <div className="adventure-board__feed" aria-live="polite">
-        <div className="adventure-board__empty">
-          <span className="adventure-board__empty-mark" aria-hidden="true">
-            …
-          </span>
-          <h3>Waiting for adventure activity</h3>
-          <p>
-            Defeated enemies, discovered locations, found items, and other actions from connected
-            wallets will appear here as they happen.
-          </p>
-        </div>
+        {events.length === 0 ? (
+          <div className="adventure-board__empty">
+            <span className="adventure-board__empty-mark" aria-hidden="true">
+              …
+            </span>
+            <h3>Waiting for adventure activity</h3>
+            <p>
+              Signed adventure starts, prompt wins, found keeps, and mints from connected wallets
+              appear here.
+            </p>
+          </div>
+        ) : (
+          events.map((event) => (
+            <article key={event.id} className="adventure-board__event">
+              <strong>{event.status}</strong>
+              <span>
+                {event.wallet_address.slice(0, 6)}…{event.wallet_address.slice(-4)}
+              </span>
+              <p>
+                {event.dungeon_seed
+                  ? `Seed ${event.dungeon_seed.slice(0, 10)}…`
+                  : `${event.xp_awarded ?? 0} XP earned`}
+              </p>
+            </article>
+          ))
+        )}
       </div>
     </section>
   );
@@ -999,7 +1294,7 @@ function InformationView() {
           <div className="adventures-rules">
             <p>
               {highlightText(
-                'Minting is free; the player only pays $DERP gas, and an Imp must still be on that adventure when the keep is claimed.'
+                'Minting is free; the player only pays ETH gas, and an Imp must still be on that adventure when the keep is claimed.'
               )}
             </p>
             <p>
@@ -1011,6 +1306,11 @@ function InformationView() {
               {highlightText(
                 'Chapter 1 ends when the 4444th keep is minted, not when the 4444th winning hash is found.'
               )}
+            </p>
+            <p>
+              After mint, OpenSea reads the live contract and shows the revealed dungeon. List and
+              trade keeps there in ETH / WETH. $DERP is only used for optional adventure drips
+              from the royalties pot.
             </p>
           </div>
         </AdventureBox>

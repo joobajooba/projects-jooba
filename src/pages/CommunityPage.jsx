@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import collection from '../data/collection.json';
 import { fetchCommunityProfiles } from '../lib/communityProfiles';
+import { ADVENTURES_API } from '../lib/adventuresApi';
 
 const COLLECTION_BY_ID = new Map(collection.map((impling) => [String(impling.id), impling]));
 
@@ -18,8 +19,23 @@ export default function CommunityPage() {
   useEffect(() => {
     const controller = new AbortController();
 
-    fetchCommunityProfiles({ signal: controller.signal })
-      .then(setProfiles)
+    Promise.all([
+      fetchCommunityProfiles({ signal: controller.signal }),
+      fetch(ADVENTURES_API, { signal: controller.signal }).then(async (response) => {
+        const data = await response.json().catch(() => ({}));
+        return data.accounts ?? [];
+      }).catch(() => []),
+    ])
+      .then(([savedProfiles, accounts]) => {
+        const byWallet = new Map(accounts.map((account) => [account.wallet_address, account]));
+        setProfiles(
+          savedProfiles.map((profile) => ({
+            ...profile,
+            xp: byWallet.get(profile.wallet_address)?.xp ?? profile.xp ?? 0,
+            level: byWallet.get(profile.wallet_address)?.level ?? profile.level ?? 1,
+          }))
+        );
+      })
       .catch((requestError) => {
         if (requestError.name !== 'AbortError') {
           setError(requestError.message || 'Could not load the community.');
@@ -71,6 +87,8 @@ export default function CommunityPage() {
                     <th scope="col">Tier 1</th>
                     <th scope="col">Tier 2</th>
                     <th scope="col">Tier 3</th>
+                    <th scope="col">Level</th>
+                    <th scope="col">XP</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -112,6 +130,8 @@ export default function CommunityPage() {
                         <td className="community-directory__count">{profile.tier_1_count ?? 0}</td>
                         <td className="community-directory__count">{profile.tier_2_count ?? 0}</td>
                         <td className="community-directory__count">{profile.tier_3_count ?? 0}</td>
+                        <td className="community-directory__count">{profile.level ?? 1}</td>
+                        <td className="community-directory__count">{profile.xp ?? 0}</td>
                       </tr>
                     );
                   })}

@@ -2,6 +2,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [
+    { "source": "/api/keep/:id", "destination": "/api/keep?id=:id" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
