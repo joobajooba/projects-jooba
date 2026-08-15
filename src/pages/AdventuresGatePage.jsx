@@ -1,30 +1,52 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
+import { useSignMessage } from 'wagmi';
+import {
+  buildAdventuresAccessMessage,
+  fetchAdventuresAccess,
+  isAdventuresTesterWallet,
+} from '../lib/adventuresAccess';
 
 const AdventuresPage = lazy(() => import('./AdventuresPage'));
 
-const BYPASS_WALLET = '0xfe9d3889b5e36b3216a756e0c752220dbf24dac8';
+function GatePopup({ message, error }) {
+  return (
+    <div
+      className="adventures-gate-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="adventures-wip-title"
+    >
+      <div className="adventures-gate__panel">
+        <p className="adventures-gate__eyebrow">Adventures</p>
+        <h1 id="adventures-wip-title">Work in progress</h1>
+        <p>{message}</p>
+        {error ? <p className="adventures-gate__error">{error}</p> : null}
+      </div>
+    </div>
+  );
+}
 
 export default function AdventuresGatePage() {
-  const { walletAccount, openWalletMenu } = useOutletContext();
-  const [unlocked, setUnlocked] = useState(false);
+  const { walletAccount } = useOutletContext();
+  const { signMessageAsync } = useSignMessage();
+  const [serverUnlocked, setServerUnlocked] = useState(false);
   const [checking, setChecking] = useState(true);
-  const [password, setPassword] = useState('');
+  const [signing, setSigning] = useState(false);
   const [error, setError] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const walletBypass = String(walletAccount || '').toLowerCase() === BYPASS_WALLET;
-  const allowed = unlocked || walletBypass;
+  const signingRef = useRef(false);
+  const walletAllowed = isAdventuresTesterWallet(walletAccount);
+  const allowed = serverUnlocked && walletAllowed;
 
   useEffect(() => {
     let cancelled = false;
 
-    fetch('/api/adventures-gate', { credentials: 'same-origin' })
-      .then((response) => response.json())
-      .then((data) => {
-        if (!cancelled) setUnlocked(Boolean(data.unlocked));
+    fetchAdventuresAccess()
+      .then((value) => {
+        if (!cancelled) setServerUnlocked(value);
       })
       .catch(() => {
-        if (!cancelled) setUnlocked(false);
+        if (!cancelled) setServerUnlocked(false);
       })
       .finally(() => {
         if (!cancelled) setChecking(false);
@@ -33,49 +55,75 @@ export default function AdventuresGatePage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [walletAccount]);
 
-  async function handleSubmit(event) {
-    event.preventDefault();
-    if (!password || submitting) return;
+  useEffect(() => {
+    if (!walletAllowed || serverUnlocked || checking || signingRef.current) return undefined;
 
-    setSubmitting(true);
+    let cancelled = false;
+    signingRef.current = true;
+    setSigning(true);
     setError('');
 
-    try {
-      const response = await fetch('/api/adventures-gate', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
-      });
-      const data = await response.json();
+    (async () => {
+      try {
+        const challengeResponse = await fetch('/api/adventures-gate', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'challenge' }),
+        });
+        const challenge = await challengeResponse.json();
+        if (!challengeResponse.ok || !challenge.nonce) {
+          throw new Error(challenge.error || 'Could not start access verification.');
+        }
 
-      if (!response.ok || !data.unlocked) {
-        setError(data.error || 'Incorrect password.');
-        setPassword('');
-        return;
+        const signature = await signMessageAsync({
+          message: buildAdventuresAccessMessage(challenge.nonce),
+        });
+
+        const unlockResponse = await fetch('/api/adventures-gate', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'unlock',
+            walletAddress: walletAccount,
+            nonce: challenge.nonce,
+            signature,
+          }),
+        });
+        const unlocked = await unlockResponse.json();
+        if (cancelled) return;
+        if (!unlockResponse.ok || !unlocked.unlocked) {
+          throw new Error(unlocked.error || 'Access was denied.');
+        }
+        setServerUnlocked(true);
+      } catch (requestError) {
+        if (!cancelled) {
+          setServerUnlocked(false);
+          setError(
+            requestError?.shortMessage ||
+              requestError?.message ||
+              'This page is being built/tested and could not verify access.'
+          );
+        }
+      } finally {
+        signingRef.current = false;
+        if (!cancelled) setSigning(false);
       }
+    })();
 
-      setUnlocked(true);
-    } catch {
-      setError('Could not check the password. Try again.');
-    } finally {
-      setSubmitting(false);
-    }
-  }
+    return () => {
+      cancelled = true;
+    };
+  }, [walletAllowed, serverUnlocked, checking, signMessageAsync, walletAccount]);
 
   if (allowed) {
     return (
       <Suspense
         fallback={
-          <div className="adventures-gate">
-            <div className="adventures-gate__panel">
-              <p className="adventures-gate__eyebrow">Adventures</p>
-              <h1>Work in progress</h1>
-              <p>Opening Adventures…</p>
-            </div>
-          </div>
+          <GatePopup message="Opening Adventures…" />
         }
       >
         <AdventuresPage />
@@ -84,39 +132,15 @@ export default function AdventuresGatePage() {
   }
 
   return (
-    <div className="adventures-gate-modal" role="dialog" aria-modal="true" aria-labelledby="adventures-wip-title">
-      <form className="adventures-gate__panel" onSubmit={handleSubmit}>
-        <p className="adventures-gate__eyebrow">Adventures</p>
-        <h1 id="adventures-wip-title">Work in progress</h1>
-        <p>
-          {checking
+    <GatePopup
+      message={
+        signing
+          ? 'Confirm the wallet signature to open this test page.'
+          : checking
             ? 'Checking access…'
-            : 'This page is still being built. Enter the password, or connect the allowed wallet to bypass.'}
-        </p>
-        <label className="adventures-gate__field">
-          <span>Password</span>
-          <input
-            type="password"
-            name="adventures-password"
-            autoComplete="off"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            disabled={submitting || checking}
-          />
-        </label>
-        {error ? <p className="adventures-gate__error">{error}</p> : null}
-        {walletAccount && !walletBypass ? (
-          <p className="adventures-gate__error">This connected wallet cannot bypass the gate.</p>
-        ) : null}
-        <div className="adventures-gate__actions">
-          <button type="submit" disabled={submitting || checking || !password}>
-            {submitting ? 'Checking…' : 'Open Adventures'}
-          </button>
-          <button type="button" onClick={() => openWalletMenu?.()} disabled={checking}>
-            {walletAccount ? 'Switch wallet' : 'Connect wallet'}
-          </button>
-        </div>
-      </form>
-    </div>
+            : 'This page is being built/tested.'
+      }
+      error={error}
+    />
   );
 }

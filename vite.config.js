@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import adventuresGateHandler from './api/adventures-gate.js';
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 
@@ -54,33 +55,47 @@ function localAdventureApis() {
         const url = new URL(req.url || '/', 'http://localhost');
 
         if (url.pathname === '/api/adventures-gate') {
-          if (req.method === 'GET') {
-            sendJson(res, 200, { unlocked: false });
-            return;
-          }
+          const wrapped = {
+            statusCode: 200,
+            setHeader(name, value) {
+              res.setHeader(name, value);
+            },
+            status(code) {
+              this.statusCode = code;
+              return this;
+            },
+            json(data) {
+              sendJson(res, this.statusCode || 200, data);
+            },
+          };
 
-          if (req.method === 'POST') {
-            const chunks = [];
-            req.on('data', (chunk) => chunks.push(chunk));
-            req.on('end', () => {
-              let body = {};
-              try {
-                body = JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}');
-              } catch {
-                body = {};
-              }
-              const password = String(body.password || '');
-              const expected = process.env.ADVENTURES_GATE_PASSWORD || '0101';
-              if (password === expected) {
-                sendJson(res, 200, { unlocked: true });
-                return;
-              }
-              sendJson(res, 401, { unlocked: false, error: 'Incorrect password.' });
+          if (req.method === 'GET' || req.method === 'HEAD') {
+            Promise.resolve(
+              adventuresGateHandler({ method: req.method, headers: req.headers, body: {} }, wrapped)
+            ).catch(() => {
+              sendJson(res, 500, { error: 'Access check failed.' });
             });
             return;
           }
 
-          sendJson(res, 405, { error: 'Method not allowed.' });
+          const chunks = [];
+          req.on('data', (chunk) => chunks.push(chunk));
+          req.on('end', () => {
+            let body = {};
+            try {
+              body = JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}');
+            } catch {
+              body = {};
+            }
+            Promise.resolve(
+              adventuresGateHandler(
+                { method: req.method, headers: req.headers, body },
+                wrapped
+              )
+            ).catch(() => {
+              sendJson(res, 500, { error: 'Access check failed.' });
+            });
+          });
           return;
         }
 

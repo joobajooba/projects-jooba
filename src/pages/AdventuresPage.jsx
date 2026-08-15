@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import { usePublicClient, useSignMessage, useWalletClient } from 'wagmi';
 import collection from '../data/collection.json';
 import { useAdventureRuntime } from '../lib/adventureRuntime';
+import { useAdventuresServerAccess } from '../lib/adventuresAccess';
 import { decorateAccount, XP_DUNGEON_DISCARDED, XP_DUNGEON_FOUND, XP_DUNGEON_MINTED } from '../lib/adventurerProgress';
 import {
   buildAdventureStartMessage,
@@ -1671,7 +1672,25 @@ function InformationView() {
 }
 
 export default function AdventuresPage() {
+  const access = useAdventuresServerAccess();
   const [activeView, setActiveView] = useState('information');
+
+  if (!access.unlocked) {
+    return (
+      <div
+        className="adventures-gate-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="adventures-wip-title"
+      >
+        <div className="adventures-gate__panel">
+          <p className="adventures-gate__eyebrow">Adventures</p>
+          <h1 id="adventures-wip-title">Work in progress</h1>
+          <p>This page is being built/tested.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="adventures-page">
