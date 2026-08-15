@@ -1,21 +1,15 @@
 #!/usr/bin/env python3
-"""Render a high-res dungeon PNG from a winning hash using Dungeon_Generator."""
+"""Render a high-res dungeon PNG from a winning hash using the vendored generator."""
 
 from __future__ import annotations
 
 import argparse
-import subprocess
+import importlib.util
 import sys
 from pathlib import Path
 
-GENERATOR = Path.home() / "Documents" / "Dungeon_Generator" / "generate.py"
-
-
-def seed_to_int(value: str) -> int:
-    text = value[2:] if value.startswith(("0x", "0X")) else value
-    if all(ch in "0123456789abcdefABCDEF" for ch in text) and len(text) >= 8:
-        return int(text[:16], 16) % (2**31)
-    return abs(hash(value)) % (2**31)
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
 
 
 def main() -> int:
@@ -24,14 +18,19 @@ def main() -> int:
     parser.add_argument("--out", default="dungeon.png")
     args = parser.parse_args()
 
-    if not GENERATOR.exists():
-        print(f"Dungeon_Generator not found at {GENERATOR}", file=sys.stderr)
-        return 1
-
-    numeric = seed_to_int(args.seed)
-    return subprocess.call(
-        [sys.executable, str(GENERATOR), "--seed", str(numeric), "--out", args.out]
+    spec = importlib.util.spec_from_file_location(
+        "dungeon_preview_api", ROOT / "api" / "dungeon-preview.py"
     )
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    preview = module.render_preview(args.seed, max_edge=2048)
+    Path(args.out).write_bytes(preview["png"])
+    print(f"seed: {preview['numericSeed']}")
+    print(f"rooms: {preview['rooms']}")
+    print(f"tileset: {preview['tileset']}")
+    print(f"wrote: {args.out}")
+    return 0
 
 
 if __name__ == "__main__":

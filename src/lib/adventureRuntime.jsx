@@ -64,7 +64,7 @@ export function AdventureRuntimeProvider({ walletAccount, children }) {
   const [party, setParty] = useState([]);
   const [hashesChecked, setHashesChecked] = useState(0);
   const [miningNonce, setMiningNonce] = useState(0);
-  const [dungeonSvg, setDungeonSvg] = useState('');
+  const [dungeonImageUrl, setDungeonImageUrl] = useState('');
   const [dripMessage, setDripMessage] = useState('');
   const [runtimeError, setRuntimeError] = useState('');
   const hashRateRef = useRef(3);
@@ -83,7 +83,7 @@ export function AdventureRuntimeProvider({ walletAccount, children }) {
     setHashesChecked(0);
     setMiningNonce(0);
     miningNonceRef.current = 0;
-    setDungeonSvg('');
+    setDungeonImageUrl('');
     setDripMessage('');
     window.sessionStorage.removeItem(PARTY_STORAGE_KEY);
     window.sessionStorage.removeItem(NONCE_STORAGE_KEY);
@@ -91,17 +91,12 @@ export function AdventureRuntimeProvider({ walletAccount, children }) {
 
   const loadDungeonPreview = useCallback(async (seed) => {
     if (!seed) {
-      setDungeonSvg('');
+      setDungeonImageUrl('');
       return;
     }
-    try {
-      const preview = await fetch(
-        `/api/dungeon-preview?seed=${encodeURIComponent(seed)}`
-      ).then((response) => response.json());
-      setDungeonSvg(preview.svg || '');
-    } catch {
-      setDungeonSvg('');
-    }
+    setDungeonImageUrl(
+      `/api/dungeon-preview?seed=${encodeURIComponent(seed)}&format=png`
+    );
   }, []);
 
   const beginAdventure = useCallback(
@@ -113,7 +108,7 @@ export function AdventureRuntimeProvider({ walletAccount, children }) {
       setHashesChecked(Number(nextSession?.hashes_checked ?? 0));
       setMiningNonce(0);
       miningNonceRef.current = 0;
-      setDungeonSvg('');
+      setDungeonImageUrl('');
       setDripMessage('');
       setRuntimeError('');
       writeJson(PARTY_STORAGE_KEY, {
@@ -169,6 +164,19 @@ export function AdventureRuntimeProvider({ walletAccount, children }) {
     clearActiveAdventure();
     return data;
   }, [clearActiveAdventure, session]);
+
+  const resumeAfterWalkAway = useCallback(
+    ({ account, session: nextSession, nextNonce }) => {
+      const nonce = Math.max(0, Number(nextNonce) || 0);
+      setAdventurer(decorateAccount(account));
+      setSession(nextSession);
+      setDungeonImageUrl('');
+      setMiningNonce(nonce);
+      miningNonceRef.current = nonce;
+      writeJson(NONCE_STORAGE_KEY, { sessionId: nextSession.id, nonce });
+    },
+    []
+  );
 
   useEffect(() => {
     if (!walletAccount) {
@@ -288,7 +296,7 @@ export function AdventureRuntimeProvider({ walletAccount, children }) {
       setSession,
       party,
       hashesChecked,
-      dungeonSvg,
+      dungeonImageUrl,
       dripMessage,
       setDripMessage,
       runtimeError,
@@ -300,6 +308,7 @@ export function AdventureRuntimeProvider({ walletAccount, children }) {
       endAdventure,
       clearActiveAdventure,
       stopAdventure,
+      resumeAfterWalkAway,
       loadDungeonPreview,
     }),
     [
@@ -307,7 +316,7 @@ export function AdventureRuntimeProvider({ walletAccount, children }) {
       session,
       party,
       hashesChecked,
-      dungeonSvg,
+      dungeonImageUrl,
       dripMessage,
       runtimeError,
       adventureActive,
@@ -316,6 +325,7 @@ export function AdventureRuntimeProvider({ walletAccount, children }) {
       endAdventure,
       clearActiveAdventure,
       stopAdventure,
+      resumeAfterWalkAway,
       loadDungeonPreview,
     ]
   );

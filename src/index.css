@@ -3289,16 +3289,12 @@ body {
 }
 
 .dungeon-found-modal__map {
-  margin-top: 0.9rem;
-  overflow: auto;
-  border: 1px solid rgba(184, 255, 46, 0.22);
-  background: #07070a;
-}
-
-.dungeon-found-modal__map svg {
   display: block;
   width: 100%;
   height: auto;
+  margin-top: 0.9rem;
+  border: 1px solid rgba(184, 255, 46, 0.22);
+  background: #07070a;
   image-rendering: pixelated;
 }
 
@@ -3365,10 +3361,12 @@ body {
 }
 
 .dungeon-page__map {
+  display: block;
+  width: 100%;
   margin-top: 1rem;
-  overflow: auto;
   border: 2px solid rgba(255, 255, 255, 0.16);
   background: #07070a;
+  image-rendering: pixelated;
 }
 
 .dungeon-page__market {

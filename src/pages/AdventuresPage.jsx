@@ -3,7 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import { usePublicClient, useSignMessage, useWalletClient } from 'wagmi';
 import collection from '../data/collection.json';
 import { useAdventureRuntime } from '../lib/adventureRuntime';
-import { decorateAccount, XP_DUNGEON_FOUND, XP_DUNGEON_MINTED } from '../lib/adventurerProgress';
+import { decorateAccount, XP_DUNGEON_DISCARDED, XP_DUNGEON_FOUND, XP_DUNGEON_MINTED } from '../lib/adventurerProgress';
 import {
   buildAdventureStartMessage,
   discardFoundDungeon,
@@ -422,7 +422,7 @@ function StartAdventurePanel() {
     session,
     party,
     hashesChecked,
-    dungeonSvg,
+    dungeonImageUrl,
     dripMessage,
     setDripMessage,
     runtimeError,
@@ -432,6 +432,7 @@ function StartAdventurePanel() {
     endAdventure,
     clearActiveAdventure,
     stopAdventure,
+    resumeAfterWalkAway,
   } = useAdventureRuntime();
 
   const [selectedImplingz, setSelectedImplingz] = useState([null, null, null]);
@@ -864,19 +865,27 @@ function StartAdventurePanel() {
   async function handleDiscardDungeon() {
     if (!session?.id) return;
     try {
+      const nextNonce = Number(session.winning_nonce ?? 0) + 1;
       const data = await discardFoundDungeon(session.id);
-      endAdventure({ account: data.account, session: data.session });
-      clearAdventureTimers();
-      setEncounterIndex(null);
+      resumeAfterWalkAway({
+        account: data.account,
+        session: data.session,
+        nextNonce: Number(data.nextNonce ?? nextNonce),
+      });
+      setMintStatus('');
       setAdventureMessages((messages) => [
         ...messages,
         {
           type: 'system',
-          text: 'The preview was discarded and did not take a supply slot.',
+          text: 'You walked away. The preview is gone and uses no supply slot. Mining continues.',
         },
+        ...(Number(data.xpAwarded ?? XP_DUNGEON_DISCARDED) > 0
+          ? [{ type: 'xp', text: `+${data.xpAwarded ?? XP_DUNGEON_DISCARDED} XP` }]
+          : []),
       ]);
-      setMintStatus('');
-      resumedSessionRef.current = '';
+      if (encounterIndex === null) {
+        scheduleNextEncounter();
+      }
     } catch (error) {
       setStartError(error?.message || 'Could not discard this dungeon.');
     }
@@ -1206,10 +1215,11 @@ function StartAdventurePanel() {
               Inspect the preview, then mint it as an NFT or walk away forever. Minting is free
               aside from ETH gas.
             </p>
-            {dungeonSvg ? (
-              <div
+            {dungeonImageUrl ? (
+              <img
                 className="dungeon-found-modal__map"
-                dangerouslySetInnerHTML={{ __html: dungeonSvg }}
+                src={dungeonImageUrl}
+                alt="Procedurally generated lost keep"
               />
             ) : (
               <p className="adventure-party__help">Loading dungeon preview…</p>
@@ -1223,6 +1233,9 @@ function StartAdventurePanel() {
               </button>
             </div>
             {mintStatus ? <p className="dungeon-found-modal__status">{mintStatus}</p> : null}
+            <p className="dungeon-found-modal__status">
+              Walk away discards this keep only. The adventure keeps mining until you stop it.
+            </p>
           </div>
         </div>
       ) : null}

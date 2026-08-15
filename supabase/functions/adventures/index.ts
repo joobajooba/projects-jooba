@@ -383,17 +383,20 @@ Deno.serve(async (request: Request) => {
       return json({ account, session: data, drip });
     }
 
-    if (action === "discard" || action === "abandon") {
-      if (!["running", "found"].includes(session.status)) {
-        return json({ error: "This adventure has already ended." }, 409);
+    if (action === "discard") {
+      if (session.status !== "found") {
+        return json({ error: "Only a found dungeon preview can be walked away from." }, 409);
       }
-      const xpAwarded = action === "discard" && session.status === "found" ? XP_DUNGEON_DISCARDED : 0;
+      const discardedNonce = Number(session.winning_nonce ?? 0);
       const { data, error } = await supabase
         .from("adventure_sessions")
         .update({
-          status: action === "discard" ? "discarded" : "abandoned",
-          ended_at: new Date().toISOString(),
-          xp_awarded: Number(session.xp_awarded ?? 0) + xpAwarded,
+          status: "running",
+          winning_nonce: null,
+          winning_hash: null,
+          dungeon_seed: null,
+          mint_deadline: null,
+          xp_awarded: Number(session.xp_awarded ?? 0) + XP_DUNGEON_DISCARDED,
           updated_at: new Date().toISOString(),
         })
         .eq("id", session.id)
@@ -401,7 +404,34 @@ Deno.serve(async (request: Request) => {
         .single();
       if (error) throw error;
       const account = decorateAccount(
-        await persistProgress(session.wallet_address, xpAwarded, -1),
+        await persistProgress(session.wallet_address, XP_DUNGEON_DISCARDED),
+        session.wallet_address,
+      );
+      return json({
+        account,
+        session: data,
+        nextNonce: Number.isFinite(discardedNonce) ? discardedNonce + 1 : 0,
+        xpAwarded: XP_DUNGEON_DISCARDED,
+      });
+    }
+
+    if (action === "abandon") {
+      if (!["running", "found"].includes(session.status)) {
+        return json({ error: "This adventure has already ended." }, 409);
+      }
+      const { data, error } = await supabase
+        .from("adventure_sessions")
+        .update({
+          status: "abandoned",
+          ended_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", session.id)
+        .select(SESSION_COLUMNS)
+        .single();
+      if (error) throw error;
+      const account = decorateAccount(
+        await persistProgress(session.wallet_address, 0, -1),
         session.wallet_address,
       );
       return json({ account, session: data });
@@ -438,7 +468,7 @@ Deno.serve(async (request: Request) => {
         message,
         signature,
         contractAddress,
-        previewUrl: `/api/dungeon-preview?seed=${encodeURIComponent(session.dungeon_seed)}&format=svg`,
+        previewUrl: `/api/dungeon-preview?seed=${encodeURIComponent(session.dungeon_seed)}&format=png`,
       });
     }
 

@@ -1,8 +1,24 @@
 import { createPublicClient, http } from 'viem';
-import { generateDungeonLayout } from '../src/lib/dungeonLayout.js';
 
 const KEEP_ADDRESS = process.env.DUNGEON_KEEP_ADDRESS || process.env.VITE_DUNGEON_KEEP_ADDRESS || '';
 const RPC_URL = 'https://rpc.mainnet.chain.robinhood.com';
+const TILESETS = [
+  'ashfall',
+  'cloudsea',
+  'deepkarst',
+  'dreamveil',
+  'farvoid',
+  'frostbite',
+  'greensward',
+  'moondust',
+  'mossruin',
+  'sporewild',
+  'stonekeep',
+  'sunscorch',
+  'tempest',
+  'underworld',
+  'verdant',
+];
 const KEEP_ABI = [
   {
     type: 'function',
@@ -29,6 +45,14 @@ function siteOrigin(request) {
 
 function seedHex(value) {
   return `0x${BigInt(value).toString(16).padStart(64, '0')}`;
+}
+
+function seedToInt(hex) {
+  const text = String(hex).replace(/^0x/i, '');
+  if (/^[0-9a-f]+$/i.test(text) && text.length >= 8) {
+    return Number(BigInt(`0x${text.slice(0, 16)}`) % 2147483648n);
+  }
+  return 42;
 }
 
 export default async function handler(request, response) {
@@ -71,9 +95,10 @@ export default async function handler(request, response) {
       args: [BigInt(tokenId)],
     });
     const hex = seedHex(seed);
-    const layout = generateDungeonLayout(hex);
+    const numeric = seedToInt(hex);
+    const tileset = TILESETS[numeric % TILESETS.length];
     const origin = siteOrigin(request);
-    const image = `${origin}/api/dungeon-preview?seed=${encodeURIComponent(hex)}&format=svg`;
+    const image = `${origin}/api/dungeon-preview?seed=${encodeURIComponent(hex)}&format=png`;
 
     response.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
     return response.status(200).json({
@@ -83,8 +108,7 @@ export default async function handler(request, response) {
       image,
       external_url: `${origin}/the-dungeon`,
       attributes: [
-        { trait_type: 'Rooms', value: layout.rooms },
-        { trait_type: 'Tileset', value: layout.tileset },
+        { trait_type: 'Tileset', value: tileset },
         { trait_type: 'Seed', value: hex },
         { trait_type: 'Owner', value: owner },
       ],

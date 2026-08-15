@@ -6,3 +6,7 @@ dist
 .vscode
 out/
 cache/
+__pycache__/
+*.pyc
+requirements-dungeon.txt
+

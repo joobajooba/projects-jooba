@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { usePublicClient } from 'wagmi';
-import { dungeonLayoutToSvg, generateDungeonLayout } from '../lib/dungeonLayout';
 import {
   DUNGEON_KEEP_ABI,
   keepOpenSeaCollectionUrl,
@@ -13,11 +12,26 @@ export default function TheDungeonPage() {
   const [keeps, setKeeps] = useState([]);
   const [supply, setSupply] = useState(null);
   const [galleryError, setGalleryError] = useState('');
+  const [previewMeta, setPreviewMeta] = useState(null);
   const publicClient = usePublicClient({ chainId: 4663 });
-  const layout = useMemo(() => generateDungeonLayout(seed || '42'), [seed]);
-  const svg = useMemo(() => dungeonLayoutToSvg(layout), [layout]);
   const keepAddress = import.meta.env.VITE_DUNGEON_KEEP_ADDRESS;
   const collectionUrl = keepOpenSeaCollectionUrl(keepAddress);
+  const previewUrl = `/api/dungeon-preview?seed=${encodeURIComponent(seed || '42')}&format=png`;
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/dungeon-preview?seed=${encodeURIComponent(seed || '42')}&format=json`)
+      .then((response) => response.json())
+      .then((data) => {
+        if (!cancelled) setPreviewMeta(data);
+      })
+      .catch(() => {
+        if (!cancelled) setPreviewMeta(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [seed]);
 
   useEffect(() => {
     if (!keepAddress || !publicClient) return undefined;
@@ -45,13 +59,10 @@ export default function TheDungeonPage() {
               args: [BigInt(tokenId)],
             });
             const hex = seedHex(seedValue);
-            const keepLayout = generateDungeonLayout(hex);
             return {
               tokenId,
               hex,
-              rooms: keepLayout.rooms,
-              tileset: keepLayout.tileset,
-              svg: dungeonLayoutToSvg(keepLayout, { cell: 6 }),
+              imageUrl: `/api/dungeon-preview?seed=${encodeURIComponent(hex)}&format=png`,
             };
           })
         );
@@ -111,14 +122,12 @@ export default function TheDungeonPage() {
             <div className="dungeon-page__gallery">
               {keeps.map((keep) => (
                 <article key={keep.tokenId} className="dungeon-page__keep">
-                  <div
+                  <img
                     className="dungeon-page__keep-map"
-                    dangerouslySetInnerHTML={{ __html: keep.svg }}
+                    src={keep.imageUrl}
+                    alt={`Lost Keep #${keep.tokenId}`}
                   />
                   <h3>Keep #{keep.tokenId}</h3>
-                  <p>
-                    {keep.rooms} rooms · {keep.tileset}
-                  </p>
                   <a
                     href={keepOpenSeaItemUrl(keepAddress, keep.tokenId)}
                     target="_blank"
@@ -148,10 +157,12 @@ export default function TheDungeonPage() {
         </label>
 
         <p className="dungeon-page__meta">
-          {layout.rooms} rooms · {layout.tileset} · numeric seed {layout.numericSeed}
+          {previewMeta
+            ? `${previewMeta.rooms} rooms · ${previewMeta.tileset} · seed ${previewMeta.numericSeed}`
+            : 'Rendering dungeon from Dungeon_Generator…'}
         </p>
 
-        <div className="dungeon-page__map" dangerouslySetInnerHTML={{ __html: svg }} />
+        <img className="dungeon-page__map" src={previewUrl} alt="Dungeon preview" />
       </div>
     </div>
   );
