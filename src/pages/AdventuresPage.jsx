@@ -5,7 +5,6 @@ import collection from '../data/collection.json';
 const HIGHLIGHT_PATTERN = /(\$DERP|\bImp\b|\b4444\b|\bfree\b)/gi;
 const IMPLINGZ_CONTRACT = '0x81d2d1f0e92285cdd22aa3cbc6956b6e1724d029';
 const ROBINHOOD_CHAIN_ID = '0x1237';
-const BLOCKSCOUT_API = 'https://robinhoodchain.blockscout.com/api/v2';
 const OWNER_OF_SELECTOR = '0x6352211e';
 const COLLECTION_BY_ID = new Map(collection.map((impling) => [String(impling.id), impling]));
 
@@ -92,34 +91,16 @@ function normalizeImageUrl(imageUrl) {
 }
 
 async function fetchOwnedImplingz(walletAccount) {
-  const url = new URL(`${BLOCKSCOUT_API}/tokens/${IMPLINGZ_CONTRACT}/instances`);
-  url.searchParams.set('holder_address_hash', walletAccount);
+  const response = await fetch(`/api/implingz?owner=${encodeURIComponent(walletAccount)}`);
+  const data = await response.json().catch(() => ({}));
 
-  const instances = [];
-  let page = 0;
-
-  while (page < 50) {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error('Could not load IMPLINGz from Blockscout.');
-    }
-
-    const data = await response.json();
-    instances.push(...(data.items ?? []));
-
-    if (!data.next_page_params) break;
-
-    Object.entries(data.next_page_params).forEach(([key, value]) => {
-      if (value !== null && value !== undefined) {
-        url.searchParams.set(key, String(value));
-      }
-    });
-    page += 1;
+  if (!response.ok) {
+    throw new Error(data.error || 'Could not load IMPLINGz.');
   }
 
   const uniqueInstances = new Map();
 
-  instances.forEach((instance) => {
+  (data.items ?? []).forEach((instance) => {
     const tokenId = String(instance.id);
     const localImpling = COLLECTION_BY_ID.get(tokenId);
 
