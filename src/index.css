@@ -3414,9 +3414,10 @@ button:active:not(:disabled),
   width: 100%;
   height: auto;
   margin-top: 0.7rem;
-  border: 1px solid rgba(255, 80, 80, 0.35);
-  background: #120808;
+  border: 1px solid rgba(255, 80, 80, 0.45);
+  background: #120606;
   image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
 .adventure-mining__map {
