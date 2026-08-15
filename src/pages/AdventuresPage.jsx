@@ -193,6 +193,21 @@ const IDLE_NARRATIONS = [
   'Moonlight breaks through the clouds and reveals old tracks crossing your path.',
 ];
 
+const IMPLING_IDLE_QUOTES = [
+  'Roll first. Panic later.',
+  'I definitely checked for traps.',
+  'If it bites, we bite back.',
+  'That chest looks mostly safe.',
+  'I call dibs on shiny loot.',
+  'My plan only has one flaw.',
+  'Stealth is just quiet screaming.',
+  'Feeling lucky. Probably.',
+  'Ask the goblin nicely? Boring.',
+  'Keep up, tall one.',
+  'I packed snacks and bad ideas.',
+  'Nat 20 energy today.',
+];
+
 const ENCOUNTER_DELAY_MIN = 60_000;
 const ENCOUNTER_DELAY_MAX = 180_000;
 const IDLE_DELAY_MIN = 18_000;
@@ -210,6 +225,11 @@ function randomIndex(length, excludedIndex = null) {
     index = Math.floor(Math.random() * length);
   }
   return index;
+}
+
+function getImplingIdleQuote(tokenId, slotIndex) {
+  if (!tokenId) return 'Psst… pick an Imp.';
+  return IMPLING_IDLE_QUOTES[(Number(tokenId) + slotIndex * 3) % IMPLING_IDLE_QUOTES.length];
 }
 
 function normalizeImageUrl(imageUrl) {
@@ -570,34 +590,42 @@ function StartAdventurePanel() {
 
         <div className="adventure-party__slots" aria-label="Selected Impz">
           {selectedImplingz.map((impling, index) => (
-            <button
-              key={index}
-              type="button"
-              className={`adventure-party__slot${
-                impling ? ' adventure-party__slot--selected' : ''
-              }`}
-              aria-label={
-                impling
-                  ? `Change ${impling.name} in slot ${index + 1}`
-                  : `Select an Imp for slot ${index + 1}`
-              }
-              disabled={!walletAccount || adventureStarted}
-              onClick={() => openImplingSelector(index)}
-            >
-              {impling ? (
-                <>
-                  <img src={impling.image} alt="" />
-                  <span className="adventure-party__slot-name">#{impling.id}</span>
-                </>
-              ) : (
-                <>
-                  <span className="adventure-party__slot-plus" aria-hidden="true">
-                    +
-                  </span>
-                  <span>Slot {index + 1}</span>
-                </>
-              )}
-            </button>
+            <div key={index} className="adventure-party__member">
+              <div
+                className={`adventure-party__speech${
+                  impling ? '' : ' adventure-party__speech--empty'
+                }`}
+              >
+                {getImplingIdleQuote(impling?.id, index)}
+              </div>
+              <button
+                type="button"
+                className={`adventure-party__slot${
+                  impling ? ' adventure-party__slot--selected' : ''
+                }`}
+                aria-label={
+                  impling
+                    ? `Change ${impling.name} in slot ${index + 1}`
+                    : `Select an Imp for slot ${index + 1}`
+                }
+                disabled={!walletAccount || adventureStarted}
+                onClick={() => openImplingSelector(index)}
+              >
+                {impling ? (
+                  <>
+                    <img src={impling.image} alt="" />
+                    <span className="adventure-party__slot-name">#{impling.id}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="adventure-party__slot-plus" aria-hidden="true">
+                      +
+                    </span>
+                    <span>Slot {index + 1}</span>
+                  </>
+                )}
+              </button>
+            </div>
           ))}
         </div>
 

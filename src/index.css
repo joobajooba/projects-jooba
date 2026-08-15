@@ -1147,13 +1147,53 @@ body {
 
 .adventure-party__slots {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.5rem;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
   margin-top: 1rem;
+}
+
+.adventure-party__member {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.adventure-party__speech {
+  position: relative;
+  min-height: 3.25rem;
+  display: flex;
+  align-items: center;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.055);
+  color: rgba(240, 240, 240, 0.8);
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+
+.adventure-party__speech::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -0.3rem;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  background: #242424;
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.adventure-party__speech--empty {
+  color: rgba(232, 232, 232, 0.42);
+  font-style: italic;
 }
 
 .adventure-party__slot {
   appearance: none;
+  width: 4.75rem;
   aspect-ratio: 1;
   min-width: 0;
   display: flex;
