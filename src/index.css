@@ -249,7 +249,7 @@ button:active:not(:disabled),
 .dm-modal__panel--diagram {
   display: flex;
   flex-direction: column;
-  width: min(96vw, 72rem);
+  width: min(96vw, 80rem);
   height: min(78vh, 32rem);
   max-height: min(92vh, 34rem);
   min-height: 0;
@@ -1290,7 +1290,7 @@ button:active:not(:disabled),
 .info-roadmap-diagram__track {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(8, minmax(0, 1fr));
   grid-template-rows: minmax(0, 1fr) 0.85rem 2px 0.85rem minmax(0, 1fr);
   column-gap: clamp(0.2rem, 0.8vw, 0.45rem);
   width: 100%;
@@ -1340,7 +1340,7 @@ button:active:not(:disabled),
 
 .info-roadmap-diagram__label {
   color: #f7f7f7;
-  font-size: clamp(0.55rem, 1.35vw, 0.8rem);
+  font-size: clamp(0.5rem, 1.2vw, 0.76rem);
   font-weight: 700;
   line-height: 1.15;
   letter-spacing: 0.01em;
@@ -1369,6 +1369,10 @@ button:active:not(:disabled),
 
 .info-highlight--derp {
   color: #b8ff2e;
+}
+
+.info-highlight--imp {
+  color: #ffc85a;
 }
 
 .info-highlight--free {

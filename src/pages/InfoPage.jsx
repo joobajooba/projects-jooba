@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useState } from 'react';
 import { AdventureInformation } from '../lib/adventureInformation';
 
-const HIGHLIGHT_PATTERN = /(\$DERP|\bIMPLINGZ?\b|\bFREE\b)/gi;
+const HIGHLIGHT_PATTERN = /(\$DERP|\$IMP|\bIMPLINGZ?\b|\bFREE\b)/gi;
 
 function highlightText(text) {
   return text.split(HIGHLIGHT_PATTERN).map((part, index) => {
@@ -9,6 +9,13 @@ function highlightText(text) {
     if (/^\$DERP$/i.test(part)) {
       return (
         <span key={`${part}-${index}`} className="info-highlight info-highlight--derp">
+          {part}
+        </span>
+      );
+    }
+    if (/^\$IMP$/i.test(part)) {
+      return (
+        <span key={`${part}-${index}`} className="info-highlight info-highlight--imp">
           {part}
         </span>
       );
@@ -98,6 +105,11 @@ const DIAGRAM_STAGES = [
     icon: '/roadmap/diagram-crown.png',
     side: 'top',
   },
+  {
+    title: 'Brand',
+    icon: '/roadmap/diagram-duck.png',
+    side: 'bottom',
+  },
 ];
 
 const ROADMAP_ITEMS = [
@@ -126,10 +138,58 @@ const ROADMAP_ITEMS = [
     title: 'Claimed Dungeons',
     paragraphs: [
       'You and your chosen Impling have faced the dangers, overcome the challenges, and earned your place within the dungeon, claimed with a free mint (ETH gas). OpenSea then reads the live contract and shows the revealed dungeon. List it on OpenSea in ETH if you want to trade.',
-      'Next steps will be revealed in the future.',
+      'After keeps are being claimed, later stages can open on this site and on Anvil: staking, a bigger rewards pot, an in-house store, product upgrades, and brand. Those are not live yet.',
     ],
     image: '/roadmap/roadmap-map.gif',
     imageAlt: 'An animated pixel art treasure map scroll',
+  },
+  {
+    title: 'Staking',
+    paragraphs: [
+      'Your IMPLINGz stay in your wallet. This is not a lockbox that takes the NFT away.',
+      'When IMPLINGz is listed on Anvil, the market creates a collection token, $IMP. Holders can trade Imps for $IMP, and they can activate an Imp for a share of that market’s trading fees. Activation costs some $IMP. A higher tier costs more and earns a larger share. If you transfer or sell that Imp, the activation ends.',
+      'Staking is optional. You can keep adventuring on j00ba.xyz without ever using Anvil.',
+    ],
+    image: '/roadmap/diagram-book.png',
+    imageAlt: 'A pixel art spell book',
+  },
+  {
+    title: 'Improving Rewards Pot',
+    paragraphs: [
+      'Adventures can already roll a small $DERP tip from a pot funded by royalties. $DERP is a real Robinhood Chain coin. Pots are active when adventures are running per Chapter.',
+      'Later, a second jar can sit beside it for $IMP. I would put some $IMP into that jar so there is a chance of finding $DERP, $IMP, or sometimes both while you are out with your Imp. Drips stay small. They are a treat from the pot, not a paycheck, we aim to ensure pots contain enough when adventures are running.',
+    ],
+    image: '/roadmap/diagram-chest.png',
+    imageAlt: 'A pixel art treasure chest',
+  },
+  {
+    title: 'In-House Store',
+    paragraphs: [
+      'Once $IMP exists, this website can accept it. Connect your wallet, spend $IMP, and buy things that belong to IMPLINGz: whitelist spots, dungeon upgrades, or other extras I add over time.',
+      'The store lives on j00ba.xyz, not on Anvil. You can still buy $IMP on Anvil if you want more, or find a little in the rewards pot. Shop prices will cost more than a lucky drip so the token keeps a job besides trading.',
+      'Anything Impling-related on this site stays FREE to use. Spending $IMP in the store is optional. You only ever pay gas to use the tools.',
+    ],
+    image: '/roadmap/diagram-crystal.png',
+    imageAlt: 'A pixel art crystal ball',
+  },
+  {
+    title: 'Product Upgrades',
+    paragraphs: [
+      'This is the open later chapter: keep upgrades after mint, The Dungeon as a place you return to, seasonal extras, and whatever else fits the world once people are actually playing. Something we can keep improving as we progress.',
+      'Impz is something we plan to constantly develop with fun features, meaningful collaborations, and a community that can keep growing!',
+    ],
+    image: '/roadmap/diagram-crown.png',
+    imageAlt: 'A pixel art crown',
+  },
+  {
+    title: 'Brand',
+    paragraphs: [
+      'IMPLINGz is more than a mint and a game loop. Brand is how the Imps, the keeps, and the people who hold them show up in the world — something you can recognise even when you are not on the site.',
+      'That can mean merch, stickers, collabs, little objects, and other drops that promote the community and let holders carry IMPLINGz into real life and into other projects. There is no single finish line. The brand can keep opening new doors as the community grows, with room for ideas we have not thought of yet.',
+      'This stage stays playful on purpose. IMPLINGz should feel like a world with infinite possibilities, not a checklist that ends when the last box is ticked.',
+    ],
+    image: '/roadmap/diagram-duck.png',
+    imageAlt: 'A pixel art rubber duck',
   },
 ];
 
