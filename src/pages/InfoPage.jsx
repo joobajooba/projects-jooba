@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { AdventureInformation } from '../lib/adventureInformation';
 
 const HIGHLIGHT_PATTERN = /(\$DERP|\bIMPLINGZ?\b|\bFREE\b)/gi;
@@ -62,6 +62,44 @@ const INTRO_CONTENT = (
   </div>
 );
 
+const DIAGRAM_STAGES = [
+  {
+    title: 'IMPLINGz Mint',
+    icon: '/roadmap/diagram-heart.png',
+    side: 'top',
+  },
+  {
+    title: 'Imp Adventures Chapter 1',
+    icon: '/roadmap/diagram-map.png',
+    side: 'bottom',
+  },
+  {
+    title: 'The Dungeons',
+    icon: '/roadmap/diagram-door.png',
+    side: 'top',
+  },
+  {
+    title: 'Staking',
+    icon: '/roadmap/diagram-book.png',
+    side: 'bottom',
+  },
+  {
+    title: 'Improving Rewards Pot',
+    icon: '/roadmap/diagram-chest.png',
+    side: 'top',
+  },
+  {
+    title: 'In-House Store',
+    icon: '/roadmap/diagram-crystal.png',
+    side: 'bottom',
+  },
+  {
+    title: 'Product Upgrades',
+    icon: '/roadmap/diagram-crown.png',
+    side: 'top',
+  },
+];
+
 const ROADMAP_ITEMS = [
   {
     title: 'Implingz Selection',
@@ -94,6 +132,32 @@ const ROADMAP_ITEMS = [
     imageAlt: 'An animated pixel art treasure map scroll',
   },
 ];
+
+function RoadmapDiagram() {
+  return (
+    <div className="info-roadmap-diagram" aria-label="IMPLINGz roadmap diagram">
+      <div className="info-roadmap-diagram__track">
+        <div className="info-roadmap-diagram__spine" aria-hidden="true" />
+        {DIAGRAM_STAGES.map((stage, index) => (
+          <Fragment key={stage.title}>
+            <article
+              className={`info-roadmap-diagram__node info-roadmap-diagram__node--${stage.side}`}
+              style={{ '--stage': index + 1 }}
+            >
+              <img className="info-roadmap-diagram__icon" src={stage.icon} alt="" />
+              <span className="info-roadmap-diagram__label">{stage.title}</span>
+            </article>
+            <span
+              className={`info-roadmap-diagram__stem info-roadmap-diagram__stem--${stage.side}`}
+              style={{ '--stage': index + 1 }}
+              aria-hidden="true"
+            />
+          </Fragment>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function RoadmapItemContent({ paragraphs, extended, image, imageAlt, imageWide = false }) {
   return (
@@ -131,6 +195,7 @@ function RoadmapItemContent({ paragraphs, extended, image, imageAlt, imageWide =
 function RoadmapContent() {
   return (
     <div className="info-roadmap-list">
+      <InfoBox title="Diagram" content={<RoadmapDiagram />} nested />
       {ROADMAP_ITEMS.map((item, index) => (
         <InfoBox
           key={item.title}
