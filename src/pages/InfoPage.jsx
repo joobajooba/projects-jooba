@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { AdventureInformation } from '../lib/adventureInformation';
 
 const HIGHLIGHT_PATTERN = /(\$DERP|\bIMPLINGZ?\b|\bFREE\b)/gi;
@@ -193,9 +193,66 @@ function RoadmapItemContent({ paragraphs, extended, image, imageAlt, imageWide =
 }
 
 function RoadmapContent() {
+  const [diagramOpen, setDiagramOpen] = useState(false);
+
+  useEffect(() => {
+    if (!diagramOpen) return undefined;
+
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') setDiagramOpen(false);
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [diagramOpen]);
+
   return (
     <div className="info-roadmap-list">
-      <InfoBox title="Diagram" content={<RoadmapDiagram />} nested />
+      <div className="faq-item faq-item--nested">
+        <button
+          type="button"
+          className="faq-item__trigger"
+          aria-haspopup="dialog"
+          aria-expanded={diagramOpen}
+          onClick={() => setDiagramOpen(true)}
+        >
+          <span className="faq-item__question">Diagram</span>
+          <span className="faq-item__icon" aria-hidden="true">
+            +
+          </span>
+        </button>
+      </div>
+
+      {diagramOpen ? (
+        <div
+          className="dm-modal info-roadmap-diagram-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="roadmap-diagram-title"
+        >
+          <button
+            type="button"
+            className="dm-modal__backdrop"
+            aria-label="Close diagram"
+            onClick={() => setDiagramOpen(false)}
+          />
+          <div className="dm-modal__panel dm-modal__panel--diagram">
+            <button
+              type="button"
+              className="dm-modal__close"
+              aria-label="Close popup"
+              onClick={() => setDiagramOpen(false)}
+            >
+              ×
+            </button>
+            <h2 id="roadmap-diagram-title" className="dm-modal__title">
+              Diagram
+            </h2>
+            <RoadmapDiagram />
+          </div>
+        </div>
+      ) : null}
+
       {ROADMAP_ITEMS.map((item, index) => (
         <InfoBox
           key={item.title}
