@@ -160,6 +160,15 @@ async function ownerProof(action, sessionId) {
   };
 }
 
+const OWNER_PROOF_ACTIONS = new Set([
+  'discard',
+  'abandon',
+  'mint-voucher',
+  'mark-minted',
+  'prompt',
+  'submit-hash',
+]);
+
 async function sessionAction(action, sessionId, extra = {}) {
   const secret = getSessionSecret(sessionId);
   const body = {
@@ -170,8 +179,10 @@ async function sessionAction(action, sessionId, extra = {}) {
 
   if (secret) {
     body.secret = secret;
-  } else {
+  } else if (OWNER_PROOF_ACTIONS.has(action)) {
     Object.assign(body, await ownerProof(action, sessionId));
+  } else {
+    return null;
   }
 
   return readResponse(
