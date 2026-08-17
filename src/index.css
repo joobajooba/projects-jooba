@@ -986,9 +986,9 @@ button:active:not(:disabled),
 
 .sidebar-nav__profile-label {
   display: inline-block;
-  color: #fff;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+  color: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
 }
 
 .sidebar-nav__link:hover {
