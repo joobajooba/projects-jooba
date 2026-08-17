@@ -943,7 +943,28 @@ button:active:not(:disabled),
 .sidebar-nav {
   display: flex;
   flex-direction: column;
+  gap: 1.05rem;
+}
+
+.sidebar-nav__section {
+  display: flex;
+  flex-direction: column;
   gap: 0.35rem;
+}
+
+.sidebar-nav__section + .sidebar-nav__section {
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.sidebar-nav__heading {
+  margin: 0 0 0.15rem;
+  padding: 0 0.9rem;
+  color: rgba(184, 255, 46, 0.82);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .sidebar-nav__link {
@@ -999,6 +1020,10 @@ button:active:not(:disabled),
   }
 
   .sidebar-nav {
+    gap: 1rem;
+  }
+
+  .sidebar-nav__section {
     gap: 0.45rem;
   }
 

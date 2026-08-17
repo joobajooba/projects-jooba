@@ -5,17 +5,34 @@ import { NavLink, Outlet } from 'react-router-dom';
 import { AdventureRuntimeProvider } from './lib/adventureRuntime';
 import { isAdventuresTesterWallet } from './lib/adventuresAccess';
 
-const NAV_ITEMS = [
-  { label: 'Profile', to: '/profile', featured: true },
-  { label: 'Community', to: '/community' },
-  { label: 'Home', to: '/' },
-  { label: 'Info', to: '/info' },
-  { label: 'Adventures', to: '/adventures' },
-  { label: 'Staking', to: '/staking', testerOnly: true },
-  { label: 'Collection', to: '/collection' },
-  { label: 'The Dungeon', to: '/the-dungeon' },
-  { label: 'Official Links', to: '/official-links' },
-  { label: 'FAQs', to: '/faqs' },
+const NAV_SECTIONS = [
+  {
+    items: [{ label: 'Home', to: '/' }],
+  },
+  {
+    title: 'Implingz Community',
+    items: [
+      { label: 'Profile', to: '/profile', featured: true },
+      { label: 'Community', to: '/community' },
+    ],
+  },
+  {
+    title: 'Information',
+    items: [
+      { label: 'Info', to: '/info' },
+      { label: 'Official Links', to: '/official-links' },
+      { label: 'FAQs', to: '/faqs' },
+    ],
+  },
+  {
+    title: 'The tools',
+    items: [
+      { label: 'Collection', to: '/collection' },
+      { label: 'Adventures', to: '/adventures' },
+      { label: 'The Dungeon', to: '/the-dungeon' },
+      { label: 'Staking', to: '/staking', testerOnly: true },
+    ],
+  },
 ];
 
 const FONT_STORAGE_KEY = 'j00ba-font-mode';
@@ -484,25 +501,37 @@ export default function App() {
         </button>
 
         <nav className="sidebar-nav" aria-label="Main">
-          {NAV_ITEMS.filter(
-            (item) => !item.testerOnly || isAdventuresTesterWallet(walletAccount)
-          ).map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.to === '/'}
-              className={({ isActive }) =>
-                `sidebar-nav__link${isActive ? ' sidebar-nav__link--active' : ''}${
-                  item.featured ? ' sidebar-nav__link--profile' : ''
-                }`
-              }
-              onClick={() => setSidebarOpen(false)}
-            >
-              <span className={item.featured ? 'sidebar-nav__profile-label' : undefined}>
-                {item.label}
-              </span>
-            </NavLink>
-          ))}
+          {NAV_SECTIONS.map((section) => {
+            const items = section.items.filter(
+              (item) => !item.testerOnly || isAdventuresTesterWallet(walletAccount)
+            );
+            if (items.length === 0) return null;
+
+            return (
+              <div key={section.title || 'home'} className="sidebar-nav__section">
+                {section.title ? (
+                  <p className="sidebar-nav__heading">{section.title}</p>
+                ) : null}
+                {items.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    end={item.to === '/'}
+                    className={({ isActive }) =>
+                      `sidebar-nav__link${isActive ? ' sidebar-nav__link--active' : ''}${
+                        item.featured ? ' sidebar-nav__link--profile' : ''
+                      }`
+                    }
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    <span className={item.featured ? 'sidebar-nav__profile-label' : undefined}>
+                      {item.label}
+                    </span>
+                  </NavLink>
+                ))}
+              </div>
+            );
+          })}
         </nav>
       </aside>
 
