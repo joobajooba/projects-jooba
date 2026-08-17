@@ -3,6 +3,7 @@ import { ConnectButton, useConnectModal } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 import { NavLink, Outlet } from 'react-router-dom';
 import { AdventureRuntimeProvider } from './lib/adventureRuntime';
+import { isAdventuresTesterWallet } from './lib/adventuresAccess';
 
 const NAV_ITEMS = [
   { label: 'Profile', to: '/profile', featured: true },
@@ -10,6 +11,7 @@ const NAV_ITEMS = [
   { label: 'Home', to: '/' },
   { label: 'Info', to: '/info' },
   { label: 'Adventures', to: '/adventures' },
+  { label: 'Staking', to: '/staking', testerOnly: true },
   { label: 'Collection', to: '/collection' },
   { label: 'The Dungeon', to: '/the-dungeon' },
   { label: 'Official Links', to: '/official-links' },
@@ -482,7 +484,9 @@ export default function App() {
         </button>
 
         <nav className="sidebar-nav" aria-label="Main">
-          {NAV_ITEMS.map((item) => (
+          {NAV_ITEMS.filter(
+            (item) => !item.testerOnly || isAdventuresTesterWallet(walletAccount)
+          ).map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
