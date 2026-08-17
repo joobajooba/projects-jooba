@@ -146,7 +146,7 @@ function FlowMap() {
           </article>
 
           <article className="adventures-flow__branch adventures-flow__branch--leave">
-            <span className="adventures-flow__branch-tag">Walk away</span>
+            <span className="adventures-flow__branch-tag">Flee</span>
             <h3>Lose the dungeon</h3>
             <p>The preview is deleted and the dungeon is never stored.</p>
             <strong>{highlightText('Uses no slot in the 4444 supply.')}</strong>

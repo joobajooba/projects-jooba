@@ -3092,6 +3092,10 @@ button:active:not(:disabled),
   font-weight: 700;
 }
 
+.adventure-chat__options--keep {
+  grid-template-columns: 1fr;
+}
+
 .adventure-chat__controls-help {
   min-height: 2.65rem;
   display: flex;
@@ -3894,6 +3898,37 @@ button:active:not(:disabled),
   border-radius: 18px;
   background: #171717;
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+}
+
+.dungeon-found-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.dungeon-found-modal__header h2 {
+  margin: 0.2rem 0 0;
+}
+
+.dungeon-found-modal__close {
+  appearance: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #f0f0f0;
+  font: inherit;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.dungeon-found-modal__close:hover {
+  border-color: rgba(255, 138, 138, 0.5);
+  background: rgba(255, 138, 138, 0.08);
 }
 
 .dungeon-found-modal__panel h2 {

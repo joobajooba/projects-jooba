@@ -260,7 +260,6 @@ function AdventureSlot({
   collapsed = false,
   onToggleCollapse,
   showStackHeader = false,
-  showFoundModal = true,
 }) {
   const { walletAccount, walletName } = useOutletContext();
   const publicClient = usePublicClient({ chainId: 4663 });
@@ -298,6 +297,7 @@ function AdventureSlot({
   const [stopping, setStopping] = useState(false);
   const [mintStatus, setMintStatus] = useState('');
   const [mintedKeepUrl, setMintedKeepUrl] = useState('');
+  const [viewKeepOpen, setViewKeepOpen] = useState(false);
   const [impSpeechStates, setImpSpeechStates] = useState([
     { quoteIndex: null, thinking: false },
     { quoteIndex: null, thinking: false },
@@ -341,6 +341,7 @@ function AdventureSlot({
     setStartError('');
     setMintStatus('');
     setMintedKeepUrl('');
+    setViewKeepOpen(false);
     resumedSessionRef.current = '';
     if (session?.id) setMiningPaused(session.id, false);
   }, [walletAccount, session?.id, setMiningPaused]);
@@ -364,7 +365,7 @@ function AdventureSlot({
         type: 'system',
         text:
           session.status === 'found'
-            ? `${adventureLabel} already uncovered a keep. Inspect it, then mint or walk away.`
+            ? `${adventureLabel} already uncovered a keep. View the dungeon, mint it, or flee.`
             : `${adventureLabel} still running${partyNames ? ` with IMPLINGz ${partyNames}` : ''}. Mining continues while you browse other pages.`,
       },
     ]);
@@ -440,6 +441,7 @@ function AdventureSlot({
 
   useEffect(() => {
     if (session?.status === 'found') {
+      setEncounterIndex(null);
       setAdventureMessages((messages) => {
         if (messages.some((message) => message.text?.includes('uncovered a lost keep'))) {
           return messages;
@@ -448,7 +450,7 @@ function AdventureSlot({
           ...messages,
           {
             type: 'system',
-            text: `${adventureLabel} uncovered a lost keep. Inspect it, then mint or walk away.`,
+            text: `${adventureLabel} uncovered a lost keep. Choose to view the dungeon, mint it, or flee.`,
           },
           {
             type: 'xp',
@@ -456,7 +458,9 @@ function AdventureSlot({
           },
         ];
       });
+      return;
     }
+    setViewKeepOpen(false);
   }, [session?.status]);
 
   async function openImplingSelector(slotIndexToOpen) {
@@ -721,6 +725,20 @@ function AdventureSlot({
     }
   }
 
+  function viewFoundDungeon() {
+    setViewKeepOpen(true);
+    setAdventureMessages((messages) => {
+      if (messages.at(-1)?.text === 'A | View dungeon') return messages;
+      return [
+        ...messages,
+        {
+          type: 'choice',
+          text: 'A | View dungeon',
+        },
+      ];
+    });
+  }
+
   async function handleDiscardDungeon() {
     if (!session?.id) return;
     setStartError('');
@@ -732,12 +750,13 @@ function AdventureSlot({
         session: data.session,
         nextNonce: Number(data.nextNonce ?? nextNonce),
       });
+      setViewKeepOpen(false);
       setMintStatus('');
       setAdventureMessages((messages) => [
         ...messages,
         {
           type: 'system',
-          text: 'You walked away. The preview is gone and uses no supply slot. Mining continues.',
+          text: 'You fled. The preview is gone and uses no supply slot. Mining continues.',
         },
         ...(Number(data.xpAwarded ?? XP_DUNGEON_DISCARDED) > 0
           ? [{ type: 'xp', text: `+${data.xpAwarded ?? XP_DUNGEON_DISCARDED} XP` }]
@@ -779,6 +798,7 @@ function AdventureSlot({
         const openSeaUrl = keepOpenSeaItemUrl(contractAddress, tokenId);
         replaceSession({ account: minted.account, session: minted.session });
         removeRun(session.id);
+        setViewKeepOpen(false);
         setMintedKeepUrl(openSeaUrl);
         setMintStatus('');
         setAdventureMessages((messages) => [
@@ -794,6 +814,7 @@ function AdventureSlot({
         ]);
       } else {
         setMintStatus(`Mint submitted. Transaction ${hash.slice(0, 10)}…`);
+        setViewKeepOpen(false);
         removeRun(session.id);
         setAdventureMessages((messages) => [
           ...messages,
@@ -1068,7 +1089,47 @@ function AdventureSlot({
         </div>
 
         <div className="adventure-chat__controls">
-          {currentEncounter ? (
+          {session?.status === 'found' ? (
+            <>
+              <p className="adventure-chat__halted">
+                Hash finding halted. A lost keep stands before you.
+              </p>
+              <p className="adventure-chat__decision-label">Make your decision.</p>
+              <div className="adventure-chat__options adventure-chat__options--keep" aria-label="Choose what to do with the keep">
+                <button type="button" onClick={viewFoundDungeon}>
+                  <span>A</span>
+                  View dungeon
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAdventureMessages((messages) => [
+                      ...messages,
+                      { type: 'choice', text: 'B | Mint dungeon' },
+                    ]);
+                    handleMintDungeon();
+                  }}
+                >
+                  <span>B</span>
+                  Mint dungeon
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAdventureMessages((messages) => [
+                      ...messages,
+                      { type: 'choice', text: 'C | Flee' },
+                    ]);
+                    handleDiscardDungeon();
+                  }}
+                >
+                  <span>C</span>
+                  Flee
+                </button>
+              </div>
+              {mintStatus ? <p className="dungeon-found-modal__status">{mintStatus}</p> : null}
+            </>
+          ) : currentEncounter ? (
             <>
               <p className="adventure-chat__halted">
                 Hash finding halted, make a decision.
@@ -1109,7 +1170,7 @@ function AdventureSlot({
           <p className="adventure-party__help">
             {currentEncounter
               ? 'Hash finding is paused until you choose an option.'
-              : 'Mining continues if you leave Adventures. A popup opens when a dungeon is found.'}
+              : 'Mining continues if you leave Adventures. A choice appears when a dungeon is found.'}
           </p>
         </aside>
       ) : null}
@@ -1117,7 +1178,7 @@ function AdventureSlot({
       </>
       )}
 
-      {session?.status === 'found' && showFoundModal ? (
+      {session?.status === 'found' && viewKeepOpen ? (
         <div
           className="dungeon-found-modal"
           role="dialog"
@@ -1125,12 +1186,24 @@ function AdventureSlot({
           aria-labelledby="dungeon-found-title"
         >
           <div className="dungeon-found-modal__panel">
-            <p className="adventure-panel__eyebrow">{adventureLabel}</p>
-            <h2 id="dungeon-found-title">{adventureLabel} found this hash</h2>
+            <div className="dungeon-found-modal__header">
+              <div>
+                <p className="adventure-panel__eyebrow">{adventureLabel}</p>
+                <h2 id="dungeon-found-title">{adventureLabel} found this hash</h2>
+              </div>
+              <button
+                type="button"
+                className="dungeon-found-modal__close"
+                aria-label="Close dungeon preview"
+                onClick={() => setViewKeepOpen(false)}
+              >
+                ×
+              </button>
+            </div>
             <p>
               {partyNames ? `Party ${partyNames}. ` : ''}
-              Inspect the preview, then mint it as an NFT or walk away forever. Minting is free
-              aside from ETH gas.
+              Inspect the preview, then mint it as an NFT or flee. Minting is free aside from ETH
+              gas.
             </p>
             {dungeonImageUrl ? (
               <img
@@ -1143,15 +1216,16 @@ function AdventureSlot({
             )}
             <div className="dungeon-found-modal__actions">
               <button type="button" onClick={handleMintDungeon}>
-                Mint keep
+                Mint dungeon
               </button>
               <button type="button" onClick={handleDiscardDungeon}>
-                Walk away
+                Flee
               </button>
             </div>
             {mintStatus ? <p className="dungeon-found-modal__status">{mintStatus}</p> : null}
             <p className="dungeon-found-modal__status">
-              Walk away discards this keep only. The adventure keeps mining until you stop it.
+              Flee discards this keep only. The adventure keeps mining until you stop it.
+              Close this preview to return to the adventure choices.
               If this browser lost the session key, confirm a wallet signature to continue.
             </p>
           </div>
@@ -1280,7 +1354,7 @@ function StartAdventurePanel() {
           {foundAdventure.party?.length
             ? ` with IMPLINGz ${foundAdventure.party.map((impling) => `#${impling.id}`).join(', ')}`
             : ''}
-          . Mint the keep or walk away.
+          . View the dungeon, mint it, or flee.
         </p>
       ) : null}
       {dripMessage ? <p className="adventure-party__drip">{dripMessage}</p> : null}
@@ -1293,7 +1367,6 @@ function StartAdventurePanel() {
           run={run}
           busyTokenIds={busyTokenIds}
           collapsed={Boolean(collapsed[run.session.id])}
-          showFoundModal={foundAdventure?.session?.id === run.session.id}
           onToggleCollapse={() =>
             setCollapsed((current) => ({
               ...current,
