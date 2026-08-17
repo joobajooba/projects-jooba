@@ -5,6 +5,7 @@ import {
   abandonAdventure,
   fetchAdventurerAccount,
   reportMiningProgress,
+  setAdventureSessionAuth,
   submitWinningHash,
 } from './adventuresApi';
 import { hashesPerTickForParty, mineHashBatch, resolveImplingTier } from './hashMining';
@@ -17,15 +18,21 @@ const COLLECTION_BY_ID = new Map(collection.map((impling) => [String(impling.id)
 
 function readJson(key, fallback) {
   try {
-    const value = window.sessionStorage.getItem(key);
-    return value ? JSON.parse(value) : fallback;
+    const local = window.localStorage.getItem(key);
+    const session = window.sessionStorage.getItem(key);
+    if (!local && !session) return fallback;
+    return {
+      ...(session ? JSON.parse(session) : {}),
+      ...(local ? JSON.parse(local) : {}),
+    };
   } catch {
     return fallback;
   }
 }
 
 function writeJson(key, value) {
-  window.sessionStorage.setItem(key, JSON.stringify(value));
+  window.localStorage.setItem(key, JSON.stringify(value));
+  window.sessionStorage.removeItem(key);
 }
 
 function migratePartyStore(raw) {
@@ -92,7 +99,7 @@ function previewUrlForSeed(seed) {
   return `/api/dungeon-preview?seed=${encodeURIComponent(seed)}&format=png`;
 }
 
-export function AdventureRuntimeProvider({ walletAccount, children }) {
+export function AdventureRuntimeProvider({ walletAccount, signMessageAsync, children }) {
   const [adventurer, setAdventurer] = useState(() => emptyAdventurerAccount());
   const [adventures, setAdventures] = useState([]);
   const [dripMessage, setDripMessage] = useState('');
@@ -102,6 +109,10 @@ export function AdventureRuntimeProvider({ walletAccount, children }) {
   const nonceMapRef = useRef({});
 
   adventuresRef.current = adventures;
+
+  useEffect(() => {
+    setAdventureSessionAuth({ walletAddress: walletAccount, signMessageAsync });
+  }, [walletAccount, signMessageAsync]);
 
   const busyTokenIds = useMemo(() => {
     const ids = new Set();
@@ -160,6 +171,8 @@ export function AdventureRuntimeProvider({ walletAccount, children }) {
     setDripMessage('');
     pausedIdsRef.current = new Set();
     nonceMapRef.current = {};
+    window.localStorage.removeItem(PARTY_STORAGE_KEY);
+    window.localStorage.removeItem(NONCE_STORAGE_KEY);
     window.sessionStorage.removeItem(PARTY_STORAGE_KEY);
     window.sessionStorage.removeItem(NONCE_STORAGE_KEY);
   }, []);

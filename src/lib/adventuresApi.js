@@ -3,6 +3,18 @@ export const ADVENTURES_API =
 
 const SESSION_STORAGE_KEY = 'implingz-adventure-sessions';
 
+let sessionAuth = {
+  walletAddress: '',
+  signMessageAsync: null,
+};
+
+export function setAdventureSessionAuth({ walletAddress, signMessageAsync }) {
+  sessionAuth = {
+    walletAddress: String(walletAddress || '').toLowerCase(),
+    signMessageAsync: signMessageAsync || null,
+  };
+}
+
 async function readResponse(response) {
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
@@ -11,12 +23,32 @@ async function readResponse(response) {
   return data;
 }
 
+function readJsonStore(key) {
+  const fromLocal = (() => {
+    try {
+      return JSON.parse(window.localStorage.getItem(key) || '{}');
+    } catch {
+      return {};
+    }
+  })();
+  const fromSession = (() => {
+    try {
+      return JSON.parse(window.sessionStorage.getItem(key) || '{}');
+    } catch {
+      return {};
+    }
+  })();
+  return { ...fromSession, ...fromLocal };
+}
+
+function writeJsonStore(key, value) {
+  const encoded = JSON.stringify(value);
+  window.localStorage.setItem(key, encoded);
+  window.sessionStorage.removeItem(key);
+}
+
 function readStoredSecrets() {
-  try {
-    return JSON.parse(window.sessionStorage.getItem(SESSION_STORAGE_KEY) || '{}');
-  } catch {
-    return {};
-  }
+  return readJsonStore(SESSION_STORAGE_KEY);
 }
 
 export function getSessionSecret(sessionId) {
@@ -26,19 +58,28 @@ export function getSessionSecret(sessionId) {
 export function storeSessionSecret(sessionId, secret) {
   const secrets = readStoredSecrets();
   secrets[sessionId] = secret;
-  window.sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(secrets));
+  writeJsonStore(SESSION_STORAGE_KEY, secrets);
 }
 
 export function clearSessionSecret(sessionId) {
   const secrets = readStoredSecrets();
   delete secrets[sessionId];
-  window.sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(secrets));
+  writeJsonStore(SESSION_STORAGE_KEY, secrets);
 }
 
 export function buildAdventureStartMessage({ walletAddress, partyTokenIds, nonce }) {
   return `IMPLINGz Adventure Start\n${JSON.stringify({
     walletAddress: walletAddress.toLowerCase(),
     partyTokenIds,
+    nonce,
+  })}`;
+}
+
+export function buildAdventureControlMessage({ walletAddress, sessionId, action, nonce }) {
+  return `IMPLINGz Adventure Control\n${JSON.stringify({
+    walletAddress: walletAddress.toLowerCase(),
+    sessionId,
+    action,
     nonce,
   })}`;
 }
@@ -94,20 +135,50 @@ export async function startAdventureSession({
   return data;
 }
 
+async function ownerProof(action, sessionId) {
+  const walletAddress = sessionAuth.walletAddress;
+  if (!walletAddress || !sessionAuth.signMessageAsync) {
+    throw new Error('Connect the adventure wallet to continue this session.');
+  }
+
+  const challenge = await requestAdventureChallenge(walletAddress);
+  if (!challenge.nonce) throw new Error('Could not start wallet verification.');
+
+  const signature = await sessionAuth.signMessageAsync({
+    message: buildAdventureControlMessage({
+      walletAddress,
+      sessionId,
+      action,
+      nonce: challenge.nonce,
+    }),
+  });
+
+  return {
+    walletAddress,
+    nonce: challenge.nonce,
+    signature,
+  };
+}
+
 async function sessionAction(action, sessionId, extra = {}) {
   const secret = getSessionSecret(sessionId);
-  if (!secret) throw new Error('This adventure session is no longer available in this browser.');
+  const body = {
+    action,
+    sessionId,
+    ...extra,
+  };
+
+  if (secret) {
+    body.secret = secret;
+  } else {
+    Object.assign(body, await ownerProof(action, sessionId));
+  }
 
   return readResponse(
     await fetch(ADVENTURES_API, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action,
-        sessionId,
-        secret,
-        ...extra,
-      }),
+      body: JSON.stringify(body),
     })
   );
 }

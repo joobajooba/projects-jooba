@@ -77,6 +77,15 @@ function decorateAccount(account: Record<string, unknown> | null, walletAddress 
   };
 }
 
+function controlMessage(payload: {
+  walletAddress: string;
+  sessionId: string;
+  action: string;
+  nonce: string;
+}) {
+  return `IMPLINGz Adventure Control\n${JSON.stringify(payload)}`;
+}
+
 function startMessage(payload: { walletAddress: string; partyTokenIds: string[]; nonce: string }) {
   return `IMPLINGz Adventure Start\n${JSON.stringify(payload)}`;
 }
@@ -162,6 +171,56 @@ Deno.serve(async (request: Request) => {
     if (secretHash !== data.secret_hash) return null;
     const { secret_hash: _secretHash, ...session } = data;
     return session;
+  }
+
+  async function loadSessionById(sessionId: string) {
+    const { data, error } = await supabase
+      .from("adventure_sessions")
+      .select(SESSION_COLUMNS)
+      .eq("id", sessionId)
+      .maybeSingle();
+    if (error) throw error;
+    return data;
+  }
+
+  async function consumeChallenge(walletAddress: string, nonce: string) {
+    const { data: challenge, error: challengeError } = await supabase
+      .from("adventure_challenges")
+      .select("nonce,expires_at")
+      .eq("wallet_address", walletAddress)
+      .eq("nonce", nonce)
+      .maybeSingle();
+    if (challengeError) throw challengeError;
+    if (!challenge || new Date(challenge.expires_at).getTime() <= Date.now()) return false;
+    await supabase.from("adventure_challenges").delete().eq("wallet_address", walletAddress);
+    return true;
+  }
+
+  async function authorizeSession(body: Record<string, unknown>, action: string) {
+    const sessionId = String(body.sessionId ?? "");
+    const secret = String(body.secret ?? "");
+    if (sessionId && secret) {
+      return loadSession(sessionId, secret);
+    }
+
+    const walletAddress = String(body.walletAddress ?? "").toLowerCase();
+    const nonce = String(body.nonce ?? "");
+    const signature = String(body.signature ?? "");
+    if (!sessionId || !ADDRESS_PATTERN.test(walletAddress) || !NONCE_PATTERN.test(nonce) || !SIGNATURE_PATTERN.test(signature)) {
+      return null;
+    }
+
+    const owned = await loadSessionById(sessionId);
+    if (!owned || String(owned.wallet_address).toLowerCase() !== walletAddress) return null;
+    if (!(await consumeChallenge(walletAddress, nonce))) return null;
+
+    const signatureValid = await verifyMessage({
+      address: walletAddress as `0x${string}`,
+      message: controlMessage({ walletAddress, sessionId, action, nonce }),
+      signature: signature as `0x${string}`,
+    });
+    if (!signatureValid) return null;
+    return owned;
   }
 
   async function maybeDrip(walletAddress: string, sessionId: string) {
@@ -309,10 +368,7 @@ Deno.serve(async (request: Request) => {
       return json({ account: nextAccount, session, secret });
     }
 
-    const sessionId = String(body.sessionId ?? "");
-    const secret = String(body.secret ?? "");
-    if (!sessionId || !secret) return json({ error: "Adventure session credentials are required." }, 400);
-    const session = await loadSession(sessionId, secret);
+    const session = await authorizeSession(body, action);
     if (!session) return json({ error: "This adventure session is invalid." }, 401);
 
     if (action === "prompt") {

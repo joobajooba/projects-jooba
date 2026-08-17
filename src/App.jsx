@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ConnectButton, useConnectModal } from '@rainbow-me/rainbowkit';
-import { useAccount } from 'wagmi';
+import { useAccount, useSignMessage } from 'wagmi';
 import { NavLink, Outlet } from 'react-router-dom';
 import { AdventureRuntimeProvider } from './lib/adventureRuntime';
 import { isAdventuresTesterWallet } from './lib/adventuresAccess';
@@ -330,6 +330,7 @@ export default function App() {
   const unlockedRef = useRef(false);
   const musicEnabledRef = useRef(true);
   const { address, connector } = useAccount();
+  const { signMessageAsync } = useSignMessage();
   const { openConnectModal } = useConnectModal();
   const walletAccount = address ?? '';
   const walletName = connector?.name ?? 'Wallet';
@@ -536,7 +537,7 @@ export default function App() {
       </aside>
 
       <main className="page-content">
-        <AdventureRuntimeProvider walletAccount={walletAccount}>
+        <AdventureRuntimeProvider walletAccount={walletAccount} signMessageAsync={signMessageAsync}>
           <Outlet
             context={{
               walletAccount,

@@ -723,6 +723,7 @@ function AdventureSlot({
 
   async function handleDiscardDungeon() {
     if (!session?.id) return;
+    setStartError('');
     try {
       const nextNonce = Number(session.winning_nonce ?? 0) + 1;
       const data = await discardFoundDungeon(session.id);
@@ -1151,6 +1152,7 @@ function AdventureSlot({
             {mintStatus ? <p className="dungeon-found-modal__status">{mintStatus}</p> : null}
             <p className="dungeon-found-modal__status">
               Walk away discards this keep only. The adventure keeps mining until you stop it.
+              If this browser lost the session key, confirm a wallet signature to continue.
             </p>
           </div>
         </div>
