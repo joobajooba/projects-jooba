@@ -28,6 +28,7 @@ import {
   keepOpenSeaItemUrl,
   tokenIdFromMintReceipt,
 } from '../lib/dungeonKeep';
+import { ADVENTURE_ENCOUNTERS } from '../lib/adventureEncounters';
 import { AdventureInformation } from '../lib/adventureInformation';
 
 const IMPLINGZ_CONTRACT = '0x81d2d1f0e92285cdd22aa3cbc6956b6e1724d029';
@@ -40,103 +41,7 @@ const ADVENTURE_VIEWS = [
   { id: 'board', label: 'Adventure Board' },
 ];
 
-const DND_ENCOUNTERS = [
-  {
-    prompt: 'A goblin scout steps onto the trail and raises a rusted blade. What do you do?',
-    options: [
-      {
-        key: 'A',
-        label: 'Fight it',
-        dc: 10,
-        success: 'Your Imp strikes first. The goblin flees and drops a scrap of dungeon map.',
-        failure: 'The goblin lands a glancing blow before your party drives it back into the brush.',
-      },
-      {
-        key: 'B',
-        label: 'Flee into the woods',
-        dc: 8,
-        success: 'Your party disappears between the trees before the goblin can sound an alarm.',
-        failure: 'A snapped branch gives you away. You escape, but the goblin warns the road ahead.',
-      },
-    ],
-  },
-  {
-    prompt: 'A broken rope bridge hangs over a black ravine. The map points to the far side.',
-    options: [
-      {
-        key: 'A',
-        label: 'Leap across',
-        dc: 13,
-        success: 'You clear the gap and pull the rest of the party safely across.',
-        failure: 'The ledge crumbles. You catch the rope and climb back up, shaken but alive.',
-      },
-      {
-        key: 'B',
-        label: 'Repair the bridge',
-        dc: 9,
-        success: 'Your careful knots hold. The party crosses without drawing attention.',
-        failure: 'The old rope tears. You lose time searching for another secure anchor.',
-      },
-    ],
-  },
-  {
-    prompt: 'Ancient runes glow across a sealed stone archway. Something is moving behind it.',
-    options: [
-      {
-        key: 'A',
-        label: 'Study the runes',
-        dc: 11,
-        success: 'The symbols reveal a safe phrase and the archway opens without a sound.',
-        failure: 'The runes flare red. A distant bell echoes through the buried halls.',
-      },
-      {
-        key: 'B',
-        label: 'Force the door',
-        dc: 14,
-        success: 'Stone cracks beneath your combined strength, revealing a forgotten passage.',
-        failure: 'The door holds and dust rains from the ceiling. Something heard the impact.',
-      },
-    ],
-  },
-  {
-    prompt: 'A skeletal guardian blocks the final stair, clutching a key carved from obsidian.',
-    options: [
-      {
-        key: 'A',
-        label: 'Challenge the guardian',
-        dc: 12,
-        success: 'The guardian falls apart. The obsidian key remains warm in your hand.',
-        failure: 'Its shield turns your attack. Your party retreats and searches for an opening.',
-      },
-      {
-        key: 'B',
-        label: 'Distract and steal the key',
-        dc: 13,
-        success: 'Your feint works. An Imp slips behind the guardian and takes the key.',
-        failure: 'The guardian sees through the trick and seals the stair behind its shield.',
-      },
-    ],
-  },
-  {
-    prompt: 'The obsidian key hums beside an unmarked dungeon gate. How will you enter?',
-    options: [
-      {
-        key: 'A',
-        label: 'Turn the key',
-        dc: 7,
-        success: 'The lost keep answers. Its buried halls begin to form beyond the gate.',
-        failure: 'The lock resists. You steady the key and feel another route awaken nearby.',
-      },
-      {
-        key: 'B',
-        label: 'Search for traps first',
-        dc: 10,
-        success: 'You uncover a hidden ward and disable it before opening the dungeon gate.',
-        failure: 'No trap is found, but the delay draws restless shapes toward your torchlight.',
-      },
-    ],
-  },
-];
+const DND_ENCOUNTERS = ADVENTURE_ENCOUNTERS;
 
 const IDLE_NARRATIONS = [
   'Wind moves through the black pines, carrying the smell of rain and old stone.',
@@ -319,6 +224,7 @@ function AdventureSlot({
   const idleTimerRef = useRef(null);
   const lastIdleNarrationRef = useRef(null);
   const resumedSessionRef = useRef('');
+  const usedEncounterIndexesRef = useRef(new Set());
   const impSpeechTimersRef = useRef([
     { wait: null, change: null },
     { wait: null, change: null },
@@ -355,6 +261,7 @@ function AdventureSlot({
     setViewKeepOpen(false);
     setKeepMetadata(null);
     resumedSessionRef.current = '';
+    usedEncounterIndexesRef.current = new Set();
     if (session?.id) setMiningPaused(session.id, false);
   }, [walletAccount, session?.id, setMiningPaused]);
 
@@ -371,6 +278,7 @@ function AdventureSlot({
     if (!adventureStarted || !session?.id) return;
     if (resumedSessionRef.current === session.id) return;
     resumedSessionRef.current = session.id;
+    usedEncounterIndexesRef.current = new Set();
 
     setAdventureMessages([
       {
@@ -631,12 +539,30 @@ function AdventureSlot({
     }, randomDelay(IMP_SPEECH_DELAY_MIN, IMP_SPEECH_DELAY_MAX));
   }
 
+  function pickUnusedEncounterIndex(excludedIndex = null) {
+    const used = usedEncounterIndexesRef.current;
+    const available = DND_ENCOUNTERS.map((_, index) => index).filter(
+      (index) => index !== excludedIndex && !used.has(index)
+    );
+    const pool =
+      available.length > 0
+        ? available
+        : DND_ENCOUNTERS.map((_, index) => index).filter((index) => index !== excludedIndex);
+    if (available.length === 0) {
+      used.clear();
+      if (excludedIndex !== null) used.add(excludedIndex);
+    }
+    const nextIndex = pool[Math.floor(Math.random() * pool.length)];
+    used.add(nextIndex);
+    return nextIndex;
+  }
+
   function scheduleNextEncounter(excludedIndex = null) {
     window.clearTimeout(nextEncounterTimerRef.current);
     setEncounterIndex(null);
 
     nextEncounterTimerRef.current = window.setTimeout(() => {
-      const nextIndex = randomIndex(DND_ENCOUNTERS.length, excludedIndex);
+      const nextIndex = pickUnusedEncounterIndex(excludedIndex);
       setEncounterIndex(nextIndex);
       setAdventureMessages((messages) => [
         ...messages,
@@ -691,6 +617,7 @@ function AdventureSlot({
         partyMembers: enrichedParty,
       });
       resumedSessionRef.current = data.session.id;
+      usedEncounterIndexesRef.current = new Set();
       setEncounterIndex(null);
       setAdventureMessages([
         {
