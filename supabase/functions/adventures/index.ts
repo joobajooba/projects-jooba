@@ -1,5 +1,12 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { verifyMessage } from "npm:viem";
+import {
+  createPublicClient,
+  createWalletClient,
+  defineChain,
+  http,
+  parseUnits,
+  verifyMessage,
+} from "npm:viem";
 import { privateKeyToAccount } from "npm:viem/accounts";
 
 const CORS_HEADERS = {
@@ -20,6 +27,35 @@ const XP_DUNGEON_FOUND = 100;
 const XP_DUNGEON_MINTED = 200;
 const XP_DUNGEON_DISCARDED = 40;
 const DERP_DRIP_CHANCE = 0.04;
+const DERP_DRIP_MIN = 20;
+const DERP_DRIP_MAX = 40;
+const DERP_DECIMALS = 18;
+const ROBINHOOD_RPC_URL = "https://rpc.mainnet.chain.robinhood.com";
+const ROBINHOOD_CHAIN = defineChain({
+  id: 4663,
+  name: "Robinhood Chain",
+  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+  rpcUrls: { default: { http: [ROBINHOOD_RPC_URL] } },
+});
+const DERP_REWARDS_ABI = [
+  {
+    type: "function",
+    name: "drip",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "to", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "potBalance",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ type: "uint256" }],
+  },
+] as const;
 const LEVELS = [
   { level: 1, xp: 0, slots: 1 },
   { level: 2, xp: 500, slots: 2 },
@@ -105,6 +141,46 @@ function rollD20() {
   const bytes = new Uint8Array(1);
   crypto.getRandomValues(bytes);
   return (bytes[0] % 20) + 1;
+}
+
+function operatorAccount() {
+  const raw = Deno.env.get("DERP_OPERATOR_PRIVATE_KEY")?.trim();
+  if (!raw) return null;
+  const key = (raw.startsWith("0x") ? raw : `0x${raw}`) as `0x${string}`;
+  return privateKeyToAccount(key);
+}
+
+async function sendDerpDrip(rewardsAddress: string, to: string, amount: number) {
+  try {
+    const account = operatorAccount();
+    if (!account) return null;
+    const rpc = Deno.env.get("ROBINHOOD_RPC_URL")?.trim() || ROBINHOOD_RPC_URL;
+    const publicClient = createPublicClient({ chain: ROBINHOOD_CHAIN, transport: http(rpc) });
+    const walletClient = createWalletClient({
+      account,
+      chain: ROBINHOOD_CHAIN,
+      transport: http(rpc),
+    });
+    const wei = parseUnits(String(amount), DERP_DECIMALS);
+    const balance = await publicClient.readContract({
+      address: rewardsAddress as `0x${string}`,
+      abi: DERP_REWARDS_ABI,
+      functionName: "potBalance",
+    });
+    if (balance < wei) return { status: "skipped_empty_pot" as const, txHash: null };
+
+    const hash = await walletClient.writeContract({
+      address: rewardsAddress as `0x${string}`,
+      abi: DERP_REWARDS_ABI,
+      functionName: "drip",
+      args: [to as `0x${string}`, wei],
+    });
+    await publicClient.waitForTransactionReceipt({ hash });
+    return { status: "sent" as const, txHash: hash };
+  } catch (error) {
+    console.error("derp drip send failed", error);
+    return null;
+  }
 }
 
 Deno.serve(async (request: Request) => {
@@ -225,19 +301,33 @@ Deno.serve(async (request: Request) => {
 
   async function maybeDrip(walletAddress: string, sessionId: string) {
     if (Math.random() >= DERP_DRIP_CHANCE) return null;
-    const amount = 5 + Math.floor(Math.random() * 6);
+    const amount = DERP_DRIP_MIN + Math.floor(Math.random() * (DERP_DRIP_MAX - DERP_DRIP_MIN + 1));
+    const rewardsAddress = Deno.env.get("DERP_REWARDS_ADDRESS")?.trim() ?? "";
+    const configured = ADDRESS_PATTERN.test(rewardsAddress);
     const { data, error } = await supabase
       .from("derp_drips")
       .insert({
         wallet_address: walletAddress,
         session_id: sessionId,
         amount,
-        status: Deno.env.get("DERP_REWARDS_ADDRESS") ? "pending" : "skipped_empty_pot",
+        status: configured ? "pending" : "skipped_empty_pot",
       })
-      .select("id,amount,status")
+      .select("id,amount,status,tx_hash")
       .single();
     if (error) throw error;
-    return data;
+    if (!configured) return data;
+
+    const paid = await sendDerpDrip(rewardsAddress, walletAddress, amount);
+    if (!paid) return data;
+
+    const { data: updated, error: updateError } = await supabase
+      .from("derp_drips")
+      .update({ status: paid.status, tx_hash: paid.txHash })
+      .eq("id", data.id)
+      .select("id,amount,status,tx_hash")
+      .single();
+    if (updateError) throw updateError;
+    return updated;
   }
 
   try {
@@ -429,7 +519,7 @@ Deno.serve(async (request: Request) => {
     if (action === "submit-hash") {
       if (session.status !== "running") return json({ error: "This adventure already found a dungeon." }, 409);
       const nonce = String(body.nonce ?? "");
-      if (!/^\d{1,16}$/.test(nonce)) return json({ error: "Invalid mining nonce." }, 400);
+      if (!/^[0-9]{1,16}$/.test(nonce)) return json({ error: "Invalid mining nonce." }, 400);
       const expectedHash = await sha256Hex(`${MINE_PAYLOAD_PREFIX}:${session.id}:${nonce}`);
       if (!expectedHash.startsWith(HASH_PREFIX)) {
         return json({ error: "That hash does not meet the dungeon difficulty." }, 400);

@@ -15,6 +15,28 @@ $DERP token: `0x6543b7746ca744c4bb2198191e71f40ff04c41b9`
 
 `KeepMarket.sol` is unused. Do not deploy it for this route.
 
+## Deploy the $DERP pot only
+
+This does **not** deploy DungeonKeep. It deploys `DerpRewards` on Robinhood Chain and sets the hot wallet as operator.
+
+```bash
+forge script script/DeployDerpRewards.s.sol:DeployDerpRewards --rpc-url robinhood --broadcast
+```
+
+Required env:
+
+- `DEPLOYER_PRIVATE_KEY` — deployer wallet with ETH on Robinhood Chain (`4663`)
+
+Hardcoded in the script:
+
+- `$DERP` token — `0x6543b7746ca744c4bb2198191e71f40ff04c41b9`
+- hot wallet operator — `0x50f7838FA05B3B53722BdA926b84bB9cA6EDF791`
+
+After broadcast, copy the `DerpRewards` address and set these on the Adventures edge function:
+
+- `DERP_REWARDS_ADDRESS` — pot contract
+- `DERP_OPERATOR_PRIVATE_KEY` — DERP HOT private key (never commit this)
+
 ## Deploy
 
 ```bash
@@ -49,6 +71,6 @@ OpenSea creator earnings on IMPLINGz (and later on keeps) still arrive as ETH on
 
 1. Swap some of those earnings to $DERP.
 2. Approve the `DerpRewards` contract, then call `fund(amount)`.
-3. Drips of 5–10 $DERP during adventures are sent from this pot. If it is empty, drops are skipped.
+3. Drips of 20–40 $DERP during adventures are sent from this pot. If it is empty, drops are skipped.
 
 Do not mint $DERP. The token has no mint function.

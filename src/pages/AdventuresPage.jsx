@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { usePublicClient, useSignMessage, useWalletClient } from 'wagmi';
 import collection from '../data/collection.json';
-import { useAdventureRuntime } from '../lib/adventureRuntime';
+import { derpTreasureChatMessage, dripStatusMessage, useAdventureRuntime } from '../lib/adventureRuntime';
 import { useAdventuresServerAccess } from '../lib/adventuresAccess';
 import { decorateAccount, XP_DUNGEON_DISCARDED, XP_DUNGEON_FOUND, XP_DUNGEON_MINTED } from '../lib/adventurerProgress';
 import {
@@ -283,6 +283,7 @@ function AdventureSlot({
   const party = run?.party ?? [];
   const hashesChecked = run?.hashesChecked ?? 0;
   const dungeonImageUrl = run?.dungeonImageUrl ?? '';
+  const lastDrip = run?.lastDrip ?? null;
 
   const [selectedImplingz, setSelectedImplingz] = useState([null, null, null]);
   const [selectingSlot, setSelectingSlot] = useState(null);
@@ -298,6 +299,7 @@ function AdventureSlot({
   const [mintStatus, setMintStatus] = useState('');
   const [mintedKeepUrl, setMintedKeepUrl] = useState('');
   const [viewKeepOpen, setViewKeepOpen] = useState(false);
+  const [keepMetadata, setKeepMetadata] = useState(null);
   const [impSpeechStates, setImpSpeechStates] = useState([
     { quoteIndex: null, thinking: false },
     { quoteIndex: null, thinking: false },
@@ -342,6 +344,7 @@ function AdventureSlot({
     setMintStatus('');
     setMintedKeepUrl('');
     setViewKeepOpen(false);
+    setKeepMetadata(null);
     resumedSessionRef.current = '';
     if (session?.id) setMiningPaused(session.id, false);
   }, [walletAccount, session?.id, setMiningPaused]);
@@ -378,6 +381,17 @@ function AdventureSlot({
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [adventureMessages, encounterIndex]);
+
+  useEffect(() => {
+    const treasure = derpTreasureChatMessage(lastDrip);
+    if (!treasure) return;
+    setAdventureMessages((messages) => {
+      if (messages.some((message) => message.type === 'derp' && message.dripId === treasure.dripId)) {
+        return messages;
+      }
+      return [...messages, treasure];
+    });
+  }, [lastDrip]);
 
   useEffect(() => {
     if (!adventureStarted || encounterIndex !== null || session?.status !== 'running') {
@@ -462,6 +476,28 @@ function AdventureSlot({
     }
     setViewKeepOpen(false);
   }, [session?.status]);
+
+  useEffect(() => {
+    if (!viewKeepOpen || !session?.dungeon_seed) {
+      setKeepMetadata(null);
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    fetch(
+      `/api/dungeon-preview?seed=${encodeURIComponent(session.dungeon_seed)}&format=json`,
+      { signal: controller.signal }
+    )
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        setKeepMetadata(data || { attributes: [] });
+      })
+      .catch(() => {
+        setKeepMetadata({ attributes: [] });
+      });
+
+    return () => controller.abort();
+  }, [viewKeepOpen, session?.dungeon_seed]);
 
   async function openImplingSelector(slotIndexToOpen) {
     if (!walletAccount || adventureStarted) return;
@@ -695,12 +731,9 @@ function AdventureSlot({
       const rollResult = result.succeeded ? 'Success' : 'Failure';
       setAdventurer(decorateAccount(result.account));
       if (result.drip) {
-        setDripMessage(
-          result.drip.status === 'skipped_empty_pot'
-            ? `A ${result.drip.amount} $DERP drip rolled, but the pot is empty.`
-            : `${result.drip.amount} $DERP is queued from the royalties pot.`
-        );
+        setDripMessage(dripStatusMessage(result.drip));
       }
+      const treasure = derpTreasureChatMessage(result.drip);
       setAdventureMessages((messages) => [
         ...messages,
         {
@@ -718,6 +751,7 @@ function AdventureSlot({
           type: 'narrator',
           text: result.succeeded ? option.success : option.failure,
         },
+        ...(treasure ? [treasure] : []),
       ]);
       scheduleNextEncounter(completedEncounterIndex);
     } catch (error) {
@@ -1058,11 +1092,13 @@ function AdventureSlot({
                         ? 'D20'
                         : message.type === 'xp'
                           ? 'XP'
-                          : message.type === 'mint'
-                            ? 'Mint'
-                            : message.type === 'system'
-                              ? 'Party'
-                              : 'Dungeon Master'}
+                          : message.type === 'derp'
+                            ? '$DERP'
+                            : message.type === 'mint'
+                              ? 'Mint'
+                              : message.type === 'system'
+                                ? 'Party'
+                                : 'Dungeon Master'}
                   </span>
                   <p>{message.text}</p>
                 </div>
@@ -1213,6 +1249,18 @@ function AdventureSlot({
               />
             ) : (
               <p className="adventure-party__help">Loading dungeon preview…</p>
+            )}
+            {keepMetadata?.attributes?.length ? (
+              <ul className="dungeon-found-modal__traits">
+                {keepMetadata.attributes.map((trait) => (
+                  <li key={trait.trait_type}>
+                    <span>{trait.trait_type}</span>
+                    <strong>{trait.value}</strong>
+                  </li>
+                ))}
+              </ul>
+            ) : keepMetadata ? null : (
+              <p className="adventure-party__help">Reading keep metadata…</p>
             )}
             <div className="dungeon-found-modal__actions">
               <button type="button" onClick={handleMintDungeon}>

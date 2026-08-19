@@ -12,6 +12,29 @@ import { hashesPerTickForParty, mineHashBatch, resolveImplingTier } from './hash
 
 const AdventureRuntimeContext = createContext(null);
 
+export const DERP_TREASURE_LINE =
+  'Congrats you stumbled upon treasure, some $DERP has been sent!';
+
+export function dripStatusMessage(drip) {
+  if (!drip) return '';
+  if (drip.status === 'skipped_empty_pot') {
+    return `A ${drip.amount} $DERP drip rolled, but the pot is empty.`;
+  }
+  if (drip.status === 'sent') {
+    return DERP_TREASURE_LINE;
+  }
+  return `${drip.amount} $DERP is queued from the royalties pot.`;
+}
+
+export function derpTreasureChatMessage(drip) {
+  if (drip?.status !== 'sent') return null;
+  return {
+    type: 'derp',
+    text: DERP_TREASURE_LINE,
+    dripId: drip.id ?? null,
+  };
+}
+
 const PARTY_STORAGE_KEY = 'implingz-active-adventure-parties';
 const NONCE_STORAGE_KEY = 'implingz-active-adventure-nonces';
 const COLLECTION_BY_ID = new Map(collection.map((impling) => [String(impling.id), impling]));
@@ -235,7 +258,7 @@ export function AdventureRuntimeProvider({ walletAccount, signMessageAsync, chil
     ({ account, session: nextSession, drip, hashesChecked }) => {
       if (account) setAdventurer(decorateAccount(account));
       if (drip) {
-        setDripMessage(`${drip.amount} $DERP is queued from the royalties pot.`);
+        setDripMessage(dripStatusMessage(drip));
       }
       if (!nextSession) return;
       if (!['running', 'found'].includes(nextSession.status)) {
@@ -247,6 +270,7 @@ export function AdventureRuntimeProvider({ walletAccount, signMessageAsync, chil
         session: nextSession,
         hashesChecked: Number(hashesChecked ?? run.hashesChecked),
         dungeonImageUrl: previewUrlForSeed(nextSession.dungeon_seed) || run.dungeonImageUrl,
+        lastDrip: drip ?? run.lastDrip ?? null,
       }));
     },
     [removeRun, updateRun]
@@ -350,14 +374,13 @@ export function AdventureRuntimeProvider({ walletAccount, signMessageAsync, chil
               if (cancelled) break;
               setAdventurer(decorateAccount(submitted.account));
               if (submitted.drip) {
-                setDripMessage(
-                  `${submitted.drip.amount} $DERP is queued from the royalties pot.`
-                );
+                setDripMessage(dripStatusMessage(submitted.drip));
               }
               updateRun(sessionId, (current) => ({
                 ...current,
                 session: submitted.session,
                 dungeonImageUrl: previewUrlForSeed(submitted.session.dungeon_seed),
+                lastDrip: submitted.drip ?? current.lastDrip ?? null,
               }));
             } catch (error) {
               if (!cancelled) {
