@@ -139,6 +139,7 @@ class Dungeon:
     room_radix: int = 0
     seed: int = 0
     connect: dict[str, int] = field(default_factory=dict)
+    inhabitant: dict[str, Any] | None = None
 
 
 def create_dungeon(options: DungeonOptions | None = None) -> Dungeon:

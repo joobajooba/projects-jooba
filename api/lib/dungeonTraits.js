@@ -3,28 +3,28 @@
 const TRAIT_XOR = 0x9e3779b9;
 const COLLECTION_SIZE = 4444;
 
-const ROBINS_LAIR = ['Robins Lair', 'farvoid'];
+const ROBINS_LAIR = ['Robins Lair', 'robins_lair'];
 const ONE_OF_ONE_BOSSES = ['Sir Roars-a-Lot', 'Bun Bun', 'King Croakus'];
 
-// label, tileset slug, weight in basis points (10000 = 100%)
+// label, tall-tileset slug, weight in basis points (10000 = 100%)
 const BIOMES = [
-  ['Grass Plains', 'verdant', 928],
-  ['Limestone', 'deepkarst', 928],
-  ['Desert', 'sunscorch', 928],
-  ['Mossy ruins', 'mossruin', 928],
-  ['Swamp', 'greensward', 928],
-  ['Ice', 'frostbite', 630],
-  ['Stone Castle', 'stonekeep', 630],
+  ['Grass Plains', 'plains', 928],
+  ['Limestone', 'limestone', 928],
+  ['Desert', 'desert', 928],
+  ['Mossy ruins', 'forgotten_ruins', 928],
+  ['Swamp', 'mossy', 928],
+  ['Ice', 'icy', 630],
+  ['Stone Castle', 'castle', 630],
   ['Underworld', 'underworld', 630],
-  ['Moon', 'moondust', 630],
-  ['Clouds', 'cloudsea', 460],
-  ['Volcano', 'ashfall', 460],
-  ['Mushroom', 'sporewild', 460],
-  ['Shortcake', 'dreamveil', 460],
-  ['Dreamscape', 'dreamveil', 300],
-  ['Storm', 'tempest', 300],
-  ['The Vault', 'stonekeep', 300],
-  ['Void', 'farvoid', 100],
+  ['Moon', 'lunar', 630],
+  ['Clouds', 'clouds', 460],
+  ['Volcano', 'volcano', 460],
+  ['Mushroom', 'mushroom', 460],
+  ['Shortcake', 'shortcake', 460],
+  ['Dreamscape', 'dreamcore', 300],
+  ['Storm', 'storm', 300],
+  ['The Vault', 'the_vault', 300],
+  ['Void', 'void', 100],
 ];
 
 const DUNGEON_TYPES = [
@@ -132,6 +132,28 @@ const DUNGEON_TYPE_PRESETS = {
 };
 
 export const TILESETS = [...new Set(BIOMES.map((row) => row[1]))];
+
+export const MINI_BOSS_SPRITES = {
+  'Alta-ir': 'Alta-ir',
+  'The Burrow Queen': 'The Burrow Queen',
+  'Arid Spectre': 'Arid Spectre',
+  'Bone Monarch': 'Bone Monarch',
+  'Gerald the Kind': 'Gerlard the Kind',
+  'Mr Freeze': 'Mr Freeze',
+  'Pebbles': 'Pebbles',
+  'Infernal Judge': 'Infernal Judge',
+  'Moon Guard': 'Moon Guard',
+  'Skymother': 'Skymother',
+  'Infernos': 'Infernos',
+  'Fun-Guy': 'Fun-Guy',
+  'Cupcake': 'Cupcake',
+  'Umbra': 'Umbra',
+  'Seaphiel': 'Seraphiel',
+  'Archmage Tempest': 'Archmage Tempest',
+  'Sir Roars-a-Lot': 'Sir Roars-a-Lot',
+  'Bun Bun': 'Bun Bun',
+  'King Croakus': 'King Croakus',
+};
 
 export function mulberry32(seed) {
   let a = seed >>> 0;

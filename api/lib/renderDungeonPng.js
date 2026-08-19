@@ -2,12 +2,21 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
-import { TILESETS, tilesetForSeed } from './dungeonTraits.js';
+import { MINI_BOSS_SPRITES, TILESETS, tilesetForSeed } from './dungeonTraits.js';
 import { describeDungeon } from './generateDungeon.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '../..');
+const TALL_DIRS = [
+  path.join(ROOT, 'Tall Tiles'),
+  path.join(ROOT, 'dungeon_generator', 'tall_tiles'),
+  path.join(ROOT, 'tall_tiles'),
+];
 const TILES_DIR = path.join(ROOT, 'Tiles');
+const BOSS_DIRS = [
+  path.join(ROOT, 'Mini-Bosses'),
+  path.join(ROOT, 'dungeon_generator', 'mini_bosses'),
+];
 const TILE_SIZE = 32;
 
 const FRAME_BY_MASK = [
@@ -21,15 +30,39 @@ function slug(name) {
     .replace(/^_|_$/g, '');
 }
 
+function listSheets(dir) {
+  if (!fs.existsSync(dir)) return [];
+  return fs
+    .readdirSync(dir)
+    .filter((name) => name.toLowerCase().endsWith('.png'))
+    .map((name) => path.join(dir, name));
+}
+
+function pickSheet(files, wanted) {
+  const rows = files.map((file) => ({ file, stem: slug(path.parse(file).name) }));
+  return (
+    rows.find((row) => row.stem === wanted) ||
+    rows.find((row) => row.stem === `tall_${wanted}`) ||
+    null
+  );
+}
+
 function resolveSheetPath(tilesetName) {
   const wanted = slug(tilesetName);
-  const files = fs.readdirSync(TILES_DIR).filter((name) => name.toLowerCase().endsWith('.png'));
-  const match =
-    files.find((name) => slug(path.parse(name).name) === wanted) ||
-    files.find((name) => slug(path.parse(name).name).includes(wanted)) ||
-    files[0];
-  if (!match) throw new Error(`No tilesheets found in ${TILES_DIR}`);
-  return path.join(TILES_DIR, match);
+  const tallFiles = TALL_DIRS.flatMap(listSheets);
+  const match = pickSheet(tallFiles, wanted) || pickSheet(listSheets(TILES_DIR), wanted);
+  if (!match) {
+    throw new Error(`No tall tilesheet for ${tilesetName} (looked in Tall Tiles/)`);
+  }
+  return match.file;
+}
+
+function resolveBossPath(stem) {
+  for (const dir of BOSS_DIRS) {
+    const spritePath = path.join(dir, `${stem}.png`);
+    if (fs.existsSync(spritePath)) return spritePath;
+  }
+  return null;
 }
 
 async function loadTileset(tilesetName) {
@@ -37,19 +70,22 @@ async function loadTileset(tilesetName) {
   const { data, info } = await sharp(sheetPath).ensureAlpha().raw().toBuffer({
     resolveWithObject: true,
   });
-  const src = Math.floor(Math.min(info.width, info.height) / 4);
-  if (src < 8) throw new Error(`Invalid tilesheet ${sheetPath}`);
+  const tileW = Math.floor(info.width / 4);
+  const tileH = Math.floor(info.height / 4);
+  if (tileW < 8 || tileH < 8) throw new Error(`Invalid tilesheet ${sheetPath}`);
+  const outW = TILE_SIZE;
+  const outH = Math.max(1, Math.round(tileH * (TILE_SIZE / tileW)));
 
   const extractCell = async (tx, ty) => {
-    const left = tx * src;
-    const top = ty * src;
-    const tileBuf = Buffer.alloc(src * src * 4);
-    for (let y = 0; y < src; y += 1) {
+    const left = tx * tileW;
+    const top = ty * tileH;
+    const tileBuf = Buffer.alloc(tileW * tileH * 4);
+    for (let y = 0; y < tileH; y += 1) {
       const srcStart = ((top + y) * info.width + left) * 4;
-      data.copy(tileBuf, y * src * 4, srcStart, srcStart + src * 4);
+      data.copy(tileBuf, y * tileW * 4, srcStart, srcStart + tileW * 4);
     }
-    return sharp(tileBuf, { raw: { width: src, height: src, channels: 4 } })
-      .resize(TILE_SIZE, TILE_SIZE, { kernel: sharp.kernel.nearest })
+    return sharp(tileBuf, { raw: { width: tileW, height: tileH, channels: 4 } })
+      .resize(outW, outH, { kernel: sharp.kernel.nearest })
       .ensureAlpha()
       .raw()
       .toBuffer();
@@ -67,7 +103,13 @@ async function loadTileset(tilesetName) {
 
   const solidWall = await extractCell(0, 3);
   byMask.set(0, solidWall);
-  return { byMask, voidTile: solidWall, tileSize: TILE_SIZE };
+  return {
+    byMask,
+    voidTile: solidWall,
+    tileSize: outW,
+    tileHeight: outH,
+    overhang: Math.max(0, outH - outW),
+  };
 }
 
 function isFloorCell(value) {
@@ -93,7 +135,7 @@ function floodExterior(rows, cols, isFloor) {
   return exterior;
 }
 
-function contentBBox(masks, tileSize) {
+function contentBBox(masks, tileSize, tileHeight) {
   let minR = null;
   let minC = null;
   let maxR = null;
@@ -112,11 +154,30 @@ function contentBBox(masks, tileSize) {
     left: minC * tileSize,
     top: minR * tileSize,
     width: (maxC - minC + 1) * tileSize,
-    height: (maxR - minR + 1) * tileSize,
+    height: (maxR - minR) * tileSize + tileHeight,
   };
 }
 
-async function centerOnSquare(pngBuffer, margin, bbox, fillTile) {
+function blit(canvas, width, height, tileBuf, tileW, tileH, dx, dy) {
+  if (!tileBuf) return;
+  for (let y = 0; y < tileH; y += 1) {
+    const destY = dy + y;
+    if (destY < 0 || destY >= height) continue;
+    for (let x = 0; x < tileW; x += 1) {
+      const destX = dx + x;
+      if (destX < 0 || destX >= width) continue;
+      const si = (y * tileW + x) * 4;
+      if (tileBuf[si + 3] === 0) continue;
+      const di = (destY * width + destX) * 4;
+      canvas[di] = tileBuf[si];
+      canvas[di + 1] = tileBuf[si + 1];
+      canvas[di + 2] = tileBuf[si + 2];
+      canvas[di + 3] = 255;
+    }
+  }
+}
+
+async function centerOnSquare(pngBuffer, margin, bbox, fillTile, tileW, tileH) {
   const image = sharp(pngBuffer);
   const meta = await image.metadata();
   const width = meta.width || 0;
@@ -139,9 +200,9 @@ async function centerOnSquare(pngBuffer, margin, bbox, fillTile) {
   const canvas = Buffer.alloc(side * side * 4);
   for (let y = 0; y < side; y += 1) {
     for (let x = 0; x < side; x += 1) {
-      const tx = x % TILE_SIZE;
-      const ty = y % TILE_SIZE;
-      const ti = (ty * TILE_SIZE + tx) * 4;
+      const tx = ((x % tileW) + tileW) % tileW;
+      const ty = ((y % tileH) + tileH) % tileH;
+      const ti = (ty * tileW + tx) * 4;
       const di = (y * side + x) * 4;
       canvas[di] = fillTile[ti];
       canvas[di + 1] = fillTile[ti + 1];
@@ -166,13 +227,36 @@ async function centerOnSquare(pngBuffer, margin, bbox, fillTile) {
   return sharp(canvas, { raw: { width: side, height: side, channels: 4 } }).png().toBuffer();
 }
 
-async function renderDualGrid(layout, tilesetName, maxEdge = 768) {
-  const tiles = await loadTileset(tilesetName);
+async function blitMiniBoss(canvas, width, height, dungeon, miniBoss, ts, overhang) {
+  const stem = MINI_BOSS_SPRITES[miniBoss];
+  if (!stem || miniBoss === 'None') return;
+  const spritePath = resolveBossPath(stem);
+  if (!spritePath) return;
+  const rooms = Object.values(dungeon?.rooms || {});
+  const room = rooms.sort((a, b) => (b.area || 0) - (a.area || 0))[0];
+  if (!room) return;
+
+  const { data, info } = await sharp(spritePath).ensureAlpha().raw().toBuffer({
+    resolveWithObject: true,
+  });
+  const cx = Math.round(((room.west + room.east + 2) * ts) / 2);
+  const floorNorth = room.south > room.north ? room.north + 1 : room.north;
+  const cy = Math.round(overhang + ((floorNorth + room.south + 2) * ts) / 2);
+  const dx = Math.round(cx - info.width / 2);
+  const dy = Math.round(cy - info.height / 2);
+  blit(canvas, width, height, data, info.width, info.height, dx, dy);
+}
+
+async function renderDualGrid(described, maxEdge = 768) {
+  const layout = described.layout;
+  const tiles = await loadTileset(described.tileset);
   const cellRows = layout.rows;
   const cellCols = layout.cols;
   const dualRows = cellRows + 1;
   const dualCols = cellCols + 1;
   const ts = tiles.tileSize;
+  const th = tiles.tileHeight;
+  const overhang = tiles.overhang;
   const isFloor = (r, c) => {
     if (r < 0 || c < 0 || r >= cellRows || c >= cellCols) return false;
     return isFloorCell(layout.grid[r][c]);
@@ -180,27 +264,12 @@ async function renderDualGrid(layout, tilesetName, maxEdge = 768) {
   const exterior = floodExterior(cellRows, cellCols, isFloor);
   const masks = Array.from({ length: dualRows }, () => Array(dualCols).fill(0));
   const width = dualCols * ts;
-  const height = dualRows * ts;
+  const height = dualRows * ts + overhang;
   const canvas = Buffer.alloc(width * height * 4);
-
-  const blit = (tileBuf, dx, dy) => {
-    if (!tileBuf) return;
-    for (let y = 0; y < ts; y += 1) {
-      for (let x = 0; x < ts; x += 1) {
-        const si = (y * ts + x) * 4;
-        if (tileBuf[si + 3] === 0) continue;
-        const di = ((dy + y) * width + (dx + x)) * 4;
-        canvas[di] = tileBuf[si];
-        canvas[di + 1] = tileBuf[si + 1];
-        canvas[di + 2] = tileBuf[si + 2];
-        canvas[di + 3] = 255;
-      }
-    }
-  };
 
   for (let dr = 0; dr < dualRows; dr += 1) {
     for (let dc = 0; dc < dualCols; dc += 1) {
-      blit(tiles.voidTile, dc * ts, dr * ts);
+      blit(canvas, width, height, tiles.voidTile, ts, th, dc * ts, dr * ts);
       let mask = 0;
       if (isFloor(dr - 1, dc - 1)) mask |= 1;
       if (isFloor(dr - 1, dc)) mask |= 2;
@@ -222,12 +291,21 @@ async function renderDualGrid(layout, tilesetName, maxEdge = 768) {
         if (allExterior) continue;
       }
 
-      blit(tiles.byMask.get(mask) || tiles.voidTile, dc * ts, dr * ts);
+      blit(canvas, width, height, tiles.byMask.get(mask) || tiles.voidTile, ts, th, dc * ts, dr * ts);
     }
   }
 
+  await blitMiniBoss(canvas, width, height, described.dungeon, described.miniBoss, ts, overhang);
+
   let png = await sharp(canvas, { raw: { width, height, channels: 4 } }).png().toBuffer();
-  png = await centerOnSquare(png, ts, contentBBox(masks, ts), tiles.voidTile);
+  png = await centerOnSquare(
+    png,
+    ts,
+    contentBBox(masks, ts, th),
+    tiles.voidTile,
+    ts,
+    th,
+  );
 
   const meta = await sharp(png).metadata();
   const edge = Math.max(meta.width || 0, meta.height || 0);
@@ -248,7 +326,7 @@ async function renderDualGrid(layout, tilesetName, maxEdge = 768) {
 export async function renderDungeonPreview(seedValue) {
   const seed = String(seedValue || '42');
   const described = describeDungeon(seed);
-  const png = await renderDualGrid(described.layout, described.tileset, 768);
+  const png = await renderDualGrid(described, 768);
   return {
     seed: described.seed,
     numericSeed: described.numericSeed,
@@ -261,7 +339,7 @@ export async function renderDungeonPreview(seedValue) {
     miniBoss: described.miniBoss,
     options: described.options,
     attributes: described.attributes,
-    engine: 'donjon-tiles',
+    engine: 'donjon-tall-tiles',
     png,
   };
 }

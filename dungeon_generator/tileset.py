@@ -55,19 +55,31 @@ def _slug(name: str) -> str:
     )
 
 
+def _register_preset(
+    presets: dict[str, TilesetPreset], path: Path, name: str
+) -> None:
+    preset = TilesetPreset(name, path, True, f"pixellab_{name}_32")
+    presets[name] = preset
+    for alias in name.split("_"):
+        presets.setdefault(alias, preset)
+
+
 def _discover_presets() -> dict[str, TilesetPreset]:
     presets: dict[str, TilesetPreset] = {}
-    tiles_dir = ROOT / "Tiles"
-    if not tiles_dir.exists():
-        return presets
-    for path in sorted(tiles_dir.glob("*.png")):
-        name = _slug(path.stem)
-        if not name:
+    # Tall 32x64 sheets win when the same slug also exists as a flat 32x32 sheet.
+    folders = (
+        ROOT / "Tall Tiles",
+        ROOT / "dungeon_generator" / "tall_tiles",
+        ROOT / "Tiles",
+    )
+    for folder in folders:
+        if not folder.exists():
             continue
-        preset = TilesetPreset(name, path, True, f"pixellab_{name}_32")
-        presets[name] = preset
-        for alias in name.split("_"):
-            presets.setdefault(alias, preset)
+        for path in sorted(folder.glob("*.png")):
+            name = _slug(path.stem)
+            if not name or name in presets:
+                continue
+            _register_preset(presets, path, name)
     return presets
 
 
@@ -81,11 +93,16 @@ DEFAULT_SHEET = DEFAULT_PRESET.path
 @dataclass
 class PixelLabTileset:
     tile_size: int
+    tile_height: int
     floor: Image.Image
     solid_walls: tuple[Image.Image, ...]
     void: Image.Image
     by_mask: dict[int, Image.Image | None]
     fill_exterior: bool = False
+
+    @property
+    def overhang(self) -> int:
+        return max(0, self.tile_height - self.tile_size)
 
 
 def resolve_tileset(
@@ -110,16 +127,18 @@ def resolve_tileset(
 def load_pixellab_tileset(sheet_path: Path | str | None = None) -> PixelLabTileset:
     path, fill_exterior, _slice_dir = resolve_tileset(sheet_path)
     sheet = Image.open(path).convert("RGBA")
-    src = min(sheet.size) // 4
-    if src < 8:
+    tile_w = sheet.size[0] // 4
+    tile_h = sheet.size[1] // 4
+    if tile_w < 8 or tile_h < 8:
         raise ValueError(f"Expected at least a 4x4 tile sheet, got {sheet.size}")
 
     def cell(tx: int, ty: int) -> Image.Image:
         tile = sheet.crop(
-            (tx * src, ty * src, (tx + 1) * src, (ty + 1) * src)
+            (tx * tile_w, ty * tile_h, (tx + 1) * tile_w, (ty + 1) * tile_h)
         ).convert("RGBA")
-        if src != TILE_SIZE:
-            tile = tile.resize((TILE_SIZE, TILE_SIZE), Image.NEAREST)
+        if tile_w != TILE_SIZE:
+            new_h = max(1, round(tile_h * (TILE_SIZE / tile_w)))
+            tile = tile.resize((TILE_SIZE, new_h), Image.NEAREST)
         return tile
 
     by_mask: dict[int, Image.Image | None] = {}
@@ -131,6 +150,8 @@ def load_pixellab_tileset(sheet_path: Path | str | None = None) -> PixelLabTiles
 
     floor = by_mask[15]
     assert floor is not None
+    tile_size = floor.size[0]
+    tile_height = floor.size[1]
     # PixelLab leaves frame 12 out of the 15 transition lookup. In this sheet
     # it is the seamless flat tile for the secondary terrain.
     solid_walls = (cell(0, 3),)
@@ -138,10 +159,11 @@ def load_pixellab_tileset(sheet_path: Path | str | None = None) -> PixelLabTiles
         by_mask[0] = solid_walls[0]
         void = solid_walls[0].copy()
     else:
-        void = Image.new("RGBA", (TILE_SIZE, TILE_SIZE), (0, 0, 0, 255))
+        void = Image.new("RGBA", (tile_size, tile_height), (0, 0, 0, 255))
 
     return PixelLabTileset(
-        tile_size=TILE_SIZE,
+        tile_size=tile_size,
+        tile_height=tile_height,
         floor=floor,
         solid_walls=solid_walls,
         void=void,

@@ -49,7 +49,7 @@ def render_preview(seed_value: str, max_edge: int = 768):
         "miniBoss": described["miniBoss"],
         "options": described["options"],
         "attributes": described["attributes"],
-        "engine": "python",
+        "engine": "donjon-tall-tiles",
         "png": buffer.getvalue(),
     }
     payload["metadata"] = opensea_metadata(

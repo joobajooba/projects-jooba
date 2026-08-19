@@ -16,16 +16,16 @@ export const TIER_BONUS = {
 };
 
 export const ALIGNMENTS = {
-  Red: ['underworld', 'sunscorch', 'ashfall'],
-  Green: ['verdant', 'greensward', 'mossruin'],
-  Khaki: ['greensward', 'sporewild', 'mossruin'],
-  Blue: ['cloudsea', 'frostbite', 'tempest', 'deepkarst'],
-  Cyan: ['cloudsea', 'tempest', 'frostbite'],
-  Purple: ['dreamveil', 'farvoid', 'moondust'],
-  Pink: ['dreamveil', 'moondust'],
-  Silver: ['stonekeep', 'farvoid'],
-  Gold: ['sunscorch', 'stonekeep'],
-  Diamond: ['farvoid', 'moondust', 'dreamveil'],
+  Red: ['underworld', 'volcano', 'desert'],
+  Green: ['plains', 'mossy', 'forgotten_ruins'],
+  Khaki: ['mossy', 'mushroom', 'forgotten_ruins'],
+  Blue: ['clouds', 'icy', 'storm', 'limestone'],
+  Cyan: ['clouds', 'storm', 'icy'],
+  Purple: ['shortcake', 'dreamcore', 'void', 'lunar'],
+  Pink: ['shortcake', 'dreamcore', 'lunar'],
+  Silver: ['castle', 'the_vault', 'void'],
+  Gold: ['desert', 'castle', 'the_vault'],
+  Diamond: ['void', 'lunar', 'dreamcore'],
 };
 
 export const PREVIEW_KEEPS = [
@@ -39,35 +39,35 @@ export const PREVIEW_KEEPS = [
   {
     id: 'preview-14',
     name: 'Lost Keep #14',
-    tileset: 'verdant',
+    tileset: 'plains',
     seed: '0000000e',
     image: '/api/dungeon-preview?seed=0000000e&format=png',
   },
   {
     id: 'preview-5',
     name: 'Lost Keep #5',
-    tileset: 'frostbite',
+    tileset: 'icy',
     seed: '00000005',
     image: '/api/dungeon-preview?seed=00000005&format=png',
   },
   {
     id: 'preview-11',
     name: 'Lost Keep #11',
-    tileset: 'sunscorch',
+    tileset: 'desert',
     seed: '0000000b',
     image: '/api/dungeon-preview?seed=0000000b&format=png',
   },
   {
     id: 'preview-3',
     name: 'Lost Keep #3',
-    tileset: 'dreamveil',
+    tileset: 'shortcake',
     seed: '00000003',
     image: '/api/dungeon-preview?seed=00000003&format=png',
   },
   {
     id: 'preview-10',
     name: 'Lost Keep #10',
-    tileset: 'stonekeep',
+    tileset: 'castle',
     seed: '0000000a',
     image: '/api/dungeon-preview?seed=0000000a&format=png',
   },

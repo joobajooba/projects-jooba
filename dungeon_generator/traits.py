@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from .generate import Dungeon, DungeonOptions, create_dungeon
+from .drops import mini_boss_sprite
 from .rng import Mulberry32, to_u32
 
 KEEP_DESCRIPTION = (
@@ -14,28 +15,28 @@ KEEP_DESCRIPTION = (
 
 TRAIT_XOR = 0x9E3779B9
 COLLECTION_SIZE = 4444
-ROBINS_LAIR = ("Robins Lair", "farvoid")
+ROBINS_LAIR = ("Robins Lair", "robins_lair")
 ONE_OF_ONE_BOSSES = ("Sir Roars-a-Lot", "Bun Bun", "King Croakus")
 
-# label, tileset slug, weight in basis points (10000 = 100%)
+# label, tall-tileset slug, weight in basis points (10000 = 100%)
 BIOMES = (
-    ("Grass Plains", "verdant", 928),
-    ("Limestone", "deepkarst", 928),
-    ("Desert", "sunscorch", 928),
-    ("Mossy ruins", "mossruin", 928),
-    ("Swamp", "greensward", 928),
-    ("Ice", "frostbite", 630),
-    ("Stone Castle", "stonekeep", 630),
+    ("Grass Plains", "plains", 928),
+    ("Limestone", "limestone", 928),
+    ("Desert", "desert", 928),
+    ("Mossy ruins", "forgotten_ruins", 928),
+    ("Swamp", "mossy", 928),
+    ("Ice", "icy", 630),
+    ("Stone Castle", "castle", 630),
     ("Underworld", "underworld", 630),
-    ("Moon", "moondust", 630),
-    ("Clouds", "cloudsea", 460),
-    ("Volcano", "ashfall", 460),
-    ("Mushroom", "sporewild", 460),
-    ("Shortcake", "dreamveil", 460),
-    ("Dreamscape", "dreamveil", 300),
-    ("Storm", "tempest", 300),
-    ("The Vault", "stonekeep", 300),
-    ("Void", "farvoid", 100),
+    ("Moon", "lunar", 630),
+    ("Clouds", "clouds", 460),
+    ("Volcano", "volcano", 460),
+    ("Mushroom", "mushroom", 460),
+    ("Shortcake", "shortcake", 460),
+    ("Dreamscape", "dreamcore", 300),
+    ("Storm", "storm", 300),
+    ("The Vault", "the_vault", 300),
+    ("Void", "void", 100),
 )
 
 DUNGEON_TYPES = (
@@ -225,10 +226,30 @@ def attributes_from_dungeon(
     ]
 
 
+def _attach_mini_boss(dungeon: Dungeon, mini_boss: str) -> None:
+    dungeon.inhabitant = None
+    kind = mini_boss_sprite(mini_boss)
+    if not kind or not dungeon.rooms:
+        return
+    room_id, room = max(
+        dungeon.rooms.items(),
+        key=lambda item: int(item[1].get("area") or 0),
+    )
+    dungeon.inhabitant = {
+        "kind": kind,
+        "room_id": room_id,
+        "north": room.get("north"),
+        "south": room.get("south"),
+        "west": room.get("west"),
+        "east": room.get("east"),
+    }
+
+
 def describe_dungeon(seed_value: Any) -> dict[str, Any]:
     numeric = seed_to_int(seed_value)
     options, traits = options_from_seed(numeric)
     dungeon = create_dungeon(options)
+    _attach_mini_boss(dungeon, traits["mini_boss"])
     attributes = attributes_from_dungeon(dungeon, traits["tileset"], options, traits)
     return {
         "seed": str(seed_value),
