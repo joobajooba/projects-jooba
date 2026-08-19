@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const HIGHLIGHT_PATTERN = /(\$DERP|\bImp\b|\b4444\b|\bfree\b)/gi;
+const HIGHLIGHT_PATTERN = /(\$DERP|\bImp\b|\b2222\b|\bfree\b)/gi;
 
 function highlightText(text) {
   return text.split(HIGHLIGHT_PATTERN).map((part, index) => {
@@ -11,7 +11,7 @@ function highlightText(text) {
 
     if (normalizedPart === '$derp') modifier = ' adventures-highlight--derp';
     if (normalizedPart === 'imp') modifier = ' adventures-highlight--imp';
-    if (normalizedPart === '4444') modifier = ' adventures-highlight--supply';
+    if (normalizedPart === '2222') modifier = ' adventures-highlight--supply';
     if (normalizedPart === 'free') modifier = ' adventures-highlight--free';
 
     return modifier ? (
@@ -35,11 +35,11 @@ const LOOP_ITEMS = [
   },
   {
     title: 'Uncover a dungeon',
-    body: 'The winning hash becomes the dungeon key. It rolls Biome, Dungeon Type, and Mini Boss, then generates the keep preview and OpenSea metadata.',
+    body: 'The winning hash becomes the dungeon key. It rolls Environment, Type, and Mini Boss, then generates the keep preview and OpenSea metadata.',
   },
   {
     title: 'Make the final choice',
-    body: 'Mint the keep or flee. Minting is free apart from ETH gas. After mint, OpenSea reads Biome, Dungeon Type, and Mini Boss, and shows the revealed dungeon.',
+    body: 'Mint the keep or flee. Minting is free apart from ETH gas. After mint, OpenSea reads Environment, Type, and Mini Boss, and shows the revealed dungeon.',
   },
 ];
 
@@ -142,20 +142,20 @@ function FlowMap() {
             <span className="adventures-flow__branch-tag">Mint</span>
             <h3>Claim the keep</h3>
             <p>{highlightText('Free mint + ETH gas. OpenSea then shows the revealed dungeon.')}</p>
-            <strong>{highlightText('Takes the next slot in the 4444 supply.')}</strong>
+            <strong>{highlightText('Takes the next slot in the 2222 supply.')}</strong>
           </article>
 
           <article className="adventures-flow__branch adventures-flow__branch--leave">
             <span className="adventures-flow__branch-tag">Flee</span>
             <h3>Lose the dungeon</h3>
             <p>The preview is deleted and the dungeon is never stored.</p>
-            <strong>{highlightText('Uses no slot in the 4444 supply.')}</strong>
+            <strong>{highlightText('Uses no slot in the 2222 supply.')}</strong>
           </article>
         </div>
       </div>
 
       <p className="adventures-flow__finish">
-        Chapter 1 ends when keep <strong>4444</strong> is minted — not when the 4444th winning
+        Chapter 1 ends when keep <strong>2222</strong> is minted — not when the 2222nd winning
         hash is found.
       </p>
     </div>
@@ -189,12 +189,12 @@ export function AdventureInformation() {
             </p>
             <p>
               {highlightText(
-                'A minted keep takes the next slot in the 4444 supply. A discarded preview is deleted, is not stored, and does not count toward the supply.'
+                'A minted keep takes the next slot in the 2222 supply. A discarded preview is deleted, is not stored, and does not count toward the supply.'
               )}
             </p>
             <p>
               {highlightText(
-                'Chapter 1 ends when the 4444th keep is minted, not when the 4444th winning hash is found.'
+                'Chapter 1 ends when the 2222nd keep is minted, not when the 2222nd winning hash is found.'
               )}
             </p>
             <p>

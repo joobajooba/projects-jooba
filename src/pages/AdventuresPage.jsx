@@ -21,7 +21,7 @@ import {
   resolveImplingTier,
   TIER_HASH_RATES,
 } from '../lib/hashMining';
-import { DUNGEON_KEEP_ABI, keepOpenSeaItemUrl, tokenIdFromMintReceipt } from '../lib/dungeonKeep';
+import { DUNGEON_KEEP_ABI, DUNGEON_KEEP_ADDRESS, keepOpenSeaItemUrl, tokenIdFromMintReceipt } from '../lib/dungeonKeep';
 import { AdventureInformation } from '../lib/adventureInformation';
 
 const IMPLINGZ_CONTRACT = '0x81d2d1f0e92285cdd22aa3cbc6956b6e1724d029';
@@ -841,7 +841,7 @@ function AdventureSlot({
     try {
       const data = await requestDungeonMint(session.id);
       const contractAddress =
-        data.contractAddress || import.meta.env.VITE_DUNGEON_KEEP_ADDRESS || '';
+        data.contractAddress || DUNGEON_KEEP_ADDRESS || '';
 
       if (!contractAddress || !data.signature || !walletClient) {
         setMintStatus(

@@ -132,7 +132,7 @@ export default function StakingPage() {
           <p className="adventures-page__eyebrow">Layout preview</p>
           <h1 className="adventures-page__title">Staking</h1>
           <p className="adventures-page__intro">
-            Lock an Imp for a chosen time to earn on-chain $IMP. Linking a Lost Keep adds a pair
+            Lock an Imp for a chosen time to earn on-chain $IMP. Linking an Imp Keep adds a pair
             bonus. Matching Body colour to dungeon tileset adds an alignment bonus. Nothing here
             is live yet — keeps below are preview dungeons so you can see the pairing layout.
           </p>

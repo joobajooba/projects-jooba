@@ -110,9 +110,9 @@ function localAdventureApis() {
 
         if (url.pathname === '/api/keep-collection') {
           sendJson(res, 200, {
-            name: 'Lost Keeps',
+            name: 'Imp Keeps',
             description:
-              '4444 procedurally generated dungeons found through IMPLINGz adventures. Each keep has a Biome, Dungeon Type, and Mini Boss.',
+              '2222 procedurally generated Imp Keeps found through IMPLINGz adventures on Robinhood Chain. Each keep has Environment, Type, and Mini Boss.',
             image: '/roadmap/roadmap-dungeon.png',
             external_link: '/the-dungeon',
           });

@@ -1,7 +1,7 @@
 /** Seed helpers and OpenSea traits shared by preview, keep metadata, and generation. */
 
 const TRAIT_XOR = 0x9e3779b9;
-const COLLECTION_SIZE = 4444;
+const COLLECTION_SIZE = 2222;
 
 const ROBINS_LAIR = ['Robins Lair', 'robins_lair'];
 const ONE_OF_ONE_BOSSES = ['Sir Roars-a-Lot', 'Bun Bun', 'King Croakus'];
@@ -70,12 +70,12 @@ const DUNGEON_TYPE_PRESETS = {
     roomCountMax: 14,
   },
   Keep: {
-    dungeonLayout: 'Box',
-    roomLayout: 'Dense',
+    dungeonLayout: 'Round',
+    roomLayout: 'Scattered',
     corridorLayout: 'Straight',
     circularRooms: 'None',
-    corridorLoops: 4,
-    removeDeadends: 75,
+    corridorLoops: 8,
+    removeDeadends: 90,
     roomMin: 5,
     roomMax: 9,
     roomCountMin: 8,
@@ -83,23 +83,23 @@ const DUNGEON_TYPE_PRESETS = {
   },
   Hive: {
     dungeonLayout: 'None',
-    roomLayout: 'Scattered',
-    corridorLayout: 'Errant',
-    circularRooms: 'Many',
-    corridorLoops: 10,
-    removeDeadends: 40,
+    roomLayout: 'Dense',
+    corridorLayout: 'Straight',
+    circularRooms: 'None',
+    corridorLoops: 4,
+    removeDeadends: 90,
     roomMin: 5,
-    roomMax: 11,
+    roomMax: 9,
     roomCountMin: 10,
     roomCountMax: 16,
   },
   Spiral: {
-    dungeonLayout: 'Round',
+    dungeonLayout: 'None',
     roomLayout: 'Scattered',
-    corridorLayout: 'Errant',
-    circularRooms: 'Some',
-    corridorLoops: 8,
-    removeDeadends: 55,
+    corridorLayout: 'Straight',
+    circularRooms: 'None',
+    corridorLoops: 0,
+    removeDeadends: 0,
     roomMin: 5,
     roomMax: 9,
     roomCountMin: 8,
@@ -110,24 +110,24 @@ const DUNGEON_TYPE_PRESETS = {
     roomLayout: 'Scattered',
     corridorLayout: 'Labyrinth',
     circularRooms: 'None',
-    corridorLoops: 16,
-    removeDeadends: 20,
+    corridorLoops: 0,
+    removeDeadends: 0,
     roomMin: 3,
     roomMax: 7,
-    roomCountMin: 8,
-    roomCountMax: 12,
+    roomCountMin: 1,
+    roomCountMax: 3,
   },
   Gauntlet: {
-    dungeonLayout: 'Cross',
+    dungeonLayout: 'None',
     roomLayout: 'Scattered',
     corridorLayout: 'Straight',
     circularRooms: 'None',
     corridorLoops: 0,
-    removeDeadends: 90,
+    removeDeadends: 80,
     roomMin: 3,
     roomMax: 7,
-    roomCountMin: 6,
-    roomCountMax: 9,
+    roomCountMin: 5,
+    roomCountMax: 8,
   },
 };
 
@@ -272,8 +272,8 @@ export function tilesetForSeed(seed) {
 export function attributesFromDungeon(_dungeon, _tileset, options) {
   const opts = options || {};
   return [
-    { trait_type: 'Biome', value: opts.biome },
-    { trait_type: 'Dungeon Type', value: opts.dungeonType || opts.dungeon_type },
+    { trait_type: 'Environment', value: opts.biome },
+    { trait_type: 'Type', value: opts.dungeonType || opts.dungeon_type },
     { trait_type: 'Mini Boss', value: opts.miniBoss || opts.mini_boss },
   ];
 }
@@ -287,7 +287,7 @@ export function openseaMetadata({
   attributes,
 }) {
   return {
-    name: tokenId ? `Lost Keep #${tokenId}` : 'Lost Keep',
+    name: tokenId ? `Imp Keep #${tokenId}` : 'Imp Keep',
     description,
     image: imageUrl,
     external_url: externalUrl,
@@ -298,4 +298,4 @@ export function openseaMetadata({
 }
 
 export const KEEP_DESCRIPTION =
-  'A procedurally generated dungeon uncovered during an IMPLINGz adventure on Robinhood Chain. Minted on j00ba.xyz. Secondary trading is on OpenSea in ETH.';
+  'An Imp Keep uncovered during an IMPLINGz adventure on Robinhood Chain. Minting is free aside from ETH gas. Traits are Environment, Type, and Mini Boss. Secondary trading is on OpenSea in ETH.';

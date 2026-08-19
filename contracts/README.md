@@ -7,9 +7,9 @@ $DERP token: `0x6543b7746ca744c4bb2198191e71f40ff04c41b9`
 
 1. Start an adventure on j00ba.xyz with owned IMPLINGz.
 2. Prompts can award wallet XP. A small $DERP drip may come from a funded pot.
-3. A winning hash can be minted as a Lost Keep, or walked away from.
+3. A winning hash can be minted as an Imp Keep, or walked away from.
 4. Minting is a free voucher mint. The player signs the keep contract and pays ETH gas.
-5. Supply is 4444. Chapter 1 ends when keep 4444 is minted.
+5. Supply is 2222. Chapter 1 ends when keep 2222 is minted.
 6. OpenSea reads `tokenURI` / `contractURI` and shows the revealed dungeon.
 7. Holders list and trade keeps on OpenSea in ETH / WETH.
 
@@ -37,7 +37,48 @@ After broadcast, copy the `DerpRewards` address and set these on the Adventures 
 - `DERP_REWARDS_ADDRESS` — pot contract
 - `DERP_OPERATOR_PRIVATE_KEY` — DERP HOT private key (never commit this)
 
-## Deploy
+## Deploy Imp Keeps (required for adventure minting)
+
+This is the contract players call from Adventures. Do not deploy `KeepMarket`.
+
+```bash
+forge test
+forge script script/DeployDungeonKeep.s.sol:DeployDungeonKeep --rpc-url robinhood --broadcast
+```
+
+Required env:
+
+- `DEPLOYER_PRIVATE_KEY` — wallet with ETH on Robinhood Chain (`4663`)
+
+Optional env (defaults in the script):
+
+- `MINT_SIGNER` — defaults to hot wallet `0x50f7838FA05B3B53722BdA926b84bB9cA6EDF791`
+- `DUNGEON_BASE_URI` — defaults to `https://j00ba.xyz/api/keep/`
+- `DUNGEON_CONTRACT_URI` — defaults to `https://j00ba.xyz/api/keep-collection`
+
+Royalty receiver is hardcoded to `0x53391bf6931E3a8d829029b2a7640f3213cF6C94` at 8% EIP-2981.
+
+The mint signer **private key** must be set on the Adventures edge function as `DUNGEON_MINT_SIGNER_KEY`. That key’s address must equal `mintSigner` on the contract.
+
+After broadcast, copy the `DungeonKeep` address and set:
+
+Vercel:
+
+- `VITE_DUNGEON_KEEP_ADDRESS` — `0x639061b01ab4261b4283a0AC9D3bB8B99013Bad4`
+- `DUNGEON_KEEP_ADDRESS` — same
+- `SITE_URL` — `https://j00ba.xyz`
+
+Adventures edge function:
+
+- `DUNGEON_KEEP_ADDRESS` — `0x639061b01ab4261b4283a0AC9D3bB8B99013Bad4`
+- `DUNGEON_MINT_SIGNER_KEY` — private key of `0x53391bf6931E3a8d829029b2a7640f3213cF6C94`
+
+Live Imp Keeps (Robinhood 4663): `0x639061b01ab4261b4283a0AC9D3bB8B99013Bad4`
+Deploy tx: `0xd409cb4738f885e5d50b5b4d276d098915bb3c28564b1368a2d807dbacf63b54`
+
+Then redeploy the site. Find a keep in Adventures and use Mint dungeon — the wallet pays ETH gas only.
+
+## Deploy DungeonKeep + DerpRewards together
 
 ```bash
 forge script script/Deploy.s.sol:Deploy --rpc-url robinhood --broadcast
@@ -51,15 +92,6 @@ Required env:
 - `DUNGEON_BASE_URI` — `https://j00ba.xyz/api/keep/`
 - `DUNGEON_CONTRACT_URI` — `https://j00ba.xyz/api/keep-collection`
 - `CREATOR_WALLET` — `0x53391bf6931E3a8d829029b2a7640f3213cF6C94`
-
-This deploys `DungeonKeep` and `DerpRewards` only. Transfers are unrestricted so OpenSea / Seaport can list and trade. On-chain royalty is 8% EIP-2981 to the creator wallet.
-
-Then set on the Adventures edge function and Vercel:
-
-- `DUNGEON_KEEP_ADDRESS`
-- `DERP_REWARDS_ADDRESS`
-- `VITE_DUNGEON_KEEP_ADDRESS`
-- `SITE_URL` — `https://j00ba.xyz`
 
 After deploy, open the collection on OpenSea and confirm logo, description, and creator fees.
 

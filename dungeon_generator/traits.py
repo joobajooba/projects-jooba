@@ -9,12 +9,13 @@ from .drops import mini_boss_sprite
 from .rng import Mulberry32, to_u32
 
 KEEP_DESCRIPTION = (
-    "A procedurally generated dungeon uncovered during an IMPLINGz adventure "
-    "on Robinhood Chain. Minted on j00ba.xyz. Secondary trading is on OpenSea in ETH."
+    "An Imp Keep uncovered during an IMPLINGz adventure on Robinhood Chain. "
+    "Minting is free aside from ETH gas. Traits are Environment, Type, and Mini Boss. "
+    "Secondary trading is on OpenSea in ETH."
 )
 
 TRAIT_XOR = 0x9E3779B9
-COLLECTION_SIZE = 4444
+COLLECTION_SIZE = 2222
 ROBINS_LAIR = ("Robins Lair", "robins_lair")
 ONE_OF_ONE_BOSSES = ("Sir Roars-a-Lot", "Bun Bun", "King Croakus")
 
@@ -220,8 +221,8 @@ def attributes_from_dungeon(
     _ = (dungeon, tileset, options)
     data = traits or {}
     return [
-        {"trait_type": "Biome", "value": data.get("biome")},
-        {"trait_type": "Dungeon Type", "value": data.get("dungeon_type")},
+        {"trait_type": "Environment", "value": data.get("biome")},
+        {"trait_type": "Type", "value": data.get("dungeon_type")},
         {"trait_type": "Mini Boss", "value": data.get("mini_boss")},
     ]
 
@@ -292,7 +293,7 @@ def opensea_metadata(
     description: str,
     attributes: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    name = f"Lost Keep #{token_id}" if token_id else "Lost Keep"
+    name = f"Imp Keep #{token_id}" if token_id else "Imp Keep"
     return {
         "name": name,
         "description": description,

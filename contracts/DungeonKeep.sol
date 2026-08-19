@@ -2,9 +2,9 @@
 pragma solidity ^0.8.24;
 
 contract DungeonKeep {
-    string public constant name = "Lost Keeps";
+    string public constant name = "Imp Keeps";
     string public constant symbol = "KEEP";
-    uint256 public constant MAX_SUPPLY = 4444;
+    uint256 public constant MAX_SUPPLY = 2222;
     bytes4 private constant IERC165 = 0x01ffc9a7;
     bytes4 private constant IERC721 = 0x80ac58cd;
     bytes4 private constant IERC721_METADATA = 0x5b5e139f;

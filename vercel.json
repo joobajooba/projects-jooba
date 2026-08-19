@@ -4,6 +4,9 @@
   "functions": {
     "api/dungeon-preview.js": {
       "includeFiles": "{api/lib/**,scripts/**,dungeon_generator/**,Tiles/**,Tall Tiles/**,Mini-Bosses/**,tall_tiles/**}"
+    },
+    "api/keep.js": {
+      "includeFiles": "{api/lib/**}"
     }
   },
   "rewrites": [

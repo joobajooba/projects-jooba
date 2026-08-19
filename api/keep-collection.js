@@ -7,9 +7,9 @@ export default async function handler(request, response) {
   const origin = process.env.SITE_URL || 'https://j00ba.xyz';
   response.setHeader('Cache-Control', 'public, s-maxage=300');
   return response.status(200).json({
-    name: 'Lost Keeps',
+    name: 'Imp Keeps',
     description:
-      '4444 procedurally generated dungeons found through IMPLINGz adventures. Each keep has a Biome, Dungeon Type, and Mini Boss. Minting is free on j00ba.xyz. Trade on OpenSea in ETH.',
+      '2222 procedurally generated Imp Keeps found through IMPLINGz adventures on Robinhood Chain. Each keep has Environment, Type, and Mini Boss. Minting is free aside from ETH gas. Trade on OpenSea in ETH.',
     image: `${origin.replace(/\/$/, '')}/roadmap/roadmap-dungeon.png`,
     external_link: `${origin.replace(/\/$/, '')}/the-dungeon`,
     seller_fee_basis_points: 800,

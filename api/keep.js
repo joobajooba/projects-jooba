@@ -2,7 +2,10 @@ import { createPublicClient, http } from 'viem';
 import { describeDungeon } from './lib/generateDungeon.js';
 import { KEEP_DESCRIPTION, openseaMetadata } from './lib/dungeonTraits.js';
 
-const KEEP_ADDRESS = process.env.DUNGEON_KEEP_ADDRESS || process.env.VITE_DUNGEON_KEEP_ADDRESS || '';
+const KEEP_ADDRESS =
+  process.env.DUNGEON_KEEP_ADDRESS ||
+  process.env.VITE_DUNGEON_KEEP_ADDRESS ||
+  '0x639061b01ab4261b4283a0AC9D3bB8B99013Bad4';
 const RPC_URL = 'https://rpc.mainnet.chain.robinhood.com';
 const KEEP_ABI = [
   {
@@ -34,7 +37,7 @@ export default async function handler(request, response) {
   const queryId = Array.isArray(request.query.id) ? request.query.id[0] : request.query.id;
   const pathId = String(request.url || '').match(/\/api\/keep\/(\d+)/)?.[1];
   const tokenId = queryId || pathId;
-  if (!tokenId || !/^\d+$/.test(tokenId) || Number(tokenId) < 1 || Number(tokenId) > 4444) {
+  if (!tokenId || !/^\d+$/.test(tokenId) || Number(tokenId) < 1 || Number(tokenId) > 2222) {
     return response.status(400).json({ error: 'A keep token id is required.' });
   }
 

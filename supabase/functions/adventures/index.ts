@@ -631,7 +631,8 @@ Deno.serve(async (request: Request) => {
         const account = privateKeyToAccount(signerKey as `0x${string}`);
         signature = await account.signMessage({ message });
       }
-      const contractAddress = Deno.env.get("DUNGEON_KEEP_ADDRESS") || "";
+      const contractAddress =
+        Deno.env.get("DUNGEON_KEEP_ADDRESS") || "0x639061b01ab4261b4283a0AC9D3bB8B99013Bad4";
       await supabase
         .from("adventure_sessions")
         .update({ mint_deadline: new Date(deadline * 1000).toISOString(), updated_at: new Date().toISOString() })
@@ -649,7 +650,7 @@ Deno.serve(async (request: Request) => {
     if (action === "mark-minted") {
       if (session.status !== "found") return json({ error: "This dungeon cannot be marked minted." }, 409);
       const tokenId = Number(body.tokenId);
-      if (!Number.isInteger(tokenId) || tokenId < 1 || tokenId > 4444) {
+      if (!Number.isInteger(tokenId) || tokenId < 1 || tokenId > 2222) {
         return json({ error: "Invalid minted token id." }, 400);
       }
       const { data, error } = await supabase

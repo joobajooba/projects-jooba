@@ -344,9 +344,137 @@ function scatterRooms(dungeon, rng) {
   }
 }
 
+function centerRoomSize(dungeon) {
+  const maxH = Math.min(dungeon.roomBase + Math.max(0, dungeon.roomRadix - 1), dungeon.nI - 2);
+  let size = Math.max(3, Math.min(5, maxH));
+  if (size % 2 === 0) size -= 1;
+  return Math.max(3, size);
+}
+
+function emplaceCenterRoom(dungeon, rng) {
+  const size = centerRoomSize(dungeon);
+  return emplaceRoom(dungeon, rng, {
+    i: Math.floor((dungeon.nI - size) / 2),
+    j: Math.floor((dungeon.nJ - size) / 2),
+    height: size,
+    width: size,
+    circular: rng.random() < 0.4 && dungeon.options.circularRooms !== 'None',
+  });
+}
+
+function squareSpiralIj(nI, nJ) {
+  let i = Math.floor(nI / 2);
+  let j = Math.floor(nJ / 2);
+  const cells = [];
+  const seen = new Set();
+  const take = (ii, jj) => {
+    const key = `${ii},${jj}`;
+    if (ii >= 1 && ii < nI && jj >= 1 && jj < nJ && !seen.has(key)) {
+      seen.add(key);
+      cells.push([ii, jj]);
+    }
+  };
+  take(i, j);
+  let di = 0;
+  let dj = 1;
+  let length = 1;
+  while (cells.length < Math.max(1, (nI - 2) * (nJ - 2)) && length <= Math.max(nI, nJ) + 2) {
+    for (let turn = 0; turn < 2; turn += 1) {
+      for (let step = 0; step < length; step += 1) {
+        i += di;
+        j += dj;
+        take(i, j);
+      }
+      [di, dj] = [dj, -di];
+    }
+    length += 1;
+  }
+  return cells;
+}
+
+function emplaceSpiralRooms(dungeon, rng) {
+  emplaceCenterRoom(dungeon, rng);
+  const positions = squareSpiralIj(dungeon.nI, dungeon.nJ);
+  if (positions.length < 16) return;
+  const outer = positions.slice(Math.floor(positions.length * 0.72));
+  rng.shuffle(outer);
+  let placed = 0;
+  for (const [i, j] of outer) {
+    if (placed >= 2) break;
+    if (emplaceRoom(dungeon, rng, { i, j, height: 2, width: 2 })) placed += 1;
+  }
+}
+
+function carveSpiralCorridor(dungeon) {
+  const points = [];
+  for (const [i, j] of squareSpiralIj(dungeon.nI, dungeon.nJ)) {
+    const r = i * 2 + 1;
+    const c = j * 2 + 1;
+    if (!(r > 0 && r < dungeon.nRows && c > 0 && c < dungeon.nCols)) continue;
+    if (dungeon.cell[r][c] & BLOCKED) continue;
+    points.push([r, c, i, j]);
+  }
+  for (let index = 0; index < points.length - 1; index += 1) {
+    const [r1, c1, i1, j1] = points[index];
+    const [r2, c2, i2, j2] = points[index + 1];
+    if (Math.abs(i1 - i2) + Math.abs(j1 - j2) !== 1) continue;
+    for (let r = Math.min(r1, r2); r <= Math.max(r1, r2); r += 1) {
+      for (let c = Math.min(c1, c2); c <= Math.max(c1, c2); c += 1) {
+        if (dungeon.cell[r][c] & (ROOM | BLOCKED)) continue;
+        dungeon.cell[r][c] &= ~PERIMETER;
+        dungeon.cell[r][c] |= CORRIDOR;
+      }
+    }
+  }
+}
+
+function emplaceGauntletRooms(dungeon, rng) {
+  const width = 3;
+  const j = Math.max(1, Math.floor((dungeon.nJ - width) / 2));
+  let i = 1;
+  const target = Math.max(5, Math.min(8, dungeon.options.roomCountMax));
+  while (dungeon.nRooms < target && i + 2 < dungeon.nI - 1) {
+    const isBossRoom = dungeon.nRooms === 0;
+    let height = isBossRoom ? 3 : 2;
+    if (i + height >= dungeon.nI - 1) height = 2;
+    if (!emplaceRoom(dungeon, rng, { i, j, height, width, circular: false })) break;
+    i += height + 1;
+  }
+}
+
+function carveGauntletSpine(dungeon) {
+  const j = Math.floor(dungeon.nJ / 2);
+  const c = j * 2 + 1;
+  let prevR = null;
+  for (let i = 1; i < dungeon.nI; i += 1) {
+    const r = i * 2 + 1;
+    if (!(r > 0 && r < dungeon.nRows && c > 0 && c < dungeon.nCols)) continue;
+    if (dungeon.cell[r][c] & BLOCKED) continue;
+    if (prevR !== null) {
+      for (let rr = Math.min(prevR, r); rr <= Math.max(prevR, r); rr += 1) {
+        if (dungeon.cell[rr][c] & (ROOM | BLOCKED)) continue;
+        dungeon.cell[rr][c] &= ~PERIMETER;
+        dungeon.cell[rr][c] |= CORRIDOR;
+      }
+    }
+    prevR = r;
+  }
+}
+
 function emplaceRooms(dungeon, rng) {
-  if (dungeon.options.roomLayout === 'Dense') packRooms(dungeon, rng);
-  else scatterRooms(dungeon, rng);
+  const style = dungeon.options.dungeonType;
+  if (style === 'Keep') {
+    emplaceCenterRoom(dungeon, rng);
+    scatterRooms(dungeon, rng);
+  } else if (style === 'Spiral') {
+    emplaceSpiralRooms(dungeon, rng);
+  } else if (style === 'Gauntlet') {
+    emplaceGauntletRooms(dungeon, rng);
+  } else if (dungeon.options.roomLayout === 'Dense') {
+    packRooms(dungeon, rng);
+  } else {
+    scatterRooms(dungeon, rng);
+  }
 }
 
 function checkSill(dungeon, room, list, sillR, sillC, direction) {
@@ -1060,7 +1188,10 @@ function cleanDungeon(dungeon, rng) {
   fixStairs(dungeon, rng);
   rebuildPerimeter(dungeon);
   emptyBlocks(dungeon);
-  nudgeLayoutToCenter(dungeon);
+  const style = dungeon.options.dungeonType;
+  if (style !== 'Spiral' && style !== 'Keep' && style !== 'Gauntlet') {
+    nudgeLayoutToCenter(dungeon);
+  }
 }
 
 export function createDungeon(options) {
@@ -1068,9 +1199,12 @@ export function createDungeon(options) {
   const rng = createRng(options.seed);
   initCells(dungeon);
   emplaceRooms(dungeon, rng);
+  const style = options.dungeonType;
+  if (style === 'Spiral') carveSpiralCorridor(dungeon);
+  else if (style === 'Gauntlet') carveGauntletSpine(dungeon);
   openRooms(dungeon, rng);
   labelRooms(dungeon);
-  corridors(dungeon, rng);
+  if (style !== 'Spiral' && style !== 'Gauntlet') corridors(dungeon, rng);
   if (options.addStairs) emplaceStairs(dungeon, rng);
   cleanDungeon(dungeon, rng);
   return dungeon;

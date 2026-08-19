@@ -1,3 +1,6 @@
+export const DUNGEON_KEEP_ADDRESS =
+  import.meta.env.VITE_DUNGEON_KEEP_ADDRESS || '0x639061b01ab4261b4283a0AC9D3bB8B99013Bad4';
+
 export const DUNGEON_KEEP_ABI = [
   {
     type: 'function',
