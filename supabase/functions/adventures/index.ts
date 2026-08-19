@@ -150,6 +150,32 @@ function operatorAccount() {
   return privateKeyToAccount(key);
 }
 
+function keepContractAddress() {
+  return Deno.env.get("DUNGEON_KEEP_ADDRESS") || "0x639061b01ab4261b4283a0AC9D3bB8B99013Bad4";
+}
+
+function openSeaItemUrl(tokenId: number) {
+  return `https://opensea.io/item/robinhood/${keepContractAddress()}/${tokenId}`;
+}
+
+function openSeaCollectionUrl() {
+  return `https://opensea.io/assets/robinhood/${keepContractAddress()}`;
+}
+
+async function refreshOpenSeaMetadata(tokenId: number) {
+  try {
+    const headers: Record<string, string> = { accept: "application/json" };
+    const apiKey = Deno.env.get("OPENSEA_API_KEY")?.trim();
+    if (apiKey) headers["x-api-key"] = apiKey;
+    await fetch(
+      `https://api.opensea.io/api/v2/chain/robinhood/contract/${keepContractAddress()}/nfts/${tokenId}/refresh`,
+      { method: "POST", headers },
+    );
+  } catch (error) {
+    console.error("opensea refresh failed", error);
+  }
+}
+
 async function sendDerpDrip(rewardsAddress: string, to: string, amount: number) {
   try {
     const account = operatorAccount();
@@ -631,8 +657,7 @@ Deno.serve(async (request: Request) => {
         const account = privateKeyToAccount(signerKey as `0x${string}`);
         signature = await account.signMessage({ message });
       }
-      const contractAddress =
-        Deno.env.get("DUNGEON_KEEP_ADDRESS") || "0x639061b01ab4261b4283a0AC9D3bB8B99013Bad4";
+      const contractAddress = keepContractAddress();
       await supabase
         .from("adventure_sessions")
         .update({ mint_deadline: new Date(deadline * 1000).toISOString(), updated_at: new Date().toISOString() })
@@ -670,7 +695,13 @@ Deno.serve(async (request: Request) => {
         await persistProgress(session.wallet_address, XP_DUNGEON_MINTED, -1),
         session.wallet_address,
       );
-      return json({ account, session: data });
+      await refreshOpenSeaMetadata(tokenId);
+      return json({
+        account,
+        session: data,
+        openSeaItemUrl: openSeaItemUrl(tokenId),
+        openSeaCollectionUrl: openSeaCollectionUrl(),
+      });
     }
 
     return json({ error: "Unknown action." }, 400);

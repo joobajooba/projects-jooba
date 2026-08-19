@@ -21,7 +21,13 @@ import {
   resolveImplingTier,
   TIER_HASH_RATES,
 } from '../lib/hashMining';
-import { DUNGEON_KEEP_ABI, DUNGEON_KEEP_ADDRESS, keepOpenSeaItemUrl, tokenIdFromMintReceipt } from '../lib/dungeonKeep';
+import {
+  DUNGEON_KEEP_ABI,
+  DUNGEON_KEEP_ADDRESS,
+  keepOpenSeaCollectionUrl,
+  keepOpenSeaItemUrl,
+  tokenIdFromMintReceipt,
+} from '../lib/dungeonKeep';
 import { AdventureInformation } from '../lib/adventureInformation';
 
 const IMPLINGZ_CONTRACT = '0x81d2d1f0e92285cdd22aa3cbc6956b6e1724d029';
@@ -300,6 +306,7 @@ function AdventureSlot({
   const [stopping, setStopping] = useState(false);
   const [mintStatus, setMintStatus] = useState('');
   const [mintedKeepUrl, setMintedKeepUrl] = useState('');
+  const [mintedCollectionUrl, setMintedCollectionUrl] = useState('');
   const [viewKeepOpen, setViewKeepOpen] = useState(false);
   const [keepMetadata, setKeepMetadata] = useState(null);
   const [impSpeechStates, setImpSpeechStates] = useState([
@@ -860,17 +867,21 @@ function AdventureSlot({
       const tokenId = tokenIdFromMintReceipt(receipt);
       if (tokenId) {
         const minted = await markDungeonMinted(session.id, tokenId);
-        const openSeaUrl = keepOpenSeaItemUrl(contractAddress, tokenId);
+        const openSeaUrl =
+          minted.openSeaItemUrl || keepOpenSeaItemUrl(contractAddress, tokenId);
+        const collectionUrl =
+          minted.openSeaCollectionUrl || keepOpenSeaCollectionUrl(contractAddress);
         replaceSession({ account: minted.account, session: minted.session });
         removeRun(session.id);
         setViewKeepOpen(false);
         setMintedKeepUrl(openSeaUrl);
+        setMintedCollectionUrl(collectionUrl);
         setMintStatus('');
         setAdventureMessages((messages) => [
           ...messages,
           {
             type: 'mint',
-            text: `Keep #${tokenId} minted. OpenSea will show the revealed dungeon.`,
+            text: `Keep #${tokenId} minted. OpenSea will add it to Imp Keeps.`,
           },
           {
             type: 'xp',
@@ -960,8 +971,16 @@ function AdventureSlot({
         {mintedKeepUrl ? (
           <p className="adventure-party__help">
             <a href={mintedKeepUrl} target="_blank" rel="noopener noreferrer">
-              View / list this keep on OpenSea
+              View this keep on OpenSea
             </a>
+            {mintedCollectionUrl ? (
+              <>
+                {' · '}
+                <a href={mintedCollectionUrl} target="_blank" rel="noopener noreferrer">
+                  Imp Keeps collection
+                </a>
+              </>
+            ) : null}
           </p>
         ) : null}
 
