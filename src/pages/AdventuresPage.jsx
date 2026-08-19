@@ -276,6 +276,7 @@ function AdventureSlot({
     stopAdventure,
     resumeAfterWalkAway,
     replaceSession,
+    refreshSessionFromServer,
     removeRun,
   } = useAdventureRuntime();
 
@@ -295,6 +296,7 @@ function AdventureSlot({
   const [encounterIndex, setEncounterIndex] = useState(null);
   const [startError, setStartError] = useState('');
   const [starting, setStarting] = useState(false);
+  const [resolvingChoice, setResolvingChoice] = useState(false);
   const [stopping, setStopping] = useState(false);
   const [mintStatus, setMintStatus] = useState('');
   const [mintedKeepUrl, setMintedKeepUrl] = useState('');
@@ -350,16 +352,16 @@ function AdventureSlot({
   }, [walletAccount, session?.id, setMiningPaused]);
 
   useEffect(() => {
+    if (!session?.id || !party.length) return;
+    const nextSlots = [null, null, null];
+    party.slice(0, 3).forEach((impling, index) => {
+      nextSlots[index] = impling;
+    });
+    setSelectedImplingz(nextSlots);
+  }, [session?.id, party]);
+
+  useEffect(() => {
     if (!adventureStarted || !session?.id) return;
-
-    if (party.length) {
-      const nextSlots = [null, null, null];
-      party.slice(0, 3).forEach((impling, index) => {
-        nextSlots[index] = impling;
-      });
-      setSelectedImplingz(nextSlots);
-    }
-
     if (resumedSessionRef.current === session.id) return;
     resumedSessionRef.current = session.id;
 
@@ -376,7 +378,7 @@ function AdventureSlot({
     if (session.status === 'running') {
       scheduleNextEncounter();
     }
-  }, [adventureStarted, session?.id, session?.status, party]);
+  }, [adventureStarted, session?.id]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -720,9 +722,11 @@ function AdventureSlot({
   }
 
   async function chooseAdventureOption(option) {
-    if (!adventureStarted || encounterIndex === null || !session?.id) return;
+    if (!adventureStarted || encounterIndex === null || !session?.id || resolvingChoice) return;
 
     const completedEncounterIndex = encounterIndex;
+    setResolvingChoice(true);
+    setStartError('');
     try {
       const result = await resolveAdventurePrompt(session.id, {
         encounterIndex,
@@ -730,7 +734,13 @@ function AdventureSlot({
       });
       const rollResult = result.succeeded ? 'Success' : 'Failure';
       setAdventurer(decorateAccount(result.account));
-      if (result.drip) {
+      if (result.session) {
+        replaceSession({
+          account: result.account,
+          session: result.session,
+          drip: result.drip,
+        });
+      } else if (result.drip) {
         setDripMessage(dripStatusMessage(result.drip));
       }
       const treasure = derpTreasureChatMessage(result.drip);
@@ -753,9 +763,30 @@ function AdventureSlot({
         },
         ...(treasure ? [treasure] : []),
       ]);
-      scheduleNextEncounter(completedEncounterIndex);
+      if (result.session?.status === 'found') {
+        setEncounterIndex(null);
+      } else {
+        scheduleNextEncounter(completedEncounterIndex);
+      }
     } catch (error) {
+      try {
+        const latest = await refreshSessionFromServer(session.id);
+        if (latest?.status === 'found') {
+          setEncounterIndex(null);
+          setStartError('');
+          return;
+        }
+        if (!latest) {
+          setEncounterIndex(null);
+          setStartError('This adventure is no longer exploring.');
+          return;
+        }
+      } catch {
+        // Keep the original choice error if the session cannot be refreshed.
+      }
       setStartError(error?.message || 'The encounter could not be resolved.');
+    } finally {
+      setResolvingChoice(false);
     }
   }
 
@@ -1170,12 +1201,15 @@ function AdventureSlot({
               <p className="adventure-chat__halted">
                 Hash finding halted, make a decision.
               </p>
-              <p className="adventure-chat__decision-label">Make your decision.</p>
+              <p className="adventure-chat__decision-label">
+                {resolvingChoice ? 'Resolving your choice…' : 'Make your decision.'}
+              </p>
               <div className="adventure-chat__options" aria-label="Choose your response">
                 {currentEncounter.options.map((option) => (
                   <button
                     key={`${encounterIndex}-${option.key}`}
                     type="button"
+                    disabled={resolvingChoice}
                     onClick={() => chooseAdventureOption(option)}
                   >
                     <span>{option.key}</span>

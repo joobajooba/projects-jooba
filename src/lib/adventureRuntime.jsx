@@ -10,6 +10,10 @@ import {
 } from './adventuresApi';
 import { hashesPerTickForParty, mineHashBatch, resolveImplingTier } from './hashMining';
 
+function sleep(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
 const AdventureRuntimeContext = createContext(null);
 
 export const DERP_TREASURE_LINE =
@@ -276,6 +280,26 @@ export function AdventureRuntimeProvider({ walletAccount, signMessageAsync, chil
     [removeRun, updateRun]
   );
 
+  const refreshSessionFromServer = useCallback(
+    async (sessionId) => {
+      if (!walletAccount || !sessionId) return null;
+      const data = await fetchAdventurerAccount(walletAccount);
+      if (data.account) setAdventurer(decorateAccount(data.account));
+      const latest = (data.sessions ?? []).find((row) => row.id === sessionId);
+      if (!latest) {
+        removeRun(sessionId);
+        return null;
+      }
+      replaceSession({
+        account: data.account,
+        session: latest,
+        hashesChecked: latest.hashes_checked,
+      });
+      return latest;
+    },
+    [replaceSession, removeRun, walletAccount]
+  );
+
   useEffect(() => {
     if (!walletAccount) {
       setAdventurer(emptyAdventurerAccount());
@@ -366,6 +390,14 @@ export function AdventureRuntimeProvider({ walletAccount, signMessageAsync, chil
           }));
 
           if (result.found) {
+            while (!cancelled && pausedIdsRef.current.has(sessionId)) {
+              await sleep(120);
+            }
+            if (cancelled) break;
+
+            const latestRun = adventuresRef.current.find((row) => row.session?.id === sessionId);
+            if (!latestRun || latestRun.session.status !== 'running') break;
+
             try {
               const submitted = await submitWinningHash(sessionId, {
                 nonce: String(result.nonce),
@@ -383,9 +415,14 @@ export function AdventureRuntimeProvider({ walletAccount, signMessageAsync, chil
                 lastDrip: submitted.drip ?? current.lastDrip ?? null,
               }));
             } catch (error) {
-              if (!cancelled) {
-                setRuntimeError(error?.message || 'The winning hash could not be verified.');
+              if (cancelled) break;
+              try {
+                const synced = await refreshSessionFromServer(sessionId);
+                if (synced?.status === 'found') break;
+              } catch {
+                // Fall through to the original error if the session cannot be refreshed.
               }
+              setRuntimeError(error?.message || 'The winning hash could not be verified.');
             }
             break;
           }
@@ -407,7 +444,7 @@ export function AdventureRuntimeProvider({ walletAccount, signMessageAsync, chil
     return () => {
       cancelled = true;
     };
-  }, [runningKey, persistNonce, updateRun]);
+  }, [runningKey, persistNonce, refreshSessionFromServer, updateRun]);
 
   const value = useMemo(
     () => ({
@@ -426,6 +463,7 @@ export function AdventureRuntimeProvider({ walletAccount, signMessageAsync, chil
       stopAdventure,
       resumeAfterWalkAway,
       replaceSession,
+      refreshSessionFromServer,
       removeRun,
       clearActiveAdventure,
     }),
@@ -441,6 +479,7 @@ export function AdventureRuntimeProvider({ walletAccount, signMessageAsync, chil
       stopAdventure,
       resumeAfterWalkAway,
       replaceSession,
+      refreshSessionFromServer,
       removeRun,
       clearActiveAdventure,
     ]

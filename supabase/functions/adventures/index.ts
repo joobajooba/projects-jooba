@@ -462,7 +462,9 @@ Deno.serve(async (request: Request) => {
     if (!session) return json({ error: "This adventure session is invalid." }, 401);
 
     if (action === "prompt") {
-      if (session.status !== "running") return json({ error: "This adventure is no longer exploring." }, 409);
+      if (!["running", "found"].includes(session.status)) {
+        return json({ error: "This adventure is no longer exploring." }, 409);
+      }
       const encounterIndex = Number(body.encounterIndex);
       const optionKey = String(body.optionKey ?? "");
       const encounter = ENCOUNTERS[encounterIndex];
@@ -481,15 +483,19 @@ Deno.serve(async (request: Request) => {
         succeeded,
         xp_awarded: xpAwarded,
       });
-      await supabase
+      const { data: updatedSession, error: promptSessionError } = await supabase
         .from("adventure_sessions")
         .update({ xp_awarded: Number(session.xp_awarded ?? 0) + xpAwarded, updated_at: new Date().toISOString() })
-        .eq("id", session.id);
+        .eq("id", session.id)
+        .select(SESSION_COLUMNS)
+        .single();
+      if (promptSessionError) throw promptSessionError;
 
       const account = decorateAccount(await persistProgress(session.wallet_address, xpAwarded), session.wallet_address);
       const drip = await maybeDrip(session.wallet_address, session.id);
       return json({
         account,
+        session: updatedSession,
         roll,
         succeeded,
         dc: option.dc,
