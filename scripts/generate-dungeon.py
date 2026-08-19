@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
-"""Render a high-res dungeon PNG from a winning hash using the vendored generator."""
+"""Render a high-res dungeon PNG and OpenSea metadata from a winning hash."""
 
 from __future__ import annotations
 
 import argparse
-import importlib.util
+import json
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "scripts"))
+
+from dungeon_preview_core import render_preview  # noqa: E402
 
 
 def main() -> int:
@@ -18,18 +21,17 @@ def main() -> int:
     parser.add_argument("--out", default="dungeon.png")
     args = parser.parse_args()
 
-    spec = importlib.util.spec_from_file_location(
-        "dungeon_preview_api", ROOT / "api" / "dungeon-preview.py"
-    )
-    module = importlib.util.module_from_spec(spec)
-    assert spec.loader is not None
-    spec.loader.exec_module(module)
-    preview = module.render_preview(args.seed, max_edge=2048)
-    Path(args.out).write_bytes(preview["png"])
+    preview = render_preview(args.seed, max_edge=2048)
+    out_path = Path(args.out)
+    out_path.write_bytes(preview["png"])
+    meta_path = out_path.with_suffix(".json")
+    meta = {key: value for key, value in preview.items() if key != "png"}
+    meta_path.write_text(json.dumps(meta, indent=2), encoding="utf-8")
     print(f"seed: {preview['numericSeed']}")
     print(f"rooms: {preview['rooms']}")
     print(f"tileset: {preview['tileset']}")
-    print(f"wrote: {args.out}")
+    print(f"wrote: {out_path}")
+    print(f"metadata: {meta_path}")
     return 0
 
 

@@ -98,8 +98,24 @@ export function generateDungeonLayout(seed, options = {}) {
     if (grid[doorRow]?.[doorCol] === ROOM) grid[doorRow][doorCol] = DOOR;
   });
 
-  const tilesetIndex = seedToInt(seed) % 6;
-  const tilesets = ['ruins', 'underworld', 'desert', 'icy', 'plains', 'void'];
+  const tilesetIndex = seedToInt(seed) % 15;
+  const tilesets = [
+    'ashfall',
+    'cloudsea',
+    'deepkarst',
+    'dreamveil',
+    'farvoid',
+    'frostbite',
+    'greensward',
+    'moondust',
+    'mossruin',
+    'sporewild',
+    'stonekeep',
+    'sunscorch',
+    'tempest',
+    'underworld',
+    'verdant',
+  ];
 
   return {
     seed: String(seed),

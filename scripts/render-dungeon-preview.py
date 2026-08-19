@@ -26,7 +26,11 @@ def main() -> int:
         "seed": preview["seed"],
         "numericSeed": preview["numericSeed"],
         "rooms": preview["rooms"],
+        "doors": preview["doors"],
+        "stairs": preview["stairs"],
         "tileset": preview["tileset"],
+        "options": preview["options"],
+        "attributes": preview["attributes"],
         "engine": "python",
     }
     sys.stdout.buffer.write(json.dumps(meta).encode("utf-8"))

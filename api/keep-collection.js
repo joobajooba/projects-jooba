@@ -9,7 +9,7 @@ export default async function handler(request, response) {
   return response.status(200).json({
     name: 'Lost Keeps',
     description:
-      '4444 procedurally generated dungeons found through IMPLINGz adventures. Minting is free on j00ba.xyz. Trade on OpenSea in ETH.',
+      '4444 procedurally generated dungeons found through IMPLINGz adventures. Each keep has a Biome, Dungeon Type, and Mini Boss. Minting is free on j00ba.xyz. Trade on OpenSea in ETH.',
     image: `${origin.replace(/\/$/, '')}/roadmap/roadmap-dungeon.png`,
     external_link: `${origin.replace(/\/$/, '')}/the-dungeon`,
     seller_fee_basis_points: 800,

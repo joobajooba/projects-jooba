@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import math
-import random
 from heapq import heappop, heappush
 from dataclasses import dataclass, field
 from typing import Any
+
+from .rng import Mulberry32
 
 from .bits import (
     ARCH,
@@ -142,8 +143,8 @@ class Dungeon:
 
 def create_dungeon(options: DungeonOptions | None = None) -> Dungeon:
     options = options or DungeonOptions()
-    seed = options.seed if options.seed is not None else random.randrange(1 << 30)
-    rng = random.Random(seed)
+    seed = options.seed if options.seed is not None else 1
+    rng = Mulberry32(seed)
 
     n_i = options.n_rows // 2
     n_j = options.n_cols // 2
@@ -175,7 +176,7 @@ def create_dungeon(options: DungeonOptions | None = None) -> Dungeon:
     return dungeon
 
 
-def _init_cells(dungeon: Dungeon, rng: random.Random) -> None:
+def _init_cells(dungeon: Dungeon, rng: Mulberry32) -> None:
     layout = dungeon.options.dungeon_layout
     if layout in LAYOUT_MASKS:
         _mask_cells(dungeon, LAYOUT_MASKS[layout])
@@ -202,14 +203,14 @@ def _round_mask(dungeon: Dungeon) -> None:
                 dungeon.cell[r][c] = BLOCKED
 
 
-def _emplace_rooms(dungeon: Dungeon, rng: random.Random) -> None:
+def _emplace_rooms(dungeon: Dungeon, rng: Mulberry32) -> None:
     if dungeon.options.room_layout == "Dense":
         _pack_rooms(dungeon, rng)
     else:
         _scatter_rooms(dungeon, rng)
 
 
-def _pack_rooms(dungeon: Dungeon, rng: random.Random) -> None:
+def _pack_rooms(dungeon: Dungeon, rng: Mulberry32) -> None:
     for i in range(dungeon.n_i):
         r = i * 2 + 1
         for j in range(dungeon.n_j):
@@ -221,7 +222,7 @@ def _pack_rooms(dungeon: Dungeon, rng: random.Random) -> None:
             _emplace_room(dungeon, rng, {"i": i, "j": j})
 
 
-def _scatter_rooms(dungeon: Dungeon, rng: random.Random) -> None:
+def _scatter_rooms(dungeon: Dungeon, rng: Mulberry32) -> None:
     options = dungeon.options
     count_min = max(1, min(options.room_count_min, options.room_count_max))
     count_max = max(count_min, options.room_count_max)
@@ -246,7 +247,7 @@ def _scatter_rooms(dungeon: Dungeon, rng: random.Random) -> None:
         _emplace_room(dungeon, rng, proto)
 
 
-def _want_circle(dungeon: Dungeon, rng: random.Random) -> bool:
+def _want_circle(dungeon: Dungeon, rng: Mulberry32) -> bool:
     mode = dungeon.options.circular_rooms
     if mode == "None":
         return False
@@ -358,7 +359,7 @@ def _mark_room_perimeter(
 
 def _emplace_room(
     dungeon: Dungeon,
-    rng: random.Random,
+    rng: Mulberry32,
     proto: dict[str, Any] | None = None,
 ) -> bool:
     if dungeon.n_rooms >= 999:
@@ -406,7 +407,7 @@ def _emplace_room(
 
 
 def _set_room(
-    dungeon: Dungeon, rng: random.Random, proto: dict[str, Any]
+    dungeon: Dungeon, rng: Mulberry32, proto: dict[str, Any]
 ) -> dict[str, Any]:
     base = dungeon.room_base
     radix = dungeon.room_radix
@@ -447,7 +448,7 @@ def _sound_room(
     return hit
 
 
-def _open_rooms(dungeon: Dungeon, rng: random.Random) -> None:
+def _open_rooms(dungeon: Dungeon, rng: Mulberry32) -> None:
     for room_id in range(1, dungeon.n_rooms + 1):
         _open_room(dungeon, rng, dungeon.rooms[room_id])
     dungeon.connect.clear()
@@ -550,7 +551,7 @@ def _check_sill(
     )
 
 
-def _door_type(dungeon: Dungeon, rng: random.Random) -> int:
+def _door_type(dungeon: Dungeon, rng: Mulberry32) -> int:
     style = dungeon.options.doors
     if style == "None":
         return ARCH
@@ -587,7 +588,7 @@ def _door_type(dungeon: Dungeon, rng: random.Random) -> int:
     return SECRET
 
 
-def _open_room(dungeon: Dungeon, rng: random.Random, room: dict[str, Any]) -> None:
+def _open_room(dungeon: Dungeon, rng: Mulberry32, room: dict[str, Any]) -> None:
     sills = _door_sills(dungeon, room)
     if not sills:
         return
@@ -669,7 +670,7 @@ def _label_rooms(dungeon: Dungeon) -> None:
         dungeon.cell[mid_r][mid_c] |= (ord(label[0]) << 24)
 
 
-def _corridors(dungeon: Dungeon, rng: random.Random) -> None:
+def _corridors(dungeon: Dungeon, rng: Mulberry32) -> None:
     for i in range(1, dungeon.n_i):
         r = i * 2 + 1
         for j in range(1, dungeon.n_j):
@@ -679,7 +680,7 @@ def _corridors(dungeon: Dungeon, rng: random.Random) -> None:
             _tunnel(dungeon, rng, i, j)
 
 
-def _add_corridor_loops(dungeon: Dungeon, rng: random.Random) -> None:
+def _add_corridor_loops(dungeon: Dungeon, rng: Mulberry32) -> None:
     """Open a few safe cross-links in the maze without touching room walls."""
     candidates: list[tuple[int, int]] = []
     for r in range(1, dungeon.n_rows):
@@ -701,14 +702,14 @@ def _add_corridor_loops(dungeon: Dungeon, rng: random.Random) -> None:
     rng.shuffle(candidates)
     chance = max(0, min(100, dungeon.options.corridor_loops))
     # Guarantee one loop when requested and possible; cap the rest by percentage.
-    wanted = max(1, round(len(candidates) * chance / 100)) if candidates else 0
+    wanted = max(1, int(len(candidates) * chance / 100 + 0.5)) if candidates else 0
     for r, c in candidates[:wanted]:
         dungeon.cell[r][c] |= CORRIDOR
 
 
 def _tunnel(
     dungeon: Dungeon,
-    rng: random.Random,
+    rng: Mulberry32,
     i: int,
     j: int,
     last_dir: str | None = None,
@@ -721,7 +722,7 @@ def _tunnel(
 
 
 def _tunnel_dirs(
-    dungeon: Dungeon, rng: random.Random, last_dir: str | None
+    dungeon: Dungeon, rng: Mulberry32, last_dir: str | None
 ) -> list[str]:
     dirs = list(DIRS)
     rng.shuffle(dirs)
@@ -771,7 +772,7 @@ def _delve_tunnel(
             dungeon.cell[r][c] |= CORRIDOR
 
 
-def _emplace_stairs(dungeon: Dungeon, rng: random.Random) -> None:
+def _emplace_stairs(dungeon: Dungeon, rng: Mulberry32) -> None:
     n = dungeon.options.add_stairs
     if n <= 0:
         return
@@ -835,7 +836,7 @@ def _check_tunnel(
     return True
 
 
-def _clean_dungeon(dungeon: Dungeon, rng: random.Random) -> None:
+def _clean_dungeon(dungeon: Dungeon, rng: Mulberry32) -> None:
     if dungeon.options.remove_deadends:
         _remove_deadends(dungeon, rng)
     if dungeon.options.corridor_loops:
@@ -1069,7 +1070,7 @@ def _rebuild_perimeter(dungeon: Dungeon) -> None:
                     break
 
 
-def _remove_deadends(dungeon: Dungeon, rng: random.Random) -> None:
+def _remove_deadends(dungeon: Dungeon, rng: Mulberry32) -> None:
     pct = dungeon.options.remove_deadends
     for i in range(dungeon.n_i):
         r = i * 2 + 1
@@ -1119,7 +1120,7 @@ def _fix_doors(dungeon: Dungeon) -> None:
         ]
 
 
-def _fix_stairs(dungeon: Dungeon, rng: random.Random) -> None:
+def _fix_stairs(dungeon: Dungeon, rng: Mulberry32) -> None:
     """Drop stale stair markers and replace any removed during maze cleanup."""
     wanted = max(0, dungeon.options.add_stairs)
     live: list[dict[str, Any]] = []
@@ -1136,7 +1137,7 @@ def _fix_stairs(dungeon: Dungeon, rng: random.Random) -> None:
         for r in range(1, dungeon.n_rows)
         for c in range(1, dungeon.n_cols)
         if dungeon.cell[r][c] & OPENSPACE
-        and not dungeon.cell[r][c] & (DOORSPACE | STAIRS | LABEL)
+        and not (dungeon.cell[r][c] & (DOORSPACE | STAIRS | LABEL))
         and sum(
             1 for dr, dc in CARDINAL if _is_open(dungeon, r + dr, c + dc)
         )

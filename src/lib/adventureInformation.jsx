@@ -35,11 +35,11 @@ const LOOP_ITEMS = [
   },
   {
     title: 'Uncover a dungeon',
-    body: 'The winning hash becomes the dungeon key. It drives the generator already in this repo — seed, tileset, and layout — and reveals a preview that is not on-chain yet.',
+    body: 'The winning hash becomes the dungeon key. It rolls Biome, Dungeon Type, and Mini Boss, then generates the keep preview and OpenSea metadata.',
   },
   {
     title: 'Make the final choice',
-    body: 'Mint the keep or walk away forever. Minting is free apart from ETH gas. After mint, OpenSea reads the contract and shows the revealed dungeon, which you can list in ETH.',
+    body: 'Mint the keep or flee. Minting is free apart from ETH gas. After mint, OpenSea reads Biome, Dungeon Type, and Mini Boss, and shows the revealed dungeon.',
   },
 ];
 
@@ -60,7 +60,7 @@ const FLOW_STEPS = [
     number: '03',
     title: 'Winning hash',
     body: 'The successful hash becomes a unique dungeon key.',
-    meta: 'Key → seed, tileset, layout',
+    meta: 'Key → biome, dungeon type, mini boss',
   },
   {
     number: '04',

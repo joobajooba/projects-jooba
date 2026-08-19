@@ -1,31 +1,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
+import { TILESETS, tilesetForSeed } from './dungeonTraits.js';
+import { describeDungeon } from './generateDungeon.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '../..');
 const TILES_DIR = path.join(ROOT, 'Tiles');
 const TILE_SIZE = 32;
-
-const TILESETS = [
-  'ashfall',
-  'cloudsea',
-  'deepkarst',
-  'dreamveil',
-  'farvoid',
-  'frostbite',
-  'greensward',
-  'moondust',
-  'mossruin',
-  'sporewild',
-  'stonekeep',
-  'sunscorch',
-  'tempest',
-  'underworld',
-  'verdant',
-];
 
 const FRAME_BY_MASK = [
   -1, 15, 8, 9, 0, 11, 14, 7, 13, 4, 1, 10, 3, 2, 5, 6,
@@ -36,93 +19,6 @@ function slug(name) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_|_$/g, '');
-}
-
-function mulberry32(seed) {
-  let a = seed >>> 0;
-  return function random() {
-    a |= 0;
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-export function seedToInt(seed) {
-  if (typeof seed === 'number' && Number.isFinite(seed)) {
-    return seed >>> 0;
-  }
-  const text = String(seed || '').replace(/^0x/i, '');
-  if (/^[0-9a-f]+$/i.test(text) && text.length >= 8) {
-    return Number.parseInt(text.slice(0, 8), 16) >>> 0;
-  }
-  let hash = 2166136261;
-  for (let index = 0; index < text.length; index += 1) {
-    hash ^= text.charCodeAt(index);
-    hash = Math.imul(hash, 16777619);
-  }
-  return hash >>> 0;
-}
-
-function generateLayout(seed, rows = 39, cols = 39) {
-  const random = mulberry32(seedToInt(seed));
-  const targetRooms = 10 + Math.floor(random() * 5);
-  const grid = Array.from({ length: rows }, () => Array(cols).fill(0));
-  const rooms = [];
-
-  for (let attempt = 0; attempt < 80 && rooms.length < targetRooms; attempt += 1) {
-    const height = 5 + Math.floor(random() * 5);
-    const width = 5 + Math.floor(random() * 5);
-    const row = 1 + Math.floor(random() * Math.max(1, rows - height - 2));
-    const col = 1 + Math.floor(random() * Math.max(1, cols - width - 2));
-    const overlaps = rooms.some(
-      (room) =>
-        row <= room.row + room.height + 1 &&
-        row + height + 1 >= room.row &&
-        col <= room.col + room.width + 1 &&
-        col + width + 1 >= room.col
-    );
-    if (overlaps) continue;
-
-    for (let r = row; r < row + height && r < rows; r += 1) {
-      for (let c = col; c < col + width && c < cols; c += 1) {
-        grid[r][c] = 1;
-      }
-    }
-    rooms.push({
-      row,
-      col,
-      height,
-      width,
-      center: [row + Math.floor(height / 2), col + Math.floor(width / 2)],
-    });
-  }
-
-  for (let index = 1; index < rooms.length; index += 1) {
-    let [r, c] = rooms[index - 1].center;
-    const [tr, tc] = rooms[index].center;
-    while (c !== tc) {
-      if (grid[r][c] === 0) grid[r][c] = 2;
-      c += tc > c ? 1 : -1;
-    }
-    while (r !== tr) {
-      if (grid[r][c] === 0) grid[r][c] = 2;
-      r += tr > r ? 1 : -1;
-    }
-  }
-
-  rooms.forEach((room) => {
-    const doorRow = room.row;
-    const doorCol = room.col + Math.floor(room.width / 2);
-    if (grid[doorRow]?.[doorCol] === 1) grid[doorRow][doorCol] = 3;
-  });
-
-  return { rows, cols, rooms: rooms.length, grid };
-}
-
-function tilesetForSeed(seed) {
-  return TILESETS[seedToInt(seed) % TILESETS.length];
 }
 
 function resolveSheetPath(tilesetName) {
@@ -349,46 +245,27 @@ async function renderDualGrid(layout, tilesetName, maxEdge = 768) {
   return png;
 }
 
-function tryPythonRender(seedValue) {
-  try {
-    const script = path.join(ROOT, 'scripts', 'render-dungeon-preview.py');
-    if (!fs.existsSync(script)) return null;
-    const result = spawnSync(process.env.PYTHON || 'python', [script, String(seedValue), '768'], {
-      encoding: 'buffer',
-      maxBuffer: 12 * 1024 * 1024,
-      cwd: ROOT,
-      env: process.env,
-    });
-    if (result.status !== 0) return null;
-    const stdout = result.stdout;
-    const sep = stdout.indexOf(0);
-    if (sep < 0) return null;
-    const meta = JSON.parse(stdout.subarray(0, sep).toString('utf8'));
-    const png = stdout.subarray(sep + 1);
-    if (png.length < 8 || png[0] !== 0x89) return null;
-    return { ...meta, png };
-  } catch {
-    return null;
-  }
-}
-
 export async function renderDungeonPreview(seedValue) {
   const seed = String(seedValue || '42');
-  const fromPython = tryPythonRender(seed);
-  if (fromPython) return fromPython;
-
-  const numericSeed = seedToInt(seed);
-  const tileset = tilesetForSeed(seed);
-  const layout = generateLayout(seed);
-  const png = await renderDualGrid(layout, tileset, 768);
+  const described = describeDungeon(seed);
+  const png = await renderDualGrid(described.layout, described.tileset, 768);
   return {
-    seed,
-    numericSeed,
-    rooms: layout.rooms,
-    tileset,
-    engine: 'node-tiles',
+    seed: described.seed,
+    numericSeed: described.numericSeed,
+    rooms: described.rooms,
+    doors: described.doors,
+    stairs: described.stairs,
+    tileset: described.tileset,
+    biome: described.biome,
+    dungeonType: described.dungeonType,
+    miniBoss: described.miniBoss,
+    options: described.options,
+    attributes: described.attributes,
+    engine: 'donjon-tiles',
     png,
   };
 }
 
 export { TILESETS, tilesetForSeed };
+export { seedToInt } from './dungeonTraits.js';
+export { describeDungeon } from './generateDungeon.js';

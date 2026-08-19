@@ -12,62 +12,14 @@ if str(ROOT) not in sys.path:
 
 from PIL import Image
 
-from dungeon_generator import DungeonOptions, create_dungeon, render_dungeon
-
-TILESETS = [
-    "ashfall",
-    "cloudsea",
-    "deepkarst",
-    "dreamveil",
-    "farvoid",
-    "frostbite",
-    "greensward",
-    "moondust",
-    "mossruin",
-    "sporewild",
-    "stonekeep",
-    "sunscorch",
-    "tempest",
-    "underworld",
-    "verdant",
-]
-
-
-def seed_to_int(value: str) -> int:
-    text = str(value or "42").strip()
-    if text.startswith(("0x", "0X")):
-        text = text[2:]
-    if text and all(ch in "0123456789abcdefABCDEF" for ch in text) and len(text) >= 8:
-        return int(text[:16], 16) % (2**31)
-    if text.isdigit():
-        return int(text) % (2**31)
-    return abs(hash(text)) % (2**31)
-
-
-def tileset_for_seed(seed: int) -> str:
-    return TILESETS[seed % len(TILESETS)]
+from dungeon_generator.traits import KEEP_DESCRIPTION, describe_dungeon, opensea_metadata
+from dungeon_generator import render_dungeon
 
 
 def render_preview(seed_value: str, max_edge: int = 768):
-    numeric = seed_to_int(seed_value)
-    tileset = tileset_for_seed(numeric)
-    dungeon = create_dungeon(
-        DungeonOptions(
-            seed=numeric,
-            n_rows=39,
-            n_cols=39,
-            room_min=5,
-            room_max=9,
-            room_count_min=10,
-            room_count_max=14,
-            corridor_layout="Straight",
-            corridor_loops=8,
-            circular_rooms="None",
-            doors="Basic",
-            remove_deadends=90,
-            add_stairs=2,
-        )
-    )
+    described = describe_dungeon(seed_value)
+    dungeon = described["dungeon"]
+    tileset = described["tileset"]
     image = render_dungeon(
         dungeon,
         tileset=tileset,
@@ -85,10 +37,26 @@ def render_preview(seed_value: str, max_edge: int = 768):
         )
     buffer = io.BytesIO()
     image.save(buffer, format="PNG", optimize=True)
-    return {
-        "seed": seed_value,
-        "numericSeed": numeric,
-        "rooms": dungeon.n_rooms,
+    payload = {
+        "seed": described["seed"],
+        "numericSeed": described["numericSeed"],
+        "rooms": described["rooms"],
+        "doors": described["doors"],
+        "stairs": described["stairs"],
         "tileset": tileset,
+        "biome": described["biome"],
+        "dungeonType": described["dungeonType"],
+        "miniBoss": described["miniBoss"],
+        "options": described["options"],
+        "attributes": described["attributes"],
+        "engine": "python",
         "png": buffer.getvalue(),
     }
+    payload["metadata"] = opensea_metadata(
+        seed_value=described["seed"],
+        image_url="",
+        external_url="",
+        description=KEEP_DESCRIPTION,
+        attributes=described["attributes"],
+    )
+    return payload
