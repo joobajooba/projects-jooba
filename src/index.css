@@ -1372,6 +1372,12 @@ button:active:not(:disabled),
   text-align: center;
 }
 
+.info-roadmap-diagram__node--done .info-roadmap-diagram__label,
+.info-roadmap-stage--done,
+.faq-item__trigger .info-roadmap-stage--done {
+  color: #b8ff2e;
+}
+
 .info-roadmap-diagram__stem {
   grid-column: var(--stage);
   justify-self: center;
