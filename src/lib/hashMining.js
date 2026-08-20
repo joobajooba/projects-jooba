@@ -1,4 +1,6 @@
 export const HASH_PREFIX = '0000';
+/** Extra hex nibble must be 0–7, which doubles keep-find difficulty vs prefix-only. */
+export const HASH_NEXT_NIBBLE_MAX = 7;
 export const MINE_PAYLOAD_PREFIX = 'implingz-dungeon';
 
 /** Hashes checked per mining tick for each IMPLINGz Tier trait. */
@@ -19,7 +21,10 @@ export async function sha256Hex(value) {
 }
 
 export function isWinningHash(hash) {
-  return String(hash).startsWith(HASH_PREFIX);
+  const hex = String(hash).toLowerCase();
+  if (!hex.startsWith(HASH_PREFIX)) return false;
+  const extra = Number.parseInt(hex.charAt(HASH_PREFIX.length) || 'f', 16);
+  return Number.isFinite(extra) && extra <= HASH_NEXT_NIBBLE_MAX;
 }
 
 /** Normalize Tier trait text from collection JSON / metadata into "Tier 1|2|3". */

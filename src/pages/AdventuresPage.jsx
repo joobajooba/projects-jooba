@@ -105,13 +105,18 @@ function livesFromSession(session) {
   return Math.min(ADVENTURE_LIVES, ...candidates);
 }
 
-const ENCOUNTER_DELAY_MIN = 60_000;
-const ENCOUNTER_DELAY_MAX = 180_000;
-const IDLE_DELAY_MIN = 18_000;
-const IDLE_DELAY_MAX = 24_000;
-const IMP_SPEECH_DELAY_MIN = 10_000;
-const IMP_SPEECH_DELAY_MAX = 30_000;
-const IMP_SPEECH_THINKING_DELAY = 5_000;
+const ENCOUNTER_DELAY_MIN = 20_000;
+const ENCOUNTER_DELAY_MAX = 30_000;
+const IDLE_DELAY_MIN = 8_000;
+const IDLE_DELAY_MAX = 14_000;
+const IMP_SPEECH_DELAY_MIN = 8_000;
+const IMP_SPEECH_DELAY_MAX = 16_000;
+const IMP_SPEECH_THINKING_DELAY = 1_800;
+const EMPTY_SPEECH_STATES = [
+  { quoteIndex: null, thinking: false },
+  { quoteIndex: null, thinking: false },
+  { quoteIndex: null, thinking: false },
+];
 
 function randomDelay(minimum, maximum) {
   return Math.floor(Math.random() * (maximum - minimum + 1)) + minimum;
@@ -250,11 +255,7 @@ function AdventureSlot({
   const [viewKeepOpen, setViewKeepOpen] = useState(false);
   const [keepMetadata, setKeepMetadata] = useState(null);
   const [nextKeepTokenId, setNextKeepTokenId] = useState(null);
-  const [impSpeechStates, setImpSpeechStates] = useState([
-    { quoteIndex: null, thinking: false },
-    { quoteIndex: null, thinking: false },
-    { quoteIndex: null, thinking: false },
-  ]);
+  const [impSpeechStates, setImpSpeechStates] = useState(EMPTY_SPEECH_STATES);
   const chatEndRef = useRef(null);
   const nextEncounterTimerRef = useRef(null);
   const idleTimerRef = useRef(null);
@@ -286,6 +287,7 @@ function AdventureSlot({
   useEffect(() => {
     clearAdventureTimers();
     setSelectedImplingz([null, null, null]);
+    setImpSpeechStates(EMPTY_SPEECH_STATES);
     setOwnedImplingz([]);
     setSelectingSlot(null);
     setImplingzError('');
@@ -317,15 +319,38 @@ function AdventureSlot({
     resumedSessionRef.current = session.id;
     usedEncounterIndexesRef.current = new Set();
 
-    setAdventureMessages([
-      {
-        type: 'system',
-        text:
-          session.status === 'found'
-            ? `${adventureLabel} already uncovered a keep. View the dungeon, mint it, or flee.`
-            : `${adventureLabel} still running${partyNames ? ` with IMPLINGz ${partyNames}` : ''}. Mining continues while you browse other pages.`,
-      },
-    ]);
+    const names = party.map((impling) => `#${impling.id}`).join(', ');
+    const isFreshStart =
+      session.status === 'running' && Number(session.hashes_checked ?? hashesChecked ?? 0) === 0;
+
+    setAdventureMessages(
+      session.status === 'found'
+        ? [
+            {
+              type: 'system',
+              text: `${adventureLabel} already uncovered a keep. View the dungeon, mint it, or flee.`,
+            },
+          ]
+        : isFreshStart
+          ? [
+              {
+                type: 'narrator',
+                text: `${adventureLabel} for the lost dungeons has commenced.`,
+              },
+              {
+                type: 'system',
+                text: `IMPLINGZ ${names} enter the wilds at ${hashesPerTickForParty(party)} hashes/tick. Mining keeps running if you leave this page.`,
+              },
+            ]
+          : [
+              {
+                type: 'system',
+                text: `${adventureLabel} still running${
+                  names ? ` with IMPLINGz ${names}` : ''
+                }. Mining continues while you browse other pages.`,
+              },
+            ]
+    );
     setEncounterIndex(null);
     setLives(livesFromSession(session));
     if (session.status === 'running') {
@@ -380,6 +405,11 @@ function AdventureSlot({
 
   useEffect(() => {
     clearImpSpeechTimers();
+    if (!adventureStarted) {
+      setImpSpeechStates(EMPTY_SPEECH_STATES);
+      return clearImpSpeechTimers;
+    }
+
     const usedQuoteIndexes = new Set();
     const initialSpeechStates = selectedImplingz.map((impling, slotIndex) => {
       if (!impling) return { quoteIndex: null, thinking: false };
@@ -399,7 +429,7 @@ function AdventureSlot({
     });
 
     return clearImpSpeechTimers;
-  }, [selectedImplingz]);
+  }, [adventureStarted, selectedImplingz]);
 
   useEffect(
     () => () => {
@@ -672,28 +702,23 @@ function AdventureSlot({
         signature,
       });
 
-      const partyNames = enrichedParty.map((impling) => `#${impling.id}`).join(', ');
       beginAdventure({
         account: data.account,
         session: data.session,
         partyMembers: enrichedParty,
       });
-      resumedSessionRef.current = data.session.id;
-      usedEncounterIndexesRef.current = new Set();
-      setEncounterIndex(null);
-      setLives(ADVENTURE_LIVES);
       writeStoredLives(data.session.id, ADVENTURE_LIVES);
-      setAdventureMessages([
-        {
-          type: 'narrator',
-          text: `${adventureLabel} for the lost dungeons has commenced.`,
-        },
-        {
-          type: 'system',
-          text: `IMPLINGZ ${partyNames} enter the wilds at ${hashesPerTickForParty(enrichedParty)} hashes/tick. Mining keeps running if you leave this page.`,
-        },
-      ]);
-      scheduleNextEncounter();
+      clearAdventureTimers();
+      clearImpSpeechTimers();
+      setSelectedImplingz([null, null, null]);
+      setImpSpeechStates(EMPTY_SPEECH_STATES);
+      setAdventureMessages([]);
+      setEncounterIndex(null);
+      setSelectingSlot(null);
+      setOwnedImplingz([]);
+      setLives(ADVENTURE_LIVES);
+      resumedSessionRef.current = '';
+      usedEncounterIndexesRef.current = new Set();
     } catch (error) {
       setStartError(error?.shortMessage || error?.message || 'Could not start the adventure.');
     } finally {
@@ -1029,7 +1054,8 @@ function AdventureSlot({
                   aria-live="polite"
                 >
                   {impling ? (
-                    impSpeechStates[index]?.thinking ? (
+                    adventureStarted ? (
+                      impSpeechStates[index]?.thinking ? (
                       <span
                         className="adventure-party__speech-loading"
                         aria-label={`${impling.name} is thinking`}
@@ -1038,9 +1064,12 @@ function AdventureSlot({
                         <span />
                         <span />
                       </span>
+                      ) : (
+                        IMPLING_IDLE_QUOTES[impSpeechStates[index]?.quoteIndex] ??
+                        IMPLING_IDLE_QUOTES[getInitialImplingQuoteIndex(impling.id, index)]
+                      )
                     ) : (
-                      IMPLING_IDLE_QUOTES[impSpeechStates[index]?.quoteIndex] ??
-                      IMPLING_IDLE_QUOTES[getInitialImplingQuoteIndex(impling.id, index)]
+                      'Ready when you start.'
                     )
                   ) : (
                     'Psst… pick an Imp.'
@@ -1177,7 +1206,7 @@ function AdventureSlot({
           }`}
           aria-live="polite"
         >
-          {adventureStarted || adventureMessages.length > 0 ? (
+          {adventureStarted && adventureMessages.length > 0 ? (
             <div className="adventure-chat__messages">
               {adventureMessages.map((message, index) => (
                 <div
@@ -1484,6 +1513,35 @@ function AdventureSlot({
   );
 }
 
+function AdventurerLevelBar() {
+  const { adventurer } = useAdventureRuntime();
+  const percent = Math.round((adventurer.progressRatio ?? 0) * 100);
+  const atMax = !adventurer.nextLevelXp;
+
+  return (
+    <div
+      className="adventures-xp"
+      aria-label={
+        atMax
+          ? `Level ${adventurer.level}, ${adventurer.xp} XP, max level`
+          : `Level ${adventurer.level}, ${adventurer.xp} of ${adventurer.nextLevelXp} XP to next level`
+      }
+    >
+      <div className="adventures-xp__meta">
+        <span>Lv {adventurer.level}</span>
+        <span>
+          {atMax
+            ? `${adventurer.xp} XP · Max level`
+            : `${adventurer.xp} / ${adventurer.nextLevelXp} XP`}
+        </span>
+      </div>
+      <div className="adventures-xp__bar" aria-hidden="true">
+        <span style={{ width: `${percent}%` }} />
+      </div>
+    </div>
+  );
+}
+
 function StartAdventurePanel() {
   const { adventurer, adventures, foundAdventure, busyTokenIds, dripMessage, runtimeError } =
     useAdventureRuntime();
@@ -1528,7 +1586,7 @@ function StartAdventurePanel() {
 
       {canStartAnother ? (
         <AdventureSlot
-          key="draft"
+          key={`draft-${adventures.map((run) => run.session.id).join('|') || 'empty'}`}
           slotIndex={adventures.length}
           run={null}
           busyTokenIds={busyTokenIds}
@@ -1711,6 +1769,7 @@ export default function AdventuresPage() {
         <header className="adventures-page__header">
           <p className="adventures-page__eyebrow">Chapter 1</p>
           <h1 className="adventures-page__title">Adventures</h1>
+          <AdventurerLevelBar />
         </header>
 
         <div className="adventures-tabs" role="tablist" aria-label="Adventure page sections">

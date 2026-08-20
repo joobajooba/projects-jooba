@@ -21,6 +21,7 @@ const SESSION_COLUMNS =
   "id,wallet_address,party_token_ids,status,hashes_checked,winning_nonce,winning_hash,dungeon_seed,mint_deadline,minted_token_id,xp_awarded,lives,started_at,ended_at,updated_at";
 const ADVENTURE_LIVES = 3;
 const HASH_PREFIX = "0000";
+const HASH_NEXT_NIBBLE_MAX = 7;
 const MINE_PAYLOAD_PREFIX = "implingz-dungeon";
 const XP_PROMPT_SUCCESS = 25;
 const XP_PROMPT_FAIL = 8;
@@ -142,6 +143,13 @@ function startMessage(payload: { walletAddress: string; partyTokenIds: string[];
 async function sha256Hex(value: string) {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function isWinningHash(hash: string) {
+  const hex = String(hash).toLowerCase();
+  if (!hex.startsWith(HASH_PREFIX)) return false;
+  const extra = Number.parseInt(hex.charAt(HASH_PREFIX.length) || "f", 16);
+  return Number.isFinite(extra) && extra <= HASH_NEXT_NIBBLE_MAX;
 }
 
 function randomSecret() {
@@ -676,7 +684,7 @@ Deno.serve(async (request: Request) => {
       const nonce = String(body.nonce ?? "");
       if (!/^[0-9]{1,16}$/.test(nonce)) return json({ error: "Invalid mining nonce." }, 400);
       const expectedHash = await sha256Hex(`${MINE_PAYLOAD_PREFIX}:${session.id}:${nonce}`);
-      if (!expectedHash.startsWith(HASH_PREFIX)) {
+      if (!isWinningHash(expectedHash)) {
         return json({ error: "That hash does not meet the dungeon difficulty." }, 400);
       }
       if (body.hash && String(body.hash).toLowerCase() !== expectedHash) {

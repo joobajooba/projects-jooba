@@ -2248,6 +2248,35 @@ button:active:not(:disabled),
   letter-spacing: 0.06em;
 }
 
+.adventures-xp {
+  width: min(100%, 22rem);
+  margin: 0.85rem auto 0;
+  text-align: left;
+}
+
+.adventures-xp__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: rgba(232, 232, 232, 0.72);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+
+.adventures-xp__bar {
+  margin-top: 0.4rem;
+  height: 0.5rem;
+  overflow: hidden;
+  border: 1px solid rgba(184, 255, 46, 0.28);
+  background: rgba(0, 0, 0, 0.32);
+}
+
+.adventures-xp__bar span {
+  display: block;
+  height: 100%;
+  background: #b8ff2e;
+}
+
 .adventures-page__intro {
   width: min(100%, 42rem);
   margin: 0 auto 1.25rem;
@@ -2526,7 +2555,7 @@ button:active:not(:disabled),
   width: 0.42rem;
   height: 0.42rem;
   background: #ff9c9c;
-  animation: adventure-typing 1.2s steps(2, end) infinite;
+  animation: adventure-typing 0.7s steps(2, end) infinite;
 }
 
 .adventure-party__speech-loading span:nth-child(2) {
@@ -3050,7 +3079,7 @@ button:active:not(:disabled),
   width: 0.42rem;
   height: 0.42rem;
   background: #89d8ff;
-  animation: adventure-typing 1.2s steps(2, end) infinite;
+  animation: adventure-typing 0.7s steps(2, end) infinite;
 }
 
 .adventure-chat__typing span:nth-child(2) {
