@@ -1649,6 +1649,7 @@ function AdventureBoard() {
   const [events, setEvents] = useState([]);
   const [payouts, setPayouts] = useState([]);
   const [profilesByWallet, setProfilesByWallet] = useState({});
+  const [feedView, setFeedView] = useState('dungeons');
 
   useEffect(() => {
     const controller = new AbortController();
@@ -1676,6 +1677,9 @@ function AdventureBoard() {
     return () => controller.abort();
   }, []);
 
+  const showingDungeons = feedView === 'dungeons';
+  const rows = showingDungeons ? events : payouts;
+
   return (
     <section className="adventure-board" aria-labelledby="adventure-board-title">
       <div className="adventure-board__header">
@@ -1683,27 +1687,66 @@ function AdventureBoard() {
           <p className="adventure-panel__eyebrow">All connected wallets</p>
           <h2 id="adventure-board-title">Live Adventure Feed</h2>
         </div>
-        <span className="adventure-board__live">
-          <span aria-hidden="true" />
-          Live
-        </span>
+        <div className="adventure-board__tools">
+          <div className="adventure-board__switch" role="tablist" aria-label="Adventure feed views">
+            <button
+              type="button"
+              role="tab"
+              id="adventure-board-tab-dungeons"
+              aria-selected={showingDungeons}
+              aria-controls="adventure-board-panel"
+              className={`adventure-board__switch-button${
+                showingDungeons ? ' adventure-board__switch-button--active' : ''
+              }`}
+              onClick={() => setFeedView('dungeons')}
+            >
+              Dungeons
+            </button>
+            <button
+              type="button"
+              role="tab"
+              id="adventure-board-tab-derp"
+              aria-selected={!showingDungeons}
+              aria-controls="adventure-board-panel"
+              className={`adventure-board__switch-button${
+                showingDungeons ? '' : ' adventure-board__switch-button--active'
+              }`}
+              onClick={() => setFeedView('derp')}
+            >
+              $DERP
+            </button>
+          </div>
+          <span className="adventure-board__live">
+            <span aria-hidden="true" />
+            Live
+          </span>
+        </div>
       </div>
 
-      <div className="adventure-board__feed" aria-live="polite">
-        {events.length === 0 && payouts.length === 0 ? (
+      <div
+        className="adventure-board__feed"
+        id="adventure-board-panel"
+        role="tabpanel"
+        aria-labelledby={
+          showingDungeons ? 'adventure-board-tab-dungeons' : 'adventure-board-tab-derp'
+        }
+        aria-live="polite"
+      >
+        {rows.length === 0 ? (
           <div className="adventure-board__empty">
             <span className="adventure-board__empty-mark" aria-hidden="true">
               …
             </span>
-            <h3>Waiting for adventure activity</h3>
+            <h3>
+              {showingDungeons ? 'Waiting for dungeon activity' : 'Waiting for $DERP payouts'}
+            </h3>
             <p>
-              Signed adventure starts, prompt wins, found keeps, mints, and $DERP payouts from
-              connected wallets appear here.
+              {showingDungeons
+                ? 'Found keeps, mints, and XP from connected wallets appear here.'
+                : 'Each sent $DERP drip is listed here with the wallet and amount.'}
             </p>
           </div>
-        ) : (
-          <>
-            {events.length > 0 ? (
+        ) : showingDungeons ? (
           <div className="adventure-board__table-wrap">
             <table className="adventure-board__table">
               <thead>
@@ -1754,46 +1797,50 @@ function AdventureBoard() {
               </tbody>
             </table>
           </div>
-            ) : null}
-
-            {payouts.length > 0 ? (
-              <div className="adventure-board__payouts">
-                <h3 className="adventure-board__payouts-title">$DERP payouts</h3>
-                <div className="adventure-board__table-wrap">
-                  <table className="adventure-board__table">
-                    <thead>
-                      <tr>
-                        <th scope="col">Name</th>
-                        <th scope="col">Wallet address</th>
-                        <th scope="col">Amount</th>
-                        <th scope="col">Time sent</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {payouts.map((payout) => {
-                        const wallet = String(payout.wallet_address || '').toLowerCase();
-                        const profile = profilesByWallet[wallet];
-                        return (
-                          <tr key={payout.id}>
-                            <td>
-                              <strong>{profile?.nickname || 'Unnamed Adventurer'}</strong>
-                            </td>
-                            <td>
-                              <span className="adventure-board__address">
-                                {shortenAddress(payout.wallet_address)}
-                              </span>
-                            </td>
-                            <td className="adventure-board__derp">{formatDerpAmount(payout.amount)}</td>
-                            <td>{formatBoardTime(payout.created_at)}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            ) : null}
-          </>
+        ) : (
+          <div className="adventure-board__table-wrap">
+            <table className="adventure-board__table">
+              <thead>
+                <tr>
+                  <th scope="col">Profile pic</th>
+                  <th scope="col">Name</th>
+                  <th scope="col">Wallet address</th>
+                  <th scope="col">Amount</th>
+                  <th scope="col">Time sent</th>
+                </tr>
+              </thead>
+              <tbody>
+                {payouts.map((payout) => {
+                  const wallet = String(payout.wallet_address || '').toLowerCase();
+                  const profile = profilesByWallet[wallet];
+                  const avatar = COLLECTION_BY_ID.get(String(profile?.avatar_token_id ?? ''));
+                  return (
+                    <tr key={payout.id}>
+                      <td>
+                        <div className="adventure-board__avatar">
+                          {avatar ? (
+                            <img src={avatar.image} alt={avatar.name} />
+                          ) : (
+                            <span aria-hidden="true">?</span>
+                          )}
+                        </div>
+                      </td>
+                      <td>
+                        <strong>{profile?.nickname || 'Unnamed Adventurer'}</strong>
+                      </td>
+                      <td>
+                        <span className="adventure-board__address">
+                          {shortenAddress(payout.wallet_address)}
+                        </span>
+                      </td>
+                      <td className="adventure-board__derp">{formatDerpAmount(payout.amount)}</td>
+                      <td>{formatBoardTime(payout.created_at)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </section>
