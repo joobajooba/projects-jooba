@@ -189,7 +189,7 @@ export function AdventureInformation() {
             </p>
             <p>
               {highlightText(
-                'A minted keep takes the next slot in the 2222 supply. A discarded preview is deleted, is not stored, and does not count toward the supply.'
+                'A minted keep takes the next slot in the 2222 supply. Each wallet can mint up to 10 keeps. A discarded preview is deleted, is not stored, and does not count toward the supply.'
               )}
             </p>
             <p>

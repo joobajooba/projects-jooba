@@ -28,6 +28,7 @@ const XP_PROMPT_FAIL = 8;
 const XP_DUNGEON_FOUND = 100;
 const XP_DUNGEON_MINTED = 200;
 const XP_DUNGEON_DISCARDED = 40;
+const MAX_KEEPS_PER_WALLET = 10;
 const DERP_DRIP_CHANCE = 0.15;
 const DERP_DRIP_MIN = 20;
 const DERP_DRIP_MAX = 40;
@@ -302,6 +303,16 @@ Deno.serve(async (request: Request) => {
       .single();
     if (createError) throw createError;
     return created;
+  }
+
+  async function mintedKeepCount(walletAddress: string) {
+    const { count, error } = await supabase
+      .from("adventure_sessions")
+      .select("id", { count: "exact", head: true })
+      .eq("wallet_address", walletAddress)
+      .eq("status", "minted");
+    if (error) throw error;
+    return count ?? 0;
   }
 
   async function persistProgress(walletAddress: string, xpDelta: number, activeDelta = 0) {
@@ -771,6 +782,12 @@ Deno.serve(async (request: Request) => {
     if (action === "mint-voucher") {
       if (session.status !== "found" || !session.dungeon_seed) {
         return json({ error: "Find a dungeon before minting." }, 409);
+      }
+      const minted = await mintedKeepCount(session.wallet_address);
+      if (minted >= MAX_KEEPS_PER_WALLET) {
+        return json({
+          error: `This wallet has already minted ${MAX_KEEPS_PER_WALLET} Imp Keeps.`,
+        }, 409);
       }
       const deadline = Math.floor(Date.now() / 1000) + 15 * 60;
       const seed = String(session.dungeon_seed).startsWith("0x")
