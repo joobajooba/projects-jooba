@@ -97,6 +97,7 @@ const DIAGRAM_STAGES = [
   },
   {
     title: 'Product Upgrades',
+    detail: 'Imp Battles',
     icon: '/roadmap/diagram-crown.png',
     side: 'bottom',
   },
@@ -207,8 +208,12 @@ function RoadmapDiagram() {
               }`}
               style={{ '--stage': index + 1 }}
             >
+              <span className="info-roadmap-diagram__number">Stage {index + 1}</span>
               <img className="info-roadmap-diagram__icon" src={stage.icon} alt="" />
               <span className="info-roadmap-diagram__label">{stage.title}</span>
+              {stage.detail ? (
+                <span className="info-roadmap-diagram__detail">{stage.detail}</span>
+              ) : null}
             </article>
             <span
               className={`info-roadmap-diagram__stem info-roadmap-diagram__stem--${stage.side}`}

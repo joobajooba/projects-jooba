@@ -1372,7 +1372,23 @@ button:active:not(:disabled),
   text-align: center;
 }
 
+.info-roadmap-diagram__number,
+.info-roadmap-diagram__detail {
+  color: rgba(247, 247, 247, 0.72);
+  font-size: clamp(0.42rem, 1vw, 0.62rem);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.info-roadmap-diagram__node--done {
+  border-color: #b8ff2e;
+}
+
 .info-roadmap-diagram__node--done .info-roadmap-diagram__label,
+.info-roadmap-diagram__node--done .info-roadmap-diagram__number,
+.info-roadmap-diagram__node--done .info-roadmap-diagram__detail,
 .info-roadmap-stage--done,
 .faq-item__trigger .info-roadmap-stage--done {
   color: #b8ff2e;
