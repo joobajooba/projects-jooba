@@ -71,6 +71,39 @@ const IMPLING_IDLE_QUOTES = [
   'Nat 20 energy today.',
 ];
 
+const ADVENTURE_LIVES = 3;
+const LIVES_STORAGE_KEY = 'implingz-adventure-lives';
+
+function readLivesStore() {
+  try {
+    return JSON.parse(window.localStorage.getItem(LIVES_STORAGE_KEY) || '{}');
+  } catch {
+    return {};
+  }
+}
+
+function writeStoredLives(sessionId, remaining) {
+  if (!sessionId) return;
+  const store = readLivesStore();
+  store[sessionId] = remaining;
+  window.localStorage.setItem(LIVES_STORAGE_KEY, JSON.stringify(store));
+}
+
+function clearStoredLives(sessionId) {
+  if (!sessionId) return;
+  const store = readLivesStore();
+  delete store[sessionId];
+  window.localStorage.setItem(LIVES_STORAGE_KEY, JSON.stringify(store));
+}
+
+function livesFromSession(session) {
+  const server = Number(session?.lives);
+  const stored = session?.id ? Number(readLivesStore()[session.id]) : NaN;
+  const candidates = [server, stored].filter((value) => Number.isFinite(value) && value >= 0);
+  if (!candidates.length) return ADVENTURE_LIVES;
+  return Math.min(ADVENTURE_LIVES, ...candidates);
+}
+
 const ENCOUNTER_DELAY_MIN = 60_000;
 const ENCOUNTER_DELAY_MAX = 180_000;
 const IDLE_DELAY_MIN = 18_000;
@@ -212,6 +245,7 @@ function AdventureSlot({
   const [mintStatus, setMintStatus] = useState('');
   const [mintedKeepUrl, setMintedKeepUrl] = useState('');
   const [mintedCollectionUrl, setMintedCollectionUrl] = useState('');
+  const [lives, setLives] = useState(() => livesFromSession(session));
   const [viewKeepOpen, setViewKeepOpen] = useState(false);
   const [keepMetadata, setKeepMetadata] = useState(null);
   const [impSpeechStates, setImpSpeechStates] = useState([
@@ -255,6 +289,7 @@ function AdventureSlot({
     setImplingzError('');
     setAdventureMessages([]);
     setEncounterIndex(null);
+    setLives(livesFromSession(session));
     setStartError('');
     setMintStatus('');
     setMintedKeepUrl('');
@@ -290,6 +325,7 @@ function AdventureSlot({
       },
     ]);
     setEncounterIndex(null);
+    setLives(livesFromSession(session));
     if (session.status === 'running') {
       scheduleNextEncounter();
     }
@@ -619,6 +655,8 @@ function AdventureSlot({
       resumedSessionRef.current = data.session.id;
       usedEncounterIndexesRef.current = new Set();
       setEncounterIndex(null);
+      setLives(ADVENTURE_LIVES);
+      writeStoredLives(data.session.id, ADVENTURE_LIVES);
       setAdventureMessages([
         {
           type: 'narrator',
@@ -645,6 +683,8 @@ function AdventureSlot({
       await stopAdventure(session.id);
       clearAdventureTimers();
       setEncounterIndex(null);
+      setLives(ADVENTURE_LIVES);
+      clearStoredLives(session.id);
       setAdventureMessages([]);
       setMintStatus(`${adventureLabel} stopped. Mining ended and the slot is free again.`);
       resumedSessionRef.current = '';
@@ -667,8 +707,20 @@ function AdventureSlot({
         optionKey: option.key,
       });
       const rollResult = result.succeeded ? 'Success' : 'Failure';
+      const remainingLives = Math.max(
+        0,
+        Number(result.lives ?? (result.succeeded ? lives : lives - 1))
+      );
+      const defeated =
+        Boolean(result.defeated) ||
+        remainingLives <= 0 ||
+        result.session?.status === 'abandoned';
+      setLives(defeated ? 0 : remainingLives);
+      if (session?.id) {
+        writeStoredLives(session.id, defeated ? 0 : remainingLives);
+      }
       setAdventurer(decorateAccount(result.account));
-      if (result.session) {
+      if (result.session && !defeated) {
         replaceSession({
           account: result.account,
           session: result.session,
@@ -688,6 +740,18 @@ function AdventureSlot({
           type: result.succeeded ? 'roll-success' : 'roll-failure',
           text: `You rolled ${result.roll} on the D20 against DC ${result.dc} — ${rollResult}.`,
         },
+        ...(result.succeeded
+          ? []
+          : [
+              {
+                type: 'system',
+                text: defeated
+                  ? 'You lost your last life. The adventure is over — start again.'
+                  : `You lost a life. ${remainingLives} ${
+                      remainingLives === 1 ? 'life' : 'lives'
+                    } remaining.`,
+              },
+            ]),
         ...(Number(result.xpAwarded) > 0
           ? [{ type: 'xp', text: `+${result.xpAwarded} XP` }]
           : []),
@@ -697,6 +761,19 @@ function AdventureSlot({
         },
         ...(treasure ? [treasure] : []),
       ]);
+      if (defeated) {
+        setRuntimeError('You lost all 3 lives. The adventure has ended. Start again.');
+        clearAdventureTimers();
+        setEncounterIndex(null);
+        if (result.session && !['running', 'found'].includes(result.session.status)) {
+          clearStoredLives(session.id);
+          removeRun(session.id);
+        } else {
+          await stopAdventure(session.id);
+          clearStoredLives(session.id);
+        }
+        return;
+      }
       if (result.session?.status === 'found') {
         setEncounterIndex(null);
       } else {
@@ -1006,6 +1083,24 @@ function AdventureSlot({
             <h2>D&amp;D Adventure</h2>
           </div>
           <div className="adventure-chat__heading-actions">
+            <div className="adventure-chat__start-group">
+              <div
+                className="adventure-chat__lives"
+                aria-label={`${lives} of ${ADVENTURE_LIVES} lives remaining`}
+                title={`${lives} of ${ADVENTURE_LIVES} lives remaining`}
+              >
+                {Array.from({ length: ADVENTURE_LIVES }, (_, index) => (
+                  <span
+                    key={index}
+                    className={`adventure-chat__life${
+                      index < lives ? '' : ' adventure-chat__life--lost'
+                    }`}
+                    aria-hidden="true"
+                  >
+                    ♥
+                  </span>
+                ))}
+              </div>
             {adventureStarted ? (
               <button
                 type="button"
@@ -1033,6 +1128,7 @@ function AdventureSlot({
                     : 'Start Adventure'}
               </button>
             )}
+            </div>
             <span
               className={`adventure-chat__status${
                 adventureStarted ? ' adventure-chat__status--started' : ''
@@ -1096,7 +1192,7 @@ function AdventureSlot({
                 &gt;_
               </span>
               <h3>The wilds are waiting</h3>
-              <p>Select at least one Imp, then start the adventure.</p>
+              <p>Select at least one Imp, then start the adventure. Failed D20 rolls cost a life.</p>
             </div>
           )}
         </div>

@@ -18,7 +18,8 @@ const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 const SIGNATURE_PATTERN = /^0x[a-fA-F0-9]{130}$/;
 const NONCE_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SESSION_COLUMNS =
-  "id,wallet_address,party_token_ids,status,hashes_checked,winning_nonce,winning_hash,dungeon_seed,mint_deadline,minted_token_id,xp_awarded,started_at,ended_at,updated_at";
+  "id,wallet_address,party_token_ids,status,hashes_checked,winning_nonce,winning_hash,dungeon_seed,mint_deadline,minted_token_id,xp_awarded,lives,started_at,ended_at,updated_at";
+const ADVENTURE_LIVES = 3;
 const HASH_PREFIX = "0000";
 const MINE_PAYLOAD_PREFIX = "implingz-dungeon";
 const XP_PROMPT_SUCCESS = 25;
@@ -486,6 +487,7 @@ Deno.serve(async (request: Request) => {
           secret_hash: secretHash,
           party_token_ids: partyTokenIds,
           status: "running",
+          lives: ADVENTURE_LIVES,
         })
         .select(SESSION_COLUMNS)
         .single();
@@ -503,6 +505,10 @@ Deno.serve(async (request: Request) => {
       if (!["running", "found"].includes(session.status)) {
         return json({ error: "This adventure is no longer exploring." }, 409);
       }
+      const livesRemaining = Number(session.lives ?? ADVENTURE_LIVES);
+      if (livesRemaining <= 0) {
+        return json({ error: "This adventure has no lives remaining." }, 409);
+      }
       const encounterIndex = Number(body.encounterIndex);
       const optionKey = String(body.optionKey ?? "");
       const encounter = ENCOUNTERS[encounterIndex];
@@ -512,6 +518,9 @@ Deno.serve(async (request: Request) => {
       const roll = rollD20();
       const succeeded = roll === 20 || (roll !== 1 && roll >= option.dc);
       const xpAwarded = succeeded ? XP_PROMPT_SUCCESS : XP_PROMPT_FAIL;
+      const nextLives = succeeded ? livesRemaining : Math.max(0, livesRemaining - 1);
+      const defeated = !succeeded && nextLives <= 0;
+      const now = new Date().toISOString();
 
       await supabase.from("adventure_prompt_results").insert({
         session_id: session.id,
@@ -521,15 +530,27 @@ Deno.serve(async (request: Request) => {
         succeeded,
         xp_awarded: xpAwarded,
       });
+      const sessionPatch: Record<string, unknown> = {
+        xp_awarded: Number(session.xp_awarded ?? 0) + xpAwarded,
+        lives: nextLives,
+        updated_at: now,
+      };
+      if (defeated) {
+        sessionPatch.status = "abandoned";
+        sessionPatch.ended_at = now;
+      }
       const { data: updatedSession, error: promptSessionError } = await supabase
         .from("adventure_sessions")
-        .update({ xp_awarded: Number(session.xp_awarded ?? 0) + xpAwarded, updated_at: new Date().toISOString() })
+        .update(sessionPatch)
         .eq("id", session.id)
         .select(SESSION_COLUMNS)
         .single();
       if (promptSessionError) throw promptSessionError;
 
-      const account = decorateAccount(await persistProgress(session.wallet_address, xpAwarded), session.wallet_address);
+      const account = decorateAccount(
+        await persistProgress(session.wallet_address, xpAwarded, defeated ? -1 : 0),
+        session.wallet_address,
+      );
       const drip = await maybeDrip(session.wallet_address, session.id);
       return json({
         account,
@@ -538,6 +559,8 @@ Deno.serve(async (request: Request) => {
         succeeded,
         dc: option.dc,
         xpAwarded,
+        lives: nextLives,
+        defeated,
         drip,
       });
     }

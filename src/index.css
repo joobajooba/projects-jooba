@@ -2838,6 +2838,31 @@ button:active:not(:disabled),
   gap: 0.5rem;
 }
 
+.adventure-chat__start-group {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.adventure-chat__lives {
+  display: flex;
+  align-items: center;
+  gap: 0.12rem;
+  user-select: none;
+}
+
+.adventure-chat__life {
+  color: #ff2d2d;
+  font-size: 1.05rem;
+  line-height: 1;
+  text-shadow: 0 0 8px rgba(255, 45, 45, 0.45);
+}
+
+.adventure-chat__life--lost {
+  color: rgba(255, 45, 45, 0.28);
+  text-shadow: none;
+}
+
 .adventure-chat__start {
   appearance: none;
   min-height: 2rem;
@@ -3494,6 +3519,10 @@ button:active:not(:disabled),
   .adventure-chat__heading-actions {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .adventure-chat__start-group {
+    flex-wrap: wrap;
   }
 
   .adventure-chat__options {
