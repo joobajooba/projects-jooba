@@ -285,6 +285,7 @@ export function AdventureRuntimeProvider({ walletAccount, signMessageAsync, chil
       if (!walletAccount || !sessionId) return null;
       const data = await fetchAdventurerAccount(walletAccount);
       if (data.account) setAdventurer(decorateAccount(data.account));
+      if (data.drip) setDripMessage(dripStatusMessage(data.drip));
       const latest = (data.sessions ?? []).find((row) => row.id === sessionId);
       if (!latest) {
         removeRun(sessionId);
@@ -311,6 +312,7 @@ export function AdventureRuntimeProvider({ walletAccount, signMessageAsync, chil
     fetchAdventurerAccount(walletAccount, { signal: controller.signal })
       .then((data) => {
         setAdventurer(decorateAccount(data.account));
+        if (data.drip) setDripMessage(dripStatusMessage(data.drip));
         const active = (data.sessions ?? []).filter(
           (row) => row.status === 'running' || row.status === 'found'
         );
@@ -430,7 +432,11 @@ export function AdventureRuntimeProvider({ walletAccount, signMessageAsync, chil
           if (pausedIdsRef.current.has(sessionId)) continue;
 
           if (pendingChecked >= 2000) {
-            reportMiningProgress(sessionId, pendingChecked).catch(() => {});
+            reportMiningProgress(sessionId, pendingChecked)
+              .then((data) => {
+                if (data?.drip) setDripMessage(dripStatusMessage(data.drip));
+              })
+              .catch(() => {});
             pendingChecked = 0;
           }
 

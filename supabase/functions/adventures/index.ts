@@ -156,11 +156,34 @@ function rollD20() {
   return (bytes[0] % 20) + 1;
 }
 
-function operatorAccount() {
-  const raw = Deno.env.get("DERP_OPERATOR_PRIVATE_KEY")?.trim();
+function normalizePrivateKey(raw: string | undefined | null): `0x${string}` | null {
   if (!raw) return null;
-  const key = (raw.startsWith("0x") ? raw : `0x${raw}`) as `0x${string}`;
-  return privateKeyToAccount(key);
+  let key = String(raw).trim();
+  if (
+    (key.startsWith('"') && key.endsWith('"')) ||
+    (key.startsWith("'") && key.endsWith("'"))
+  ) {
+    key = key.slice(1, -1).trim();
+  }
+  key = key.replace(/[\s\u0000-\u001f]+/g, "");
+  while (key.toLowerCase().startsWith("0x")) key = key.slice(2);
+  if (!/^[0-9a-fA-F]{64}$/.test(key)) return null;
+  return `0x${key}`;
+}
+
+function operatorAccount() {
+  const raw = Deno.env.get("DERP_OPERATOR_PRIVATE_KEY");
+  const key = normalizePrivateKey(raw);
+  if (!key) {
+    if (raw?.trim()) console.error("derp operator key is not 64 hex characters after cleanup");
+    return null;
+  }
+  try {
+    return privateKeyToAccount(key);
+  } catch (error) {
+    console.error("derp operator key invalid", String(error));
+    return null;
+  }
 }
 
 function keepContractAddress() {
@@ -217,7 +240,7 @@ async function sendDerpDrip(rewardsAddress: string, to: string, amount: number) 
     await publicClient.waitForTransactionReceipt({ hash });
     return { status: "sent" as const, txHash: hash };
   } catch (error) {
-    console.error("derp drip send failed", error);
+    console.error("derp drip send failed", String(error));
     return null;
   }
 }
@@ -338,8 +361,53 @@ Deno.serve(async (request: Request) => {
     return owned;
   }
 
+  async function persistDripPayment(
+    dripId: string,
+    paid: { status: "sent" | "skipped_empty_pot"; txHash: string | null },
+  ) {
+    const { data, error } = await supabase
+      .from("derp_drips")
+      .update({ status: paid.status, tx_hash: paid.txHash })
+      .eq("id", dripId)
+      .select("id,amount,status,tx_hash")
+      .single();
+    if (error) throw error;
+    return data;
+  }
+
+  async function settlePendingDrips(walletAddress: string) {
+    const rewardsAddress = Deno.env.get("DERP_REWARDS_ADDRESS")?.trim() ?? "";
+    if (!ADDRESS_PATTERN.test(rewardsAddress) || !operatorAccount()) return [] as Array<{
+      id: string;
+      amount: number;
+      status: string;
+      tx_hash: string | null;
+    }>;
+
+    const { data: pending, error } = await supabase
+      .from("derp_drips")
+      .select("id,wallet_address,amount,status,tx_hash")
+      .eq("wallet_address", walletAddress)
+      .eq("status", "pending")
+      .order("created_at", { ascending: true })
+      .limit(8);
+    if (error) throw error;
+
+    const settled = [];
+    for (const drip of pending ?? []) {
+      const paid = await sendDerpDrip(rewardsAddress, drip.wallet_address, Number(drip.amount));
+      if (!paid) break;
+      settled.push(await persistDripPayment(drip.id, paid));
+    }
+    return settled;
+  }
+
   async function maybeDrip(walletAddress: string, sessionId: string) {
-    if (Math.random() >= DERP_DRIP_CHANCE) return null;
+    const settled = await settlePendingDrips(walletAddress);
+    if (Math.random() >= DERP_DRIP_CHANCE) {
+      return settled.find((drip) => drip.status === "sent") ?? settled.at(-1) ?? null;
+    }
+
     const amount = DERP_DRIP_MIN + Math.floor(Math.random() * (DERP_DRIP_MAX - DERP_DRIP_MIN + 1));
     const rewardsAddress = Deno.env.get("DERP_REWARDS_ADDRESS")?.trim() ?? "";
     const configured = ADDRESS_PATTERN.test(rewardsAddress);
@@ -358,15 +426,7 @@ Deno.serve(async (request: Request) => {
 
     const paid = await sendDerpDrip(rewardsAddress, walletAddress, amount);
     if (!paid) return data;
-
-    const { data: updated, error: updateError } = await supabase
-      .from("derp_drips")
-      .update({ status: paid.status, tx_hash: paid.txHash })
-      .eq("id", data.id)
-      .select("id,amount,status,tx_hash")
-      .single();
-    if (updateError) throw updateError;
-    return updated;
+    return persistDripPayment(data.id, paid);
   }
 
   try {
@@ -403,7 +463,12 @@ Deno.serve(async (request: Request) => {
         .in("status", ["running", "found"])
         .order("started_at", { ascending: false });
       if (error) throw error;
-      return json({ account, sessions: sessions ?? [] });
+      const settled = await settlePendingDrips(wallet);
+      return json({
+        account,
+        sessions: sessions ?? [],
+        drip: settled.find((row) => row.status === "sent") ?? settled.at(-1) ?? null,
+      });
     }
 
     if (request.method !== "POST") return json({ error: "Method not allowed." }, 405);
@@ -580,7 +645,11 @@ Deno.serve(async (request: Request) => {
         .select(SESSION_COLUMNS)
         .single();
       if (error) throw error;
-      return json({ session: data });
+      const settled = await settlePendingDrips(session.wallet_address);
+      return json({
+        session: data,
+        drip: settled.find((row) => row.status === "sent") ?? settled.at(-1) ?? null,
+      });
     }
 
     if (action === "submit-hash") {
