@@ -161,29 +161,48 @@ function normalizePrivateKey(raw: string | undefined | null): `0x${string}` | nu
   let key = String(raw).trim();
   if (
     (key.startsWith('"') && key.endsWith('"')) ||
-    (key.startsWith("'") && key.endsWith("'"))
+    (key.startsWith("'") && key.endsWith("'")) ||
+    (key.startsWith("`") && key.endsWith("`"))
   ) {
     key = key.slice(1, -1).trim();
   }
+  key = key.replace(/^\s*(hex:|key:|private[_ ]?key:)\s*/i, "");
+  const labeled = key.match(/(?:^|[=:\s])(?:0x)?([0-9a-fA-F]{64})(?:\s|$)/);
+  if (labeled?.[1]) return `0x${labeled[1]}`;
   key = key.replace(/[\s\u0000-\u001f]+/g, "");
   while (key.toLowerCase().startsWith("0x")) key = key.slice(2);
-  if (!/^[0-9a-fA-F]{64}$/.test(key)) return null;
-  return `0x${key}`;
+  if (/^[0-9a-fA-F]{64}$/.test(key)) return `0x${key}`;
+  return null;
 }
 
+let cachedOperator: ReturnType<typeof privateKeyToAccount> | null | undefined;
+
 function operatorAccount() {
-  const raw = Deno.env.get("DERP_OPERATOR_PRIVATE_KEY");
-  const key = normalizePrivateKey(raw);
-  if (!key) {
-    if (raw?.trim()) console.error("derp operator key is not 64 hex characters after cleanup");
-    return null;
+  if (cachedOperator !== undefined) return cachedOperator;
+  const sources = [
+    ["DERP_OPERATOR_PRIVATE_KEY", Deno.env.get("DERP_OPERATOR_PRIVATE_KEY")],
+    ["DUNGEON_MINT_SIGNER_KEY", Deno.env.get("DUNGEON_MINT_SIGNER_KEY")],
+  ] as const;
+  for (const [name, raw] of sources) {
+    const key = normalizePrivateKey(raw);
+    if (!key) {
+      if (raw?.trim()) {
+        console.error(`derp key ${name} unusable (len=${String(raw).trim().length})`);
+      }
+      continue;
+    }
+    try {
+      cachedOperator = privateKeyToAccount(key);
+      if (name !== "DERP_OPERATOR_PRIVATE_KEY") {
+        console.log(`derp drips using ${name} because DERP_OPERATOR_PRIVATE_KEY is invalid`);
+      }
+      return cachedOperator;
+    } catch (error) {
+      console.error(`derp key ${name} rejected`, String(error));
+    }
   }
-  try {
-    return privateKeyToAccount(key);
-  } catch (error) {
-    console.error("derp operator key invalid", String(error));
-    return null;
-  }
+  cachedOperator = null;
+  return null;
 }
 
 function keepContractAddress() {
@@ -756,9 +775,9 @@ Deno.serve(async (request: Request) => {
       };
       const message = `IMPLINGz Dungeon Mint\n${voucher.wallet}\n${voucher.seed}\n${voucher.deadline}`;
       let signature = "";
-      const signerKey = Deno.env.get("DUNGEON_MINT_SIGNER_KEY");
+      const signerKey = normalizePrivateKey(Deno.env.get("DUNGEON_MINT_SIGNER_KEY"));
       if (signerKey) {
-        const account = privateKeyToAccount(signerKey as `0x${string}`);
+        const account = privateKeyToAccount(signerKey);
         signature = await account.signMessage({ message });
       }
       const contractAddress = keepContractAddress();
