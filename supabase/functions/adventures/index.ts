@@ -473,11 +473,18 @@ Deno.serve(async (request: Request) => {
       if (url.searchParams.get("board") === "1") {
         const { data, error } = await supabase
           .from("adventure_sessions")
-          .select("id,wallet_address,status,winning_hash,dungeon_seed,party_token_ids,xp_awarded,started_at,ended_at,updated_at")
+          .select("id,wallet_address,status,winning_hash,dungeon_seed,minted_token_id,party_token_ids,xp_awarded,started_at,ended_at,updated_at")
           .order("updated_at", { ascending: false })
           .limit(20);
         if (error) throw error;
-        return json({ events: data ?? [] });
+        const { data: payouts, error: payoutsError } = await supabase
+          .from("derp_drips")
+          .select("id,wallet_address,session_id,amount,tx_hash,created_at")
+          .eq("status", "sent")
+          .order("created_at", { ascending: false })
+          .limit(40);
+        if (payoutsError) throw payoutsError;
+        return json({ events: data ?? [], payouts: payouts ?? [] });
       }
 
       const wallet = url.searchParams.get("wallet")?.toLowerCase() ?? "";

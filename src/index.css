@@ -3295,6 +3295,27 @@ button:active:not(:disabled),
   font-variant-numeric: tabular-nums;
 }
 
+.adventure-board__minted {
+  color: #f0f0f0;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.adventure-board__derp {
+  color: #89d8ff;
+  font-variant-numeric: tabular-nums;
+}
+
+.adventure-board__payouts {
+  margin-top: 1.5rem;
+}
+
+.adventure-board__payouts-title {
+  margin: 0 0 0.65rem;
+  color: #f5f5f5;
+  font-size: 0.95rem;
+}
+
 .adventure-board__empty {
   width: min(100%, 28rem);
   margin: 4rem auto 0;

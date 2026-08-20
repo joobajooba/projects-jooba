@@ -95,7 +95,10 @@ export async function fetchAdventureBoard({ signal } = {}) {
   const url = new URL(ADVENTURES_API);
   url.searchParams.set('board', '1');
   const data = await readResponse(await fetch(url, { signal }));
-  return data.events ?? [];
+  return {
+    events: data.events ?? [],
+    payouts: data.payouts ?? [],
+  };
 }
 
 export async function requestAdventureChallenge(walletAddress) {

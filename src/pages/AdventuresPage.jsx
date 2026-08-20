@@ -1634,8 +1634,20 @@ function formatDungeonFound(event) {
   return '—';
 }
 
+function formatMinted(event) {
+  if (event?.status === 'minted' || event?.minted_token_id) return 'Y';
+  return 'N';
+}
+
+function formatDerpAmount(amount) {
+  const value = Number(amount);
+  if (!Number.isFinite(value) || value <= 0) return '—';
+  return `${value} $DERP`;
+}
+
 function AdventureBoard() {
   const [events, setEvents] = useState([]);
+  const [payouts, setPayouts] = useState([]);
   const [profilesByWallet, setProfilesByWallet] = useState({});
 
   useEffect(() => {
@@ -1644,8 +1656,9 @@ function AdventureBoard() {
       fetchAdventureBoard({ signal: controller.signal }),
       fetchCommunityProfiles({ signal: controller.signal }).catch(() => []),
     ])
-      .then(([boardEvents, profiles]) => {
-        setEvents(boardEvents);
+      .then(([board, profiles]) => {
+        setEvents(board.events ?? []);
+        setPayouts(board.payouts ?? []);
         setProfilesByWallet(
           Object.fromEntries(
             (profiles ?? []).map((profile) => [
@@ -1657,6 +1670,7 @@ function AdventureBoard() {
       })
       .catch(() => {
         setEvents([]);
+        setPayouts([]);
         setProfilesByWallet({});
       });
     return () => controller.abort();
@@ -1676,18 +1690,20 @@ function AdventureBoard() {
       </div>
 
       <div className="adventure-board__feed" aria-live="polite">
-        {events.length === 0 ? (
+        {events.length === 0 && payouts.length === 0 ? (
           <div className="adventure-board__empty">
             <span className="adventure-board__empty-mark" aria-hidden="true">
               …
             </span>
             <h3>Waiting for adventure activity</h3>
             <p>
-              Signed adventure starts, prompt wins, found keeps, and mints from connected wallets
-              appear here.
+              Signed adventure starts, prompt wins, found keeps, mints, and $DERP payouts from
+              connected wallets appear here.
             </p>
           </div>
         ) : (
+          <>
+            {events.length > 0 ? (
           <div className="adventure-board__table-wrap">
             <table className="adventure-board__table">
               <thead>
@@ -1696,6 +1712,7 @@ function AdventureBoard() {
                   <th scope="col">Name</th>
                   <th scope="col">Wallet address</th>
                   <th scope="col">Dungeon found</th>
+                  <th scope="col">Minted</th>
                   <th scope="col">XP earned</th>
                   <th scope="col">Time found</th>
                 </tr>
@@ -1726,6 +1743,7 @@ function AdventureBoard() {
                         </span>
                       </td>
                       <td>{formatDungeonFound(event)}</td>
+                      <td className="adventure-board__minted">{formatMinted(event)}</td>
                       <td className="adventure-board__xp">{event.xp_awarded ?? 0}</td>
                       <td>
                         {formatBoardTime(event.updated_at || event.ended_at || event.started_at)}
@@ -1736,6 +1754,46 @@ function AdventureBoard() {
               </tbody>
             </table>
           </div>
+            ) : null}
+
+            {payouts.length > 0 ? (
+              <div className="adventure-board__payouts">
+                <h3 className="adventure-board__payouts-title">$DERP payouts</h3>
+                <div className="adventure-board__table-wrap">
+                  <table className="adventure-board__table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Wallet address</th>
+                        <th scope="col">Amount</th>
+                        <th scope="col">Time sent</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {payouts.map((payout) => {
+                        const wallet = String(payout.wallet_address || '').toLowerCase();
+                        const profile = profilesByWallet[wallet];
+                        return (
+                          <tr key={payout.id}>
+                            <td>
+                              <strong>{profile?.nickname || 'Unnamed Adventurer'}</strong>
+                            </td>
+                            <td>
+                              <span className="adventure-board__address">
+                                {shortenAddress(payout.wallet_address)}
+                              </span>
+                            </td>
+                            <td className="adventure-board__derp">{formatDerpAmount(payout.amount)}</td>
+                            <td>{formatBoardTime(payout.created_at)}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ) : null}
+          </>
         )}
       </div>
     </section>
