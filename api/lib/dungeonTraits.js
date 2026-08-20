@@ -1,10 +1,15 @@
 /** Seed helpers and OpenSea traits shared by preview, keep metadata, and generation. */
 
 const TRAIT_XOR = 0x9e3779b9;
-const COLLECTION_SIZE = 2222;
+export const COLLECTION_SIZE = 2222;
+const ONE_OF_ONE_SHUFFLE_SEED = 0x4b335031;
 
 const ROBINS_LAIR = ['Robins Lair', 'robins_lair'];
-const ONE_OF_ONE_BOSSES = ['Sir Roars-a-Lot', 'Bun Bun', 'King Croakus'];
+const LEGENDARY_BOSSES = [
+  { miniBoss: 'Sir Roars-a-Lot', biome: 'The Vault', tileset: 'the_vault' },
+  { miniBoss: 'Bun Bun', biome: 'Ice', tileset: 'icy' },
+  { miniBoss: 'King Croakus', biome: 'Swamp', tileset: 'mossy' },
+];
 
 // label, tall-tileset slug, weight in basis points (10000 = 100%)
 const BIOMES = [
@@ -131,7 +136,8 @@ const DUNGEON_TYPE_PRESETS = {
   },
 };
 
-export const TILESETS = [...new Set(BIOMES.map((row) => row[1]))];
+export const TILESETS = [...new Set([...BIOMES.map((row) => row[1]), ROBINS_LAIR[1]])];
+const DUNGEON_TYPE_NAMES = DUNGEON_TYPES.map((row) => row[0]);
 
 export const MINI_BOSS_SPRITES = {
   'Alta-ir': 'Alta-ir',
@@ -192,6 +198,83 @@ export function createRng(seed) {
   };
 }
 
+function buildReservedTraitMap() {
+  const rng = createRng(ONE_OF_ONE_SHUFFLE_SEED);
+  const ids = Array.from({ length: COLLECTION_SIZE }, (_, index) => index + 1);
+  rng.shuffle(ids);
+  const map = new Map();
+  let cursor = 0;
+  for (const dungeonType of DUNGEON_TYPE_NAMES) {
+    map.set(ids[cursor], {
+      kind: 'robins_lair',
+      biome: ROBINS_LAIR[0],
+      tileset: ROBINS_LAIR[1],
+      dungeonType,
+    });
+    cursor += 1;
+  }
+  for (const boss of LEGENDARY_BOSSES) {
+    map.set(ids[cursor], {
+      kind: 'legendary_boss',
+      biome: boss.biome,
+      tileset: boss.tileset,
+      miniBoss: boss.miniBoss,
+    });
+    cursor += 1;
+  }
+  return map;
+}
+
+const RESERVED_TRAITS = buildReservedTraitMap();
+
+export function parseKeepTokenId(value) {
+  const tokenId = Number(Array.isArray(value) ? value[0] : value);
+  if (!Number.isInteger(tokenId) || tokenId < 1 || tokenId > COLLECTION_SIZE) return null;
+  return tokenId;
+}
+
+export function reservedTraitsForToken(tokenId) {
+  const parsed = parseKeepTokenId(tokenId);
+  return parsed ? RESERVED_TRAITS.get(parsed) || null : null;
+}
+
+export function listReservedTraitAssignments() {
+  return [...RESERVED_TRAITS.entries()]
+    .map(([tokenId, spec]) => ({ tokenId, ...spec }))
+    .sort((left, right) => left.tokenId - right.tokenId);
+}
+
+export function dungeonPreviewPath(seed, { format = 'png', tokenId } = {}) {
+  const params = new URLSearchParams();
+  params.set('seed', String(seed ?? ''));
+  params.set('format', format);
+  const parsed = parseKeepTokenId(tokenId);
+  if (parsed) params.set('tokenId', String(parsed));
+  return `/api/dungeon-preview?${params.toString()}`;
+}
+
+function applyReservedTraits(traits, tokenId) {
+  const reserved = reservedTraitsForToken(tokenId);
+  if (!reserved) return traits;
+  if (reserved.kind === 'robins_lair') {
+    return {
+      ...traits,
+      biome: reserved.biome,
+      tileset: reserved.tileset,
+      dungeonType: reserved.dungeonType,
+    };
+  }
+  if (reserved.kind === 'legendary_boss') {
+    return {
+      ...traits,
+      biome: reserved.biome,
+      tileset: reserved.tileset,
+      miniBoss: reserved.miniBoss,
+    };
+  }
+  return traits;
+}
+
 export function seedToInt(seed) {
   if (typeof seed === 'number' && Number.isFinite(seed)) {
     return seed >>> 0;
@@ -232,24 +315,17 @@ function pickWeighted(rng, table) {
   return last.length > 2 ? last.slice(0, -1) : last[0];
 }
 
-export function rollKeepTraits(seed) {
+export function rollKeepTraits(seed, tokenId = null) {
   const numeric = seedToInt(seed);
   const rng = createRng(numeric ^ TRAIT_XOR);
-  let [biome, tileset] = pickWeighted(rng, BIOMES);
+  const [biome, tileset] = pickWeighted(rng, BIOMES);
   const dungeonType = pickWeighted(rng, DUNGEON_TYPES);
-  let miniBoss = pickWeighted(rng, MINI_BOSSES);
-  if (rng.randrange(COLLECTION_SIZE) === 0) {
-    [biome, tileset] = ROBINS_LAIR;
-  }
-  const legendary = rng.randrange(COLLECTION_SIZE);
-  if (legendary < ONE_OF_ONE_BOSSES.length) {
-    miniBoss = ONE_OF_ONE_BOSSES[legendary];
-  }
-  return { biome, tileset, dungeonType, miniBoss, numeric };
+  const miniBoss = pickWeighted(rng, MINI_BOSSES);
+  return applyReservedTraits({ biome, tileset, dungeonType, miniBoss, numeric }, tokenId);
 }
 
-export function optionsFromSeed(seed) {
-  const traits = rollKeepTraits(seed);
+export function optionsFromSeed(seed, tokenId = null) {
+  const traits = rollKeepTraits(seed, tokenId);
   const preset = DUNGEON_TYPE_PRESETS[traits.dungeonType] || DUNGEON_TYPE_PRESETS.Standard;
   return {
     seed: traits.numeric,
@@ -265,8 +341,8 @@ export function optionsFromSeed(seed) {
   };
 }
 
-export function tilesetForSeed(seed) {
-  return rollKeepTraits(seed).tileset;
+export function tilesetForSeed(seed, tokenId = null) {
+  return rollKeepTraits(seed, tokenId).tileset;
 }
 
 export function attributesFromDungeon(_dungeon, _tileset, options) {

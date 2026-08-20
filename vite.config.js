@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import adventuresGateHandler from './api/adventures-gate.js';
-import { KEEP_DESCRIPTION, openseaMetadata } from './api/lib/dungeonTraits.js';
+import { KEEP_DESCRIPTION, dungeonPreviewPath, openseaMetadata, parseKeepTokenId } from './api/lib/dungeonTraits.js';
 import { renderDungeonPreview } from './api/lib/renderDungeonPng.js';
 
 function sendJson(res, status, body) {
@@ -65,13 +65,15 @@ function localAdventureApis() {
         if (url.pathname === '/api/dungeon-preview') {
           const seed = url.searchParams.get('seed') || '42';
           const format = (url.searchParams.get('format') || 'png').toLowerCase();
-          renderDungeonPreview(seed)
+          const tokenId = parseKeepTokenId(url.searchParams.get('tokenId'));
+          renderDungeonPreview(seed, tokenId)
             .then((preview) => {
-              const imageUrl = `/api/dungeon-preview?seed=${encodeURIComponent(seed)}&format=png`;
+              const imageUrl = dungeonPreviewPath(seed, { format: 'png', tokenId });
               const metadata = openseaMetadata({
                 seedValue: preview.seed,
                 imageUrl: `http://localhost:5173${imageUrl}`,
                 externalUrl: 'http://localhost:5173/the-dungeon',
+                tokenId,
                 description: KEEP_DESCRIPTION,
                 attributes: preview.attributes,
               });
@@ -90,6 +92,7 @@ function localAdventureApis() {
                   biome: preview.biome,
                   dungeonType: preview.dungeonType,
                   miniBoss: preview.miniBoss,
+                  tokenId,
                   options: preview.options,
                   attributes: preview.attributes,
                   engine: preview.engine,

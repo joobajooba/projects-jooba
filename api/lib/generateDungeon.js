@@ -1224,8 +1224,8 @@ export function dungeonToFloorGrid(dungeon) {
   return { rows, cols, rooms: dungeon.nRooms, grid };
 }
 
-export function describeDungeon(seedValue) {
-  const options = optionsFromSeed(seedValue);
+export function describeDungeon(seedValue, tokenId = null) {
+  const options = optionsFromSeed(seedValue, tokenId);
   const dungeon = createDungeon(options);
   const attributes = attributesFromDungeon(dungeon, options.tileset, options);
   return {
@@ -1235,6 +1235,7 @@ export function describeDungeon(seedValue) {
     biome: options.biome,
     dungeonType: options.dungeonType,
     miniBoss: options.miniBoss,
+    tokenId,
     rooms: dungeon.nRooms,
     doors: dungeon.doors.length,
     stairs: dungeon.stairs.length,

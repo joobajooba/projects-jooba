@@ -55,6 +55,16 @@ export function keepOpenSeaCollectionUrl(keepAddress) {
   return `https://opensea.io/assets/robinhood/${keepAddress}`;
 }
 
+export function keepPreviewUrl(seed, { format = 'png', tokenId } = {}) {
+  if (!seed) return '';
+  const params = new URLSearchParams({ seed: String(seed), format });
+  const numeric = Number(tokenId);
+  if (Number.isInteger(numeric) && numeric >= 1 && numeric <= 2222) {
+    params.set('tokenId', String(numeric));
+  }
+  return `/api/dungeon-preview?${params}`;
+}
+
 export function seedHex(value) {
   return `0x${BigInt(value).toString(16).padStart(64, '0')}`;
 }

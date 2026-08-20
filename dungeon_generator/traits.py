@@ -16,8 +16,13 @@ KEEP_DESCRIPTION = (
 
 TRAIT_XOR = 0x9E3779B9
 COLLECTION_SIZE = 2222
+ONE_OF_ONE_SHUFFLE_SEED = 0x4B335031
 ROBINS_LAIR = ("Robins Lair", "robins_lair")
-ONE_OF_ONE_BOSSES = ("Sir Roars-a-Lot", "Bun Bun", "King Croakus")
+LEGENDARY_BOSSES = (
+    {"mini_boss": "Sir Roars-a-Lot", "biome": "The Vault", "tileset": "the_vault"},
+    {"mini_boss": "Bun Bun", "biome": "Ice", "tileset": "icy"},
+    {"mini_boss": "King Croakus", "biome": "Swamp", "tileset": "mossy"},
+)
 
 # label, tall-tileset slug, weight in basis points (10000 = 100%)
 BIOMES = (
@@ -144,7 +149,68 @@ DUNGEON_TYPE_PRESETS = {
     },
 }
 
-TILESETS = tuple(dict.fromkeys(row[1] for row in BIOMES))
+TILESETS = tuple(dict.fromkeys([*(row[1] for row in BIOMES), ROBINS_LAIR[1]]))
+DUNGEON_TYPE_NAMES = tuple(row[0] for row in DUNGEON_TYPES)
+
+
+def _build_reserved_trait_map() -> dict[int, dict[str, Any]]:
+    rng = Mulberry32(ONE_OF_ONE_SHUFFLE_SEED)
+    ids = list(range(1, COLLECTION_SIZE + 1))
+    rng.shuffle(ids)
+    assigned: dict[int, dict[str, Any]] = {}
+    cursor = 0
+    for dungeon_type in DUNGEON_TYPE_NAMES:
+        assigned[ids[cursor]] = {
+            "kind": "robins_lair",
+            "biome": ROBINS_LAIR[0],
+            "tileset": ROBINS_LAIR[1],
+            "dungeon_type": dungeon_type,
+        }
+        cursor += 1
+    for boss in LEGENDARY_BOSSES:
+        assigned[ids[cursor]] = {
+            "kind": "legendary_boss",
+            "biome": boss["biome"],
+            "tileset": boss["tileset"],
+            "mini_boss": boss["mini_boss"],
+        }
+        cursor += 1
+    return assigned
+
+
+RESERVED_TRAITS = _build_reserved_trait_map()
+
+
+def parse_keep_token_id(value: Any) -> int | None:
+    try:
+        token_id = int(value)
+    except (TypeError, ValueError):
+        return None
+    if token_id < 1 or token_id > COLLECTION_SIZE:
+        return None
+    return token_id
+
+
+def _apply_reserved_traits(traits: dict[str, Any], token_id: Any) -> dict[str, Any]:
+    parsed = parse_keep_token_id(token_id)
+    reserved = RESERVED_TRAITS.get(parsed) if parsed else None
+    if not reserved:
+        return traits
+    if reserved["kind"] == "robins_lair":
+        return {
+            **traits,
+            "biome": reserved["biome"],
+            "tileset": reserved["tileset"],
+            "dungeon_type": reserved["dungeon_type"],
+        }
+    if reserved["kind"] == "legendary_boss":
+        return {
+            **traits,
+            "biome": reserved["biome"],
+            "tileset": reserved["tileset"],
+            "mini_boss": reserved["mini_boss"],
+        }
+    return traits
 
 
 def seed_to_int(value: Any) -> int:
@@ -177,32 +243,30 @@ def _pick_weighted(rng: Mulberry32, table: tuple[tuple, ...]):
     return last[:-1] if len(last) > 2 else last[0]
 
 
-def roll_keep_traits(seed: int) -> dict[str, Any]:
+def roll_keep_traits(seed: int, token_id: int | None = None) -> dict[str, Any]:
     numeric = to_u32(seed)
     rng = Mulberry32(numeric ^ TRAIT_XOR)
     biome, tileset = _pick_weighted(rng, BIOMES)
     dungeon_type = _pick_weighted(rng, DUNGEON_TYPES)
     mini_boss = _pick_weighted(rng, MINI_BOSSES)
-    if rng.randrange(COLLECTION_SIZE) == 0:
-        biome, tileset = ROBINS_LAIR
-    legendary = rng.randrange(COLLECTION_SIZE)
-    if legendary < len(ONE_OF_ONE_BOSSES):
-        mini_boss = ONE_OF_ONE_BOSSES[legendary]
-    return {
-        "biome": biome,
-        "tileset": tileset,
-        "dungeon_type": dungeon_type,
-        "mini_boss": mini_boss,
-        "numeric": numeric,
-    }
+    return _apply_reserved_traits(
+        {
+            "biome": biome,
+            "tileset": tileset,
+            "dungeon_type": dungeon_type,
+            "mini_boss": mini_boss,
+            "numeric": numeric,
+        },
+        token_id,
+    )
 
 
-def tileset_for_seed(seed: int) -> str:
-    return roll_keep_traits(to_u32(seed))["tileset"]
+def tileset_for_seed(seed: int, token_id: int | None = None) -> str:
+    return roll_keep_traits(to_u32(seed), token_id)["tileset"]
 
 
-def options_from_seed(seed: int) -> tuple[DungeonOptions, dict[str, Any]]:
-    traits = roll_keep_traits(seed)
+def options_from_seed(seed: int, token_id: int | None = None) -> tuple[DungeonOptions, dict[str, Any]]:
+    traits = roll_keep_traits(seed, token_id)
     preset = DUNGEON_TYPE_PRESETS.get(traits["dungeon_type"], DUNGEON_TYPE_PRESETS["Standard"])
     options = DungeonOptions(
         seed=traits["numeric"],
@@ -246,9 +310,9 @@ def _attach_mini_boss(dungeon: Dungeon, mini_boss: str) -> None:
     }
 
 
-def describe_dungeon(seed_value: Any) -> dict[str, Any]:
+def describe_dungeon(seed_value: Any, token_id: int | None = None) -> dict[str, Any]:
     numeric = seed_to_int(seed_value)
-    options, traits = options_from_seed(numeric)
+    options, traits = options_from_seed(numeric, token_id)
     dungeon = create_dungeon(options)
     _attach_mini_boss(dungeon, traits["mini_boss"])
     attributes = attributes_from_dungeon(dungeon, traits["tileset"], options, traits)

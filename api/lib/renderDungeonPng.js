@@ -323,9 +323,9 @@ async function renderDualGrid(described, maxEdge = 768) {
   return png;
 }
 
-export async function renderDungeonPreview(seedValue) {
+export async function renderDungeonPreview(seedValue, tokenId = null) {
   const seed = String(seedValue || '42');
-  const described = describeDungeon(seed);
+  const described = describeDungeon(seed, tokenId);
   const png = await renderDualGrid(described, 768);
   return {
     seed: described.seed,

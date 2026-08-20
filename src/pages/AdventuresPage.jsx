@@ -26,6 +26,7 @@ import {
   DUNGEON_KEEP_ADDRESS,
   keepOpenSeaCollectionUrl,
   keepOpenSeaItemUrl,
+  keepPreviewUrl,
   tokenIdFromMintReceipt,
 } from '../lib/dungeonKeep';
 import { ADVENTURE_ENCOUNTERS } from '../lib/adventureEncounters';
@@ -248,6 +249,7 @@ function AdventureSlot({
   const [lives, setLives] = useState(() => livesFromSession(session));
   const [viewKeepOpen, setViewKeepOpen] = useState(false);
   const [keepMetadata, setKeepMetadata] = useState(null);
+  const [nextKeepTokenId, setNextKeepTokenId] = useState(null);
   const [impSpeechStates, setImpSpeechStates] = useState([
     { quoteIndex: null, thinking: false },
     { quoteIndex: null, thinking: false },
@@ -431,16 +433,40 @@ function AdventureSlot({
   }, [session?.status]);
 
   useEffect(() => {
+    if (!viewKeepOpen || !publicClient || !DUNGEON_KEEP_ADDRESS) {
+      if (!viewKeepOpen) setNextKeepTokenId(null);
+      return undefined;
+    }
+
+    let cancelled = false;
+    publicClient
+      .readContract({
+        address: DUNGEON_KEEP_ADDRESS,
+        abi: DUNGEON_KEEP_ABI,
+        functionName: 'totalSupply',
+      })
+      .then((supply) => {
+        if (!cancelled) setNextKeepTokenId(Number(supply) + 1);
+      })
+      .catch(() => {
+        if (!cancelled) setNextKeepTokenId(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [viewKeepOpen, publicClient, session?.dungeon_seed]);
+
+  useEffect(() => {
     if (!viewKeepOpen || !session?.dungeon_seed) {
       setKeepMetadata(null);
       return undefined;
     }
 
     const controller = new AbortController();
-    fetch(
-      `/api/dungeon-preview?seed=${encodeURIComponent(session.dungeon_seed)}&format=json`,
-      { signal: controller.signal }
-    )
+    fetch(keepPreviewUrl(session.dungeon_seed, { format: 'json', tokenId: nextKeepTokenId }), {
+      signal: controller.signal,
+    })
       .then((response) => (response.ok ? response.json() : null))
       .then((data) => {
         setKeepMetadata(data || { attributes: [] });
@@ -450,7 +476,7 @@ function AdventureSlot({
       });
 
     return () => controller.abort();
-  }, [viewKeepOpen, session?.dungeon_seed]);
+  }, [viewKeepOpen, session?.dungeon_seed, nextKeepTokenId]);
 
   async function openImplingSelector(slotIndexToOpen) {
     if (!walletAccount || adventureStarted) return;
@@ -1317,10 +1343,10 @@ function AdventureSlot({
               Inspect the preview, then mint it as an NFT or flee. Minting is free aside from ETH
               gas.
             </p>
-            {dungeonImageUrl ? (
+            {session?.dungeon_seed ? (
               <img
                 className="dungeon-found-modal__map"
-                src={dungeonImageUrl}
+                src={keepPreviewUrl(session.dungeon_seed, { tokenId: nextKeepTokenId })}
                 alt="Procedurally generated lost keep"
               />
             ) : (
