@@ -286,6 +286,39 @@ Deno.serve(async (request: Request) => {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
+  async function snapshotFloorFor(walletAddress: string) {
+    const { data, error } = await supabase
+      .from("impz_holder_xp_snapshot")
+      .select("floor_xp, floor_level")
+      .eq("wallet_address", walletAddress)
+      .maybeSingle();
+    if (error) throw error;
+    return data;
+  }
+
+  /** Apply Chapter 1 Impz holdings floor without ever lowering earned XP. */
+  async function applySnapshotFloor(account: Record<string, unknown>) {
+    const walletAddress = String(account.wallet_address ?? "").toLowerCase();
+    const snap = await snapshotFloorFor(walletAddress);
+    if (!snap) return account;
+    const currentXp = Math.max(0, Number(account.xp ?? 0));
+    const floorXp = Math.max(0, Number(snap.floor_xp ?? 0));
+    if (currentXp >= floorXp) return account;
+    const progress = progressFromXp(floorXp);
+    const { data, error } = await supabase
+      .from("adventurer_accounts")
+      .update({
+        xp: floorXp,
+        level: progress.level,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("wallet_address", walletAddress)
+      .select("*")
+      .single();
+    if (error) throw error;
+    return data;
+  }
+
   async function ensureAccount(walletAddress: string) {
     const { data, error } = await supabase
       .from("adventurer_accounts")
@@ -293,11 +326,18 @@ Deno.serve(async (request: Request) => {
       .eq("wallet_address", walletAddress)
       .maybeSingle();
     if (error) throw error;
-    if (data) return data;
+    if (data) return applySnapshotFloor(data);
 
+    const snap = await snapshotFloorFor(walletAddress);
+    const floorXp = Math.max(0, Number(snap?.floor_xp ?? 0));
+    const progress = progressFromXp(floorXp);
     const { data: created, error: createError } = await supabase
       .from("adventurer_accounts")
-      .insert({ wallet_address: walletAddress })
+      .insert({
+        wallet_address: walletAddress,
+        xp: floorXp,
+        level: progress.level,
+      })
       .select("*")
       .single();
     if (createError) throw createError;

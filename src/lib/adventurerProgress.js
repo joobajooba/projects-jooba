@@ -19,6 +19,20 @@ export const XP_DUNGEON_FOUND = 40;
 export const XP_DUNGEON_MINTED = 80;
 export const XP_DUNGEON_DISCARDED = 15;
 
+/** One-time Chapter 1 Impz holdings floor (snapshot); never lowers earned XP. */
+export const IMPZ_HOLDINGS_XP_FLOORS = [
+  { minImpz: 20, level: 3, xp: 900 },
+  { minImpz: 10, level: 2, xp: 300 },
+];
+
+export function floorXpForImpzCount(impzCount = 0) {
+  const count = Math.max(0, Number(impzCount) || 0);
+  for (const row of IMPZ_HOLDINGS_XP_FLOORS) {
+    if (count >= row.minImpz) return row.xp;
+  }
+  return 0;
+}
+
 export function progressFromXp(xp = 0) {
   const safeXp = Math.max(0, Number(xp) || 0);
   let current = ADVENTURER_LEVELS[0];
