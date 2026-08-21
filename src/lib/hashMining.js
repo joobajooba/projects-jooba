@@ -1,6 +1,6 @@
 export const HASH_PREFIX = '0000';
-/** Extra hex nibble must be 0–3, which doubles keep-find difficulty vs the prior 0–7 rule. */
-export const HASH_NEXT_NIBBLE_MAX = 3;
+/** Extra hex nibble must be 0–5 (half-step easier than 0–3, still harder than the old 0–7 rule). */
+export const HASH_NEXT_NIBBLE_MAX = 5;
 export const MINE_PAYLOAD_PREFIX = 'implingz-dungeon';
 
 /** Hashes checked per mining tick for each IMPLINGz Tier trait. */

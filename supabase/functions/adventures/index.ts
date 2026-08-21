@@ -21,7 +21,7 @@ const SESSION_COLUMNS =
   "id,wallet_address,party_token_ids,status,hashes_checked,winning_nonce,winning_hash,dungeon_seed,mint_deadline,minted_token_id,xp_awarded,lives,started_at,ended_at,updated_at";
 const ADVENTURE_LIVES = 5;
 const HASH_PREFIX = "0000";
-const HASH_NEXT_NIBBLE_MAX = 3;
+const HASH_NEXT_NIBBLE_MAX = 5;
 const MINE_PAYLOAD_PREFIX = "implingz-dungeon";
 const XP_PROMPT_SUCCESS = 15;
 const XP_PROMPT_FAIL = 5;
