@@ -3,6 +3,8 @@ import { verifyMessage } from 'viem';
 
 const COOKIE_NAME = 'adventures_gate';
 const COOKIE_SECRET = process.env.ADVENTURES_GATE_SECRET || 'j00ba-adventures-gate-v3';
+/** Keep in sync with src/lib/adventuresChapter.js */
+const ADVENTURES_CHAPTER1_OPENS_AT_MS = Date.parse('2026-08-22T20:00:00.000Z');
 const ALLOWED_WALLETS = [
   '0xfe9d3889b5e36b3216a756e0c752220dbf24dac8',
   '0xb05b214b21801c18b40be098782f32970d29cea1',
@@ -10,6 +12,10 @@ const ALLOWED_WALLETS = [
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 const SIGNATURE_PATTERN = /^0x[a-fA-F0-9]{130}$/;
 const CHALLENGE_TTL_MS = 5 * 60 * 1000;
+
+function isChapter1Open(now = Date.now()) {
+  return Number(now) >= ADVENTURES_CHAPTER1_OPENS_AT_MS;
+}
 
 function readCookie(request, name) {
   const header = request.headers.cookie;
@@ -37,6 +43,7 @@ function hmacValue(value) {
 }
 
 function isAllowedWallet(address) {
+  if (isChapter1Open()) return true;
   const wallet = String(address || '').toLowerCase();
   return ALLOWED_WALLETS.some((allowed) => tokensMatch(wallet, allowed));
 }
@@ -46,6 +53,7 @@ function expectedToken(wallet) {
 }
 
 function isUnlocked(request) {
+  if (isChapter1Open()) return true;
   const cookie = readCookie(request, COOKIE_NAME);
   return ALLOWED_WALLETS.some((wallet) => tokensMatch(cookie, expectedToken(wallet)));
 }
@@ -97,9 +105,10 @@ function parseBody(request) {
 
 export default async function handler(request, response) {
   response.setHeader('Cache-Control', 'no-store');
+  const chapterOpen = isChapter1Open();
 
   if (request.method === 'GET') {
-    return response.status(200).json({ unlocked: isUnlocked(request) });
+    return response.status(200).json({ unlocked: isUnlocked(request), chapterOpen });
   }
 
   if (request.method !== 'POST') {
@@ -111,11 +120,15 @@ export default async function handler(request, response) {
   const action = String(body.action || 'unlock');
 
   if (action === 'challenge') {
-    return response.status(200).json({ nonce: makeChallenge() });
+    return response.status(200).json({ nonce: makeChallenge(), chapterOpen });
   }
 
   if (action !== 'unlock') {
     return response.status(400).json({ unlocked: false, error: 'Unknown action.' });
+  }
+
+  if (chapterOpen) {
+    return response.status(200).json({ unlocked: true, chapterOpen: true });
   }
 
   const walletAddress = String(body.walletAddress || '').toLowerCase();
@@ -140,5 +153,5 @@ export default async function handler(request, response) {
   }
 
   setUnlockCookie(response, walletAddress);
-  return response.status(200).json({ unlocked: true });
+  return response.status(200).json({ unlocked: true, chapterOpen: false });
 }

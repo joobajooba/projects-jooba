@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { AdventuresChapterCountdown } from '../components/AdventuresChapterCountdown';
 
 const SLIDE_MS = 3500;
 const SHOW_SLIDESHOW = false;
@@ -84,6 +85,8 @@ export default function HomePage() {
             Mint
           </button>
         </div>
+
+        <AdventuresChapterCountdown />
 
         {SHOW_SLIDESHOW && slides.length > 0 && (
           <div className="home-slideshow" aria-label="IMPLINGZ preview">

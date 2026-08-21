@@ -6,6 +6,7 @@ import {
   fetchAdventuresAccess,
   isAdventuresTesterWallet,
 } from '../lib/adventuresAccess';
+import { isAdventuresChapter1Open } from '../lib/adventuresChapter';
 
 const AdventuresPage = lazy(() => import('./AdventuresPage'));
 
@@ -27,19 +28,42 @@ function GatePopup({ message, error }) {
   );
 }
 
+function AdventuresSuspense() {
+  return (
+    <Suspense fallback={<GatePopup message="Opening Adventures…" />}>
+      <AdventuresPage />
+    </Suspense>
+  );
+}
+
 export default function AdventuresGatePage() {
   const { walletAccount } = useOutletContext();
   const { signMessageAsync } = useSignMessage();
+  const [chapterOpen, setChapterOpen] = useState(() => isAdventuresChapter1Open());
   const [serverUnlocked, setServerUnlocked] = useState(false);
   const [checking, setChecking] = useState(true);
   const [signing, setSigning] = useState(false);
   const [error, setError] = useState('');
   const signingRef = useRef(false);
-  const walletAllowed = isAdventuresTesterWallet(walletAccount);
-  const allowed = serverUnlocked && walletAllowed;
+  const walletAllowed = chapterOpen || isAdventuresTesterWallet(walletAccount);
+  const allowed = chapterOpen || (serverUnlocked && walletAllowed);
 
   useEffect(() => {
+    const syncChapter = () => setChapterOpen(isAdventuresChapter1Open());
+    syncChapter();
+    const id = window.setInterval(syncChapter, 1000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    if (chapterOpen) {
+      setServerUnlocked(true);
+      setChecking(false);
+      return undefined;
+    }
+
     let cancelled = false;
+    setChecking(true);
 
     fetchAdventuresAccess()
       .then((value) => {
@@ -55,10 +79,12 @@ export default function AdventuresGatePage() {
     return () => {
       cancelled = true;
     };
-  }, [walletAccount]);
+  }, [walletAccount, chapterOpen]);
 
   useEffect(() => {
-    if (!walletAllowed || serverUnlocked || checking || signingRef.current) return undefined;
+    if (chapterOpen || !walletAllowed || serverUnlocked || checking || signingRef.current) {
+      return undefined;
+    }
 
     let cancelled = false;
     signingRef.current = true;
@@ -117,18 +143,10 @@ export default function AdventuresGatePage() {
     return () => {
       cancelled = true;
     };
-  }, [walletAllowed, serverUnlocked, checking, signMessageAsync, walletAccount]);
+  }, [chapterOpen, walletAllowed, serverUnlocked, checking, signMessageAsync, walletAccount]);
 
   if (allowed) {
-    return (
-      <Suspense
-        fallback={
-          <GatePopup message="Opening Adventures…" />
-        }
-      >
-        <AdventuresPage />
-      </Suspense>
-    );
+    return <AdventuresSuspense />;
   }
 
   return (
