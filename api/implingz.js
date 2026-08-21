@@ -1,6 +1,10 @@
 const IMPLINGZ_CONTRACT = '0x81D2D1f0e92285CdD22Aa3cbc6956B6E1724d029';
 const BLOCKSCOUT_API = 'https://robinhoodchain.blockscout.com/api/v2';
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
+const BLOCKSCOUT_HEADERS = {
+  Accept: 'application/json',
+  'User-Agent': 'Mozilla/5.0 (compatible; j00ba.xyz/implingz-ownership)',
+};
 
 export default async function handler(request, response) {
   if (request.method !== 'GET') {
@@ -23,9 +27,7 @@ export default async function handler(request, response) {
   try {
     while (page < 50) {
       const blockscoutResponse = await fetch(url, {
-        headers: {
-          Accept: 'application/json',
-        },
+        headers: BLOCKSCOUT_HEADERS,
       });
 
       if (!blockscoutResponse.ok) {

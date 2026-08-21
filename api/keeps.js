@@ -79,7 +79,10 @@ export default async function handler(request, response) {
   try {
     while (page < 50) {
       const blockscoutResponse = await fetch(url, {
-        headers: { Accept: 'application/json' },
+        headers: {
+          Accept: 'application/json',
+          'User-Agent': 'Mozilla/5.0 (compatible; j00ba.xyz/keep-ownership)',
+        },
       });
       if (!blockscoutResponse.ok) {
         throw new Error(`Blockscout returned ${blockscoutResponse.status}.`);

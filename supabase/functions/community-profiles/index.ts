@@ -9,9 +9,13 @@ const CORS_HEADERS = {
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 const SIGNATURE_PATTERN = /^0x[a-fA-F0-9]{130}$/;
 const NONCE_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const IMPLINGZ_CONTRACT = "0x81d2d1f0e92285cdd22aa3cbc6956b6e1724d029";
+const IMPLINGZ_CONTRACT = "0x81D2D1f0e92285CdD22Aa3cbc6956B6E1724d029";
 const ROBINHOOD_RPC = "https://rpc.mainnet.chain.robinhood.com";
 const BLOCKSCOUT_API = "https://robinhoodchain.blockscout.com/api/v2";
+const BLOCKSCOUT_HEADERS = {
+  Accept: "application/json",
+  "User-Agent": "Mozilla/5.0 (compatible; j00ba.xyz/community-profiles)",
+};
 const OWNER_OF_SELECTOR = "0x6352211e";
 const PROFILE_COLUMNS =
   "wallet_address,nickname,bio,avatar_token_id,total_implingz,tier_1_count,tier_2_count,tier_3_count,created_at,updated_at";
@@ -64,7 +68,7 @@ async function fetchOwnedTokenIds(walletAddress: string) {
   const tokenIds = new Set<string>();
 
   for (let page = 0; page < 50; page += 1) {
-    const response = await fetch(url, { headers: { Accept: "application/json" } });
+    const response = await fetch(url, { headers: BLOCKSCOUT_HEADERS });
     if (!response.ok) throw new Error(`Blockscout returned ${response.status}.`);
 
     const data = await response.json();
@@ -82,7 +86,12 @@ async function fetchOwnedTokenIds(walletAddress: string) {
 }
 
 async function countWalletHoldings(walletAddress: string) {
-  return countTiersFromTokenIds(await fetchOwnedTokenIds(walletAddress));
+  try {
+    return countTiersFromTokenIds(await fetchOwnedTokenIds(walletAddress));
+  } catch (error) {
+    console.error("implingz holdings lookup failed", error);
+    return emptyCounts();
+  }
 }
 
 async function verifyAvatarOwnership(walletAddress: string, tokenId: string | null) {
@@ -94,7 +103,10 @@ async function verifyAvatarOwnership(walletAddress: string, tokenId: string | nu
   const encodedTokenId = numericTokenId.toString(16).padStart(64, "0");
   const response = await fetch(ROBINHOOD_RPC, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "User-Agent": "Mozilla/5.0 (compatible; j00ba.xyz/community-profiles)",
+    },
     body: JSON.stringify({
       jsonrpc: "2.0",
       id: 1,
@@ -148,30 +160,7 @@ Deno.serve(async (request: Request) => {
       const { data, error } = await query;
       if (error) throw error;
 
-      const profiles = [];
-      for (const profile of data ?? []) {
-        if ((profile.total_implingz ?? 0) > 0) {
-          profiles.push(profile);
-          continue;
-        }
-
-        const counts = await countWalletHoldings(profile.wallet_address);
-        if (counts.total_implingz === 0) {
-          profiles.push({ ...profile, ...counts });
-          continue;
-        }
-
-        const { data: updated, error: updateError } = await supabase
-          .from("community_profiles")
-          .update(counts)
-          .eq("wallet_address", profile.wallet_address)
-          .select(PROFILE_COLUMNS)
-          .single();
-        if (updateError) throw updateError;
-        profiles.push({
-          ...updated,
-        });
-      }
+      const profiles = data ?? [];
 
       const wallets = profiles.map((profile) => profile.wallet_address);
       const accountByWallet = new Map();
