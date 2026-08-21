@@ -2,22 +2,22 @@ export const MAX_ADVENTURER_LEVEL = 10;
 
 export const ADVENTURER_LEVELS = [
   { level: 1, xp: 0, slots: 1 },
-  { level: 2, xp: 500, slots: 2 },
-  { level: 3, xp: 1500, slots: 3 },
-  { level: 4, xp: 4000, slots: 4 },
-  { level: 5, xp: 8000, slots: 5 },
-  { level: 6, xp: 14000, slots: 5 },
-  { level: 7, xp: 22000, slots: 5 },
-  { level: 8, xp: 32000, slots: 5 },
-  { level: 9, xp: 45000, slots: 5 },
-  { level: 10, xp: 60000, slots: 5 },
+  { level: 2, xp: 300, slots: 2 },
+  { level: 3, xp: 900, slots: 3 },
+  { level: 4, xp: 2200, slots: 4 },
+  { level: 5, xp: 4500, slots: 5 },
+  { level: 6, xp: 8000, slots: 5 },
+  { level: 7, xp: 13000, slots: 5 },
+  { level: 8, xp: 20000, slots: 5 },
+  { level: 9, xp: 30000, slots: 5 },
+  { level: 10, xp: 45000, slots: 5 },
 ];
 
-export const XP_PROMPT_SUCCESS = 25;
-export const XP_PROMPT_FAIL = 8;
-export const XP_DUNGEON_FOUND = 100;
-export const XP_DUNGEON_MINTED = 200;
-export const XP_DUNGEON_DISCARDED = 40;
+export const XP_PROMPT_SUCCESS = 15;
+export const XP_PROMPT_FAIL = 5;
+export const XP_DUNGEON_FOUND = 40;
+export const XP_DUNGEON_MINTED = 80;
+export const XP_DUNGEON_DISCARDED = 15;
 
 export function progressFromXp(xp = 0) {
   const safeXp = Math.max(0, Number(xp) || 0);
@@ -50,7 +50,7 @@ export function emptyAdventurerAccount(walletAddress = '') {
     level: 1,
     active_adventures: 0,
     slots: 1,
-    nextLevelXp: 500,
+    nextLevelXp: 300,
     progressRatio: 0,
   };
 }

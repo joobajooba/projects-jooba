@@ -21,13 +21,13 @@ const SESSION_COLUMNS =
   "id,wallet_address,party_token_ids,status,hashes_checked,winning_nonce,winning_hash,dungeon_seed,mint_deadline,minted_token_id,xp_awarded,lives,started_at,ended_at,updated_at";
 const ADVENTURE_LIVES = 5;
 const HASH_PREFIX = "0000";
-const HASH_NEXT_NIBBLE_MAX = 7;
+const HASH_NEXT_NIBBLE_MAX = 3;
 const MINE_PAYLOAD_PREFIX = "implingz-dungeon";
-const XP_PROMPT_SUCCESS = 25;
-const XP_PROMPT_FAIL = 8;
-const XP_DUNGEON_FOUND = 100;
-const XP_DUNGEON_MINTED = 200;
-const XP_DUNGEON_DISCARDED = 40;
+const XP_PROMPT_SUCCESS = 15;
+const XP_PROMPT_FAIL = 5;
+const XP_DUNGEON_FOUND = 40;
+const XP_DUNGEON_MINTED = 80;
+const XP_DUNGEON_DISCARDED = 15;
 const DERP_DRIP_CHANCE = 0.15;
 const DERP_DRIP_MIN = 20;
 const DERP_DRIP_MAX = 40;
@@ -60,15 +60,15 @@ const DERP_REWARDS_ABI = [
 ] as const;
 const LEVELS = [
   { level: 1, xp: 0, slots: 1 },
-  { level: 2, xp: 500, slots: 2 },
-  { level: 3, xp: 1500, slots: 3 },
-  { level: 4, xp: 4000, slots: 4 },
-  { level: 5, xp: 8000, slots: 5 },
-  { level: 6, xp: 14000, slots: 5 },
-  { level: 7, xp: 22000, slots: 5 },
-  { level: 8, xp: 32000, slots: 5 },
-  { level: 9, xp: 45000, slots: 5 },
-  { level: 10, xp: 60000, slots: 5 },
+  { level: 2, xp: 300, slots: 2 },
+  { level: 3, xp: 900, slots: 3 },
+  { level: 4, xp: 2200, slots: 4 },
+  { level: 5, xp: 4500, slots: 5 },
+  { level: 6, xp: 8000, slots: 5 },
+  { level: 7, xp: 13000, slots: 5 },
+  { level: 8, xp: 20000, slots: 5 },
+  { level: 9, xp: 30000, slots: 5 },
+  { level: 10, xp: 45000, slots: 5 },
 ];
 const MAX_LEVEL = 10;
 const ENCOUNTER_DC_PAIRS = [
