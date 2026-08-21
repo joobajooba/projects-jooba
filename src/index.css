@@ -1372,6 +1372,28 @@ button:active:not(:disabled),
   text-align: center;
 }
 
+.info-roadmap-diagram__number,
+.info-roadmap-diagram__detail {
+  color: rgba(247, 247, 247, 0.72);
+  font-size: clamp(0.42rem, 1vw, 0.62rem);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.info-roadmap-diagram__node--done {
+  border-color: #b8ff2e;
+}
+
+.info-roadmap-diagram__node--done .info-roadmap-diagram__label,
+.info-roadmap-diagram__node--done .info-roadmap-diagram__number,
+.info-roadmap-diagram__node--done .info-roadmap-diagram__detail,
+.info-roadmap-stage--done,
+.faq-item__trigger .info-roadmap-stage--done {
+  color: #b8ff2e;
+}
+
 .info-roadmap-diagram__stem {
   grid-column: var(--stage);
   justify-self: center;
@@ -2248,6 +2270,35 @@ button:active:not(:disabled),
   letter-spacing: 0.06em;
 }
 
+.adventures-xp {
+  width: min(100%, 22rem);
+  margin: 0.85rem auto 0;
+  text-align: left;
+}
+
+.adventures-xp__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: rgba(232, 232, 232, 0.72);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+
+.adventures-xp__bar {
+  margin-top: 0.4rem;
+  height: 0.5rem;
+  overflow: hidden;
+  border: 1px solid rgba(184, 255, 46, 0.28);
+  background: rgba(0, 0, 0, 0.32);
+}
+
+.adventures-xp__bar span {
+  display: block;
+  height: 100%;
+  background: #b8ff2e;
+}
+
 .adventures-page__intro {
   width: min(100%, 42rem);
   margin: 0 auto 1.25rem;
@@ -2526,7 +2577,7 @@ button:active:not(:disabled),
   width: 0.42rem;
   height: 0.42rem;
   background: #ff9c9c;
-  animation: adventure-typing 1.2s steps(2, end) infinite;
+  animation: adventure-typing 0.7s steps(2, end) infinite;
 }
 
 .adventure-party__speech-loading span:nth-child(2) {
@@ -2838,6 +2889,31 @@ button:active:not(:disabled),
   gap: 0.5rem;
 }
 
+.adventure-chat__start-group {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.adventure-chat__lives {
+  display: flex;
+  align-items: center;
+  gap: 0.12rem;
+  user-select: none;
+}
+
+.adventure-chat__life {
+  color: #ff2d2d;
+  font-size: 1.05rem;
+  line-height: 1;
+  text-shadow: 0 0 8px rgba(255, 45, 45, 0.45);
+}
+
+.adventure-chat__life--lost {
+  color: rgba(255, 45, 45, 0.28);
+  text-shadow: none;
+}
+
 .adventure-chat__start {
   appearance: none;
   min-height: 2rem;
@@ -3025,7 +3101,7 @@ button:active:not(:disabled),
   width: 0.42rem;
   height: 0.42rem;
   background: #89d8ff;
-  animation: adventure-typing 1.2s steps(2, end) infinite;
+  animation: adventure-typing 0.7s steps(2, end) infinite;
 }
 
 .adventure-chat__typing span:nth-child(2) {
@@ -3158,6 +3234,52 @@ button:active:not(:disabled),
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
+.adventure-board__tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.adventure-board__switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem;
+}
+
+.adventure-board__switch-button {
+  appearance: none;
+  min-height: 2.4rem;
+  padding: 0.45rem 0.85rem;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.35);
+  color: rgba(240, 240, 240, 0.72);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.adventure-board__switch-button:hover {
+  border-color: rgba(255, 138, 138, 0.46);
+  background: rgba(255, 255, 255, 0.09);
+  color: #fff;
+}
+
+.adventure-board__switch-button--active {
+  border-color: rgba(255, 138, 138, 0.58);
+  background: rgba(255, 138, 138, 0.12);
+  color: #fff;
+}
+
+.adventure-board__switch-button:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.62);
+  outline-offset: 2px;
+}
+
 .adventure-board__live {
   display: inline-flex;
   align-items: center;
@@ -3238,6 +3360,17 @@ button:active:not(:disabled),
 
 .adventure-board__xp {
   color: #d9ff91;
+  font-variant-numeric: tabular-nums;
+}
+
+.adventure-board__minted {
+  color: #f0f0f0;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.adventure-board__derp {
+  color: #89d8ff;
   font-variant-numeric: tabular-nums;
 }
 
@@ -3494,6 +3627,10 @@ button:active:not(:disabled),
   .adventure-chat__heading-actions {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .adventure-chat__start-group {
+    flex-wrap: wrap;
   }
 
   .adventure-chat__options {

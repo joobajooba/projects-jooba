@@ -1,5 +1,10 @@
 import { renderDungeonPreview } from './lib/renderDungeonPng.js';
-import { KEEP_DESCRIPTION, openseaMetadata } from './lib/dungeonTraits.js';
+import {
+  KEEP_DESCRIPTION,
+  dungeonPreviewPath,
+  openseaMetadata,
+  parseKeepTokenId,
+} from './lib/dungeonTraits.js';
 
 function siteOrigin(request) {
   const header = request.headers['x-forwarded-host'] || request.headers.host;
@@ -19,15 +24,17 @@ export default async function handler(request, response) {
 
   const seed = String(request.query?.seed || '42');
   const fmt = String(request.query?.format || 'png').toLowerCase();
+  const tokenId = parseKeepTokenId(request.query?.tokenId);
 
   try {
-    const preview = await renderDungeonPreview(seed);
+    const preview = await renderDungeonPreview(seed, tokenId);
     const origin = siteOrigin(request);
-    const imageUrl = `${origin}/api/dungeon-preview?seed=${encodeURIComponent(seed)}&format=png`;
+    const imageUrl = `${origin}${dungeonPreviewPath(seed, { format: 'png', tokenId })}`;
     const metadata = openseaMetadata({
       seedValue: preview.seed,
       imageUrl,
       externalUrl: `${origin}/the-dungeon`,
+      tokenId,
       description: KEEP_DESCRIPTION,
       attributes: preview.attributes,
     });
@@ -52,7 +59,8 @@ export default async function handler(request, response) {
         options: preview.options,
         attributes: preview.attributes,
         engine: preview.engine,
-        imageUrl: `/api/dungeon-preview?seed=${encodeURIComponent(seed)}&format=png`,
+        tokenId,
+        imageUrl: dungeonPreviewPath(seed, { format: 'png', tokenId }),
         metadata,
       });
     }

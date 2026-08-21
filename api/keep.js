@@ -1,6 +1,6 @@
 import { createPublicClient, http } from 'viem';
 import { describeDungeon } from './lib/generateDungeon.js';
-import { KEEP_DESCRIPTION, openseaMetadata } from './lib/dungeonTraits.js';
+import { KEEP_DESCRIPTION, dungeonPreviewPath, openseaMetadata } from './lib/dungeonTraits.js';
 
 const KEEP_ADDRESS =
   process.env.DUNGEON_KEEP_ADDRESS ||
@@ -62,9 +62,10 @@ export default async function handler(request, response) {
       args: [BigInt(tokenId)],
     });
     const hex = seedHex(seed);
-    const described = describeDungeon(hex);
+    const id = Number(tokenId);
+    const described = describeDungeon(hex, id);
     const origin = siteOrigin(request);
-    const image = `${origin}/api/dungeon-preview?seed=${encodeURIComponent(hex)}&format=png`;
+    const image = `${origin}${dungeonPreviewPath(hex, { format: 'png', tokenId: id })}`;
 
     response.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
     return response.status(200).json(

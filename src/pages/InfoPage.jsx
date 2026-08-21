@@ -96,13 +96,14 @@ const DIAGRAM_STAGES = [
     side: 'top',
   },
   {
-    title: 'In-House Store',
-    icon: '/roadmap/diagram-crystal.png',
+    title: 'Product Upgrades',
+    detail: 'Imp Battles',
+    icon: '/roadmap/diagram-crown.png',
     side: 'bottom',
   },
   {
-    title: 'Product Upgrades',
-    icon: '/roadmap/diagram-crown.png',
+    title: 'In-House Store',
+    icon: '/roadmap/diagram-crystal.png',
     side: 'top',
   },
   {
@@ -138,7 +139,7 @@ const ROADMAP_ITEMS = [
     title: 'Claimed Dungeons',
     paragraphs: [
       'You and your chosen Impling have faced the dangers, overcome the challenges, and earned your place within the dungeon, claimed with a free mint (ETH gas). OpenSea then reads the live contract and shows the revealed dungeon. List it on OpenSea in ETH if you want to trade.',
-      'After keeps are being claimed, later stages can open on this site and on Anvil: staking, a bigger rewards pot, an in-house store, product upgrades, and brand. Those are not live yet.',
+      'After keeps are being claimed, later stages can open on this site and on Anvil: staking, a bigger rewards pot, product upgrades, an in-house store, and brand. Those are not live yet.',
     ],
     image: '/roadmap/roadmap-map.gif',
     imageAlt: 'An animated pixel art treasure map scroll',
@@ -163,6 +164,16 @@ const ROADMAP_ITEMS = [
     imageAlt: 'A pixel art treasure chest',
   },
   {
+    title: 'Product Upgrades',
+    paragraphs: [
+      'This is the open later chapter: keep upgrades after mint, The Dungeon as a place you return to, seasonal extras, and whatever else fits the world once people are actually playing. Something we can keep improving as we progress.',
+      'Impz is something we plan to constantly develop with fun features, meaningful collaborations, and a community that can keep growing!',
+      'Imp Battles is something we want to bring as additional functionality, battle others with your Impz and stake royalities, the winner takes all!',
+    ],
+    image: '/roadmap/diagram-crown.png',
+    imageAlt: 'A pixel art crown',
+  },
+  {
     title: 'In-House Store',
     paragraphs: [
       'Once $IMP exists, this website can accept it. Connect your wallet, spend $IMP, and buy things that belong to IMPLINGz: whitelist spots, dungeon upgrades, or other extras I add over time.',
@@ -171,15 +182,6 @@ const ROADMAP_ITEMS = [
     ],
     image: '/roadmap/diagram-crystal.png',
     imageAlt: 'A pixel art crystal ball',
-  },
-  {
-    title: 'Product Upgrades',
-    paragraphs: [
-      'This is the open later chapter: keep upgrades after mint, The Dungeon as a place you return to, seasonal extras, and whatever else fits the world once people are actually playing. Something we can keep improving as we progress.',
-      'Impz is something we plan to constantly develop with fun features, meaningful collaborations, and a community that can keep growing!',
-    ],
-    image: '/roadmap/diagram-crown.png',
-    imageAlt: 'A pixel art crown',
   },
   {
     title: 'Brand',
@@ -201,11 +203,17 @@ function RoadmapDiagram() {
         {DIAGRAM_STAGES.map((stage, index) => (
           <Fragment key={stage.title}>
             <article
-              className={`info-roadmap-diagram__node info-roadmap-diagram__node--${stage.side}`}
+              className={`info-roadmap-diagram__node info-roadmap-diagram__node--${stage.side}${
+                index < 3 ? ' info-roadmap-diagram__node--done' : ''
+              }`}
               style={{ '--stage': index + 1 }}
             >
+              <span className="info-roadmap-diagram__number">Stage {index + 1}</span>
               <img className="info-roadmap-diagram__icon" src={stage.icon} alt="" />
               <span className="info-roadmap-diagram__label">{stage.title}</span>
+              {stage.detail ? (
+                <span className="info-roadmap-diagram__detail">{stage.detail}</span>
+              ) : null}
             </article>
             <span
               className={`info-roadmap-diagram__stem info-roadmap-diagram__stem--${stage.side}`}
@@ -317,9 +325,9 @@ function RoadmapContent() {
         <InfoBox
           key={item.title}
           title={
-            <>
+            <span className={index < 3 ? 'info-roadmap-stage--done' : undefined}>
               <strong>Stage {index + 1}</strong> | {item.title}
-            </>
+            </span>
           }
           content={
             <RoadmapItemContent
