@@ -26,6 +26,7 @@ import {
   DUNGEON_KEEP_ADDRESS,
   keepOpenSeaCollectionUrl,
   keepOpenSeaItemUrl,
+  keepPreviewUrl,
   tokenIdFromMintReceipt,
 } from '../lib/dungeonKeep';
 import { ADVENTURE_ENCOUNTERS } from '../lib/adventureEncounters';
@@ -71,13 +72,56 @@ const IMPLING_IDLE_QUOTES = [
   'Nat 20 energy today.',
 ];
 
-const ENCOUNTER_DELAY_MIN = 60_000;
-const ENCOUNTER_DELAY_MAX = 180_000;
-const IDLE_DELAY_MIN = 18_000;
-const IDLE_DELAY_MAX = 24_000;
-const IMP_SPEECH_DELAY_MIN = 10_000;
-const IMP_SPEECH_DELAY_MAX = 30_000;
-const IMP_SPEECH_THINKING_DELAY = 5_000;
+const ADVENTURE_LIVES = 3;
+const LIVES_STORAGE_KEY = 'implingz-adventure-lives';
+
+function readLivesStore() {
+  try {
+    return JSON.parse(window.localStorage.getItem(LIVES_STORAGE_KEY) || '{}');
+  } catch {
+    return {};
+  }
+}
+
+function writeStoredLives(sessionId, remaining) {
+  if (!sessionId) return;
+  const store = readLivesStore();
+  store[sessionId] = remaining;
+  window.localStorage.setItem(LIVES_STORAGE_KEY, JSON.stringify(store));
+}
+
+function clearStoredLives(sessionId) {
+  if (!sessionId) return;
+  const store = readLivesStore();
+  delete store[sessionId];
+  window.localStorage.setItem(LIVES_STORAGE_KEY, JSON.stringify(store));
+}
+
+function livesFromSession(session) {
+  const server = Number(session?.lives);
+  const stored = session?.id ? Number(readLivesStore()[session.id]) : NaN;
+  const candidates = [server, stored].filter((value) => Number.isFinite(value) && value >= 0);
+  if (!candidates.length) return ADVENTURE_LIVES;
+  return Math.min(ADVENTURE_LIVES, ...candidates);
+}
+
+const ENCOUNTER_DELAY_MIN = 20_000;
+const ENCOUNTER_DELAY_MAX = 30_000;
+const IDLE_DELAY_MIN = 8_000;
+const IDLE_DELAY_MAX = 14_000;
+const IMP_SPEECH_DELAY_MIN = 8_000;
+const IMP_SPEECH_DELAY_MAX = 16_000;
+const IMP_SPEECH_THINKING_DELAY = 1_800;
+const PARTY_SLOT_COUNT = 5;
+const EMPTY_PARTY_SLOTS = Array.from({ length: PARTY_SLOT_COUNT }, () => null);
+const EMPTY_SPEECH_STATES = Array.from({ length: PARTY_SLOT_COUNT }, () => ({
+  quoteIndex: null,
+  thinking: false,
+}));
+const EMPTY_SPEECH_TIMERS = Array.from({ length: PARTY_SLOT_COUNT }, () => ({
+  wait: null,
+  change: null,
+}));
 
 function randomDelay(minimum, maximum) {
   return Math.floor(Math.random() * (maximum - minimum + 1)) + minimum;
@@ -197,7 +241,7 @@ function AdventureSlot({
   const dungeonImageUrl = run?.dungeonImageUrl ?? '';
   const lastDrip = run?.lastDrip ?? null;
 
-  const [selectedImplingz, setSelectedImplingz] = useState([null, null, null]);
+  const [selectedImplingz, setSelectedImplingz] = useState(EMPTY_PARTY_SLOTS);
   const [selectingSlot, setSelectingSlot] = useState(null);
   const [ownedImplingz, setOwnedImplingz] = useState([]);
   const [implingzLoading, setImplingzLoading] = useState(false);
@@ -212,24 +256,18 @@ function AdventureSlot({
   const [mintStatus, setMintStatus] = useState('');
   const [mintedKeepUrl, setMintedKeepUrl] = useState('');
   const [mintedCollectionUrl, setMintedCollectionUrl] = useState('');
+  const [lives, setLives] = useState(() => livesFromSession(session));
   const [viewKeepOpen, setViewKeepOpen] = useState(false);
   const [keepMetadata, setKeepMetadata] = useState(null);
-  const [impSpeechStates, setImpSpeechStates] = useState([
-    { quoteIndex: null, thinking: false },
-    { quoteIndex: null, thinking: false },
-    { quoteIndex: null, thinking: false },
-  ]);
+  const [nextKeepTokenId, setNextKeepTokenId] = useState(null);
+  const [impSpeechStates, setImpSpeechStates] = useState(EMPTY_SPEECH_STATES);
   const chatEndRef = useRef(null);
   const nextEncounterTimerRef = useRef(null);
   const idleTimerRef = useRef(null);
   const lastIdleNarrationRef = useRef(null);
   const resumedSessionRef = useRef('');
   const usedEncounterIndexesRef = useRef(new Set());
-  const impSpeechTimersRef = useRef([
-    { wait: null, change: null },
-    { wait: null, change: null },
-    { wait: null, change: null },
-  ]);
+  const impSpeechTimersRef = useRef(EMPTY_SPEECH_TIMERS.map((timer) => ({ ...timer })));
   const connectedAddress = walletAccount
     ? `${walletAccount.slice(0, 6)}…${walletAccount.slice(-4)}`
     : '';
@@ -249,12 +287,14 @@ function AdventureSlot({
 
   useEffect(() => {
     clearAdventureTimers();
-    setSelectedImplingz([null, null, null]);
+    setSelectedImplingz(EMPTY_PARTY_SLOTS);
+    setImpSpeechStates(EMPTY_SPEECH_STATES);
     setOwnedImplingz([]);
     setSelectingSlot(null);
     setImplingzError('');
     setAdventureMessages([]);
     setEncounterIndex(null);
+    setLives(livesFromSession(session));
     setStartError('');
     setMintStatus('');
     setMintedKeepUrl('');
@@ -267,8 +307,8 @@ function AdventureSlot({
 
   useEffect(() => {
     if (!session?.id || !party.length) return;
-    const nextSlots = [null, null, null];
-    party.slice(0, 3).forEach((impling, index) => {
+    const nextSlots = [...EMPTY_PARTY_SLOTS];
+    party.slice(0, PARTY_SLOT_COUNT).forEach((impling, index) => {
       nextSlots[index] = impling;
     });
     setSelectedImplingz(nextSlots);
@@ -280,16 +320,40 @@ function AdventureSlot({
     resumedSessionRef.current = session.id;
     usedEncounterIndexesRef.current = new Set();
 
-    setAdventureMessages([
-      {
-        type: 'system',
-        text:
-          session.status === 'found'
-            ? `${adventureLabel} already uncovered a keep. View the dungeon, mint it, or flee.`
-            : `${adventureLabel} still running${partyNames ? ` with IMPLINGz ${partyNames}` : ''}. Mining continues while you browse other pages.`,
-      },
-    ]);
+    const names = party.map((impling) => `#${impling.id}`).join(', ');
+    const isFreshStart =
+      session.status === 'running' && Number(session.hashes_checked ?? hashesChecked ?? 0) === 0;
+
+    setAdventureMessages(
+      session.status === 'found'
+        ? [
+            {
+              type: 'system',
+              text: `${adventureLabel} already uncovered a keep. View the dungeon, mint it, or flee.`,
+            },
+          ]
+        : isFreshStart
+          ? [
+              {
+                type: 'narrator',
+                text: `${adventureLabel} for the lost dungeons has commenced.`,
+              },
+              {
+                type: 'system',
+                text: `IMPLINGZ ${names} enter the wilds at ${hashesPerTickForParty(party)} hashes/tick. Mining keeps running if you leave this page.`,
+              },
+            ]
+          : [
+              {
+                type: 'system',
+                text: `${adventureLabel} still running${
+                  names ? ` with IMPLINGz ${names}` : ''
+                }. Mining continues while you browse other pages.`,
+              },
+            ]
+    );
     setEncounterIndex(null);
+    setLives(livesFromSession(session));
     if (session.status === 'running') {
       scheduleNextEncounter();
     }
@@ -342,6 +406,11 @@ function AdventureSlot({
 
   useEffect(() => {
     clearImpSpeechTimers();
+    if (!adventureStarted) {
+      setImpSpeechStates(EMPTY_SPEECH_STATES);
+      return clearImpSpeechTimers;
+    }
+
     const usedQuoteIndexes = new Set();
     const initialSpeechStates = selectedImplingz.map((impling, slotIndex) => {
       if (!impling) return { quoteIndex: null, thinking: false };
@@ -361,7 +430,7 @@ function AdventureSlot({
     });
 
     return clearImpSpeechTimers;
-  }, [selectedImplingz]);
+  }, [adventureStarted, selectedImplingz]);
 
   useEffect(
     () => () => {
@@ -395,16 +464,40 @@ function AdventureSlot({
   }, [session?.status]);
 
   useEffect(() => {
+    if (!viewKeepOpen || !publicClient || !DUNGEON_KEEP_ADDRESS) {
+      if (!viewKeepOpen) setNextKeepTokenId(null);
+      return undefined;
+    }
+
+    let cancelled = false;
+    publicClient
+      .readContract({
+        address: DUNGEON_KEEP_ADDRESS,
+        abi: DUNGEON_KEEP_ABI,
+        functionName: 'totalSupply',
+      })
+      .then((supply) => {
+        if (!cancelled) setNextKeepTokenId(Number(supply) + 1);
+      })
+      .catch(() => {
+        if (!cancelled) setNextKeepTokenId(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [viewKeepOpen, publicClient, session?.dungeon_seed]);
+
+  useEffect(() => {
     if (!viewKeepOpen || !session?.dungeon_seed) {
       setKeepMetadata(null);
       return undefined;
     }
 
     const controller = new AbortController();
-    fetch(
-      `/api/dungeon-preview?seed=${encodeURIComponent(session.dungeon_seed)}&format=json`,
-      { signal: controller.signal }
-    )
+    fetch(keepPreviewUrl(session.dungeon_seed, { format: 'json', tokenId: nextKeepTokenId }), {
+      signal: controller.signal,
+    })
       .then((response) => (response.ok ? response.json() : null))
       .then((data) => {
         setKeepMetadata(data || { attributes: [] });
@@ -414,7 +507,7 @@ function AdventureSlot({
       });
 
     return () => controller.abort();
-  }, [viewKeepOpen, session?.dungeon_seed]);
+  }, [viewKeepOpen, session?.dungeon_seed, nextKeepTokenId]);
 
   async function openImplingSelector(slotIndexToOpen) {
     if (!walletAccount || adventureStarted) return;
@@ -610,26 +703,23 @@ function AdventureSlot({
         signature,
       });
 
-      const partyNames = enrichedParty.map((impling) => `#${impling.id}`).join(', ');
       beginAdventure({
         account: data.account,
         session: data.session,
         partyMembers: enrichedParty,
       });
-      resumedSessionRef.current = data.session.id;
-      usedEncounterIndexesRef.current = new Set();
+      writeStoredLives(data.session.id, ADVENTURE_LIVES);
+      clearAdventureTimers();
+      clearImpSpeechTimers();
+      setSelectedImplingz(EMPTY_PARTY_SLOTS);
+      setImpSpeechStates(EMPTY_SPEECH_STATES);
+      setAdventureMessages([]);
       setEncounterIndex(null);
-      setAdventureMessages([
-        {
-          type: 'narrator',
-          text: `${adventureLabel} for the lost dungeons has commenced.`,
-        },
-        {
-          type: 'system',
-          text: `IMPLINGZ ${partyNames} enter the wilds at ${hashesPerTickForParty(enrichedParty)} hashes/tick. Mining keeps running if you leave this page.`,
-        },
-      ]);
-      scheduleNextEncounter();
+      setSelectingSlot(null);
+      setOwnedImplingz([]);
+      setLives(ADVENTURE_LIVES);
+      resumedSessionRef.current = '';
+      usedEncounterIndexesRef.current = new Set();
     } catch (error) {
       setStartError(error?.shortMessage || error?.message || 'Could not start the adventure.');
     } finally {
@@ -645,6 +735,8 @@ function AdventureSlot({
       await stopAdventure(session.id);
       clearAdventureTimers();
       setEncounterIndex(null);
+      setLives(ADVENTURE_LIVES);
+      clearStoredLives(session.id);
       setAdventureMessages([]);
       setMintStatus(`${adventureLabel} stopped. Mining ended and the slot is free again.`);
       resumedSessionRef.current = '';
@@ -667,8 +759,20 @@ function AdventureSlot({
         optionKey: option.key,
       });
       const rollResult = result.succeeded ? 'Success' : 'Failure';
+      const remainingLives = Math.max(
+        0,
+        Number(result.lives ?? (result.succeeded ? lives : lives - 1))
+      );
+      const defeated =
+        Boolean(result.defeated) ||
+        remainingLives <= 0 ||
+        result.session?.status === 'abandoned';
+      setLives(defeated ? 0 : remainingLives);
+      if (session?.id) {
+        writeStoredLives(session.id, defeated ? 0 : remainingLives);
+      }
       setAdventurer(decorateAccount(result.account));
-      if (result.session) {
+      if (result.session && !defeated) {
         replaceSession({
           account: result.account,
           session: result.session,
@@ -688,6 +792,18 @@ function AdventureSlot({
           type: result.succeeded ? 'roll-success' : 'roll-failure',
           text: `You rolled ${result.roll} on the D20 against DC ${result.dc} — ${rollResult}.`,
         },
+        ...(result.succeeded
+          ? []
+          : [
+              {
+                type: 'system',
+                text: defeated
+                  ? 'You lost your last life. The adventure is over — start again.'
+                  : `You lost a life. ${remainingLives} ${
+                      remainingLives === 1 ? 'life' : 'lives'
+                    } remaining.`,
+              },
+            ]),
         ...(Number(result.xpAwarded) > 0
           ? [{ type: 'xp', text: `+${result.xpAwarded} XP` }]
           : []),
@@ -697,6 +813,19 @@ function AdventureSlot({
         },
         ...(treasure ? [treasure] : []),
       ]);
+      if (defeated) {
+        setRuntimeError('You lost all 3 lives. The adventure has ended. Start again.');
+        clearAdventureTimers();
+        setEncounterIndex(null);
+        if (result.session && !['running', 'found'].includes(result.session.status)) {
+          clearStoredLives(session.id);
+          removeRun(session.id);
+        } else {
+          await stopAdventure(session.id);
+          clearStoredLives(session.id);
+        }
+        return;
+      }
       if (result.session?.status === 'found') {
         setEncounterIndex(null);
       } else {
@@ -892,8 +1021,8 @@ function AdventureSlot({
             {walletAccount
             ? adventureStarted
               ? `${adventureLabel} is using these Impz. Start another adventure below with unused Impz if you have a free slot.`
-              : 'Choose up to three Impz that are not already on another adventure.'
-            : 'Use the wallet icon in the top-right, then choose up to three Impz to join the adventure.'}
+              : 'Choose up to five Impz that are not already on another adventure.'
+            : 'Use the wallet icon in the top-right, then choose up to five Impz to join the adventure.'}
         </p>
         {mintedKeepUrl ? (
           <p className="adventure-party__help">
@@ -926,7 +1055,8 @@ function AdventureSlot({
                   aria-live="polite"
                 >
                   {impling ? (
-                    impSpeechStates[index]?.thinking ? (
+                    adventureStarted ? (
+                      impSpeechStates[index]?.thinking ? (
                       <span
                         className="adventure-party__speech-loading"
                         aria-label={`${impling.name} is thinking`}
@@ -935,9 +1065,12 @@ function AdventureSlot({
                         <span />
                         <span />
                       </span>
+                      ) : (
+                        IMPLING_IDLE_QUOTES[impSpeechStates[index]?.quoteIndex] ??
+                        IMPLING_IDLE_QUOTES[getInitialImplingQuoteIndex(impling.id, index)]
+                      )
                     ) : (
-                      IMPLING_IDLE_QUOTES[impSpeechStates[index]?.quoteIndex] ??
-                      IMPLING_IDLE_QUOTES[getInitialImplingQuoteIndex(impling.id, index)]
+                      'Ready when you start.'
                     )
                   ) : (
                     'Psst… pick an Imp.'
@@ -1006,6 +1139,24 @@ function AdventureSlot({
             <h2>D&amp;D Adventure</h2>
           </div>
           <div className="adventure-chat__heading-actions">
+            <div className="adventure-chat__start-group">
+              <div
+                className="adventure-chat__lives"
+                aria-label={`${lives} of ${ADVENTURE_LIVES} lives remaining`}
+                title={`${lives} of ${ADVENTURE_LIVES} lives remaining`}
+              >
+                {Array.from({ length: ADVENTURE_LIVES }, (_, index) => (
+                  <span
+                    key={index}
+                    className={`adventure-chat__life${
+                      index < lives ? '' : ' adventure-chat__life--lost'
+                    }`}
+                    aria-hidden="true"
+                  >
+                    ♥
+                  </span>
+                ))}
+              </div>
             {adventureStarted ? (
               <button
                 type="button"
@@ -1033,6 +1184,7 @@ function AdventureSlot({
                     : 'Start Adventure'}
               </button>
             )}
+            </div>
             <span
               className={`adventure-chat__status${
                 adventureStarted ? ' adventure-chat__status--started' : ''
@@ -1055,7 +1207,7 @@ function AdventureSlot({
           }`}
           aria-live="polite"
         >
-          {adventureStarted || adventureMessages.length > 0 ? (
+          {adventureStarted && adventureMessages.length > 0 ? (
             <div className="adventure-chat__messages">
               {adventureMessages.map((message, index) => (
                 <div
@@ -1096,7 +1248,7 @@ function AdventureSlot({
                 &gt;_
               </span>
               <h3>The wilds are waiting</h3>
-              <p>Select at least one Imp, then start the adventure.</p>
+              <p>Select at least one Imp, then start the adventure. Failed D20 rolls cost a life.</p>
             </div>
           )}
         </div>
@@ -1221,10 +1373,10 @@ function AdventureSlot({
               Inspect the preview, then mint it as an NFT or flee. Minting is free aside from ETH
               gas.
             </p>
-            {dungeonImageUrl ? (
+            {session?.dungeon_seed ? (
               <img
                 className="dungeon-found-modal__map"
-                src={dungeonImageUrl}
+                src={keepPreviewUrl(session.dungeon_seed, { tokenId: nextKeepTokenId })}
                 alt="Procedurally generated lost keep"
               />
             ) : (
@@ -1362,6 +1514,35 @@ function AdventureSlot({
   );
 }
 
+function AdventurerLevelBar() {
+  const { adventurer } = useAdventureRuntime();
+  const percent = Math.round((adventurer.progressRatio ?? 0) * 100);
+  const atMax = !adventurer.nextLevelXp;
+
+  return (
+    <div
+      className="adventures-xp"
+      aria-label={
+        atMax
+          ? `Level ${adventurer.level}, ${adventurer.xp} XP, max level`
+          : `Level ${adventurer.level}, ${adventurer.xp} of ${adventurer.nextLevelXp} XP to next level`
+      }
+    >
+      <div className="adventures-xp__meta">
+        <span>Lv {adventurer.level}</span>
+        <span>
+          {atMax
+            ? `${adventurer.xp} XP · Max level`
+            : `${adventurer.xp} / ${adventurer.nextLevelXp} XP`}
+        </span>
+      </div>
+      <div className="adventures-xp__bar" aria-hidden="true">
+        <span style={{ width: `${percent}%` }} />
+      </div>
+    </div>
+  );
+}
+
 function StartAdventurePanel() {
   const { adventurer, adventures, foundAdventure, busyTokenIds, dripMessage, runtimeError } =
     useAdventureRuntime();
@@ -1406,7 +1587,7 @@ function StartAdventurePanel() {
 
       {canStartAnother ? (
         <AdventureSlot
-          key="draft"
+          key={`draft-${adventures.map((run) => run.session.id).join('|') || 'empty'}`}
           slotIndex={adventures.length}
           run={null}
           busyTokenIds={busyTokenIds}
@@ -1454,9 +1635,22 @@ function formatDungeonFound(event) {
   return '—';
 }
 
+function formatMinted(event) {
+  if (event?.status === 'minted' || event?.minted_token_id) return 'Y';
+  return 'N';
+}
+
+function formatDerpAmount(amount) {
+  const value = Number(amount);
+  if (!Number.isFinite(value) || value <= 0) return '—';
+  return `${value} $DERP`;
+}
+
 function AdventureBoard() {
   const [events, setEvents] = useState([]);
+  const [payouts, setPayouts] = useState([]);
   const [profilesByWallet, setProfilesByWallet] = useState({});
+  const [feedView, setFeedView] = useState('dungeons');
 
   useEffect(() => {
     const controller = new AbortController();
@@ -1464,8 +1658,9 @@ function AdventureBoard() {
       fetchAdventureBoard({ signal: controller.signal }),
       fetchCommunityProfiles({ signal: controller.signal }).catch(() => []),
     ])
-      .then(([boardEvents, profiles]) => {
-        setEvents(boardEvents);
+      .then(([board, profiles]) => {
+        setEvents(board.events ?? []);
+        setPayouts(board.payouts ?? []);
         setProfilesByWallet(
           Object.fromEntries(
             (profiles ?? []).map((profile) => [
@@ -1477,10 +1672,14 @@ function AdventureBoard() {
       })
       .catch(() => {
         setEvents([]);
+        setPayouts([]);
         setProfilesByWallet({});
       });
     return () => controller.abort();
   }, []);
+
+  const showingDungeons = feedView === 'dungeons';
+  const rows = showingDungeons ? events : payouts;
 
   return (
     <section className="adventure-board" aria-labelledby="adventure-board-title">
@@ -1489,25 +1688,66 @@ function AdventureBoard() {
           <p className="adventure-panel__eyebrow">All connected wallets</p>
           <h2 id="adventure-board-title">Live Adventure Feed</h2>
         </div>
-        <span className="adventure-board__live">
-          <span aria-hidden="true" />
-          Live
-        </span>
+        <div className="adventure-board__tools">
+          <div className="adventure-board__switch" role="tablist" aria-label="Adventure feed views">
+            <button
+              type="button"
+              role="tab"
+              id="adventure-board-tab-dungeons"
+              aria-selected={showingDungeons}
+              aria-controls="adventure-board-panel"
+              className={`adventure-board__switch-button${
+                showingDungeons ? ' adventure-board__switch-button--active' : ''
+              }`}
+              onClick={() => setFeedView('dungeons')}
+            >
+              Dungeons
+            </button>
+            <button
+              type="button"
+              role="tab"
+              id="adventure-board-tab-derp"
+              aria-selected={!showingDungeons}
+              aria-controls="adventure-board-panel"
+              className={`adventure-board__switch-button${
+                showingDungeons ? '' : ' adventure-board__switch-button--active'
+              }`}
+              onClick={() => setFeedView('derp')}
+            >
+              $DERP
+            </button>
+          </div>
+          <span className="adventure-board__live">
+            <span aria-hidden="true" />
+            Live
+          </span>
+        </div>
       </div>
 
-      <div className="adventure-board__feed" aria-live="polite">
-        {events.length === 0 ? (
+      <div
+        className="adventure-board__feed"
+        id="adventure-board-panel"
+        role="tabpanel"
+        aria-labelledby={
+          showingDungeons ? 'adventure-board-tab-dungeons' : 'adventure-board-tab-derp'
+        }
+        aria-live="polite"
+      >
+        {rows.length === 0 ? (
           <div className="adventure-board__empty">
             <span className="adventure-board__empty-mark" aria-hidden="true">
               …
             </span>
-            <h3>Waiting for adventure activity</h3>
+            <h3>
+              {showingDungeons ? 'Waiting for dungeon activity' : 'Waiting for $DERP payouts'}
+            </h3>
             <p>
-              Signed adventure starts, prompt wins, found keeps, and mints from connected wallets
-              appear here.
+              {showingDungeons
+                ? 'Found keeps, mints, and XP from connected wallets appear here.'
+                : 'Each sent $DERP drip is listed here with the wallet and amount.'}
             </p>
           </div>
-        ) : (
+        ) : showingDungeons ? (
           <div className="adventure-board__table-wrap">
             <table className="adventure-board__table">
               <thead>
@@ -1516,6 +1756,7 @@ function AdventureBoard() {
                   <th scope="col">Name</th>
                   <th scope="col">Wallet address</th>
                   <th scope="col">Dungeon found</th>
+                  <th scope="col">Minted</th>
                   <th scope="col">XP earned</th>
                   <th scope="col">Time found</th>
                 </tr>
@@ -1546,10 +1787,55 @@ function AdventureBoard() {
                         </span>
                       </td>
                       <td>{formatDungeonFound(event)}</td>
+                      <td className="adventure-board__minted">{formatMinted(event)}</td>
                       <td className="adventure-board__xp">{event.xp_awarded ?? 0}</td>
                       <td>
                         {formatBoardTime(event.updated_at || event.ended_at || event.started_at)}
                       </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="adventure-board__table-wrap">
+            <table className="adventure-board__table">
+              <thead>
+                <tr>
+                  <th scope="col">Profile pic</th>
+                  <th scope="col">Name</th>
+                  <th scope="col">Wallet address</th>
+                  <th scope="col">Amount</th>
+                  <th scope="col">Time sent</th>
+                </tr>
+              </thead>
+              <tbody>
+                {payouts.map((payout) => {
+                  const wallet = String(payout.wallet_address || '').toLowerCase();
+                  const profile = profilesByWallet[wallet];
+                  const avatar = COLLECTION_BY_ID.get(String(profile?.avatar_token_id ?? ''));
+                  return (
+                    <tr key={payout.id}>
+                      <td>
+                        <div className="adventure-board__avatar">
+                          {avatar ? (
+                            <img src={avatar.image} alt={avatar.name} />
+                          ) : (
+                            <span aria-hidden="true">?</span>
+                          )}
+                        </div>
+                      </td>
+                      <td>
+                        <strong>{profile?.nickname || 'Unnamed Adventurer'}</strong>
+                      </td>
+                      <td>
+                        <span className="adventure-board__address">
+                          {shortenAddress(payout.wallet_address)}
+                        </span>
+                      </td>
+                      <td className="adventure-board__derp">{formatDerpAmount(payout.amount)}</td>
+                      <td>{formatBoardTime(payout.created_at)}</td>
                     </tr>
                   );
                 })}
@@ -1589,6 +1875,7 @@ export default function AdventuresPage() {
         <header className="adventures-page__header">
           <p className="adventures-page__eyebrow">Chapter 1</p>
           <h1 className="adventures-page__title">Adventures</h1>
+          <AdventurerLevelBar />
         </header>
 
         <div className="adventures-tabs" role="tablist" aria-label="Adventure page sections">

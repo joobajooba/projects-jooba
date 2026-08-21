@@ -18,15 +18,17 @@ const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 const SIGNATURE_PATTERN = /^0x[a-fA-F0-9]{130}$/;
 const NONCE_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SESSION_COLUMNS =
-  "id,wallet_address,party_token_ids,status,hashes_checked,winning_nonce,winning_hash,dungeon_seed,mint_deadline,minted_token_id,xp_awarded,started_at,ended_at,updated_at";
+  "id,wallet_address,party_token_ids,status,hashes_checked,winning_nonce,winning_hash,dungeon_seed,mint_deadline,minted_token_id,xp_awarded,lives,started_at,ended_at,updated_at";
+const ADVENTURE_LIVES = 3;
 const HASH_PREFIX = "0000";
+const HASH_NEXT_NIBBLE_MAX = 7;
 const MINE_PAYLOAD_PREFIX = "implingz-dungeon";
 const XP_PROMPT_SUCCESS = 25;
 const XP_PROMPT_FAIL = 8;
 const XP_DUNGEON_FOUND = 100;
 const XP_DUNGEON_MINTED = 200;
 const XP_DUNGEON_DISCARDED = 40;
-const DERP_DRIP_CHANCE = 0.04;
+const DERP_DRIP_CHANCE = 0.15;
 const DERP_DRIP_MIN = 20;
 const DERP_DRIP_MAX = 40;
 const DERP_DECIMALS = 18;
@@ -143,6 +145,13 @@ async function sha256Hex(value: string) {
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
+function isWinningHash(hash: string) {
+  const hex = String(hash).toLowerCase();
+  if (!hex.startsWith(HASH_PREFIX)) return false;
+  const extra = Number.parseInt(hex.charAt(HASH_PREFIX.length) || "f", 16);
+  return Number.isFinite(extra) && extra <= HASH_NEXT_NIBBLE_MAX;
+}
+
 function randomSecret() {
   const bytes = new Uint8Array(32);
   crypto.getRandomValues(bytes);
@@ -155,11 +164,53 @@ function rollD20() {
   return (bytes[0] % 20) + 1;
 }
 
-function operatorAccount() {
-  const raw = Deno.env.get("DERP_OPERATOR_PRIVATE_KEY")?.trim();
+function normalizePrivateKey(raw: string | undefined | null): `0x${string}` | null {
   if (!raw) return null;
-  const key = (raw.startsWith("0x") ? raw : `0x${raw}`) as `0x${string}`;
-  return privateKeyToAccount(key);
+  let key = String(raw).trim();
+  if (
+    (key.startsWith('"') && key.endsWith('"')) ||
+    (key.startsWith("'") && key.endsWith("'")) ||
+    (key.startsWith("`") && key.endsWith("`"))
+  ) {
+    key = key.slice(1, -1).trim();
+  }
+  key = key.replace(/^\s*(hex:|key:|private[_ ]?key:)\s*/i, "");
+  const labeled = key.match(/(?:^|[=:\s])(?:0x)?([0-9a-fA-F]{64})(?:\s|$)/);
+  if (labeled?.[1]) return `0x${labeled[1]}`;
+  key = key.replace(/[\s\u0000-\u001f]+/g, "");
+  while (key.toLowerCase().startsWith("0x")) key = key.slice(2);
+  if (/^[0-9a-fA-F]{64}$/.test(key)) return `0x${key}`;
+  return null;
+}
+
+let cachedOperator: ReturnType<typeof privateKeyToAccount> | null | undefined;
+
+function operatorAccount() {
+  if (cachedOperator !== undefined) return cachedOperator;
+  const sources = [
+    ["DERP_OPERATOR_PRIVATE_KEY", Deno.env.get("DERP_OPERATOR_PRIVATE_KEY")],
+    ["DUNGEON_MINT_SIGNER_KEY", Deno.env.get("DUNGEON_MINT_SIGNER_KEY")],
+  ] as const;
+  for (const [name, raw] of sources) {
+    const key = normalizePrivateKey(raw);
+    if (!key) {
+      if (raw?.trim()) {
+        console.error(`derp key ${name} unusable (len=${String(raw).trim().length})`);
+      }
+      continue;
+    }
+    try {
+      cachedOperator = privateKeyToAccount(key);
+      if (name !== "DERP_OPERATOR_PRIVATE_KEY") {
+        console.log(`derp drips using ${name} because DERP_OPERATOR_PRIVATE_KEY is invalid`);
+      }
+      return cachedOperator;
+    } catch (error) {
+      console.error(`derp key ${name} rejected`, String(error));
+    }
+  }
+  cachedOperator = null;
+  return null;
 }
 
 function keepContractAddress() {
@@ -216,7 +267,7 @@ async function sendDerpDrip(rewardsAddress: string, to: string, amount: number) 
     await publicClient.waitForTransactionReceipt({ hash });
     return { status: "sent" as const, txHash: hash };
   } catch (error) {
-    console.error("derp drip send failed", error);
+    console.error("derp drip send failed", String(error));
     return null;
   }
 }
@@ -337,8 +388,53 @@ Deno.serve(async (request: Request) => {
     return owned;
   }
 
+  async function persistDripPayment(
+    dripId: string,
+    paid: { status: "sent" | "skipped_empty_pot"; txHash: string | null },
+  ) {
+    const { data, error } = await supabase
+      .from("derp_drips")
+      .update({ status: paid.status, tx_hash: paid.txHash })
+      .eq("id", dripId)
+      .select("id,amount,status,tx_hash")
+      .single();
+    if (error) throw error;
+    return data;
+  }
+
+  async function settlePendingDrips(walletAddress: string) {
+    const rewardsAddress = Deno.env.get("DERP_REWARDS_ADDRESS")?.trim() ?? "";
+    if (!ADDRESS_PATTERN.test(rewardsAddress) || !operatorAccount()) return [] as Array<{
+      id: string;
+      amount: number;
+      status: string;
+      tx_hash: string | null;
+    }>;
+
+    const { data: pending, error } = await supabase
+      .from("derp_drips")
+      .select("id,wallet_address,amount,status,tx_hash")
+      .eq("wallet_address", walletAddress)
+      .eq("status", "pending")
+      .order("created_at", { ascending: true })
+      .limit(8);
+    if (error) throw error;
+
+    const settled = [];
+    for (const drip of pending ?? []) {
+      const paid = await sendDerpDrip(rewardsAddress, drip.wallet_address, Number(drip.amount));
+      if (!paid) break;
+      settled.push(await persistDripPayment(drip.id, paid));
+    }
+    return settled;
+  }
+
   async function maybeDrip(walletAddress: string, sessionId: string) {
-    if (Math.random() >= DERP_DRIP_CHANCE) return null;
+    const settled = await settlePendingDrips(walletAddress);
+    if (Math.random() >= DERP_DRIP_CHANCE) {
+      return settled.find((drip) => drip.status === "sent") ?? settled.at(-1) ?? null;
+    }
+
     const amount = DERP_DRIP_MIN + Math.floor(Math.random() * (DERP_DRIP_MAX - DERP_DRIP_MIN + 1));
     const rewardsAddress = Deno.env.get("DERP_REWARDS_ADDRESS")?.trim() ?? "";
     const configured = ADDRESS_PATTERN.test(rewardsAddress);
@@ -357,15 +453,7 @@ Deno.serve(async (request: Request) => {
 
     const paid = await sendDerpDrip(rewardsAddress, walletAddress, amount);
     if (!paid) return data;
-
-    const { data: updated, error: updateError } = await supabase
-      .from("derp_drips")
-      .update({ status: paid.status, tx_hash: paid.txHash })
-      .eq("id", data.id)
-      .select("id,amount,status,tx_hash")
-      .single();
-    if (updateError) throw updateError;
-    return updated;
+    return persistDripPayment(data.id, paid);
   }
 
   try {
@@ -374,11 +462,18 @@ Deno.serve(async (request: Request) => {
       if (url.searchParams.get("board") === "1") {
         const { data, error } = await supabase
           .from("adventure_sessions")
-          .select("id,wallet_address,status,winning_hash,dungeon_seed,party_token_ids,xp_awarded,started_at,ended_at,updated_at")
+          .select("id,wallet_address,status,winning_hash,dungeon_seed,minted_token_id,party_token_ids,xp_awarded,started_at,ended_at,updated_at")
           .order("updated_at", { ascending: false })
           .limit(20);
         if (error) throw error;
-        return json({ events: data ?? [] });
+        const { data: payouts, error: payoutsError } = await supabase
+          .from("derp_drips")
+          .select("id,wallet_address,session_id,amount,tx_hash,created_at")
+          .eq("status", "sent")
+          .order("created_at", { ascending: false })
+          .limit(40);
+        if (payoutsError) throw payoutsError;
+        return json({ events: data ?? [], payouts: payouts ?? [] });
       }
 
       const wallet = url.searchParams.get("wallet")?.toLowerCase() ?? "";
@@ -402,7 +497,12 @@ Deno.serve(async (request: Request) => {
         .in("status", ["running", "found"])
         .order("started_at", { ascending: false });
       if (error) throw error;
-      return json({ account, sessions: sessions ?? [] });
+      const settled = await settlePendingDrips(wallet);
+      return json({
+        account,
+        sessions: sessions ?? [],
+        drip: settled.find((row) => row.status === "sent") ?? settled.at(-1) ?? null,
+      });
     }
 
     if (request.method !== "POST") return json({ error: "Method not allowed." }, 405);
@@ -427,7 +527,7 @@ Deno.serve(async (request: Request) => {
     if (action === "start") {
       const walletAddress = String(body.walletAddress ?? "").toLowerCase();
       const partyTokenIds = Array.isArray(body.partyTokenIds)
-        ? [...new Set(body.partyTokenIds.map((id: unknown) => String(id)))].slice(0, 3)
+        ? [...new Set(body.partyTokenIds.map((id: unknown) => String(id)))].slice(0, 5)
         : [];
       const nonce = String(body.nonce ?? "");
       const signature = String(body.signature ?? "");
@@ -486,6 +586,7 @@ Deno.serve(async (request: Request) => {
           secret_hash: secretHash,
           party_token_ids: partyTokenIds,
           status: "running",
+          lives: ADVENTURE_LIVES,
         })
         .select(SESSION_COLUMNS)
         .single();
@@ -503,6 +604,10 @@ Deno.serve(async (request: Request) => {
       if (!["running", "found"].includes(session.status)) {
         return json({ error: "This adventure is no longer exploring." }, 409);
       }
+      const livesRemaining = Number(session.lives ?? ADVENTURE_LIVES);
+      if (livesRemaining <= 0) {
+        return json({ error: "This adventure has no lives remaining." }, 409);
+      }
       const encounterIndex = Number(body.encounterIndex);
       const optionKey = String(body.optionKey ?? "");
       const encounter = ENCOUNTERS[encounterIndex];
@@ -512,6 +617,9 @@ Deno.serve(async (request: Request) => {
       const roll = rollD20();
       const succeeded = roll === 20 || (roll !== 1 && roll >= option.dc);
       const xpAwarded = succeeded ? XP_PROMPT_SUCCESS : XP_PROMPT_FAIL;
+      const nextLives = succeeded ? livesRemaining : Math.max(0, livesRemaining - 1);
+      const defeated = !succeeded && nextLives <= 0;
+      const now = new Date().toISOString();
 
       await supabase.from("adventure_prompt_results").insert({
         session_id: session.id,
@@ -521,15 +629,27 @@ Deno.serve(async (request: Request) => {
         succeeded,
         xp_awarded: xpAwarded,
       });
+      const sessionPatch: Record<string, unknown> = {
+        xp_awarded: Number(session.xp_awarded ?? 0) + xpAwarded,
+        lives: nextLives,
+        updated_at: now,
+      };
+      if (defeated) {
+        sessionPatch.status = "abandoned";
+        sessionPatch.ended_at = now;
+      }
       const { data: updatedSession, error: promptSessionError } = await supabase
         .from("adventure_sessions")
-        .update({ xp_awarded: Number(session.xp_awarded ?? 0) + xpAwarded, updated_at: new Date().toISOString() })
+        .update(sessionPatch)
         .eq("id", session.id)
         .select(SESSION_COLUMNS)
         .single();
       if (promptSessionError) throw promptSessionError;
 
-      const account = decorateAccount(await persistProgress(session.wallet_address, xpAwarded), session.wallet_address);
+      const account = decorateAccount(
+        await persistProgress(session.wallet_address, xpAwarded, defeated ? -1 : 0),
+        session.wallet_address,
+      );
       const drip = await maybeDrip(session.wallet_address, session.id);
       return json({
         account,
@@ -538,6 +658,8 @@ Deno.serve(async (request: Request) => {
         succeeded,
         dc: option.dc,
         xpAwarded,
+        lives: nextLives,
+        defeated,
         drip,
       });
     }
@@ -557,7 +679,11 @@ Deno.serve(async (request: Request) => {
         .select(SESSION_COLUMNS)
         .single();
       if (error) throw error;
-      return json({ session: data });
+      const settled = await settlePendingDrips(session.wallet_address);
+      return json({
+        session: data,
+        drip: settled.find((row) => row.status === "sent") ?? settled.at(-1) ?? null,
+      });
     }
 
     if (action === "submit-hash") {
@@ -565,7 +691,7 @@ Deno.serve(async (request: Request) => {
       const nonce = String(body.nonce ?? "");
       if (!/^[0-9]{1,16}$/.test(nonce)) return json({ error: "Invalid mining nonce." }, 400);
       const expectedHash = await sha256Hex(`${MINE_PAYLOAD_PREFIX}:${session.id}:${nonce}`);
-      if (!expectedHash.startsWith(HASH_PREFIX)) {
+      if (!isWinningHash(expectedHash)) {
         return json({ error: "That hash does not meet the dungeon difficulty." }, 400);
       }
       if (body.hash && String(body.hash).toLowerCase() !== expectedHash) {
@@ -664,9 +790,9 @@ Deno.serve(async (request: Request) => {
       };
       const message = `IMPLINGz Dungeon Mint\n${voucher.wallet}\n${voucher.seed}\n${voucher.deadline}`;
       let signature = "";
-      const signerKey = Deno.env.get("DUNGEON_MINT_SIGNER_KEY");
+      const signerKey = normalizePrivateKey(Deno.env.get("DUNGEON_MINT_SIGNER_KEY"));
       if (signerKey) {
-        const account = privateKeyToAccount(signerKey as `0x${string}`);
+        const account = privateKeyToAccount(signerKey);
         signature = await account.signMessage({ message });
       }
       const contractAddress = keepContractAddress();
