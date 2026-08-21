@@ -19,7 +19,7 @@ const SIGNATURE_PATTERN = /^0x[a-fA-F0-9]{130}$/;
 const NONCE_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SESSION_COLUMNS =
   "id,wallet_address,party_token_ids,status,hashes_checked,winning_nonce,winning_hash,dungeon_seed,mint_deadline,minted_token_id,xp_awarded,lives,started_at,ended_at,updated_at";
-const ADVENTURE_LIVES = 3;
+const ADVENTURE_LIVES = 5;
 const HASH_PREFIX = "0000";
 const HASH_NEXT_NIBBLE_MAX = 7;
 const MINE_PAYLOAD_PREFIX = "implingz-dungeon";

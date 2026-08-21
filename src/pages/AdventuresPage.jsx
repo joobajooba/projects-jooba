@@ -72,7 +72,7 @@ const IMPLING_IDLE_QUOTES = [
   'Nat 20 energy today.',
 ];
 
-const ADVENTURE_LIVES = 3;
+const ADVENTURE_LIVES = 5;
 const LIVES_STORAGE_KEY = 'implingz-adventure-lives';
 
 function readLivesStore() {
@@ -814,7 +814,7 @@ function AdventureSlot({
         ...(treasure ? [treasure] : []),
       ]);
       if (defeated) {
-        setRuntimeError('You lost all 3 lives. The adventure has ended. Start again.');
+        setRuntimeError(`You lost all ${ADVENTURE_LIVES} lives. The adventure has ended. Start again.`);
         clearAdventureTimers();
         setEncounterIndex(null);
         if (result.session && !['running', 'found'].includes(result.session.status)) {
