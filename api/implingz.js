@@ -1,4 +1,4 @@
-const IMPLINGZ_CONTRACT = '0x81d2d1f0e92285cdd22aa3cbc6956b6e1724d029';
+const IMPLINGZ_CONTRACT = '0x81D2D1f0e92285CdD22Aa3cbc6956B6E1724d029';
 const BLOCKSCOUT_API = 'https://robinhoodchain.blockscout.com/api/v2';
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 

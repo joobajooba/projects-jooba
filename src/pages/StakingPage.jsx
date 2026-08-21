@@ -7,8 +7,9 @@ import {
   ALIGNMENTS,
   alignedTilesets,
   estimateStake,
-  PREVIEW_KEEPS,
   STAKING_DURATIONS,
+  STAKING_IMPLINGZ_ADDRESS,
+  STAKING_KEEP_ADDRESS,
 } from '../lib/stakingPreview';
 
 const COLLECTION_BY_ID = new Map(collection.map((impling) => [String(impling.id), impling]));
@@ -38,10 +39,27 @@ function mapOwnedImplingz(items) {
         resolveImplingTier({ attributes: instance.metadata?.attributes }) ||
         'Tier 1',
       body: localImpling?.attributes?.Body || 'Unknown',
+      contract: STAKING_IMPLINGZ_ADDRESS,
     });
   });
 
   return [...uniqueImplingz.values()].sort((a, b) => Number(a.id) - Number(b.id));
+}
+
+function mapOwnedKeeps(items) {
+  return (items ?? [])
+    .map((keep) => ({
+      id: String(keep.id),
+      name: keep.name || `Imp Keep #${keep.id}`,
+      image: keep.image || '',
+      tileset: String(keep.tileset || '').toLowerCase(),
+      biome: keep.biome || 'Unknown',
+      dungeonType: keep.dungeonType || '',
+      miniBoss: keep.miniBoss || '',
+      seed: keep.seed || '',
+      contract: STAKING_KEEP_ADDRESS,
+    }))
+    .sort((a, b) => Number(a.id) - Number(b.id));
 }
 
 function formatImp(amount) {
@@ -52,18 +70,26 @@ function percentFromMultiplier(value) {
   return `+${Math.round((value - 1) * 100)}%`;
 }
 
+function shortAddress(address) {
+  if (!address) return '';
+  return `${address.slice(0, 6)}…${address.slice(-4)}`;
+}
+
 export default function StakingPage() {
-  const { walletAccount } = useOutletContext();
+  const { walletAccount, openWalletMenu } = useOutletContext();
   const access = useAdventuresServerAccess();
   const [ownedImplingz, setOwnedImplingz] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [ownedKeeps, setOwnedKeeps] = useState([]);
+  const [loadingImps, setLoadingImps] = useState(false);
+  const [loadingKeeps, setLoadingKeeps] = useState(false);
+  const [impError, setImpError] = useState('');
+  const [keepError, setKeepError] = useState('');
   const [selectedImpId, setSelectedImpId] = useState('');
   const [selectedKeepId, setSelectedKeepId] = useState('');
   const [durationId, setDurationId] = useState('30d');
 
   const selectedImp = ownedImplingz.find((imp) => imp.id === selectedImpId) ?? null;
-  const selectedKeep = PREVIEW_KEEPS.find((keep) => keep.id === selectedKeepId) ?? null;
+  const selectedKeep = ownedKeeps.find((keep) => keep.id === selectedKeepId) ?? null;
   const duration = STAKING_DURATIONS.find((item) => item.id === durationId) ?? STAKING_DURATIONS[1];
   const estimate = useMemo(
     () => estimateStake(selectedImp, selectedKeep, duration),
@@ -74,13 +100,19 @@ export default function StakingPage() {
   useEffect(() => {
     if (!walletAccount) {
       setOwnedImplingz([]);
+      setOwnedKeeps([]);
       setSelectedImpId('');
+      setSelectedKeepId('');
+      setImpError('');
+      setKeepError('');
       return undefined;
     }
 
     const controller = new AbortController();
-    setLoading(true);
-    setError('');
+    setLoadingImps(true);
+    setLoadingKeeps(true);
+    setImpError('');
+    setKeepError('');
 
     fetch(`/api/implingz?owner=${encodeURIComponent(walletAccount)}`, {
       signal: controller.signal,
@@ -98,11 +130,36 @@ export default function StakingPage() {
       })
       .catch((loadError) => {
         if (loadError.name !== 'AbortError') {
-          setError(loadError.message || 'Could not load your IMPLINGz.');
+          setImpError(loadError.message || 'Could not load your IMPLINGz.');
+          setOwnedImplingz([]);
         }
       })
       .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
+        if (!controller.signal.aborted) setLoadingImps(false);
+      });
+
+    fetch(`/api/keeps?owner=${encodeURIComponent(walletAccount)}`, {
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'Could not load your Imp Keeps.');
+        return mapOwnedKeeps(data.items ?? []);
+      })
+      .then((keeps) => {
+        setOwnedKeeps(keeps);
+        setSelectedKeepId((current) =>
+          current === '' || keeps.some((keep) => keep.id === current) ? current : ''
+        );
+      })
+      .catch((loadError) => {
+        if (loadError.name !== 'AbortError') {
+          setKeepError(loadError.message || 'Could not load your Imp Keeps.');
+          setOwnedKeeps([]);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoadingKeeps(false);
       });
 
     return () => controller.abort();
@@ -129,28 +186,45 @@ export default function StakingPage() {
     <div className="staking-page">
       <div className="staking-page__inner">
         <header className="adventures-page__header">
-          <p className="adventures-page__eyebrow">Layout preview</p>
+          <p className="adventures-page__eyebrow">Alignment preview</p>
           <h1 className="adventures-page__title">Staking</h1>
           <p className="adventures-page__intro">
-            Lock an Imp for a chosen time to earn on-chain $IMP. Linking an Imp Keep adds a pair
-            bonus. Matching Body colour to dungeon tileset adds an alignment bonus. Nothing here
-            is live yet — keeps below are preview dungeons so you can see the pairing layout.
+            Pick an Imp and optionally link one of your Imp Keeps. Matching Body colour to keep
+            Environment (tileset) shows the alignment bonus. $IMP staking is not live yet — this
+            page only loads your wallet NFTs and estimates future rewards.
+          </p>
+          <p className="staking-contracts">
+            Impz <code>{shortAddress(STAKING_IMPLINGZ_ADDRESS)}</code>
+            {' · '}
+            Keeps <code>{shortAddress(STAKING_KEEP_ADDRESS)}</code>
           </p>
         </header>
+
+        {!walletAccount ? (
+          <section className="staking-panel staking-panel--wide">
+            <p className="staking-panel__message">
+              Connect a wallet to load IMPLINGz and Imp Keeps from Robinhood Chain.
+            </p>
+            <button type="button" className="staking-summary__action" onClick={() => openWalletMenu?.()}>
+              Connect wallet
+            </button>
+          </section>
+        ) : null}
 
         <div className="staking-layout">
           <section className="staking-panel">
             <div className="staking-panel__header">
               <p className="adventure-panel__eyebrow">Step 1</p>
               <h2>Choose an Imp</h2>
+              <p>From IMPLINGz · {shortAddress(STAKING_IMPLINGZ_ADDRESS)}</p>
             </div>
-            {loading ? <p className="staking-panel__message">Loading IMPLINGz…</p> : null}
-            {error ? (
+            {loadingImps ? <p className="staking-panel__message">Loading IMPLINGz…</p> : null}
+            {impError ? (
               <p className="staking-panel__message staking-panel__message--error" role="alert">
-                {error}
+                {impError}
               </p>
             ) : null}
-            {!loading && !error && ownedImplingz.length === 0 ? (
+            {!loadingImps && !impError && walletAccount && ownedImplingz.length === 0 ? (
               <p className="staking-panel__message">No IMPLINGz were found in this wallet.</p>
             ) : null}
             <div className="staking-grid">
@@ -161,7 +235,7 @@ export default function StakingPage() {
                   className={`staking-card${selectedImpId === imp.id ? ' staking-card--selected' : ''}`}
                   onClick={() => setSelectedImpId(imp.id)}
                 >
-                  <img src={imp.image} alt={imp.name} />
+                  {imp.image ? <img src={imp.image} alt={imp.name} /> : null}
                   <span className="staking-card__name">{imp.name}</span>
                   <span className="staking-card__meta">
                     {imp.body} · {imp.tier}
@@ -175,8 +249,22 @@ export default function StakingPage() {
             <div className="staking-panel__header">
               <p className="adventure-panel__eyebrow">Step 2</p>
               <h2>Link a dungeon</h2>
-              <p>Optional. Imp-only is the base rate. A keep adds the pair bonus.</p>
+              <p>
+                Optional. Imp-only is the base rate. A keep from{' '}
+                {shortAddress(STAKING_KEEP_ADDRESS)} adds the pair bonus.
+              </p>
             </div>
+            {loadingKeeps ? <p className="staking-panel__message">Loading Imp Keeps…</p> : null}
+            {keepError ? (
+              <p className="staking-panel__message staking-panel__message--error" role="alert">
+                {keepError}
+              </p>
+            ) : null}
+            {!loadingKeeps && !keepError && walletAccount && ownedKeeps.length === 0 ? (
+              <p className="staking-panel__message">
+                No Imp Keeps in this wallet yet. Mint one from Adventures, or stake Imp-only.
+              </p>
+            ) : null}
             <div className="staking-grid">
               <button
                 type="button"
@@ -188,8 +276,10 @@ export default function StakingPage() {
                 <span className="staking-card__name">Imp only</span>
                 <span className="staking-card__meta">No pair bonus</span>
               </button>
-              {PREVIEW_KEEPS.map((keep) => {
-                const aligned = selectedImp ? alignedTilesets(selectedImp.body).includes(keep.tileset) : false;
+              {ownedKeeps.map((keep) => {
+                const aligned = selectedImp
+                  ? alignedTilesets(selectedImp.body).includes(keep.tileset)
+                  : false;
                 return (
                   <button
                     key={keep.id}
@@ -199,10 +289,10 @@ export default function StakingPage() {
                     }`}
                     onClick={() => setSelectedKeepId(keep.id)}
                   >
-                    <img src={keep.image} alt={`${keep.name} ${keep.tileset}`} />
+                    {keep.image ? <img src={keep.image} alt={`${keep.name} ${keep.biome}`} /> : null}
                     <span className="staking-card__name">{keep.name}</span>
                     <span className="staking-card__meta">
-                      {keep.tileset}
+                      {keep.biome || keep.tileset}
                       {aligned ? ' · aligned' : ''}
                     </span>
                   </button>
@@ -216,7 +306,10 @@ export default function StakingPage() {
           <div className="staking-panel__header">
             <p className="adventure-panel__eyebrow">Step 3</p>
             <h2>Lock time</h2>
-            <p>Longer locks pay more $IMP. The Imp (and keep, if linked) would sit in a vault until the date.</p>
+            <p>
+              Longer locks will pay more $IMP once staking goes live. Nothing is locked on-chain
+              yet.
+            </p>
           </div>
           <div className="staking-durations">
             {STAKING_DURATIONS.map((option) => (
@@ -241,7 +334,9 @@ export default function StakingPage() {
               {selectedImp
                 ? `${selectedImp.name} · ${selectedImp.body}`
                 : 'Choose an Imp to see the rate.'}
-              {selectedKeep ? ` + ${selectedKeep.name} (${selectedKeep.tileset})` : ' · Imp only'}
+              {selectedKeep
+                ? ` + ${selectedKeep.name} (${selectedKeep.biome || selectedKeep.tileset})`
+                : ' · Imp only'}
             </p>
           </div>
 
@@ -274,20 +369,23 @@ export default function StakingPage() {
             <p className="staking-summary__hint">
               {selectedImp.body} aligns with {matchTilesets.join(', ') || 'no listed tilesets'}.
               {selectedKeep && !estimate.aligned
-                ? ` ${selectedKeep.tileset} is a normal pair, not an alignment match.`
+                ? ` ${selectedKeep.tileset || selectedKeep.biome} is a normal pair, not an alignment match.`
                 : ''}
             </p>
           ) : null}
 
           <button type="button" className="staking-summary__action" disabled>
-            Stake — preview only
+            Stake — $IMP not live yet
           </button>
         </section>
 
         <section className="staking-panel staking-panel--wide">
           <div className="staking-panel__header">
             <h2>Alignment chart</h2>
-            <p>Body colour on the Imp, tileset on the keep. Match = extra modifier. Mismatch still gets the flat pair bonus.</p>
+            <p>
+              Body colour on the Imp, tileset on the keep. Match = extra modifier. Mismatch still
+              gets the flat pair bonus.
+            </p>
           </div>
           <div className="staking-alignments">
             {Object.entries(ALIGNMENTS).map(([body, tilesets]) => (

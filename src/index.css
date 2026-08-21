@@ -4385,6 +4385,19 @@ button:active:not(:disabled),
   gap: clamp(1.1rem, 2.6vw, 1.5rem);
 }
 
+.staking-contracts {
+  margin: 0.65rem 0 0;
+  color: rgba(232, 232, 232, 0.62);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.staking-contracts code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.78rem;
+  color: rgba(184, 255, 46, 0.88);
+}
+
 .staking-layout {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
