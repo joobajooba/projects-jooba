@@ -1,6 +1,6 @@
 export const HASH_PREFIX = '0000';
-/** Extra hex nibble must be 0–6 (~1/149,800 hashes; slightly easier than 0–5). */
-export const HASH_NEXT_NIBBLE_MAX = 6;
+/** Extra hex nibble must be 0–5 (~1/174,800 hashes). */
+export const HASH_NEXT_NIBBLE_MAX = 5;
 export const MINE_PAYLOAD_PREFIX = 'implingz-dungeon';
 
 /** Hashes checked per mining tick for each IMPLINGz Tier trait. */
