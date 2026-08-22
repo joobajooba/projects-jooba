@@ -59,17 +59,19 @@ export default function CommunityPage() {
       }).catch(() => []),
     ])
       .then(([savedProfiles, accounts]) => {
-        const byWallet = new Map(accounts.map((account) => [account.wallet_address, account]));
+        const byWallet = new Map(
+          accounts.map((account) => [String(account.wallet_address || '').toLowerCase(), account])
+        );
         setProfiles(
-          savedProfiles.map((profile) => ({
-            ...profile,
-            xp: byWallet.get(profile.wallet_address)?.xp ?? profile.xp ?? 0,
-            level: byWallet.get(profile.wallet_address)?.level ?? profile.level ?? 1,
-            created_at:
-              profile.created_at ||
-              byWallet.get(profile.wallet_address)?.created_at ||
-              null,
-          }))
+          savedProfiles.map((profile) => {
+            const live = byWallet.get(String(profile.wallet_address || '').toLowerCase());
+            return {
+              ...profile,
+              xp: live?.xp ?? profile.xp ?? 0,
+              level: live?.level ?? profile.level ?? 1,
+              created_at: profile.created_at || live?.created_at || null,
+            };
+          })
         );
       })
       .catch((requestError) => {
@@ -137,6 +139,7 @@ export default function CommunityPage() {
                       <th scope="col">Profile pic</th>
                       <th scope="col">Nickname</th>
                       <th scope="col">Public address</th>
+                      <th scope="col">Total</th>
                       <th scope="col">Tier 1</th>
                       <th scope="col">Tier 2</th>
                       <th scope="col">Tier 3</th>
@@ -181,6 +184,7 @@ export default function CommunityPage() {
                               {shortenAddress(profile.wallet_address)}
                             </span>
                           </td>
+                          <td className="community-directory__count">{profile.total_implingz ?? 0}</td>
                           <td className="community-directory__count">{profile.tier_1_count ?? 0}</td>
                           <td className="community-directory__count">{profile.tier_2_count ?? 0}</td>
                           <td className="community-directory__count">{profile.tier_3_count ?? 0}</td>

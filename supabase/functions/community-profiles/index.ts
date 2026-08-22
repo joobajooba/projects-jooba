@@ -62,20 +62,26 @@ function countTiersFromTokenIds(tokenIds: Iterable<string>) {
   return counts;
 }
 
-async function fetchOwnedTokenIds(walletAddress: string) {
+function tokenContract(item: { token?: { address_hash?: string; address?: string } } | null) {
+  return String(item?.token?.address_hash || item?.token?.address || "").toLowerCase();
+}
+
+async function fetchJson(url: string) {
+  const response = await fetch(url, { headers: BLOCKSCOUT_HEADERS });
+  if (!response.ok) throw new Error(`Blockscout returned ${response.status}.`);
+  return response.json();
+}
+
+async function fetchOwnedFromInstances(walletAddress: string) {
   const url = new URL(`${BLOCKSCOUT_API}/tokens/${IMPLINGZ_CONTRACT}/instances`);
   url.searchParams.set("holder_address_hash", walletAddress);
   const tokenIds = new Set<string>();
 
   for (let page = 0; page < 50; page += 1) {
-    const response = await fetch(url, { headers: BLOCKSCOUT_HEADERS });
-    if (!response.ok) throw new Error(`Blockscout returned ${response.status}.`);
-
-    const data = await response.json();
+    const data = await fetchJson(url.toString());
     for (const item of data.items ?? []) {
       if (item?.id) tokenIds.add(String(item.id));
     }
-
     if (!data.next_page_params) break;
     for (const [key, value] of Object.entries(data.next_page_params)) {
       if (value !== null && value !== undefined) url.searchParams.set(key, String(value));
@@ -85,13 +91,109 @@ async function fetchOwnedTokenIds(walletAddress: string) {
   return tokenIds;
 }
 
-async function countWalletHoldings(walletAddress: string) {
-  try {
-    return countTiersFromTokenIds(await fetchOwnedTokenIds(walletAddress));
-  } catch (error) {
-    console.error("implingz holdings lookup failed", error);
-    return emptyCounts();
+async function fetchOwnedFromInventory(walletAddress: string) {
+  const url = new URL(`${BLOCKSCOUT_API}/addresses/${walletAddress}/nft`);
+  url.searchParams.set("type", "ERC-721");
+  const contract = IMPLINGZ_CONTRACT.toLowerCase();
+  const tokenIds = new Set<string>();
+
+  for (let page = 0; page < 50; page += 1) {
+    const data = await fetchJson(url.toString());
+    for (const item of data.items ?? []) {
+      if (tokenContract(item) === contract && item?.id) tokenIds.add(String(item.id));
+    }
+    if (!data.next_page_params) break;
+    for (const [key, value] of Object.entries(data.next_page_params)) {
+      if (value !== null && value !== undefined) url.searchParams.set(key, String(value));
+    }
   }
+
+  return tokenIds;
+}
+
+async function fetchOwnedFromTransfers(walletAddress: string) {
+  const owned = new Set<string>();
+  const wallet = walletAddress.toLowerCase();
+
+  for (let page = 1; page <= 50; page += 1) {
+    const url = new URL("https://robinhoodchain.blockscout.com/api");
+    url.searchParams.set("module", "account");
+    url.searchParams.set("action", "tokennfttx");
+    url.searchParams.set("contractaddress", IMPLINGZ_CONTRACT);
+    url.searchParams.set("address", walletAddress);
+    url.searchParams.set("page", String(page));
+    url.searchParams.set("offset", "100");
+    url.searchParams.set("sort", "asc");
+    const data = await fetchJson(url.toString());
+    if (!Array.isArray(data.result) || data.message !== "OK") {
+      throw new Error("Blockscout transfer inventory is unavailable.");
+    }
+    const rows = data.result;
+    if (rows.length === 0) break;
+
+    for (const row of rows) {
+      const tokenId = String(row.tokenID ?? "");
+      if (!tokenId) continue;
+      if (String(row.to || "").toLowerCase() === wallet) owned.add(tokenId);
+      if (String(row.from || "").toLowerCase() === wallet) owned.delete(tokenId);
+    }
+    if (rows.length < 100) break;
+  }
+
+  return owned;
+}
+
+async function fetchOwnedTokenIds(walletAddress: string) {
+  const lookups = [fetchOwnedFromInstances, fetchOwnedFromInventory, fetchOwnedFromTransfers];
+  let lastError: unknown = null;
+  let sawSuccess = false;
+  let empty = new Set<string>();
+
+  for (const lookup of lookups) {
+    try {
+      const tokenIds = await lookup(walletAddress);
+      sawSuccess = true;
+      if (tokenIds.size > 0) return tokenIds;
+      empty = tokenIds;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  if (!sawSuccess) throw lastError ?? new Error("Could not load wallet IMPLINGz.");
+  return empty;
+}
+
+async function countWalletHoldings(walletAddress: string) {
+  return countTiersFromTokenIds(await fetchOwnedTokenIds(walletAddress));
+}
+
+function holdingsUnchanged(
+  profile: { total_implingz?: number; tier_1_count?: number; tier_2_count?: number; tier_3_count?: number },
+  counts: ReturnType<typeof emptyCounts>,
+) {
+  return (
+    Number(profile.total_implingz ?? 0) === counts.total_implingz &&
+    Number(profile.tier_1_count ?? 0) === counts.tier_1_count &&
+    Number(profile.tier_2_count ?? 0) === counts.tier_2_count &&
+    Number(profile.tier_3_count ?? 0) === counts.tier_3_count
+  );
+}
+
+async function mapPool<T, R>(items: T[], limit: number, mapper: (item: T) => Promise<R>) {
+  const results = new Array<R>(items.length);
+  let index = 0;
+
+  async function worker() {
+    while (index < items.length) {
+      const current = index;
+      index += 1;
+      results[current] = await mapper(items[current]);
+    }
+  }
+
+  await Promise.all(Array.from({ length: Math.min(limit, Math.max(items.length, 1)) }, worker));
+  return results;
 }
 
 async function verifyAvatarOwnership(walletAddress: string, tokenId: string | null) {
@@ -160,9 +262,25 @@ Deno.serve(async (request: Request) => {
       const { data, error } = await query;
       if (error) throw error;
 
-      const profiles = data ?? [];
+      const refreshed = await mapPool(data ?? [], 6, async (profile) => {
+        try {
+          const counts = await countWalletHoldings(profile.wallet_address);
+          if (holdingsUnchanged(profile, counts)) return { ...profile, ...counts };
+          const { data: updated, error: updateError } = await supabase
+            .from("community_profiles")
+            .update(counts)
+            .eq("wallet_address", profile.wallet_address)
+            .select(PROFILE_COLUMNS)
+            .single();
+          if (updateError) throw updateError;
+          return updated;
+        } catch (lookupError) {
+          console.error("implingz holdings refresh failed", profile.wallet_address, lookupError);
+          return profile;
+        }
+      });
 
-      const wallets = profiles.map((profile) => profile.wallet_address);
+      const wallets = refreshed.map((profile) => profile.wallet_address);
       const accountByWallet = new Map();
       if (wallets.length > 0) {
         const { data: accounts, error: accountError } = await supabase
@@ -171,13 +289,13 @@ Deno.serve(async (request: Request) => {
           .in("wallet_address", wallets);
         if (accountError) throw accountError;
         for (const account of accounts ?? []) {
-          accountByWallet.set(account.wallet_address, account);
+          accountByWallet.set(String(account.wallet_address).toLowerCase(), account);
         }
       }
 
       return json({
-        profiles: profiles.map((profile) => {
-          const account = accountByWallet.get(profile.wallet_address);
+        profiles: refreshed.map((profile) => {
+          const account = accountByWallet.get(String(profile.wallet_address).toLowerCase());
           return {
             ...profile,
             xp: account?.xp ?? 0,
@@ -257,7 +375,25 @@ Deno.serve(async (request: Request) => {
       return json({ error: "The selected profile IMPLINGZ is not held by this wallet." }, 403);
     }
 
-    const counts = await countWalletHoldings(walletAddress);
+    let counts = emptyCounts();
+    try {
+      counts = await countWalletHoldings(walletAddress);
+    } catch (lookupError) {
+      console.error("implingz holdings lookup failed", lookupError);
+      const { data: existing } = await supabase
+        .from("community_profiles")
+        .select("total_implingz,tier_1_count,tier_2_count,tier_3_count")
+        .eq("wallet_address", walletAddress)
+        .maybeSingle();
+      if (existing) {
+        counts = {
+          total_implingz: Number(existing.total_implingz ?? 0),
+          tier_1_count: Number(existing.tier_1_count ?? 0),
+          tier_2_count: Number(existing.tier_2_count ?? 0),
+          tier_3_count: Number(existing.tier_3_count ?? 0),
+        };
+      }
+    }
     await supabase.from("profile_challenges").delete().eq("wallet_address", walletAddress);
 
     const { data: profile, error: profileError } = await supabase
