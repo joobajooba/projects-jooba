@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import collection from '../data/collection.json';
 import { fetchCommunityProfiles, formatAccountCreatedAt } from '../lib/communityProfiles';
 import { ADVENTURES_API } from '../lib/adventuresApi';
@@ -97,6 +97,9 @@ export default function CommunityPage() {
           <p className="profile-page__eyebrow">The connected realm</p>
           <h1>Community</h1>
           <p>Adventurer profiles saved and verified by their wallets.</p>
+          <p className="community-page__links">
+            <Link to="/community/hall-of-fame">Hall of Fame →</Link>
+          </p>
         </header>
 
         <section className="community-directory" aria-busy={loading}>

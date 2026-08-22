@@ -14,6 +14,7 @@ const NAV_SECTIONS = [
     items: [
       { label: 'Profile', to: '/profile', featured: true },
       { label: 'Community', to: '/community' },
+      { label: 'Hall of Fame', to: '/community/hall-of-fame' },
     ],
   },
   {
@@ -517,7 +518,7 @@ export default function App() {
                   <NavLink
                     key={item.to}
                     to={item.to}
-                    end={item.to === '/'}
+                    end={item.to === '/' || item.to === '/community'}
                     className={({ isActive }) =>
                       `sidebar-nav__link${isActive ? ' sidebar-nav__link--active' : ''}${
                         item.featured ? ' sidebar-nav__link--profile' : ''
