@@ -138,6 +138,12 @@ export function AdventureRuntimeProvider({ walletAccount, signMessageAsync, chil
   adventuresRef.current = adventures;
 
   useEffect(() => {
+    if (!dripMessage) return undefined;
+    const timer = window.setTimeout(() => setDripMessage(''), 15_000);
+    return () => window.clearTimeout(timer);
+  }, [dripMessage]);
+
+  useEffect(() => {
     setAdventureSessionAuth({ walletAddress: walletAccount, signMessageAsync });
   }, [walletAccount, signMessageAsync]);
 
