@@ -331,6 +331,33 @@ Deno.serve(async (request: Request) => {
     return data;
   }
 
+  async function countActiveSessions(walletAddress: string) {
+    const { count, error } = await supabase
+      .from("adventure_sessions")
+      .select("id", { count: "exact", head: true })
+      .eq("wallet_address", walletAddress)
+      .in("status", ["running", "found"]);
+    if (error) throw error;
+    return Number(count ?? 0);
+  }
+
+  async function syncActiveAdventures(account: Record<string, unknown>) {
+    const walletAddress = String(account.wallet_address ?? "").toLowerCase();
+    const live = await countActiveSessions(walletAddress);
+    if (Number(account.active_adventures ?? 0) === live) return account;
+    const { data, error } = await supabase
+      .from("adventurer_accounts")
+      .update({
+        active_adventures: live,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("wallet_address", walletAddress)
+      .select("*")
+      .single();
+    if (error) throw error;
+    return data;
+  }
+
   async function ensureAccount(walletAddress: string) {
     const { data, error } = await supabase
       .from("adventurer_accounts")
@@ -338,7 +365,7 @@ Deno.serve(async (request: Request) => {
       .eq("wallet_address", walletAddress)
       .maybeSingle();
     if (error) throw error;
-    if (data) return applyHoldingsFloor(data);
+    if (data) return syncActiveAdventures(await applyHoldingsFloor(data));
 
     const floor = await holdingsFloorFor(walletAddress);
     const { data: created, error: createError } = await supabase
@@ -351,14 +378,14 @@ Deno.serve(async (request: Request) => {
       .select("*")
       .single();
     if (createError) throw createError;
-    return created;
+    return syncActiveAdventures(created);
   }
 
   async function persistProgress(walletAddress: string, xpDelta: number, activeDelta = 0) {
     const account = await ensureAccount(walletAddress);
     const nextXp = Math.max(0, Number(account.xp ?? 0) + xpDelta);
     const progress = progressFromXp(nextXp);
-    const nextActive = Math.max(0, Number(account.active_adventures ?? 0) + activeDelta);
+    const nextActive = await countActiveSessions(walletAddress);
     const { data, error } = await supabase
       .from("adventurer_accounts")
       .update({
@@ -607,19 +634,18 @@ Deno.serve(async (request: Request) => {
       if (!signatureValid) return json({ error: "Wallet signature verification failed." }, 401);
 
       const account = decorateAccount(await ensureAccount(walletAddress), walletAddress);
-      if (account.active_adventures >= account.slots) {
-        return json({
-          error: `Level ${account.level} can run ${account.slots} adventure${account.slots === 1 ? "" : "s"} at a time.`,
-          account,
-        }, 409);
-      }
-
       const { data: activeSessions, error: activeError } = await supabase
         .from("adventure_sessions")
         .select("party_token_ids")
         .eq("wallet_address", walletAddress)
         .in("status", ["running", "found"]);
       if (activeError) throw activeError;
+      if ((activeSessions ?? []).length >= account.slots) {
+        return json({
+          error: `Level ${account.level} can run ${account.slots} adventure${account.slots === 1 ? "" : "s"} at a time.`,
+          account,
+        }, 409);
+      }
       const usedTokenIds = new Set(
         (activeSessions ?? []).flatMap((row) => row.party_token_ids ?? []).map((id) => String(id)),
       );

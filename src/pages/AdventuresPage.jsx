@@ -222,6 +222,7 @@ function AdventureSlot({
   const { signMessageAsync } = useSignMessage();
   const {
     adventurer,
+    adventures,
     setAdventurer,
     setDripMessage,
     runtimeError,
@@ -234,6 +235,9 @@ function AdventureSlot({
     refreshSessionFromServer,
     removeRun,
   } = useAdventureRuntime();
+  const usedSlots = adventures.filter((row) =>
+    ['running', 'found'].includes(row.session?.status),
+  ).length;
 
   const session = run?.session ?? null;
   const party = run?.party ?? [];
@@ -669,7 +673,7 @@ function AdventureSlot({
 
   async function startAdventure() {
     if (selectedParty.length === 0 || !walletAccount || starting || adventureStarted) return;
-    if (adventurer.active_adventures >= adventurer.slots) return;
+    if (usedSlots >= adventurer.slots) return;
     if (selectedParty.some((impling) => busyTokenIds.has(String(impling.id)))) {
       setStartError('That IMPLINGZ is already on another adventure.');
       return;
@@ -1012,7 +1016,7 @@ function AdventureSlot({
           </div>
           {showStackHeader ? (
           <span className="adventure-party__limit">
-            Lv {adventurer.level} · {adventurer.active_adventures}/{adventurer.slots} adventures
+            Lv {adventurer.level} · {usedSlots}/{adventurer.slots} adventures
           </span>
           ) : null}
         </div>
@@ -1173,13 +1177,13 @@ function AdventureSlot({
                 disabled={
                   selectedParty.length === 0 ||
                   starting ||
-                  adventurer.active_adventures >= adventurer.slots
+                  usedSlots >= adventurer.slots
                 }
                 onClick={startAdventure}
               >
                 {starting
                   ? 'Signing…'
-                  : adventurer.active_adventures >= adventurer.slots
+                  : usedSlots >= adventurer.slots
                     ? 'No free slots'
                     : 'Start Adventure'}
               </button>
@@ -1547,12 +1551,15 @@ function StartAdventurePanel() {
   const { adventurer, adventures, foundAdventure, busyTokenIds, dripMessage, runtimeError } =
     useAdventureRuntime();
   const [collapsed, setCollapsed] = useState({});
-  const canStartAnother = adventurer.active_adventures < adventurer.slots;
+  const usedSlots = adventures.filter((row) =>
+    ['running', 'found'].includes(row.session?.status),
+  ).length;
+  const canStartAnother = usedSlots < adventurer.slots;
 
   return (
     <div className="adventure-stack">
       <p className="adventure-stack__meta">
-        Lv {adventurer.level} · {adventurer.active_adventures}/{adventurer.slots} adventures.
+        Lv {adventurer.level} · {usedSlots}/{adventurer.slots} adventures.
         Extra concurrent adventures unlock through level 5. Max level is 10.
       </p>
       {foundAdventure ? (
