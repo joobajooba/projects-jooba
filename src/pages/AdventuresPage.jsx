@@ -105,8 +105,8 @@ function livesFromSession(session) {
   return Math.min(ADVENTURE_LIVES, ...candidates);
 }
 
-const ENCOUNTER_DELAY_MIN = 20_000;
-const ENCOUNTER_DELAY_MAX = 30_000;
+const ENCOUNTER_DELAY_MIN = 30_000;
+const ENCOUNTER_DELAY_MAX = 40_000;
 const IDLE_DELAY_MIN = 8_000;
 const IDLE_DELAY_MAX = 14_000;
 const IMP_SPEECH_DELAY_MIN = 8_000;
