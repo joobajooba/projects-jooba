@@ -295,6 +295,27 @@ export function seedToInt(seed) {
   return hash >>> 0;
 }
 
+/** Fold the full hash + token id so two winning hashes never share a layout seed. */
+export function layoutSeedFrom(seed, tokenId = null) {
+  const text = String(seed ?? '42').trim();
+  const hex = text.replace(/^0x/i, '');
+  let numeric = 0;
+  if (/^[0-9a-f]+$/i.test(hex) && hex.length >= 8) {
+    for (let offset = 0; offset < hex.length; offset += 8) {
+      const chunk = hex.slice(offset, offset + 8).padEnd(8, '0');
+      numeric ^= Number.parseInt(chunk, 16) >>> 0;
+    }
+    numeric >>>= 0;
+  } else {
+    numeric = seedToInt(seed);
+  }
+  const id = Number(tokenId);
+  if (Number.isInteger(id) && id > 0) {
+    numeric = (numeric ^ Math.imul(id, 0x9e3779b9)) >>> 0;
+  }
+  return numeric;
+}
+
 export function titleTrait(value) {
   return String(value || '')
     .replace(/_/g, ' ')
@@ -328,7 +349,7 @@ export function optionsFromSeed(seed, tokenId = null) {
   const traits = rollKeepTraits(seed, tokenId);
   const preset = DUNGEON_TYPE_PRESETS[traits.dungeonType] || DUNGEON_TYPE_PRESETS.Standard;
   return {
-    seed: traits.numeric,
+    seed: layoutSeedFrom(seed, tokenId),
     nRows: 39,
     nCols: 39,
     addStairs: 2,

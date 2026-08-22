@@ -228,6 +228,25 @@ def seed_to_int(value: Any) -> int:
     return to_u32(hash_)
 
 
+def layout_seed_from(seed_value: Any, token_id: int | None = None) -> int:
+    text = str(seed_value or "42").strip()
+    if text.startswith(("0x", "0X")):
+        text = text[2:]
+    if text and all(ch in "0123456789abcdefABCDEF" for ch in text) and len(text) >= 8:
+        numeric = 0
+        for offset in range(0, len(text), 8):
+            chunk = text[offset : offset + 8].ljust(8, "0")
+            numeric ^= int(chunk, 16) & 0xFFFFFFFF
+        numeric &= 0xFFFFFFFF
+    else:
+        numeric = seed_to_int(seed_value)
+    if token_id is not None:
+        token = int(token_id)
+        if token > 0:
+            numeric ^= (token * 0x9E3779B9) & 0xFFFFFFFF
+    return numeric
+
+
 def title_trait(value: str) -> str:
     return str(value or "").replace("_", " ").strip().title() or "Unknown"
 
@@ -243,8 +262,8 @@ def _pick_weighted(rng: Mulberry32, table: tuple[tuple, ...]):
     return last[:-1] if len(last) > 2 else last[0]
 
 
-def roll_keep_traits(seed: int, token_id: int | None = None) -> dict[str, Any]:
-    numeric = to_u32(seed)
+def roll_keep_traits(seed: int | str, token_id: int | None = None) -> dict[str, Any]:
+    numeric = seed_to_int(seed)
     rng = Mulberry32(numeric ^ TRAIT_XOR)
     biome, tileset = _pick_weighted(rng, BIOMES)
     dungeon_type = _pick_weighted(rng, DUNGEON_TYPES)
@@ -269,7 +288,7 @@ def options_from_seed(seed: int, token_id: int | None = None) -> tuple[DungeonOp
     traits = roll_keep_traits(seed, token_id)
     preset = DUNGEON_TYPE_PRESETS.get(traits["dungeon_type"], DUNGEON_TYPE_PRESETS["Standard"])
     options = DungeonOptions(
-        seed=traits["numeric"],
+        seed=layout_seed_from(seed, token_id),
         n_rows=39,
         n_cols=39,
         add_stairs=2,
@@ -311,8 +330,8 @@ def _attach_mini_boss(dungeon: Dungeon, mini_boss: str) -> None:
 
 
 def describe_dungeon(seed_value: Any, token_id: int | None = None) -> dict[str, Any]:
-    numeric = seed_to_int(seed_value)
-    options, traits = options_from_seed(numeric, token_id)
+    numeric = layout_seed_from(seed_value, token_id)
+    options, traits = options_from_seed(seed_value, token_id)
     dungeon = create_dungeon(options)
     _attach_mini_boss(dungeon, traits["mini_boss"])
     attributes = attributes_from_dungeon(dungeon, traits["tileset"], options, traits)

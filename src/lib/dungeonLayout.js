@@ -20,7 +20,12 @@ export function seedToInt(seed) {
 
   const text = String(seed || '').replace(/^0x/i, '');
   if (/^[0-9a-f]+$/i.test(text) && text.length >= 8) {
-    return Number.parseInt(text.slice(0, 8), 16) >>> 0;
+    let numeric = 0;
+    for (let offset = 0; offset < text.length; offset += 8) {
+      const chunk = text.slice(offset, offset + 8).padEnd(8, '0');
+      numeric ^= Number.parseInt(chunk, 16) >>> 0;
+    }
+    return numeric >>> 0;
   }
 
   let hash = 2166136261;

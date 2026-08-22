@@ -1,4 +1,4 @@
-import { createRng, optionsFromSeed, attributesFromDungeon, seedToInt } from './dungeonTraits.js';
+import { createRng, optionsFromSeed, attributesFromDungeon, layoutSeedFrom } from './dungeonTraits.js';
 
 export const NOTHING = 0x00000000;
 export const BLOCKED = 0x00000001;
@@ -136,10 +136,10 @@ function maskCells(dungeon, mask) {
   }
 }
 
-function roundMask(dungeon) {
-  const centerR = Math.floor(dungeon.nRows / 2);
-  const centerC = Math.floor(dungeon.nCols / 2);
-  const radius = centerC;
+function roundMask(dungeon, rng) {
+  const centerR = Math.floor(dungeon.nRows / 2) + (rng ? rng.randint(-2, 2) : 0);
+  const centerC = Math.floor(dungeon.nCols / 2) + (rng ? rng.randint(-2, 2) : 0);
+  const radius = Math.max(14, Math.floor(dungeon.nCols / 2) - (rng ? rng.randint(0, 4) : 0));
   for (let r = 0; r <= dungeon.nRows; r += 1) {
     for (let c = 0; c <= dungeon.nCols; c += 1) {
       if (hypot(r - centerR, c - centerC) > radius) dungeon.cell[r][c] = BLOCKED;
@@ -147,10 +147,10 @@ function roundMask(dungeon) {
   }
 }
 
-function initCells(dungeon) {
+function initCells(dungeon, rng) {
   const layout = dungeon.options.dungeonLayout;
   if (LAYOUT_MASKS[layout]) maskCells(dungeon, LAYOUT_MASKS[layout]);
-  else if (layout === 'Round') roundMask(dungeon);
+  else if (layout === 'Round') roundMask(dungeon, rng);
 }
 
 function wantCircle(dungeon, rng) {
@@ -352,10 +352,14 @@ function centerRoomSize(dungeon) {
 }
 
 function emplaceCenterRoom(dungeon, rng) {
-  const size = centerRoomSize(dungeon);
+  const base = centerRoomSize(dungeon);
+  let size = Math.max(3, base + rng.choice([-2, 0, 0, 2]));
+  if (size % 2 === 0) size -= 1;
+  const i = Math.max(1, Math.floor((dungeon.nI - size) / 2) + rng.randint(-1, 1));
+  const j = Math.max(1, Math.floor((dungeon.nJ - size) / 2) + rng.randint(-1, 1));
   return emplaceRoom(dungeon, rng, {
-    i: Math.floor((dungeon.nI - size) / 2),
-    j: Math.floor((dungeon.nJ - size) / 2),
+    i,
+    j,
     height: size,
     width: size,
     circular: rng.random() < 0.4 && dungeon.options.circularRooms !== 'None',
@@ -1197,7 +1201,7 @@ function cleanDungeon(dungeon, rng) {
 export function createDungeon(options) {
   const dungeon = emptyDungeon(options);
   const rng = createRng(options.seed);
-  initCells(dungeon);
+  initCells(dungeon, rng);
   emplaceRooms(dungeon, rng);
   const style = options.dungeonType;
   if (style === 'Spiral') carveSpiralCorridor(dungeon);
@@ -1230,7 +1234,7 @@ export function describeDungeon(seedValue, tokenId = null) {
   const attributes = attributesFromDungeon(dungeon, options.tileset, options);
   return {
     seed: String(seedValue ?? '42'),
-    numericSeed: seedToInt(seedValue),
+    numericSeed: layoutSeedFrom(seedValue, tokenId),
     tileset: options.tileset,
     biome: options.biome,
     dungeonType: options.dungeonType,
