@@ -286,30 +286,42 @@ Deno.serve(async (request: Request) => {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  async function snapshotFloorFor(walletAddress: string) {
-    const { data, error } = await supabase
+  function floorFromImpzCount(impzCount = 0) {
+    const count = Math.max(0, Number(impzCount) || 0);
+    if (count >= 20) return progressFromXp(900);
+    if (count >= 10) return progressFromXp(300);
+    return progressFromXp(0);
+  }
+
+  async function holdingsFloorFor(walletAddress: string) {
+    const { data: profile, error: profileError } = await supabase
+      .from("community_profiles")
+      .select("total_implingz")
+      .eq("wallet_address", walletAddress)
+      .maybeSingle();
+    if (profileError) throw profileError;
+    if (profile) return floorFromImpzCount(profile.total_implingz);
+
+    const { data: snap, error: snapError } = await supabase
       .from("impz_holder_xp_snapshot")
       .select("floor_xp, floor_level")
       .eq("wallet_address", walletAddress)
       .maybeSingle();
-    if (error) throw error;
-    return data;
+    if (snapError) throw snapError;
+    return progressFromXp(Math.max(0, Number(snap?.floor_xp ?? 0)));
   }
 
-  /** Apply Chapter 1 Impz holdings floor without ever lowering earned XP. */
-  async function applySnapshotFloor(account: Record<string, unknown>) {
+  /** Apply Impz holdings floor (10+ L2, 20+ L3) without lowering earned XP. */
+  async function applyHoldingsFloor(account: Record<string, unknown>) {
     const walletAddress = String(account.wallet_address ?? "").toLowerCase();
-    const snap = await snapshotFloorFor(walletAddress);
-    if (!snap) return account;
+    const floor = await holdingsFloorFor(walletAddress);
     const currentXp = Math.max(0, Number(account.xp ?? 0));
-    const floorXp = Math.max(0, Number(snap.floor_xp ?? 0));
-    if (currentXp >= floorXp) return account;
-    const progress = progressFromXp(floorXp);
+    if (currentXp >= floor.xp) return account;
     const { data, error } = await supabase
       .from("adventurer_accounts")
       .update({
-        xp: floorXp,
-        level: progress.level,
+        xp: floor.xp,
+        level: floor.level,
         updated_at: new Date().toISOString(),
       })
       .eq("wallet_address", walletAddress)
@@ -326,17 +338,15 @@ Deno.serve(async (request: Request) => {
       .eq("wallet_address", walletAddress)
       .maybeSingle();
     if (error) throw error;
-    if (data) return applySnapshotFloor(data);
+    if (data) return applyHoldingsFloor(data);
 
-    const snap = await snapshotFloorFor(walletAddress);
-    const floorXp = Math.max(0, Number(snap?.floor_xp ?? 0));
-    const progress = progressFromXp(floorXp);
+    const floor = await holdingsFloorFor(walletAddress);
     const { data: created, error: createError } = await supabase
       .from("adventurer_accounts")
       .insert({
         wallet_address: walletAddress,
-        xp: floorXp,
-        level: progress.level,
+        xp: floor.xp,
+        level: floor.level,
       })
       .select("*")
       .single();

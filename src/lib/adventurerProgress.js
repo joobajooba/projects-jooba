@@ -19,7 +19,7 @@ export const XP_DUNGEON_FOUND = 40;
 export const XP_DUNGEON_MINTED = 80;
 export const XP_DUNGEON_DISCARDED = 15;
 
-/** One-time Chapter 1 Impz holdings floor (snapshot); never lowers earned XP. */
+/** Impz holdings floor: 10+ => L2, 20+ => L3. Never lowers earned XP after the reset. */
 export const IMPZ_HOLDINGS_XP_FLOORS = [
   { minImpz: 20, level: 3, xp: 900 },
   { minImpz: 10, level: 2, xp: 300 },

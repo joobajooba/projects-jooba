@@ -43,6 +43,27 @@ function emptyCounts() {
   return { total_implingz: 0, tier_1_count: 0, tier_2_count: 0, tier_3_count: 0 };
 }
 
+function floorFromImpzCount(impzCount = 0) {
+  const count = Math.max(0, Number(impzCount) || 0);
+  if (count >= 20) return { xp: 900, level: 3 };
+  if (count >= 10) return { xp: 300, level: 2 };
+  return { xp: 0, level: 1 };
+}
+
+function levelFromXp(xp = 0) {
+  const safeXp = Math.max(0, Number(xp) || 0);
+  if (safeXp >= 45000) return 10;
+  if (safeXp >= 30000) return 9;
+  if (safeXp >= 20000) return 8;
+  if (safeXp >= 13000) return 7;
+  if (safeXp >= 8000) return 6;
+  if (safeXp >= 4500) return 5;
+  if (safeXp >= 2200) return 4;
+  if (safeXp >= 900) return 3;
+  if (safeXp >= 300) return 2;
+  return 1;
+}
+
 function countTiersFromTokenIds(tokenIds: Iterable<string>) {
   const counts = emptyCounts();
 
@@ -245,6 +266,41 @@ Deno.serve(async (request: Request) => {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
+  async function applyHoldingsFloor(walletAddress: string, impzCount: number) {
+    const floor = floorFromImpzCount(impzCount);
+    const { data: account, error } = await supabase
+      .from("adventurer_accounts")
+      .select("xp,level")
+      .eq("wallet_address", walletAddress)
+      .maybeSingle();
+    if (error) throw error;
+
+    const currentXp = Math.max(0, Number(account?.xp ?? 0));
+    const nextXp = Math.max(currentXp, floor.xp);
+    const nextLevel = levelFromXp(nextXp);
+    if (account && currentXp === nextXp && Number(account.level ?? 1) === nextLevel) return;
+
+    if (!account) {
+      const { error: insertError } = await supabase.from("adventurer_accounts").insert({
+        wallet_address: walletAddress,
+        xp: nextXp,
+        level: nextLevel,
+      });
+      if (insertError) throw insertError;
+      return;
+    }
+
+    const { error: updateError } = await supabase
+      .from("adventurer_accounts")
+      .update({
+        xp: nextXp,
+        level: nextLevel,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("wallet_address", walletAddress);
+    if (updateError) throw updateError;
+  }
+
   try {
     if (request.method === "GET") {
       const requestUrl = new URL(request.url);
@@ -265,6 +321,7 @@ Deno.serve(async (request: Request) => {
       const refreshed = await mapPool(data ?? [], 6, async (profile) => {
         try {
           const counts = await countWalletHoldings(profile.wallet_address);
+          await applyHoldingsFloor(profile.wallet_address, counts.total_implingz);
           if (holdingsUnchanged(profile, counts)) return { ...profile, ...counts };
           const { data: updated, error: updateError } = await supabase
             .from("community_profiles")
@@ -276,6 +333,11 @@ Deno.serve(async (request: Request) => {
           return updated;
         } catch (lookupError) {
           console.error("implingz holdings refresh failed", profile.wallet_address, lookupError);
+          try {
+            await applyHoldingsFloor(profile.wallet_address, Number(profile.total_implingz ?? 0));
+          } catch (floorError) {
+            console.error("holdings floor failed", profile.wallet_address, floorError);
+          }
           return profile;
         }
       });
@@ -413,10 +475,7 @@ Deno.serve(async (request: Request) => {
       .single();
 
     if (profileError) throw profileError;
-    await supabase.from("adventurer_accounts").upsert(
-      { wallet_address: walletAddress, updated_at: new Date().toISOString() },
-      { onConflict: "wallet_address", ignoreDuplicates: true },
-    );
+    await applyHoldingsFloor(walletAddress, counts.total_implingz);
     return json({ profile });
   } catch (error) {
     console.error("community-profiles error", error);
