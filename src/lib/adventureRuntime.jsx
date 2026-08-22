@@ -286,26 +286,66 @@ export function AdventureRuntimeProvider({ walletAccount, signMessageAsync, chil
     [removeRun, updateRun]
   );
 
+  const hydrateFromAccountData = useCallback(
+    (data) => {
+      if (data.account) setAdventurer(decorateAccount(data.account));
+      if (data.drip) setDripMessage(dripStatusMessage(data.drip));
+      const active = (data.sessions ?? []).filter(
+        (row) => row.status === 'running' || row.status === 'found'
+      );
+      if (!active.length) {
+        clearActiveAdventure();
+        return;
+      }
+
+      const storedParties = migratePartyStore(readJson(PARTY_STORAGE_KEY, {}));
+      const storedNonces = migrateNonceStore(readJson(NONCE_STORAGE_KEY, {}));
+      nonceMapRef.current = { ...storedNonces, ...nonceMapRef.current };
+
+      const existingById = new Map(
+        adventuresRef.current.map((run) => [run.session?.id, run]),
+      );
+      const restored = active.map((session) => {
+        const existing = existingById.get(session.id);
+        const storedParty = storedParties?.[session.id];
+        const party = Array.isArray(storedParty)
+          ? storedParty.map(enrichPartyMember)
+          : existing?.party?.length
+            ? existing.party
+            : partyFromTokenIds(session.party_token_ids ?? []);
+        const nonce = Number(nonceMapRef.current?.[session.id] ?? existing?.miningNonce) || 0;
+        const next = createRun(session, party);
+        return {
+          ...next,
+          miningNonce: nonce,
+          hashesChecked: existing?.hashesChecked ?? next.hashesChecked,
+          dungeonImageUrl: existing?.dungeonImageUrl || next.dungeonImageUrl,
+        };
+      });
+
+      setAdventures(restored);
+      persistParties(restored);
+      writeJson(NONCE_STORAGE_KEY, nonceMapRef.current);
+    },
+    [clearActiveAdventure, persistParties]
+  );
+
   const refreshSessionFromServer = useCallback(
     async (sessionId) => {
       if (!walletAccount || !sessionId) return null;
       const data = await fetchAdventurerAccount(walletAccount);
-      if (data.account) setAdventurer(decorateAccount(data.account));
-      if (data.drip) setDripMessage(dripStatusMessage(data.drip));
-      const latest = (data.sessions ?? []).find((row) => row.id === sessionId);
-      if (!latest) {
-        removeRun(sessionId);
-        return null;
-      }
-      replaceSession({
-        account: data.account,
-        session: latest,
-        hashesChecked: latest.hashes_checked,
-      });
-      return latest;
+      hydrateFromAccountData(data);
+      return (data.sessions ?? []).find((row) => row.id === sessionId) ?? null;
     },
-    [replaceSession, removeRun, walletAccount]
+    [hydrateFromAccountData, walletAccount]
   );
+
+  const refreshAdventuresFromServer = useCallback(async () => {
+    if (!walletAccount) return null;
+    const data = await fetchAdventurerAccount(walletAccount);
+    hydrateFromAccountData(data);
+    return data;
+  }, [hydrateFromAccountData, walletAccount]);
 
   useEffect(() => {
     if (!walletAccount) {
@@ -317,42 +357,14 @@ export function AdventureRuntimeProvider({ walletAccount, signMessageAsync, chil
     const controller = new AbortController();
     fetchAdventurerAccount(walletAccount, { signal: controller.signal })
       .then((data) => {
-        setAdventurer(decorateAccount(data.account));
-        if (data.drip) setDripMessage(dripStatusMessage(data.drip));
-        const active = (data.sessions ?? []).filter(
-          (row) => row.status === 'running' || row.status === 'found'
-        );
-        if (!active.length) {
-          clearActiveAdventure();
-          return;
-        }
-
-        const storedParties = migratePartyStore(readJson(PARTY_STORAGE_KEY, {}));
-        const storedNonces = migrateNonceStore(readJson(NONCE_STORAGE_KEY, {}));
-        nonceMapRef.current = storedNonces;
-
-        const restored = active.map((session) => {
-          const storedParty = storedParties?.[session.id];
-          const party = Array.isArray(storedParty)
-            ? storedParty.map(enrichPartyMember)
-            : partyFromTokenIds(session.party_token_ids ?? []);
-          const nonce = Number(storedNonces?.[session.id]) || 0;
-          return {
-            ...createRun(session, party),
-            miningNonce: nonce,
-          };
-        });
-
-        setAdventures(restored);
-        persistParties(restored);
-        writeJson(NONCE_STORAGE_KEY, storedNonces);
+        hydrateFromAccountData(data);
       })
       .catch(() => {
         setAdventurer(emptyAdventurerAccount(walletAccount.toLowerCase()));
       });
 
     return () => controller.abort();
-  }, [walletAccount, clearActiveAdventure, persistParties]);
+  }, [walletAccount, clearActiveAdventure, hydrateFromAccountData]);
 
   const runningKey = adventures
     .filter((run) => run.session?.status === 'running')
@@ -476,6 +488,7 @@ export function AdventureRuntimeProvider({ walletAccount, signMessageAsync, chil
       resumeAfterWalkAway,
       replaceSession,
       refreshSessionFromServer,
+      refreshAdventuresFromServer,
       removeRun,
       clearActiveAdventure,
     }),
@@ -492,6 +505,7 @@ export function AdventureRuntimeProvider({ walletAccount, signMessageAsync, chil
       resumeAfterWalkAway,
       replaceSession,
       refreshSessionFromServer,
+      refreshAdventuresFromServer,
       removeRun,
       clearActiveAdventure,
     ]

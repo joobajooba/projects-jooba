@@ -233,11 +233,13 @@ function AdventureSlot({
     resumeAfterWalkAway,
     replaceSession,
     refreshSessionFromServer,
+    refreshAdventuresFromServer,
     removeRun,
   } = useAdventureRuntime();
-  const usedSlots = adventures.filter((row) =>
+  const visibleUsed = adventures.filter((row) =>
     ['running', 'found'].includes(row.session?.status),
   ).length;
+  const usedSlots = Math.max(visibleUsed, Number(adventurer.active_adventures) || 0);
 
   const session = run?.session ?? null;
   const party = run?.party ?? [];
@@ -726,6 +728,11 @@ function AdventureSlot({
       usedEncounterIndexesRef.current = new Set();
     } catch (error) {
       setStartError(error?.shortMessage || error?.message || 'Could not start the adventure.');
+      try {
+        await refreshAdventuresFromServer();
+      } catch {
+        // Keep the start error even if the slot list cannot refresh.
+      }
     } finally {
       setStarting(false);
     }
@@ -1548,13 +1555,27 @@ function AdventurerLevelBar() {
 }
 
 function StartAdventurePanel() {
-  const { adventurer, adventures, foundAdventure, busyTokenIds, dripMessage, runtimeError } =
-    useAdventureRuntime();
+  const {
+    adventurer,
+    adventures,
+    foundAdventure,
+    busyTokenIds,
+    dripMessage,
+    runtimeError,
+    refreshAdventuresFromServer,
+  } = useAdventureRuntime();
   const [collapsed, setCollapsed] = useState({});
-  const usedSlots = adventures.filter((row) =>
+  const visibleUsed = adventures.filter((row) =>
     ['running', 'found'].includes(row.session?.status),
   ).length;
+  const usedSlots = Math.max(visibleUsed, Number(adventurer.active_adventures) || 0);
   const canStartAnother = usedSlots < adventurer.slots;
+
+  useEffect(() => {
+    if ((Number(adventurer.active_adventures) || 0) <= visibleUsed) return undefined;
+    refreshAdventuresFromServer().catch(() => {});
+    return undefined;
+  }, [adventurer.active_adventures, refreshAdventuresFromServer, visibleUsed]);
 
   return (
     <div className="adventure-stack">
@@ -1570,7 +1591,7 @@ function StartAdventurePanel() {
           {foundAdventure.party?.length
             ? ` with IMPLINGz ${foundAdventure.party.map((impling) => `#${impling.id}`).join(', ')}`
             : ''}
-          . View the dungeon, mint it, or flee.
+          . Mint or flee it to free that slot.
         </p>
       ) : null}
       {dripMessage ? <p className="adventure-party__drip">{dripMessage}</p> : null}

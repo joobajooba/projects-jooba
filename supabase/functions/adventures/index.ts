@@ -636,14 +636,18 @@ Deno.serve(async (request: Request) => {
       const account = decorateAccount(await ensureAccount(walletAddress), walletAddress);
       const { data: activeSessions, error: activeError } = await supabase
         .from("adventure_sessions")
-        .select("party_token_ids")
+        .select("party_token_ids,status")
         .eq("wallet_address", walletAddress)
         .in("status", ["running", "found"]);
       if (activeError) throw activeError;
-      if ((activeSessions ?? []).length >= account.slots) {
+      const liveCount = (activeSessions ?? []).length;
+      if (liveCount >= account.slots) {
+        const waitingKeeps = (activeSessions ?? []).filter((row) => row.status === "found").length;
         return json({
-          error: `Level ${account.level} can run ${account.slots} adventure${account.slots === 1 ? "" : "s"} at a time.`,
-          account,
+          error: waitingKeeps
+            ? `Level ${account.level} can run ${account.slots} adventure${account.slots === 1 ? "" : "s"} at a time. Mint or flee a found keep to free a slot.`
+            : `Level ${account.level} can run ${account.slots} adventure${account.slots === 1 ? "" : "s"} at a time.`,
+          account: { ...account, active_adventures: liveCount },
         }, 409);
       }
       const usedTokenIds = new Set(
