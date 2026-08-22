@@ -1,4 +1,4 @@
-/** Manual founding Hall of Fame roster. Live 30+ wallet checks can replace this later. */
+/** Manual founding Hall of Fame roster. Live wallet totals are loaded from community profiles. */
 export const HALL_OF_FAME_MEMBERS = [
   {
     nickname: 'Imp King Rafaam',
