@@ -2851,6 +2851,35 @@ button:active:not(:disabled),
   line-height: 1;
 }
 
+.adventure-party__random {
+  appearance: none;
+  width: 100%;
+  margin-top: 0.85rem;
+  min-height: 2.25rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid rgba(184, 255, 46, 0.4);
+  border-radius: 2px;
+  background: rgba(184, 255, 46, 0.08);
+  color: #d9ff91;
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.adventure-party__random:hover:not(:disabled) {
+  background: rgba(184, 255, 46, 0.15);
+}
+
+.adventure-party__random:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.62);
+  outline-offset: 2px;
+}
+
+.adventure-party__random:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
 .adventure-party__wallet-status {
   width: 100%;
   margin-top: 1rem;

@@ -153,6 +153,15 @@ function getUniqueQuoteIndex(excludedIndexes, preferredIndex = null) {
   return availableIndexes[Math.floor(Math.random() * availableIndexes.length)];
 }
 
+function pickRandomItems(items, count) {
+  const pool = [...items];
+  for (let index = pool.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [pool[index], pool[swapIndex]] = [pool[swapIndex], pool[index]];
+  }
+  return pool.slice(0, Math.max(0, count));
+}
+
 function normalizeImageUrl(imageUrl) {
   if (!imageUrl) return '';
   if (imageUrl.startsWith('ipfs://')) {
@@ -257,6 +266,7 @@ function AdventureSlot({
   const [encounterIndex, setEncounterIndex] = useState(null);
   const [startError, setStartError] = useState('');
   const [starting, setStarting] = useState(false);
+  const [randomizingParty, setRandomizingParty] = useState(false);
   const [resolvingChoice, setResolvingChoice] = useState(false);
   const [stopping, setStopping] = useState(false);
   const [mintStatus, setMintStatus] = useState('');
@@ -514,6 +524,52 @@ function AdventureSlot({
 
     return () => controller.abort();
   }, [viewKeepOpen, session?.dungeon_seed, nextKeepTokenId]);
+
+  async function fillRandomParty() {
+    if (!walletAccount || adventureStarted || randomizingParty) return;
+
+    setRandomizingParty(true);
+    setStartError('');
+
+    try {
+      const owned = await fetchOwnedImplingz(walletAccount);
+      setOwnedImplingz(owned);
+      const available = owned.filter((impling) => !busyTokenIds.has(String(impling.id)));
+      if (available.length === 0) {
+        setStartError(
+          owned.length === 0
+            ? 'No IMPLINGz were found in this wallet.'
+            : 'All of your Impz are already on another adventure.'
+        );
+        return;
+      }
+
+      const picked = pickRandomItems(available, PARTY_SLOT_COUNT);
+      const nextSlots = [...EMPTY_PARTY_SLOTS];
+      const usedQuoteIndexes = new Set();
+      const nextSpeech = EMPTY_SPEECH_STATES.map(() => ({ quoteIndex: null, thinking: false }));
+
+      picked.forEach((impling, index) => {
+        nextSlots[index] = {
+          ...impling,
+          tier: impling.tier || resolveImplingTier(impling) || 'Tier 1',
+        };
+        const quoteIndex = getUniqueQuoteIndex(
+          usedQuoteIndexes,
+          getInitialImplingQuoteIndex(impling.id, index)
+        );
+        usedQuoteIndexes.add(quoteIndex);
+        nextSpeech[index] = { quoteIndex, thinking: false };
+      });
+
+      setSelectedImplingz(nextSlots);
+      setImpSpeechStates(nextSpeech);
+    } catch (error) {
+      setStartError(error?.message || 'Could not load your IMPLINGz.');
+    } finally {
+      setRandomizingParty(false);
+    }
+  }
 
   async function openImplingSelector(slotIndexToOpen) {
     if (!walletAccount || adventureStarted) return;
@@ -1032,7 +1088,7 @@ function AdventureSlot({
             {walletAccount
             ? adventureStarted
               ? `${adventureLabel} is using these Impz. Start another adventure below with unused Impz if you have a free slot.`
-              : 'Choose up to five Impz that are not already on another adventure.'
+              : 'Choose up to five Impz that are not already on another adventure, or fill the party at random.'
             : 'Use the wallet icon in the top-right, then choose up to five Impz to join the adventure.'}
         </p>
         {mintedKeepUrl ? (
@@ -1131,6 +1187,17 @@ function AdventureSlot({
             );
           })}
         </div>
+
+        {adventureStarted ? null : (
+          <button
+            type="button"
+            className="adventure-party__random"
+            disabled={!walletAccount || randomizingParty}
+            onClick={fillRandomParty}
+          >
+            {randomizingParty ? 'Picking Impz…' : 'Random Impz'}
+          </button>
+        )}
 
         <div
           className={`adventure-party__wallet-status${
