@@ -41,8 +41,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
                 <Route index element={<HomePage />} />
                 <Route path="profile" element={<ProfilePage />} />
                 <Route path="community" element={<CommunityPage />} />
-                <Route path="community/hall-of-fame" element={<HallOfFamePage />} />
                 <Route path="community/:walletAddress" element={<CommunityProfilePage />} />
+                <Route path="hall-of-fame" element={<HallOfFamePage />} />
                 <Route path="info" element={<InfoPage />} />
                 <Route path="adventures" element={<AdventuresGatePage />} />
                 <Route path="staking" element={<StakingGatePage />} />

@@ -14,7 +14,7 @@ const NAV_SECTIONS = [
     items: [
       { label: 'Profile', to: '/profile', featured: true },
       { label: 'Community', to: '/community' },
-      { label: 'Hall of Fame', to: '/community/hall-of-fame' },
+      { label: 'Hall of Fame', to: '/hall-of-fame' },
     ],
   },
   {

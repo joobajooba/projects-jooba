@@ -12,12 +12,8 @@ export default function HallOfFamePage() {
   return (
     <div className="community-page hall-of-fame-page">
       <div className="community-page__inner">
-        <Link className="community-profile-page__back" to="/community">
-          ← Back to Community
-        </Link>
-
-        <header className="community-page__header hall-of-fame-page__header">
-          <p className="profile-page__eyebrow">Community</p>
+        <header className="community-page__header">
+          <p className="profile-page__eyebrow">Implingz Community</p>
           <h1>Hall of Fame</h1>
           <p>
             Commemorating adventurers who hold 30+ IMPLINGz. This founding roster is set by hand
