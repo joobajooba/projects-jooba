@@ -30,6 +30,7 @@ export default function TheDungeonPage() {
   const banned = isBannedKeepWallet(walletAccount);
   const reservedReplacement = replacementForWallet(walletAccount);
   const showOps = isKeepV2OpsWallet(walletAccount);
+  const showCreeBox = Boolean(reservedReplacement) && !showOps;
 
   const grouped = useMemo(() => {
     const eligible = [];
@@ -331,20 +332,15 @@ export default function TheDungeonPage() {
           <section className="dungeon-page__ops">
             <p className="profile-page__eyebrow">Ops</p>
             {!opsGate ? (
-              <p>Checking Cree replacement gate…</p>
+              <p>…</p>
             ) : opsGate.creeAlreadyMinted ? (
-              <p>Cree’s Bun Bun replacement is already minted.</p>
+              <p>Minted</p>
             ) : opsGate.creeMintable ? (
-              <p className="dungeon-page__ok">
-                Cree can mint now. Next V2 ID #{opsGate.nextTokenId} is a void hole.
-              </p>
+              <p className="dungeon-page__ok">#{opsGate.nextTokenId}</p>
             ) : (
               <p>
-                Cree is waiting. Next V2 mint would take honest keep #{opsGate.nextTokenId}
-                {opsGate.honestLeftBeforeVoid
-                  ? ` · ${opsGate.honestLeftBeforeVoid} honest ID${opsGate.honestLeftBeforeVoid === 1 ? '' : 's'} left before void #${opsGate.firstVoidId}`
-                  : ''}
-                . This panel refreshes by itself.
+                #{opsGate.nextTokenId}
+                {opsGate.honestLeftBeforeVoid ? ` · ${opsGate.honestLeftBeforeVoid}` : ''}
               </p>
             )}
           </section>
@@ -390,18 +386,12 @@ export default function TheDungeonPage() {
           {error ? <p className="dungeon-page__warn">{error}</p> : null}
 
           <div className="dungeon-page__gallery">
-            {replacement ? (
+            {showCreeBox && replacement ? (
               <article className="dungeon-page__keep dungeon-page__keep--restore">
                 {replacement.previewUrl ? (
                   <img className="dungeon-page__map" src={replacement.previewUrl} alt="" />
                 ) : null}
                 <h3>Keep #{replacement.v1TokenId} · {replacement.miniBoss}</h3>
-                <p>
-                  {replacement.alreadyMinted
-                    ? 'Replacement minted on the new collection.'
-                    : 'Reserved replacement. Same Bun Bun dungeon, new token number.'}
-                </p>
-                {replacement.reason ? <p>{replacement.reason}</p> : null}
                 {v2Ready && replacement.mintable && !banned ? (
                   <button
                     type="button"
