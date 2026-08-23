@@ -12,7 +12,7 @@ import {
   keepV2OpenSeaCollectionUrl,
 } from '../lib/keepV2';
 import { isBannedKeepWallet } from '../lib/keepV2Allowlist';
-import { replacementForWallet } from '../lib/keepV2Replacements';
+import { KEEP_V2_FIRST_VOID_ID, KEEP_V2_REPLACEMENTS, isKeepV2OpsWallet, replacementForWallet } from '../lib/keepV2Replacements';
 
 export default function TheDungeonPage() {
   const { walletAccount } = useOutletContext();
@@ -25,9 +25,11 @@ export default function TheDungeonPage() {
   const [status, setStatus] = useState('');
   const [claimingId, setClaimingId] = useState('');
   const [replacement, setReplacement] = useState(null);
+  const [opsGate, setOpsGate] = useState(null);
   const v2Ready = keepV2Configured();
   const banned = isBannedKeepWallet(walletAccount);
   const reservedReplacement = replacementForWallet(walletAccount);
+  const showOps = isKeepV2OpsWallet(walletAccount);
 
   const grouped = useMemo(() => {
     const eligible = [];
@@ -47,6 +49,7 @@ export default function TheDungeonPage() {
       setKeeps([]);
       setClaimed({});
       setReplacement(null);
+      setOpsGate(null);
       return undefined;
     }
 
@@ -123,6 +126,79 @@ export default function TheDungeonPage() {
 
     return () => controller.abort();
   }, [reservedReplacement, walletAccount]);
+
+  useEffect(() => {
+    if (!showOps || !publicClient || !v2Ready) {
+      if (!showOps) setOpsGate(null);
+      return undefined;
+    }
+
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const cursor = Number(
+          await publicClient.readContract({
+            address: DUNGEON_KEEP_V2_ADDRESS,
+            abi: IMP_KEEPS_V2_ABI,
+            functionName: 'mintCursor',
+          })
+        );
+        let nextTokenId = Number.isFinite(cursor) && cursor >= 1 ? cursor : 1;
+        while (nextTokenId <= 2222) {
+          try {
+            await publicClient.readContract({
+              address: DUNGEON_KEEP_V2_ADDRESS,
+              abi: IMP_KEEPS_V2_ABI,
+              functionName: 'ownerOf',
+              args: [BigInt(nextTokenId)],
+            });
+            nextTokenId += 1;
+          } catch {
+            break;
+          }
+        }
+        if (nextTokenId > 2222) nextTokenId = 0;
+        const nextIsHonest = nextTokenId
+          ? Boolean(
+              await publicClient.readContract({
+                address: DUNGEON_KEEP_V2_ADDRESS,
+                abi: IMP_KEEPS_V2_ABI,
+                functionName: 'isAllowed',
+                args: [BigInt(nextTokenId)],
+              })
+            )
+          : false;
+        const creeMinted = Boolean(
+          await publicClient.readContract({
+            address: DUNGEON_KEEP_V2_ADDRESS,
+            abi: IMP_KEEPS_V2_ABI,
+            functionName: 'seedUsed',
+            args: [BigInt(KEEP_V2_REPLACEMENTS[0].seedHex)],
+          })
+        );
+        if (cancelled) return;
+        setOpsGate({
+          nextTokenId,
+          nextIsHonest,
+          creeMintable: !creeMinted && nextTokenId > 0 && !nextIsHonest,
+          creeAlreadyMinted: creeMinted,
+          honestLeftBeforeVoid:
+            nextIsHonest && nextTokenId > 0 && nextTokenId < KEEP_V2_FIRST_VOID_ID
+              ? KEEP_V2_FIRST_VOID_ID - nextTokenId
+              : 0,
+          firstVoidId: KEEP_V2_FIRST_VOID_ID,
+        });
+      } catch {
+        if (!cancelled) setOpsGate(null);
+      }
+    };
+    load();
+    const timer = window.setInterval(load, 45000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [showOps, publicClient, v2Ready]);
 
   async function claimKeep(tokenId) {
     if (!walletClient || !v2Ready || banned) return;
@@ -250,6 +326,29 @@ export default function TheDungeonPage() {
             )}
           </p>
         </header>
+
+        {showOps ? (
+          <section className="dungeon-page__ops">
+            <p className="profile-page__eyebrow">Ops</p>
+            {!opsGate ? (
+              <p>Checking Cree replacement gate…</p>
+            ) : opsGate.creeAlreadyMinted ? (
+              <p>Cree’s Bun Bun replacement is already minted.</p>
+            ) : opsGate.creeMintable ? (
+              <p className="dungeon-page__ok">
+                Cree can mint now. Next V2 ID #{opsGate.nextTokenId} is a void hole.
+              </p>
+            ) : (
+              <p>
+                Cree is waiting. Next V2 mint would take honest keep #{opsGate.nextTokenId}
+                {opsGate.honestLeftBeforeVoid
+                  ? ` · ${opsGate.honestLeftBeforeVoid} honest ID${opsGate.honestLeftBeforeVoid === 1 ? '' : 's'} left before void #${opsGate.firstVoidId}`
+                  : ''}
+                . This panel refreshes by itself.
+              </p>
+            )}
+          </section>
+        ) : null}
 
         <section className="dungeon-page__market">
           <h2>Claim your honest keeps</h2>

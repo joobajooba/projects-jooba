@@ -66,6 +66,20 @@ export const IMP_KEEPS_V2_ABI = [
     ],
     outputs: [],
   },
+  {
+    type: 'function',
+    name: 'mintCursor',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ type: 'uint256' }],
+  },
+  {
+    type: 'function',
+    name: 'seedUsed',
+    stateMutability: 'view',
+    inputs: [{ name: 'seed', type: 'uint256' }],
+    outputs: [{ type: 'bool' }],
+  },
 ];
 
 export function keepV2Configured() {

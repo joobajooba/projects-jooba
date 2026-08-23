@@ -21,6 +21,7 @@ const REPLACEMENT = {
   miniBoss: "Bun Bun",
   seedHex: "0x0000244dc2ac4374ecf0f30773fb2415c5773b24c32df3f962f2533ffd54f060",
 };
+const FIRST_VOID_ID = 136;
 const ROBINHOOD_CHAIN = defineChain({
   id: 4663,
   name: "Robinhood Chain",
@@ -144,6 +145,43 @@ async function nextV2MintId(client: ReturnType<typeof chainClient>, keep: `0x${s
   return 0;
 }
 
+async function mintGateStatus() {
+  const keepV2 = keepV2Address();
+  const client = chainClient();
+  const nextTokenId = await nextV2MintId(client, keepV2);
+  const nextIsHonest = nextTokenId
+    ? Boolean(
+        await client.readContract({
+          address: keepV2,
+          abi: KEEP_V2_ABI,
+          functionName: "isAllowed",
+          args: [BigInt(nextTokenId)],
+        }),
+      )
+    : false;
+  const creeSeed = BigInt(REPLACEMENT.seedHex);
+  const creeMinted = Boolean(
+    await client.readContract({
+      address: keepV2,
+      abi: KEEP_V2_ABI,
+      functionName: "seedUsed",
+      args: [creeSeed],
+    }),
+  );
+  const honestLeftBeforeVoid =
+    nextIsHonest && nextTokenId > 0 && nextTokenId < FIRST_VOID_ID
+      ? FIRST_VOID_ID - nextTokenId
+      : 0;
+  return {
+    nextTokenId,
+    nextIsHonest,
+    creeMintable: !creeMinted && nextTokenId > 0 && !nextIsHonest,
+    creeAlreadyMinted: creeMinted,
+    honestLeftBeforeVoid,
+    firstVoidId: FIRST_VOID_ID,
+  };
+}
+
 async function replacementMintStatus(walletAddress = "") {
   const wallet = String(walletAddress || "").toLowerCase();
   if (wallet !== REPLACEMENT.wallet) return { replacement: null };
@@ -236,7 +274,9 @@ Deno.serve(async (request: Request) => {
       const url = new URL(request.url);
       const wallet = url.searchParams.get("wallet")?.toLowerCase() ?? "";
       if (wallet && !ADDRESS_PATTERN.test(wallet)) return json({ error: "Invalid wallet address." }, 400);
-      return json(await replacementMintStatus(wallet));
+      const mintGate = await mintGateStatus();
+      const status = await replacementMintStatus(wallet);
+      return json({ ...status, mintGate });
     }
 
     if (request.method !== "POST") return json({ error: "Method not allowed." }, 405);

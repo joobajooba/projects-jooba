@@ -1,5 +1,8 @@
 /** Wallet-bound V2 replacement mints for voided V1 keeps that should keep their 1-of-1 traits. */
 
+export const KEEP_V2_OPS_WALLET = '0x53391bf6931e3a8d829029b2a7640f3213cf6c94';
+export const KEEP_V2_FIRST_VOID_ID = 136;
+
 export const KEEP_V2_REPLACEMENTS = [
   {
     wallet: '0xe1f381e1e7a32c75ac64fcfcb1c453628a1a5166',
@@ -20,6 +23,10 @@ export function normalizeKeepSeedHex(seed) {
     if (/^[0-9a-f]+$/.test(hex)) return `0x${hex.padStart(64, '0')}`;
     return '';
   }
+}
+
+export function isKeepV2OpsWallet(walletAddress) {
+  return String(walletAddress || '').toLowerCase() === KEEP_V2_OPS_WALLET;
 }
 
 export function replacementForWallet(walletAddress) {
