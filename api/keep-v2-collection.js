@@ -7,9 +7,9 @@ export default async function handler(request, response) {
   const origin = process.env.SITE_URL || 'https://j00ba.xyz';
   response.setHeader('Cache-Control', 'public, s-maxage=300');
   return response.status(200).json({
-    name: 'Imp Keeps',
+    name: 'IMPLINGz Keeps',
     description:
-      'Official Imp Keeps restored after the Chapter 1 exploit. Only honest adventure mints can be claimed. Each keep has Environment, Type, and Mini Boss.',
+      'IMPLINGz Keeps can be migrated onto the new contract, those evil exploiters have been voided and cannot migrate over! Each keep has Environment, Type, and Mini Boss.',
     image: `${origin.replace(/\/$/, '')}/roadmap/roadmap-dungeon.png`,
     external_link: `${origin.replace(/\/$/, '')}/the-dungeon`,
     seller_fee_basis_points: 800,

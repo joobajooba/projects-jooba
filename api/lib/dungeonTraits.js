@@ -382,9 +382,10 @@ export function openseaMetadata({
   tokenId = null,
   description,
   attributes,
+  name,
 }) {
   return {
-    name: tokenId ? `Imp Keep #${tokenId}` : 'Imp Keep',
+    name: name || (tokenId ? `Imp Keep #${tokenId}` : 'Imp Keep'),
     description,
     image: imageUrl,
     external_url: externalUrl,

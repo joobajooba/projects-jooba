@@ -2,7 +2,8 @@ import { KEEP_V2_HONEST_ID_SET, isBannedKeepWallet, isHonestKeepId } from './kee
 import { DUNGEON_KEEP_ADDRESS, keepPreviewUrl } from './dungeonKeep';
 
 export const DUNGEON_KEEP_V1_ADDRESS = DUNGEON_KEEP_ADDRESS;
-export const DUNGEON_KEEP_V2_ADDRESS = import.meta.env.VITE_DUNGEON_KEEP_V2_ADDRESS || '';
+export const DUNGEON_KEEP_V2_ADDRESS =
+  import.meta.env.VITE_DUNGEON_KEEP_V2_ADDRESS || '0x51eA8743109F1b9C70C9d1a9A56cCaA5C2877ee9';
 
 export const IMP_KEEPS_V2_ABI = [
   {

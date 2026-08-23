@@ -3,7 +3,9 @@ import { describeDungeon } from './lib/generateDungeon.js';
 import { KEEP_DESCRIPTION, dungeonPreviewPath, openseaMetadata } from './lib/dungeonTraits.js';
 
 const KEEP_ADDRESS =
-  process.env.DUNGEON_KEEP_V2_ADDRESS || process.env.VITE_DUNGEON_KEEP_V2_ADDRESS || '';
+  process.env.DUNGEON_KEEP_V2_ADDRESS ||
+  process.env.VITE_DUNGEON_KEEP_V2_ADDRESS ||
+  '0x51eA8743109F1b9C70C9d1a9A56cCaA5C2877ee9';
 const RPC_URL = 'https://rpc.mainnet.chain.robinhood.com';
 const KEEP_ABI = [
   {
@@ -72,6 +74,7 @@ export default async function handler(request, response) {
         imageUrl: image,
         externalUrl: `${origin}/the-dungeon`,
         tokenId: Number(tokenId),
+        name: `IMPLINGz Keep #${tokenId}`,
         description: KEEP_DESCRIPTION,
         attributes: described.attributes,
       })

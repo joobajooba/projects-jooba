@@ -151,11 +151,10 @@ export default function TheDungeonPage() {
       <div className="dungeon-page__inner">
         <header className="dungeon-page__header">
           <p className="profile-page__eyebrow">Lost keeps</p>
-          <h1>Imp Keeps migration</h1>
+          <h1>IMPLINGz Keeps migration</h1>
           <p>
-            The original Imp Keeps contract was exploited. Do not buy or list that collection.
-            Honest keeps can be claimed here into a new collection. Exploit-minted tokens are
-            void and will not migrate.
+            IMPLINGz Keeps can be migrated onto the new contract, those evil exploiters have been
+            voided and cannot migrate over!
           </p>
           <p className="dungeon-page__meta">
             Old collection:{' '}
@@ -167,7 +166,7 @@ export default function TheDungeonPage() {
                 {' · '}
                 New collection:{' '}
                 <a href={keepV2OpenSeaCollectionUrl()} target="_blank" rel="noreferrer">
-                  Imp Keeps
+                  IMPLINGz Keeps
                 </a>
               </>
             ) : (
