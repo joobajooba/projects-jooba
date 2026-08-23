@@ -1,5 +1,7 @@
 /** Seed helpers and OpenSea traits shared by preview, keep metadata, and generation. */
 
+import { replacementSourceTokenId } from './keepV2Replacements.js';
+
 const TRAIT_XOR = 0x9e3779b9;
 export const COLLECTION_SIZE = 2222;
 const ONE_OF_ONE_SHUFFLE_SEED = 0x4b335031;
@@ -342,14 +344,16 @@ export function rollKeepTraits(seed, tokenId = null) {
   const [biome, tileset] = pickWeighted(rng, BIOMES);
   const dungeonType = pickWeighted(rng, DUNGEON_TYPES);
   const miniBoss = pickWeighted(rng, MINI_BOSSES);
-  return applyReservedTraits({ biome, tileset, dungeonType, miniBoss, numeric }, tokenId);
+  const effectiveId = replacementSourceTokenId(seed) || tokenId;
+  return applyReservedTraits({ biome, tileset, dungeonType, miniBoss, numeric }, effectiveId);
 }
 
 export function optionsFromSeed(seed, tokenId = null) {
-  const traits = rollKeepTraits(seed, tokenId);
+  const effectiveId = replacementSourceTokenId(seed) || tokenId;
+  const traits = rollKeepTraits(seed, effectiveId);
   const preset = DUNGEON_TYPE_PRESETS[traits.dungeonType] || DUNGEON_TYPE_PRESETS.Standard;
   return {
-    seed: layoutSeedFrom(seed, tokenId),
+    seed: layoutSeedFrom(seed, effectiveId),
     nRows: 39,
     nCols: 39,
     addStairs: 2,

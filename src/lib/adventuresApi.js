@@ -1,5 +1,7 @@
 export const ADVENTURES_API =
   'https://jitkwbatwymqtlzxiyil.supabase.co/functions/v1/adventures';
+export const KEEP_REPLACEMENT_API =
+  'https://jitkwbatwymqtlzxiyil.supabase.co/functions/v1/keep-replacement';
 
 const SESSION_STORAGE_KEY = 'implingz-adventure-sessions';
 
@@ -223,4 +225,20 @@ export function markDungeonMinted(sessionId, tokenId) {
 
 export function abandonAdventure(sessionId) {
   return sessionAction('abandon', sessionId);
+}
+
+export async function fetchKeepReplacement(walletAddress, { signal } = {}) {
+  const url = new URL(KEEP_REPLACEMENT_API);
+  if (walletAddress) url.searchParams.set('wallet', walletAddress);
+  return readResponse(await fetch(url, { signal }));
+}
+
+export async function requestKeepReplacementMint(walletAddress) {
+  return readResponse(
+    await fetch(KEEP_REPLACEMENT_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ walletAddress }),
+    })
+  );
 }

@@ -55,6 +55,17 @@ export const IMP_KEEPS_V2_ABI = [
     inputs: [],
     outputs: [{ type: 'bool' }],
   },
+  {
+    type: 'function',
+    name: 'mint',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'seed', type: 'uint256' },
+      { name: 'deadline', type: 'uint256' },
+      { name: 'signature', type: 'bytes' },
+    ],
+    outputs: [],
+  },
 ];
 
 export function keepV2Configured() {

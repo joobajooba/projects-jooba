@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { usePublicClient, useWalletClient } from 'wagmi';
+import { fetchKeepReplacement, requestKeepReplacementMint } from '../lib/adventuresApi';
+import { keepOpenSeaCollectionUrl, keepOpenSeaItemUrl, tokenIdFromMintReceipt } from '../lib/dungeonKeep';
 import {
   DUNGEON_KEEP_V1_ADDRESS,
   DUNGEON_KEEP_V2_ADDRESS,
@@ -10,7 +12,7 @@ import {
   keepV2OpenSeaCollectionUrl,
 } from '../lib/keepV2';
 import { isBannedKeepWallet } from '../lib/keepV2Allowlist';
-import { keepOpenSeaCollectionUrl } from '../lib/dungeonKeep';
+import { replacementForWallet } from '../lib/keepV2Replacements';
 
 export default function TheDungeonPage() {
   const { walletAccount } = useOutletContext();
@@ -22,8 +24,10 @@ export default function TheDungeonPage() {
   const [error, setError] = useState('');
   const [status, setStatus] = useState('');
   const [claimingId, setClaimingId] = useState('');
+  const [replacement, setReplacement] = useState(null);
   const v2Ready = keepV2Configured();
   const banned = isBannedKeepWallet(walletAccount);
+  const reservedReplacement = replacementForWallet(walletAccount);
 
   const grouped = useMemo(() => {
     const eligible = [];
@@ -31,16 +35,18 @@ export default function TheDungeonPage() {
     keeps.forEach((keep) => {
       const kind = classifyV1Keep(keep.id, walletAccount);
       if (kind === 'eligible') eligible.push(keep);
+      else if (reservedReplacement && Number(keep.id) === reservedReplacement.v1TokenId) return;
       else voided.push(keep);
     });
     return { eligible, voided };
-  }, [keeps, walletAccount]);
+  }, [keeps, walletAccount, reservedReplacement]);
   const eligibleKey = grouped.eligible.map((keep) => keep.id).join('|');
 
   useEffect(() => {
     if (!walletAccount) {
       setKeeps([]);
       setClaimed({});
+      setReplacement(null);
       return undefined;
     }
 
@@ -93,6 +99,31 @@ export default function TheDungeonPage() {
     };
   }, [eligibleKey, publicClient, v2Ready]);
 
+  useEffect(() => {
+    if (!reservedReplacement || !walletAccount) {
+      setReplacement(null);
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    fetchKeepReplacement(walletAccount, { signal: controller.signal })
+      .then((data) => setReplacement(data.replacement || null))
+      .catch(() => {
+        setReplacement({
+          ...reservedReplacement,
+          seed: reservedReplacement.seedHex,
+          previewUrl: `/api/dungeon-preview?seed=${encodeURIComponent(reservedReplacement.seedHex)}&format=png&tokenId=${reservedReplacement.v1TokenId}`,
+          nextTokenId: 0,
+          mintable: false,
+          alreadyMinted: false,
+          reason: 'Could not check replacement status. Refresh in a moment.',
+          contractAddress: DUNGEON_KEEP_V2_ADDRESS,
+        });
+      });
+
+    return () => controller.abort();
+  }, [reservedReplacement, walletAccount]);
+
   async function claimKeep(tokenId) {
     if (!walletClient || !v2Ready || banned) return;
     setClaimingId(String(tokenId));
@@ -139,6 +170,51 @@ export default function TheDungeonPage() {
       setStatus(`Claimed ${pending.length} keep${pending.length === 1 ? '' : 's'} on the new collection.`);
     } catch (claimError) {
       setError(claimError?.shortMessage || claimError?.message || 'Claim failed.');
+    } finally {
+      setClaimingId('');
+    }
+  }
+
+  async function mintReplacement() {
+    if (!walletClient || !publicClient || !replacement?.mintable || banned) return;
+    setClaimingId('replacement');
+    setStatus('');
+    setError('');
+    try {
+      const data = await requestKeepReplacementMint(walletAccount);
+      const contractAddress = data.contractAddress || DUNGEON_KEEP_V2_ADDRESS;
+      if (!data.signature || !data.voucher) {
+        throw new Error('Could not prepare the Bun Bun replacement voucher.');
+      }
+      const hash = await walletClient.writeContract({
+        address: contractAddress,
+        abi: IMP_KEEPS_V2_ABI,
+        functionName: 'mint',
+        args: [BigInt(data.voucher.seed), BigInt(data.voucher.deadline), data.signature],
+      });
+      const receipt = await publicClient.waitForTransactionReceipt({ hash });
+      const tokenId = tokenIdFromMintReceipt(receipt);
+      setReplacement((current) =>
+        current
+          ? {
+              ...current,
+              mintable: false,
+              alreadyMinted: true,
+              reason: 'This Bun Bun replacement has already been minted.',
+            }
+          : current
+      );
+      const itemUrl = tokenId ? keepOpenSeaItemUrl(contractAddress, tokenId) : keepV2OpenSeaCollectionUrl();
+      setStatus(
+        tokenId
+          ? `Bun Bun keep restored as #${tokenId} on the new collection.`
+          : 'Bun Bun keep restored on the new collection.'
+      );
+      if (itemUrl) {
+        setStatus((current) => `${current} OpenSea: ${itemUrl}`);
+      }
+    } catch (mintError) {
+      setError(mintError?.shortMessage || mintError?.message || 'Replacement mint failed.');
     } finally {
       setClaimingId('');
     }
@@ -215,6 +291,30 @@ export default function TheDungeonPage() {
           {error ? <p className="dungeon-page__warn">{error}</p> : null}
 
           <div className="dungeon-page__gallery">
+            {replacement ? (
+              <article className="dungeon-page__keep dungeon-page__keep--restore">
+                {replacement.previewUrl ? (
+                  <img className="dungeon-page__map" src={replacement.previewUrl} alt="" />
+                ) : null}
+                <h3>Keep #{replacement.v1TokenId} · {replacement.miniBoss}</h3>
+                <p>
+                  {replacement.alreadyMinted
+                    ? 'Replacement minted on the new collection.'
+                    : 'Reserved replacement. Same Bun Bun dungeon, new token number.'}
+                </p>
+                {replacement.reason ? <p>{replacement.reason}</p> : null}
+                {v2Ready && replacement.mintable && !banned ? (
+                  <button
+                    type="button"
+                    className="dungeon-page__claim"
+                    disabled={Boolean(claimingId)}
+                    onClick={mintReplacement}
+                  >
+                    {claimingId === 'replacement' ? 'Minting…' : 'Mint Bun Bun replacement'}
+                  </button>
+                ) : null}
+              </article>
+            ) : null}
             {grouped.eligible.map((keep) => (
               <article key={keep.id} className="dungeon-page__keep">
                 {keep.image ? <img className="dungeon-page__map" src={keep.image} alt="" /> : null}

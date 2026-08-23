@@ -4490,6 +4490,11 @@ button:active:not(:disabled),
   opacity: 0.55;
 }
 
+.dungeon-page__keep--restore {
+  outline: 1px solid rgba(184, 255, 46, 0.35);
+  background: rgba(184, 255, 46, 0.06);
+}
+
 .dungeon-page__claim {
   appearance: none;
   margin-top: 0.45rem;
