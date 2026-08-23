@@ -48,8 +48,11 @@ function createKeepClient() {
   });
 }
 
-async function fetchJson(url) {
-  const response = await fetch(url, { headers: BLOCKSCOUT_HEADERS });
+async function fetchJson(url, timeoutMs = 4000) {
+  const response = await fetch(url, {
+    headers: BLOCKSCOUT_HEADERS,
+    signal: AbortSignal.timeout(timeoutMs),
+  });
   if (!response.ok) {
     throw new Error(`Blockscout returned ${response.status}.`);
   }
@@ -70,7 +73,7 @@ async function fetchOwnedFromInstances(owner) {
   const tokenIds = new Set();
 
   for (let page = 0; page < 50; page += 1) {
-    const data = await fetchJson(url);
+    const data = await fetchJson(url, 2500);
     for (const item of data.items ?? []) {
       if (item?.id) tokenIds.add(String(item.id));
     }
@@ -88,7 +91,7 @@ async function fetchOwnedFromInventory(owner) {
   const tokenIds = new Set();
 
   for (let page = 0; page < 50; page += 1) {
-    const data = await fetchJson(url);
+    const data = await fetchJson(url, 2500);
     for (const item of data.items ?? []) {
       const address = String(item?.token?.address_hash || item?.token?.address || '').toLowerCase();
       if (address === contract && item?.id) tokenIds.add(String(item.id));
@@ -113,7 +116,7 @@ async function fetchOwnedFromTransfers(owner) {
     url.searchParams.set('page', String(page));
     url.searchParams.set('offset', '100');
     url.searchParams.set('sort', 'asc');
-    const data = await fetchJson(url);
+    const data = await fetchJson(url, 6000);
     if (!Array.isArray(data.result)) {
       if (data.message === 'No transactions found' || data.status === '0') break;
       throw new Error('Blockscout transfer inventory is unavailable.');
@@ -132,7 +135,7 @@ async function fetchOwnedFromTransfers(owner) {
 }
 
 async function fetchOwnedTokenIds(owner) {
-  const lookups = [fetchOwnedFromInstances, fetchOwnedFromInventory, fetchOwnedFromTransfers];
+  const lookups = [fetchOwnedFromTransfers, fetchOwnedFromInstances, fetchOwnedFromInventory];
   let lastError = null;
   let sawSuccess = false;
   let empty = new Set();
