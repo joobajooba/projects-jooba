@@ -183,7 +183,7 @@ export default function TheDungeonPage() {
             <p className="dungeon-page__warn">This wallet is excluded from the migration.</p>
           ) : loading ? (
             <p>Reading your wallet…</p>
-          ) : (
+          ) : error && keeps.length === 0 ? null : (
             <>
               <p>
                 This wallet holds {grouped.eligible.length} honest keep

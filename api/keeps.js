@@ -2,9 +2,14 @@ import { createPublicClient, http } from 'viem';
 import { optionsFromSeed } from './lib/dungeonTraits.js';
 
 const KEEP_CONTRACT = '0x639061b01ab4261b4283a0AC9D3bB8B99013Bad4';
-const BLOCKSCOUT_API = 'https://robinhoodchain.blockscout.com/api/v2';
+const BLOCKSCOUT_V2 = 'https://robinhoodchain.blockscout.com/api/v2';
+const BLOCKSCOUT_V1 = 'https://robinhoodchain.blockscout.com/api';
 const RPC_URL = 'https://rpc.mainnet.chain.robinhood.com';
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
+const BLOCKSCOUT_HEADERS = {
+  Accept: 'application/json',
+  'User-Agent': 'Mozilla/5.0 (compatible; j00ba.xyz/keep-ownership)',
+};
 const KEEP_ABI = [
   {
     type: 'function',
@@ -12,6 +17,13 @@ const KEEP_ABI = [
     stateMutability: 'view',
     inputs: [{ name: 'tokenId', type: 'uint256' }],
     outputs: [{ type: 'uint256' }],
+  },
+  {
+    type: 'function',
+    name: 'ownerOf',
+    stateMutability: 'view',
+    inputs: [{ name: 'tokenId', type: 'uint256' }],
+    outputs: [{ type: 'address' }],
   },
 ];
 
@@ -24,8 +36,143 @@ function previewUrl(seed, tokenId) {
   return `/api/dungeon-preview?${params}`;
 }
 
-async function enrichKeep(client, item) {
-  const tokenId = String(item.id);
+function createKeepClient() {
+  return createPublicClient({
+    chain: {
+      id: 4663,
+      name: 'Robinhood Chain',
+      nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+      rpcUrls: { default: { http: [RPC_URL] } },
+    },
+    transport: http(RPC_URL),
+  });
+}
+
+async function fetchJson(url) {
+  const response = await fetch(url, { headers: BLOCKSCOUT_HEADERS });
+  if (!response.ok) {
+    throw new Error(`Blockscout returned ${response.status}.`);
+  }
+  return response.json();
+}
+
+function applyNextPage(url, nextPageParams) {
+  Object.entries(nextPageParams || {}).forEach(([key, value]) => {
+    if (value !== null && value !== undefined) {
+      url.searchParams.set(key, String(value));
+    }
+  });
+}
+
+async function fetchOwnedFromInstances(owner) {
+  const url = new URL(`${BLOCKSCOUT_V2}/tokens/${KEEP_CONTRACT}/instances`);
+  url.searchParams.set('holder_address_hash', owner);
+  const tokenIds = new Set();
+
+  for (let page = 0; page < 50; page += 1) {
+    const data = await fetchJson(url);
+    for (const item of data.items ?? []) {
+      if (item?.id) tokenIds.add(String(item.id));
+    }
+    if (!data.next_page_params) break;
+    applyNextPage(url, data.next_page_params);
+  }
+
+  return tokenIds;
+}
+
+async function fetchOwnedFromInventory(owner) {
+  const url = new URL(`${BLOCKSCOUT_V2}/addresses/${owner}/nft`);
+  url.searchParams.set('type', 'ERC-721');
+  const contract = KEEP_CONTRACT.toLowerCase();
+  const tokenIds = new Set();
+
+  for (let page = 0; page < 50; page += 1) {
+    const data = await fetchJson(url);
+    for (const item of data.items ?? []) {
+      const address = String(item?.token?.address_hash || item?.token?.address || '').toLowerCase();
+      if (address === contract && item?.id) tokenIds.add(String(item.id));
+    }
+    if (!data.next_page_params) break;
+    applyNextPage(url, data.next_page_params);
+  }
+
+  return tokenIds;
+}
+
+async function fetchOwnedFromTransfers(owner) {
+  const owned = new Set();
+  const wallet = owner.toLowerCase();
+
+  for (let page = 1; page <= 50; page += 1) {
+    const url = new URL(BLOCKSCOUT_V1);
+    url.searchParams.set('module', 'account');
+    url.searchParams.set('action', 'tokennfttx');
+    url.searchParams.set('contractaddress', KEEP_CONTRACT);
+    url.searchParams.set('address', owner);
+    url.searchParams.set('page', String(page));
+    url.searchParams.set('offset', '100');
+    url.searchParams.set('sort', 'asc');
+    const data = await fetchJson(url);
+    if (!Array.isArray(data.result)) {
+      if (data.message === 'No transactions found' || data.status === '0') break;
+      throw new Error('Blockscout transfer inventory is unavailable.');
+    }
+
+    for (const row of data.result) {
+      const tokenId = String(row.tokenID ?? '');
+      if (!tokenId) continue;
+      if (String(row.to || '').toLowerCase() === wallet) owned.add(tokenId);
+      if (String(row.from || '').toLowerCase() === wallet) owned.delete(tokenId);
+    }
+    if (data.result.length < 100) break;
+  }
+
+  return owned;
+}
+
+async function fetchOwnedTokenIds(owner) {
+  const lookups = [fetchOwnedFromInstances, fetchOwnedFromInventory, fetchOwnedFromTransfers];
+  let lastError = null;
+  let sawSuccess = false;
+  let empty = new Set();
+
+  for (const lookup of lookups) {
+    try {
+      const tokenIds = await lookup(owner);
+      sawSuccess = true;
+      if (tokenIds.size > 0) return tokenIds;
+      empty = tokenIds;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  if (!sawSuccess) throw lastError ?? new Error('Could not load wallet Imp Keeps.');
+  return empty;
+}
+
+async function stillOwnedIds(client, owner, tokenIds) {
+  const wallet = owner.toLowerCase();
+  const rows = await Promise.all(
+    [...tokenIds].map(async (tokenId) => {
+      try {
+        const current = await client.readContract({
+          address: KEEP_CONTRACT,
+          abi: KEEP_ABI,
+          functionName: 'ownerOf',
+          args: [BigInt(tokenId)],
+        });
+        return String(current).toLowerCase() === wallet ? tokenId : null;
+      } catch {
+        return null;
+      }
+    })
+  );
+  return rows.filter(Boolean);
+}
+
+async function enrichKeep(client, tokenId) {
   try {
     const seed = await client.readContract({
       address: KEEP_CONTRACT,
@@ -48,7 +195,7 @@ async function enrichKeep(client, item) {
   } catch {
     return {
       id: tokenId,
-      name: item.metadata?.name || `Imp Keep #${tokenId}`,
+      name: `Imp Keep #${tokenId}`,
       image: '',
       seed: '',
       tileset: '',
@@ -70,48 +217,12 @@ export default async function handler(request, response) {
     return response.status(400).json({ error: 'A valid wallet address is required.' });
   }
 
-  const url = new URL(`${BLOCKSCOUT_API}/tokens/${KEEP_CONTRACT}/instances`);
-  url.searchParams.set('holder_address_hash', owner);
-
-  const items = [];
-  let page = 0;
-
   try {
-    while (page < 50) {
-      const blockscoutResponse = await fetch(url, {
-        headers: {
-          Accept: 'application/json',
-          'User-Agent': 'Mozilla/5.0 (compatible; j00ba.xyz/keep-ownership)',
-        },
-      });
-      if (!blockscoutResponse.ok) {
-        throw new Error(`Blockscout returned ${blockscoutResponse.status}.`);
-      }
-
-      const data = await blockscoutResponse.json();
-      items.push(...(data.items ?? []));
-      if (!data.next_page_params) break;
-
-      Object.entries(data.next_page_params).forEach(([key, value]) => {
-        if (value !== null && value !== undefined) {
-          url.searchParams.set(key, String(value));
-        }
-      });
-      page += 1;
-    }
-
-    const client = createPublicClient({
-      chain: {
-        id: 4663,
-        name: 'Robinhood Chain',
-        nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-        rpcUrls: { default: { http: [RPC_URL] } },
-      },
-      transport: http(RPC_URL),
-    });
-
+    const tokenIds = await fetchOwnedTokenIds(owner);
+    const client = createKeepClient();
+    const ownedIds = tokenIds.size ? await stillOwnedIds(client, owner, tokenIds) : [];
     const keeps = (
-      await Promise.all(items.map((item) => enrichKeep(client, item)))
+      await Promise.all(ownedIds.map((tokenId) => enrichKeep(client, tokenId)))
     ).sort((a, b) => Number(a.id) - Number(b.id));
 
     response.setHeader('Cache-Control', 'public, s-maxage=15, stale-while-revalidate=30');
