@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { isAdventuresChapter1Open } from './adventuresChapter';
+import { ADVENTURES_CLOSED, isAdventuresChapter1Open } from './adventuresChapter';
 
 export const ADVENTURES_TESTER_WALLET = '0xfe9d3889b5e36b3216a756e0c752220dbf24dac8';
 
@@ -28,7 +28,8 @@ export function useAdventuresServerAccess() {
   const [unlocked, setUnlocked] = useState(false);
   const [ready, setReady] = useState(false);
   const [chapterOpen, setChapterOpen] = useState(() => isAdventuresChapter1Open());
-  const walletAllowed = chapterOpen || isAdventuresTesterWallet(walletAccount);
+  const walletAllowed =
+    !ADVENTURES_CLOSED && (chapterOpen || isAdventuresTesterWallet(walletAccount));
 
   useEffect(() => {
     const syncChapter = () => setChapterOpen(isAdventuresChapter1Open());

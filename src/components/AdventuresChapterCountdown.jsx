@@ -15,6 +15,15 @@ export function AdventuresChapterCountdown() {
     return () => window.clearInterval(id);
   }, []);
 
+  if (parts.closed) {
+    return (
+      <div className="home-countdown" aria-live="polite">
+        <p className="home-countdown__title">Adventures Chapter 1</p>
+        <p className="home-countdown__live">Paused</p>
+      </div>
+    );
+  }
+
   if (parts.open) {
     return (
       <div className="home-countdown" aria-live="polite">

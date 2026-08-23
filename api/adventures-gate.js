@@ -5,6 +5,7 @@ const COOKIE_NAME = 'adventures_gate';
 const COOKIE_SECRET = process.env.ADVENTURES_GATE_SECRET || 'j00ba-adventures-gate-v3';
 /** Keep in sync with src/lib/adventuresChapter.js */
 const ADVENTURES_CHAPTER1_OPENS_AT_MS = Date.parse('2026-08-22T20:00:00.000Z');
+const ADVENTURES_CLOSED = true;
 const ALLOWED_WALLETS = [
   '0xfe9d3889b5e36b3216a756e0c752220dbf24dac8',
   '0xb05b214b21801c18b40be098782f32970d29cea1',
@@ -14,6 +15,7 @@ const SIGNATURE_PATTERN = /^0x[a-fA-F0-9]{130}$/;
 const CHALLENGE_TTL_MS = 5 * 60 * 1000;
 
 function isChapter1Open(now = Date.now()) {
+  if (ADVENTURES_CLOSED) return false;
   return Number(now) >= ADVENTURES_CHAPTER1_OPENS_AT_MS;
 }
 
@@ -43,6 +45,7 @@ function hmacValue(value) {
 }
 
 function isAllowedWallet(address) {
+  if (ADVENTURES_CLOSED) return false;
   if (isChapter1Open()) return true;
   const wallet = String(address || '').toLowerCase();
   return ALLOWED_WALLETS.some((allowed) => tokensMatch(wallet, allowed));
@@ -53,6 +56,7 @@ function expectedToken(wallet) {
 }
 
 function isUnlocked(request) {
+  if (ADVENTURES_CLOSED) return false;
   if (isChapter1Open()) return true;
   const cookie = readCookie(request, COOKIE_NAME);
   return ALLOWED_WALLETS.some((wallet) => tokensMatch(cookie, expectedToken(wallet)));

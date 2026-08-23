@@ -28,6 +28,7 @@ const XP_PROMPT_FAIL = 5;
 const XP_DUNGEON_FOUND = 40;
 const XP_DUNGEON_MINTED = 80;
 const XP_DUNGEON_DISCARDED = 15;
+const ADVENTURES_CLOSED = true;
 const DERP_DRIP_CHANCE = 0.2;
 const DERP_DRIP_MIN = 20;
 const DERP_DRIP_MAX = 40;
@@ -275,6 +276,10 @@ async function sendDerpDrip(rewardsAddress: string, to: string, amount: number) 
 Deno.serve(async (request: Request) => {
   if (request.method === "OPTIONS") {
     return new Response("ok", { headers: CORS_HEADERS });
+  }
+
+  if (ADVENTURES_CLOSED && request.method === "POST") {
+    return json({ error: "Adventures are paused." }, 503);
   }
 
   const secretKeys = JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") ?? "{}");

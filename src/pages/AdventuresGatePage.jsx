@@ -6,7 +6,7 @@ import {
   fetchAdventuresAccess,
   isAdventuresTesterWallet,
 } from '../lib/adventuresAccess';
-import { isAdventuresChapter1Open } from '../lib/adventuresChapter';
+import { ADVENTURES_CLOSED, isAdventuresChapter1Open } from '../lib/adventuresChapter';
 
 const AdventuresPage = lazy(() => import('./AdventuresPage'));
 
@@ -45,7 +45,8 @@ export default function AdventuresGatePage() {
   const [signing, setSigning] = useState(false);
   const [error, setError] = useState('');
   const signingRef = useRef(false);
-  const walletAllowed = chapterOpen || isAdventuresTesterWallet(walletAccount);
+  const walletAllowed =
+    !ADVENTURES_CLOSED && (chapterOpen || isAdventuresTesterWallet(walletAccount));
   const allowed = chapterOpen || (serverUnlocked && walletAllowed);
 
   useEffect(() => {
