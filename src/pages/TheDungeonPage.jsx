@@ -187,9 +187,15 @@ export default function TheDungeonPage() {
           ) : (
             <>
               <p>
-                {grouped.eligible.length} honest keep{grouped.eligible.length === 1 ? '' : 's'} can
-                migrate. {grouped.voided.length} token
-                {grouped.voided.length === 1 ? '' : 's'} in this wallet are void.
+                This wallet holds {grouped.eligible.length} honest keep
+                {grouped.eligible.length === 1 ? '' : 's'} right now. All of those can migrate.
+                {grouped.voided.length
+                  ? ` ${grouped.voided.length} keep${grouped.voided.length === 1 ? '' : 's'} in this wallet are void and will not migrate.`
+                  : ''}
+              </p>
+              <p>
+                There are 1603 honest keeps in total. Connect every wallet that still holds yours.
+                Keeps you already sold move with the current owner.
               </p>
               {v2Ready && pendingCount > 0 ? (
                 <button
