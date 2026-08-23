@@ -10,10 +10,14 @@
     },
     "api/keeps.js": {
       "includeFiles": "{api/lib/**}"
+    },
+    "api/keep-v2.js": {
+      "includeFiles": "{api/lib/**}"
     }
   },
   "rewrites": [
     { "source": "/api/keep/:id", "destination": "/api/keep?id=:id" },
+    { "source": "/api/keep-v2/:id", "destination": "/api/keep-v2?id=:id" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }

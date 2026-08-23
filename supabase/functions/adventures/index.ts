@@ -29,6 +29,20 @@ const XP_DUNGEON_FOUND = 40;
 const XP_DUNGEON_MINTED = 80;
 const XP_DUNGEON_DISCARDED = 15;
 const ADVENTURES_CLOSED = true;
+const BANNED_WALLETS = new Set([
+  "0x6a69c91eab620fe31ff6cd30b3a00edfb347e32b",
+  "0xfc8d2794f75dc008fe0fba2d585aeb49ab4b68a1",
+]);
+const IMPLINGZ_ADDRESS = "0x81D2D1f0e92285CdD22Aa3cbc6956B6E1724d029";
+const ERC721_OWNER_ABI = [
+  {
+    type: "function",
+    name: "ownerOf",
+    stateMutability: "view",
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    outputs: [{ type: "address" }],
+  },
+] as const;
 const DERP_DRIP_CHANCE = 0.2;
 const DERP_DRIP_MIN = 20;
 const DERP_DRIP_MAX = 40;
@@ -637,6 +651,27 @@ Deno.serve(async (request: Request) => {
         signature: signature as `0x${string}`,
       });
       if (!signatureValid) return json({ error: "Wallet signature verification failed." }, 401);
+      if (BANNED_WALLETS.has(walletAddress)) {
+        return json({ error: "This wallet cannot use Adventures." }, 403);
+      }
+
+      const rpc = Deno.env.get("ROBINHOOD_RPC_URL")?.trim() || ROBINHOOD_RPC_URL;
+      const chainClient = createPublicClient({ chain: ROBINHOOD_CHAIN, transport: http(rpc) });
+      for (const tokenId of partyTokenIds) {
+        try {
+          const owner = await chainClient.readContract({
+            address: IMPLINGZ_ADDRESS,
+            abi: ERC721_OWNER_ABI,
+            functionName: "ownerOf",
+            args: [BigInt(tokenId)],
+          });
+          if (String(owner).toLowerCase() !== walletAddress) {
+            return json({ error: `This wallet does not own IMPLINGZ #${tokenId}.` }, 403);
+          }
+        } catch {
+          return json({ error: `IMPLINGZ #${tokenId} ownership could not be verified.` }, 403);
+        }
+      }
 
       const account = decorateAccount(await ensureAccount(walletAddress), walletAddress);
       const { data: activeSessions, error: activeError } = await supabase

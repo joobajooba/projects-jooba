@@ -10,7 +10,7 @@ interface Vm {
 
 contract DeployDerpRewards {
     Vm internal constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
-    address constant DERP_TOKEN = 0x6543b7746ca744c4bb2198191e71f40ff04c41b9;
+    address constant DERP_TOKEN = 0x6543B7746ca744C4bb2198191E71f40FF04C41b9;
     address constant HOT_WALLET = 0x50f7838FA05B3B53722BdA926b84bB9cA6EDF791;
 
     function run() external {

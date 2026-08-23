@@ -3,9 +3,7 @@ import { describeDungeon } from './lib/generateDungeon.js';
 import { KEEP_DESCRIPTION, dungeonPreviewPath, openseaMetadata } from './lib/dungeonTraits.js';
 
 const KEEP_ADDRESS =
-  process.env.DUNGEON_KEEP_ADDRESS ||
-  process.env.VITE_DUNGEON_KEEP_ADDRESS ||
-  '0x639061b01ab4261b4283a0AC9D3bB8B99013Bad4';
+  process.env.DUNGEON_KEEP_V2_ADDRESS || process.env.VITE_DUNGEON_KEEP_V2_ADDRESS || '';
 const RPC_URL = 'https://rpc.mainnet.chain.robinhood.com';
 const KEEP_ABI = [
   {
@@ -34,15 +32,15 @@ export default async function handler(request, response) {
     return response.status(405).json({ error: 'Method not allowed.' });
   }
 
+  if (!/^0x[a-fA-F0-9]{40}$/.test(KEEP_ADDRESS)) {
+    return response.status(503).json({ error: 'The restored Imp Keeps contract is not live yet.' });
+  }
+
   const queryId = Array.isArray(request.query.id) ? request.query.id[0] : request.query.id;
-  const pathId = String(request.url || '').match(/\/api\/keep\/(\d+)/)?.[1];
+  const pathId = String(request.url || '').match(/\/api\/keep-v2\/(\d+)/)?.[1];
   const tokenId = queryId || pathId;
   if (!tokenId || !/^\d+$/.test(tokenId) || Number(tokenId) < 1 || Number(tokenId) > 2222) {
     return response.status(400).json({ error: 'A keep token id is required.' });
-  }
-
-  if (!KEEP_ADDRESS) {
-    return response.status(503).json({ error: 'Keep contract is not configured.' });
   }
 
   try {
@@ -74,11 +72,11 @@ export default async function handler(request, response) {
         imageUrl: image,
         externalUrl: `${origin}/the-dungeon`,
         tokenId: Number(tokenId),
-        description: `DO NOT BUY. This token is on the voided Imp Keeps contract. Honest keeps migrate at ${origin}/the-dungeon. ${KEEP_DESCRIPTION}`,
+        description: KEEP_DESCRIPTION,
         attributes: described.attributes,
       })
     );
   } catch {
-    return response.status(404).json({ error: 'That keep has not been minted yet.' });
+    return response.status(404).json({ error: 'That keep has not been claimed yet.' });
   }
 }

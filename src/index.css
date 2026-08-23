@@ -4478,6 +4478,41 @@ button:active:not(:disabled),
   height: auto;
 }
 
+.dungeon-page__warn {
+  color: #ffabab;
+}
+
+.dungeon-page__ok {
+  color: #d9ff91;
+}
+
+.dungeon-page__keep--void {
+  opacity: 0.55;
+}
+
+.dungeon-page__claim {
+  appearance: none;
+  margin-top: 0.45rem;
+  min-height: 2rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid rgba(184, 255, 46, 0.4);
+  border-radius: 2px;
+  background: rgba(184, 255, 46, 0.08);
+  color: #d9ff91;
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.dungeon-page__claim:hover:not(:disabled) {
+  background: rgba(184, 255, 46, 0.15);
+}
+
+.dungeon-page__claim:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
 .staking-page {
   min-height: 100vh;
   min-height: 100dvh;
