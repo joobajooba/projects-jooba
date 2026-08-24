@@ -22,13 +22,12 @@ import {
   TIER_HASH_RATES,
 } from '../lib/hashMining';
 import {
-  DUNGEON_KEEP_ABI,
-  DUNGEON_KEEP_ADDRESS,
   keepOpenSeaCollectionUrl,
   keepOpenSeaItemUrl,
   keepPreviewUrl,
   tokenIdFromMintReceipt,
 } from '../lib/dungeonKeep';
+import { DUNGEON_KEEP_V2_ADDRESS, IMP_KEEPS_V2_ABI } from '../lib/keepV2';
 import { ADVENTURE_ENCOUNTERS } from '../lib/adventureEncounters';
 import { AdventureInformation } from '../lib/adventureInformation';
 
@@ -480,24 +479,40 @@ function AdventureSlot({
   }, [session?.status]);
 
   useEffect(() => {
-    if (!viewKeepOpen || !publicClient || !DUNGEON_KEEP_ADDRESS) {
+    if (!viewKeepOpen || !publicClient || !DUNGEON_KEEP_V2_ADDRESS) {
       if (!viewKeepOpen) setNextKeepTokenId(null);
       return undefined;
     }
 
     let cancelled = false;
-    publicClient
-      .readContract({
-        address: DUNGEON_KEEP_ADDRESS,
-        abi: DUNGEON_KEEP_ABI,
-        functionName: 'totalSupply',
-      })
-      .then((supply) => {
-        if (!cancelled) setNextKeepTokenId(Number(supply) + 1);
-      })
-      .catch(() => {
+    (async () => {
+      try {
+        let nextId = Number(
+          await publicClient.readContract({
+            address: DUNGEON_KEEP_V2_ADDRESS,
+            abi: IMP_KEEPS_V2_ABI,
+            functionName: 'mintCursor',
+          })
+        );
+        if (!Number.isFinite(nextId) || nextId < 1) nextId = 1;
+        while (nextId <= 2222) {
+          try {
+            await publicClient.readContract({
+              address: DUNGEON_KEEP_V2_ADDRESS,
+              abi: IMP_KEEPS_V2_ABI,
+              functionName: 'ownerOf',
+              args: [BigInt(nextId)],
+            });
+            nextId += 1;
+          } catch {
+            break;
+          }
+        }
+        if (!cancelled) setNextKeepTokenId(nextId <= 2222 ? nextId : 0);
+      } catch {
         if (!cancelled) setNextKeepTokenId(null);
-      });
+      }
+    })();
 
     return () => {
       cancelled = true;
@@ -971,7 +986,7 @@ function AdventureSlot({
     try {
       const data = await requestDungeonMint(session.id);
       const contractAddress =
-        data.contractAddress || DUNGEON_KEEP_ADDRESS || '';
+        data.contractAddress || DUNGEON_KEEP_V2_ADDRESS || '';
 
       if (!contractAddress || !data.signature || !walletClient) {
         setMintStatus(
@@ -982,7 +997,7 @@ function AdventureSlot({
 
       const hash = await walletClient.writeContract({
         address: contractAddress,
-        abi: DUNGEON_KEEP_ABI,
+        abi: IMP_KEEPS_V2_ABI,
         functionName: 'mint',
         args: [BigInt(data.voucher.seed), BigInt(data.voucher.deadline), data.signature],
       });

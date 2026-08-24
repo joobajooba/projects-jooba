@@ -1,9 +1,19 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
+  ADVENTURES_CHAPTER1_OPENS_AT_MS,
   chapter1CountdownParts,
   padCountdownUnit,
 } from '../lib/adventuresChapter';
+
+function chapter1OpensLabel() {
+  const date = new Date(ADVENTURES_CHAPTER1_OPENS_AT_MS);
+  if (Number.isNaN(date.getTime())) return '';
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const hh = padCountdownUnit(date.getUTCHours());
+  const mm = padCountdownUnit(date.getUTCMinutes());
+  return `Opens ${hh}:${mm} UTC · ${date.getUTCDate()} ${months[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
+}
 
 export function AdventuresChapterCountdown() {
   const [parts, setParts] = useState(() => chapter1CountdownParts());
@@ -63,7 +73,7 @@ export function AdventuresChapterCountdown() {
           <span className="home-countdown__label">Seconds</span>
         </div>
       </div>
-      <p className="home-countdown__meta">Opens 20:00 GMT · 22 Aug 2026</p>
+      <p className="home-countdown__meta">{chapter1OpensLabel()}</p>
     </div>
   );
 }

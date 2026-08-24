@@ -1,7 +1,7 @@
 /** Chapter 1 public open (UTC). Keep in sync with api/adventures-gate.js. */
-export const ADVENTURES_CHAPTER1_OPENS_AT_MS = Date.parse('2026-08-22T20:00:00.000Z');
+export const ADVENTURES_CHAPTER1_OPENS_AT_MS = Date.parse('2026-08-24T18:05:00.000Z');
 /** Kill switch. When true, Adventures is closed for everyone including testers. */
-export const ADVENTURES_CLOSED = true;
+export const ADVENTURES_CLOSED = false;
 
 export function isAdventuresChapter1Open(now = Date.now()) {
   if (ADVENTURES_CLOSED) return false;

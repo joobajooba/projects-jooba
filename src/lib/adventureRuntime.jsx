@@ -458,7 +458,7 @@ export function AdventureRuntimeProvider({ walletAccount, signMessageAsync, chil
             pendingChecked = 0;
           }
 
-          await new Promise((resolve) => window.setTimeout(resolve, 16));
+          await new Promise((resolve) => window.setTimeout(resolve, 16)); // MINE_TICK_MS on the server
         }
       }
 

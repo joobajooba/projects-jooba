@@ -297,7 +297,7 @@ function SiteSettingsModal({
             </button>
           </div>
           <label className="site-settings-modal__volume">
-            <span>Text size {Math.round(textScale * 100)}%</span>
+            <span>Page zoom {Math.round(textScale * 100)}%</span>
             <input
               type="range"
               min={Math.round(MIN_TEXT_SCALE * 100)}
@@ -308,10 +308,10 @@ function SiteSettingsModal({
               aria-valuemin={Math.round(MIN_TEXT_SCALE * 100)}
               aria-valuemax={Math.round(MAX_TEXT_SCALE * 100)}
               aria-valuenow={Math.round(textScale * 100)}
-              aria-label="Text size"
+              aria-label="Page zoom"
             />
           </label>
-          <p>Increase this if site text is hard to read on a phone.</p>
+          <p>Increase this if the page is hard to read on a phone.</p>
         </SettingsSection>
 
         <SettingsSection id="sound-title" title="Sound settings">

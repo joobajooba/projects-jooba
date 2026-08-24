@@ -7,6 +7,7 @@ import {
   isAdventuresTesterWallet,
 } from '../lib/adventuresAccess';
 import { ADVENTURES_CLOSED, isAdventuresChapter1Open } from '../lib/adventuresChapter';
+import { AdventuresChapterCountdown } from '../components/AdventuresChapterCountdown';
 
 const AdventuresPage = lazy(() => import('./AdventuresPage'));
 
@@ -148,6 +149,24 @@ export default function AdventuresGatePage() {
 
   if (allowed) {
     return <AdventuresSuspense />;
+  }
+
+  if (!ADVENTURES_CLOSED && !chapterOpen && !isAdventuresTesterWallet(walletAccount)) {
+    return (
+      <div
+        className="adventures-gate-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="adventures-wip-title"
+      >
+        <div className="adventures-gate__panel">
+          <p className="adventures-gate__eyebrow">Adventures</p>
+          <h1 id="adventures-wip-title">Chapter 1 returns shortly</h1>
+          <p>Keep minting stays open until all 2222 Imp Keeps are minted.</p>
+          <AdventuresChapterCountdown />
+        </div>
+      </div>
+    );
   }
 
   return (

@@ -3,7 +3,8 @@ export const HASH_PREFIX = '0000';
 export const HASH_NEXT_NIBBLE_MAX = 5;
 export const MINE_PAYLOAD_PREFIX = 'implingz-dungeon';
 
-/** Hashes checked per mining tick for each IMPLINGz Tier trait. */
+/** Hashes checked per mining tick for each IMPLINGz Tier trait.
+ * Keep in sync with supabase/functions/adventures (TIER_HASH_RATES, MINE_TICK_MS). */
 export const TIER_HASH_RATES = {
   'Tier 1': 3,
   'Tier 2': 6,

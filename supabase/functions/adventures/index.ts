@@ -8,6 +8,7 @@ import {
   verifyMessage,
 } from "npm:viem";
 import { privateKeyToAccount } from "npm:viem/accounts";
+import { IMP_TIER_DIGITS } from "./impTiers.ts";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -23,12 +24,21 @@ const ADVENTURE_LIVES = 5;
 const HASH_PREFIX = "0000";
 const HASH_NEXT_NIBBLE_MAX = 5;
 const MINE_PAYLOAD_PREFIX = "implingz-dungeon";
+const TIER_HASH_RATES = { 1: 3, 2: 6, 3: 12 } as const;
+const MINE_TICK_MS = 16;
+const MINE_RATE_SLACK = 1.5;
 const XP_PROMPT_SUCCESS = 15;
 const XP_PROMPT_FAIL = 5;
 const XP_DUNGEON_FOUND = 40;
 const XP_DUNGEON_MINTED = 80;
 const XP_DUNGEON_DISCARDED = 15;
-const ADVENTURES_CLOSED = true;
+const ADVENTURES_CHAPTER1_OPENS_AT_MS = Date.parse("2026-08-24T18:05:00.000Z");
+const ADVENTURES_CLOSED = false;
+const ADVENTURES_TESTER_WALLETS = new Set([
+  "0xfe9d3889b5e36b3216a756e0c752220dbf24dac8",
+  "0xb05b214b21801c18b40be098782f32970d29cea1",
+]);
+const KEEP_V2_ADDRESS = "0x51eA8743109F1b9C70C9d1a9A56cCaA5C2877ee9";
 const BANNED_WALLETS = new Set([
   "0x6a69c91eab620fe31ff6cd30b3a00edfb347e32b",
   "0xfc8d2794f75dc008fe0fba2d585aeb49ab4b68a1",
@@ -167,6 +177,66 @@ function isWinningHash(hash: string) {
   return Number.isFinite(extra) && extra <= HASH_NEXT_NIBBLE_MAX;
 }
 
+function chainClient() {
+  const rpc = Deno.env.get("ROBINHOOD_RPC_URL")?.trim() || ROBINHOOD_RPC_URL;
+  return createPublicClient({ chain: ROBINHOOD_CHAIN, transport: http(rpc) });
+}
+
+function partyTokenIdsOf(session: { party_token_ids?: unknown }) {
+  return Array.isArray(session.party_token_ids)
+    ? session.party_token_ids.map((id) => String(id))
+    : [];
+}
+
+function hashesPerTickForParty(tokenIds: string[]) {
+  return tokenIds.reduce((total, id) => {
+    const index = Number(id) - 1;
+    const digit = Number.parseInt(IMP_TIER_DIGITS.charAt(index) || "1", 10);
+    const tier = digit === 3 ? 3 : digit === 2 ? 2 : 1;
+    return total + TIER_HASH_RATES[tier];
+  }, 0);
+}
+
+function maxAllowedNonce(session: { party_token_ids?: unknown; started_at?: string | null }) {
+  const rate = Math.max(1, hashesPerTickForParty(partyTokenIdsOf(session)));
+  const started = Date.parse(String(session.started_at ?? ""));
+  const elapsedMs = Number.isFinite(started) ? Math.max(0, Date.now() - started) : 0;
+  const ticks = Math.max(1, elapsedMs / MINE_TICK_MS) * MINE_RATE_SLACK;
+  return BigInt(Math.floor(rate * ticks));
+}
+
+async function verifyPartyOwnership(walletAddress: string, partyTokenIds: string[]) {
+  if (partyTokenIds.length === 0) {
+    return { ok: false as const, error: "Select at least one IMPLINGZ.", status: 400 };
+  }
+  const client = chainClient();
+  const wallet = walletAddress.toLowerCase();
+  for (const tokenId of partyTokenIds) {
+    try {
+      const owner = await client.readContract({
+        address: IMPLINGZ_ADDRESS,
+        abi: ERC721_OWNER_ABI,
+        functionName: "ownerOf",
+        args: [BigInt(tokenId)],
+      });
+      if (String(owner).toLowerCase() !== wallet) {
+        return {
+          ok: false as const,
+          error: `This wallet does not own IMPLINGZ #${tokenId}.`,
+          status: 403,
+        };
+      }
+    } catch {
+      return {
+        ok: false as const,
+        error: `IMPLINGZ #${tokenId} ownership could not be verified.`,
+        status: 403,
+      };
+    }
+  }
+  return { ok: true as const };
+}
+
 function randomSecret() {
   const bytes = new Uint8Array(32);
   crypto.getRandomValues(bytes);
@@ -229,7 +299,13 @@ function operatorAccount() {
 }
 
 function keepContractAddress() {
-  return Deno.env.get("DUNGEON_KEEP_ADDRESS") || "0x639061b01ab4261b4283a0AC9D3bB8B99013Bad4";
+  return Deno.env.get("DUNGEON_KEEP_V2_ADDRESS") || KEEP_V2_ADDRESS;
+}
+
+function adventuresPausedFor(wallet = "") {
+  if (ADVENTURES_CLOSED) return true;
+  if (Date.now() >= ADVENTURES_CHAPTER1_OPENS_AT_MS) return false;
+  return !ADVENTURES_TESTER_WALLETS.has(String(wallet).toLowerCase());
 }
 
 function openSeaItemUrl(tokenId: number) {
@@ -606,6 +682,12 @@ Deno.serve(async (request: Request) => {
     const body = await request.json();
     const action = String(body.action ?? "");
 
+    if (action === "challenge" || action === "start") {
+      if (adventuresPausedFor(String(body.walletAddress ?? ""))) {
+        return json({ error: "Adventures open shortly. Keep minting resumes until all 2222 are minted." }, 503);
+      }
+    }
+
     if (action === "challenge") {
       const walletAddress = String(body.walletAddress ?? "").toLowerCase();
       if (!ADDRESS_PATTERN.test(walletAddress)) return json({ error: "Invalid wallet address." }, 400);
@@ -655,23 +737,8 @@ Deno.serve(async (request: Request) => {
         return json({ error: "This wallet cannot use Adventures." }, 403);
       }
 
-      const rpc = Deno.env.get("ROBINHOOD_RPC_URL")?.trim() || ROBINHOOD_RPC_URL;
-      const chainClient = createPublicClient({ chain: ROBINHOOD_CHAIN, transport: http(rpc) });
-      for (const tokenId of partyTokenIds) {
-        try {
-          const owner = await chainClient.readContract({
-            address: IMPLINGZ_ADDRESS,
-            abi: ERC721_OWNER_ABI,
-            functionName: "ownerOf",
-            args: [BigInt(tokenId)],
-          });
-          if (String(owner).toLowerCase() !== walletAddress) {
-            return json({ error: `This wallet does not own IMPLINGZ #${tokenId}.` }, 403);
-          }
-        } catch {
-          return json({ error: `IMPLINGZ #${tokenId} ownership could not be verified.` }, 403);
-        }
-      }
+      const owned = await verifyPartyOwnership(walletAddress, partyTokenIds);
+      if (!owned.ok) return json({ error: owned.error }, owned.status);
 
       const account = decorateAccount(await ensureAccount(walletAddress), walletAddress);
       const { data: activeSessions, error: activeError } = await supabase
@@ -719,6 +786,9 @@ Deno.serve(async (request: Request) => {
 
     const session = await authorizeSession(body, action);
     if (!session) return json({ error: "This adventure session is invalid." }, 401);
+    if (adventuresPausedFor(session.wallet_address)) {
+      return json({ error: "Adventures open shortly. Keep minting resumes until all 2222 are minted." }, 503);
+    }
 
     if (action === "prompt") {
       if (!["running", "found"].includes(session.status)) {
@@ -788,7 +858,13 @@ Deno.serve(async (request: Request) => {
       if (!["running", "found"].includes(session.status)) {
         return json({ error: "This adventure is no longer mining." }, 409);
       }
-      const extra = Math.min(250_000, Math.max(0, Number(body.hashesChecked) || 0));
+      const current = Number(session.hashes_checked ?? 0);
+      const allowed = Number(maxAllowedNonce(session));
+      const extra = Math.min(
+        250_000,
+        Math.max(0, Number(body.hashesChecked) || 0),
+        Math.max(0, allowed - current),
+      );
       const { data, error } = await supabase
         .from("adventure_sessions")
         .update({
@@ -810,6 +886,19 @@ Deno.serve(async (request: Request) => {
       if (session.status !== "running") return json({ error: "This adventure already found a dungeon." }, 409);
       const nonce = String(body.nonce ?? "");
       if (!/^[0-9]{1,16}$/.test(nonce)) return json({ error: "Invalid mining nonce." }, 400);
+      const owned = await verifyPartyOwnership(session.wallet_address, partyTokenIdsOf(session));
+      if (!owned.ok) return json({ error: owned.error }, owned.status);
+      let nonceValue: bigint;
+      try {
+        nonceValue = BigInt(nonce);
+      } catch {
+        return json({ error: "Invalid mining nonce." }, 400);
+      }
+      if (nonceValue > maxAllowedNonce(session)) {
+        return json({
+          error: "That find arrived faster than this party could mine. Keep exploring.",
+        }, 400);
+      }
       const expectedHash = await sha256Hex(`${MINE_PAYLOAD_PREFIX}:${session.id}:${nonce}`);
       if (!isWinningHash(expectedHash)) {
         return json({ error: "That hash does not meet the dungeon difficulty." }, 400);
@@ -899,6 +988,8 @@ Deno.serve(async (request: Request) => {
       if (session.status !== "found" || !session.dungeon_seed) {
         return json({ error: "Find a dungeon before minting." }, 409);
       }
+      const owned = await verifyPartyOwnership(session.wallet_address, partyTokenIdsOf(session));
+      if (!owned.ok) return json({ error: owned.error }, owned.status);
       const deadline = Math.floor(Date.now() / 1000) + 15 * 60;
       const seed = String(session.dungeon_seed).startsWith("0x")
         ? String(session.dungeon_seed)

@@ -4,8 +4,8 @@ import { verifyMessage } from 'viem';
 const COOKIE_NAME = 'adventures_gate';
 const COOKIE_SECRET = process.env.ADVENTURES_GATE_SECRET || 'j00ba-adventures-gate-v3';
 /** Keep in sync with src/lib/adventuresChapter.js */
-const ADVENTURES_CHAPTER1_OPENS_AT_MS = Date.parse('2026-08-22T20:00:00.000Z');
-const ADVENTURES_CLOSED = true;
+const ADVENTURES_CHAPTER1_OPENS_AT_MS = Date.parse('2026-08-24T18:05:00.000Z');
+const ADVENTURES_CLOSED = false;
 const ALLOWED_WALLETS = [
   '0xfe9d3889b5e36b3216a756e0c752220dbf24dac8',
   '0xb05b214b21801c18b40be098782f32970d29cea1',
