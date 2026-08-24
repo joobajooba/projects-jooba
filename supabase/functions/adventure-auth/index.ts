@@ -3,7 +3,7 @@ import { createPublicClient, defineChain, http, verifyMessage } from "npm:viem";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;

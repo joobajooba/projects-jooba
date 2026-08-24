@@ -12,7 +12,7 @@ import { IMP_TIER_DIGITS } from "./impTiers.ts";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
@@ -898,10 +898,9 @@ Deno.serve(async (request: Request) => {
         .select(SESSION_COLUMNS)
         .single();
       if (error) throw error;
-      const settled = await settlePendingDrips(session.wallet_address);
       return json({
         session: data,
-        drip: settled.find((row) => row.status === "sent") ?? settled.at(-1) ?? null,
+        drip: null,
       });
     }
 
