@@ -174,7 +174,9 @@ async function fetchOwnedImplingz(walletAccount) {
   let lastError = new Error('Could not load IMPLINGz.');
 
   for (let attempt = 0; attempt < 2; attempt += 1) {
-    const response = await fetch(`/api/implingz?owner=${encodeURIComponent(walletAccount)}`);
+    const response = await fetch(`/api/implingz?owner=${encodeURIComponent(walletAccount)}`, {
+      cache: 'no-store',
+    });
     const data = await response.json().catch(() => ({}));
     if (response.ok) {
       const uniqueInstances = new Map();

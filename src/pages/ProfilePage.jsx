@@ -127,6 +127,7 @@ export default function ProfilePage() {
 
     fetch(`/api/implingz?owner=${encodeURIComponent(walletAccount)}`, {
       signal: controller.signal,
+      cache: 'no-store',
     })
       .then(async (response) => {
         const data = await response.json().catch(() => ({}));

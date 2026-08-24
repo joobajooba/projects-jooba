@@ -247,6 +247,7 @@ export default function StakingPage() {
     Promise.all([
       fetch(`/api/implingz?owner=${encodeURIComponent(walletAccount)}`, {
         signal: controller.signal,
+        cache: 'no-store',
       }).then(async (response) => {
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.error || 'Could not load your IMPLINGz.');

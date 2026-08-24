@@ -1,4 +1,4 @@
-import { createPublicClient, http } from 'viem';
+import { createPublicClient, http, parseAbiItem } from 'viem';
 
 const IMPLINGZ_CONTRACT = '0x81D2D1f0e92285CdD22Aa3cbc6956B6E1724d029';
 const BLOCKSCOUT_V2 = 'https://robinhoodchain.blockscout.com/api/v2';
@@ -9,7 +9,10 @@ const BLOCKSCOUT_HEADERS = {
   Accept: 'application/json',
   'User-Agent': 'Mozilla/5.0 (compatible; j00ba.xyz/implingz-ownership)',
 };
-const ERC721_BALANCE_ABI = [
+const TRANSFER_EVENT = parseAbiItem(
+  'event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)'
+);
+const ERC721_ABI = [
   {
     type: 'function',
     name: 'balanceOf',
@@ -17,10 +20,20 @@ const ERC721_BALANCE_ABI = [
     inputs: [{ name: 'owner', type: 'address' }],
     outputs: [{ type: 'uint256' }],
   },
+  {
+    type: 'function',
+    name: 'ownerOf',
+    stateMutability: 'view',
+    inputs: [{ name: 'tokenId', type: 'uint256' }],
+    outputs: [{ type: 'address' }],
+  },
 ];
 
 function toItems(tokenIds) {
-  return [...tokenIds].map((id) => ({ id: String(id) }));
+  return [...tokenIds]
+    .map((id) => String(id))
+    .sort((left, right) => Number(left) - Number(right))
+    .map((id) => ({ id }));
 }
 
 function rpcClient() {
@@ -31,7 +44,7 @@ function rpcClient() {
       nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
       rpcUrls: { default: { http: [RPC_URL] } },
     },
-    transport: http(RPC_URL, { timeout: 3000 }),
+    transport: http(RPC_URL, { timeout: 4000 }),
   });
 }
 
@@ -55,8 +68,8 @@ function applyNextPage(url, nextPageParams) {
 }
 
 async function paginateV2(url, onItem, signal, timeoutMs = 2500) {
-  const deadline = Date.now() + 4500;
-  for (let page = 0; page < 12 && Date.now() < deadline; page += 1) {
+  const deadline = Date.now() + 4000;
+  for (let page = 0; page < 8 && Date.now() < deadline; page += 1) {
     if (signal?.aborted) break;
     const data = await fetchJson(url, signal ?? AbortSignal.timeout(timeoutMs), timeoutMs);
     for (const item of data.items ?? []) onItem(item);
@@ -68,7 +81,7 @@ async function paginateV2(url, onItem, signal, timeoutMs = 2500) {
 async function fetchBalance(owner) {
   return rpcClient().readContract({
     address: IMPLINGZ_CONTRACT,
-    abi: ERC721_BALANCE_ABI,
+    abi: ERC721_ABI,
     functionName: 'balanceOf',
     args: [owner],
   });
@@ -104,10 +117,10 @@ async function fetchOwnedFromInventory(owner, signal) {
   return tokenIds;
 }
 
-async function fetchOwnedFromTransfers(owner, signal) {
-  const owned = new Set();
+async function fetchIncomingTransfers(owner, signal) {
+  const incoming = new Set();
   const wallet = owner.toLowerCase();
-  for (let page = 1; page <= 8; page += 1) {
+  for (let page = 1; page <= 4; page += 1) {
     if (signal?.aborted) break;
     const url = new URL(BLOCKSCOUT_V1);
     url.searchParams.set('module', 'account');
@@ -116,7 +129,7 @@ async function fetchOwnedFromTransfers(owner, signal) {
     url.searchParams.set('address', owner);
     url.searchParams.set('page', String(page));
     url.searchParams.set('offset', '100');
-    url.searchParams.set('sort', 'asc');
+    url.searchParams.set('sort', 'desc');
     const data = await fetchJson(url, signal ?? AbortSignal.timeout(2500), 2500);
     if (!Array.isArray(data.result)) {
       if (data.message === 'No transactions found' || data.status === '0') break;
@@ -124,52 +137,92 @@ async function fetchOwnedFromTransfers(owner, signal) {
     }
     for (const row of data.result) {
       const tokenId = String(row.tokenID ?? '');
-      if (!tokenId) continue;
-      if (String(row.to || '').toLowerCase() === wallet) owned.add(tokenId);
-      if (String(row.from || '').toLowerCase() === wallet) owned.delete(tokenId);
+      if (tokenId && String(row.to || '').toLowerCase() === wallet) incoming.add(tokenId);
     }
     if (data.result.length < 100) break;
   }
+  return incoming;
+}
+
+async function fetchOwnedFromLogs(owner) {
+  const client = rpcClient();
+  const latest = await client.getBlockNumber();
+  const windows = [20_000n, 80_000n];
+  const incoming = new Set();
+
+  for (const window of windows) {
+    try {
+      const fromBlock = latest > window ? latest - window : 0n;
+      const logs = await client.getLogs({
+        address: IMPLINGZ_CONTRACT,
+        event: TRANSFER_EVENT,
+        args: { to: owner },
+        fromBlock,
+        toBlock: latest,
+      });
+      for (const log of logs) {
+        if (log.args?.tokenId != null) incoming.add(String(log.args.tokenId));
+      }
+      if (incoming.size > 0) return incoming;
+    } catch (error) {
+      console.error('implingz transfer logs failed', window.toString(), error);
+    }
+  }
+
+  return incoming;
+}
+
+async function verifyOwned(owner, tokenIds) {
+  const ids = [...tokenIds].filter((id) => /^\d+$/.test(String(id)));
+  if (ids.length === 0) return new Set();
+
+  const client = rpcClient();
+  const wallet = owner.toLowerCase();
+  const owned = new Set();
+  const chunkSize = 20;
+
+  for (let start = 0; start < ids.length; start += chunkSize) {
+    const slice = ids.slice(start, start + chunkSize);
+    const owners = await Promise.all(
+      slice.map((id) =>
+        client
+          .readContract({
+            address: IMPLINGZ_CONTRACT,
+            abi: ERC721_ABI,
+            functionName: 'ownerOf',
+            args: [BigInt(id)],
+          })
+          .then((address) => (String(address).toLowerCase() === wallet ? String(id) : null))
+          .catch(() => null)
+      )
+    );
+    owners.filter(Boolean).forEach((id) => owned.add(id));
+  }
+
   return owned;
 }
 
-async function firstNonEmptyLookup(lookups) {
-  return new Promise((resolve, reject) => {
-    let pending = lookups.length;
-    let empty = new Set();
-    let sawSuccess = false;
-    let lastError = null;
-
-    lookups.forEach((lookup) => {
-      Promise.resolve()
-        .then(lookup)
-        .then((tokenIds) => {
-          sawSuccess = true;
-          if (tokenIds.size > 0) {
-            resolve(tokenIds);
-            return;
-          }
-          empty = tokenIds;
-        })
-        .catch((error) => {
-          lastError = error;
-        })
-        .finally(() => {
-          pending -= 1;
-          if (pending > 0) return;
-          if (sawSuccess) resolve(empty);
-          else reject(lastError ?? new Error('Could not load wallet IMPLINGz.'));
-        });
-    });
-  });
-}
-
-async function fetchOwnedTokenIds(owner, signal) {
-  return firstNonEmptyLookup([
-    () => fetchOwnedFromInstances(owner, signal),
-    () => fetchOwnedFromInventory(owner, signal),
-    () => fetchOwnedFromTransfers(owner, signal),
+async function collectCandidateIds(owner, signal) {
+  const results = await Promise.allSettled([
+    fetchOwnedFromInstances(owner, signal),
+    fetchOwnedFromInventory(owner, signal),
+    fetchIncomingTransfers(owner, signal),
+    fetchOwnedFromLogs(owner),
   ]);
+
+  const candidates = new Set();
+  let lastError = null;
+  let sawSuccess = false;
+  for (const result of results) {
+    if (result.status === 'fulfilled') {
+      sawSuccess = true;
+      for (const id of result.value) candidates.add(String(id));
+    } else {
+      lastError = result.reason;
+    }
+  }
+
+  return { candidates, sawSuccess, lastError };
 }
 
 export default async function handler(request, response) {
@@ -185,19 +238,29 @@ export default async function handler(request, response) {
   }
 
   const controller = new AbortController();
-  const deadline = setTimeout(() => controller.abort(), 8000);
+  const deadline = setTimeout(() => controller.abort(), 8500);
+  response.setHeader('Cache-Control', 'private, no-store');
 
   try {
-    const tokenIds = await fetchOwnedTokenIds(owner, controller.signal);
-    if (tokenIds.size === 0) {
-      const balance = await fetchBalance(owner).catch(() => null);
-      if (balance != null && BigInt(balance) === 0n) {
-        response.setHeader('Cache-Control', 'public, s-maxage=15, stale-while-revalidate=30');
-        return response.status(200).json({ items: [] });
-      }
+    const balance = await fetchBalance(owner).catch(() => null);
+    if (balance != null && BigInt(balance) === 0n) {
+      return response.status(200).json({ items: [] });
     }
-    response.setHeader('Cache-Control', 'public, s-maxage=15, stale-while-revalidate=30');
-    return response.status(200).json({ items: toItems(tokenIds) });
+
+    const { candidates, sawSuccess, lastError } = await collectCandidateIds(owner, controller.signal);
+    const tokenIds = await verifyOwned(owner, candidates);
+
+    if (tokenIds.size > 0) {
+      return response.status(200).json({ items: toItems(tokenIds) });
+    }
+    if (balance != null && BigInt(balance) === 0n) {
+      return response.status(200).json({ items: [] });
+    }
+    if (sawSuccess) {
+      return response.status(200).json({ items: toItems(tokenIds) });
+    }
+
+    throw lastError ?? new Error('Could not load wallet IMPLINGz.');
   } catch (error) {
     console.error('Failed to load IMPLINGz ownership', error);
     try {
