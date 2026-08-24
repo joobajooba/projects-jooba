@@ -2417,6 +2417,7 @@ button:active:not(:disabled),
   width: 100%;
   display: flex;
   justify-content: center;
+  overflow-anchor: none;
   padding: 4.5rem clamp(1rem, 4vw, 1.5rem) 3rem;
   padding-left: max(clamp(1rem, 4vw, 1.5rem), env(safe-area-inset-left));
   padding-right: max(clamp(1rem, 4vw, 1.5rem), env(safe-area-inset-right));
@@ -3086,6 +3087,12 @@ button:active:not(:disabled),
   display: flex;
   flex-direction: column;
   padding: 1rem;
+  overflow-anchor: none;
+}
+
+.adventure-chat__window:focus,
+.adventure-chat__window:focus-visible {
+  outline: none;
 }
 
 .adventure-chat__heading {
@@ -3346,6 +3353,7 @@ button:active:not(:disabled),
 .adventure-chat__controls {
   padding-top: 0.85rem;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
+  overflow-anchor: none;
 }
 
 .adventure-chat__options {

@@ -853,6 +853,10 @@ function AdventureSlot({
 
   async function chooseAdventureOption(option) {
     if (!adventureStarted || encounterIndex === null || !session?.id || resolvingChoice) return;
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    chatWindowRef.current?.focus({ preventScroll: true });
 
     const completedEncounterIndex = encounterIndex;
     setResolvingChoice(true);
@@ -1321,7 +1325,7 @@ function AdventureSlot({
           className={`adventure-chat__window${
             adventureStarted ? ' adventure-chat__window--active' : ''
           }`}
-          aria-live="polite"
+          tabIndex={-1}
         >
           {adventureStarted && adventureMessages.length > 0 ? (
             <div className="adventure-chat__messages">
@@ -1376,12 +1380,13 @@ function AdventureSlot({
               </p>
               <p className="adventure-chat__decision-label">Make your decision.</p>
               <div className="adventure-chat__options adventure-chat__options--keep" aria-label="Choose what to do with the keep">
-                <button type="button" onClick={viewFoundDungeon}>
+                <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={viewFoundDungeon}>
                   <span>A</span>
                   View dungeon
                 </button>
                 <button
                   type="button"
+                  onMouseDown={(event) => event.preventDefault()}
                   onClick={() => {
                     setAdventureMessages((messages) => [
                       ...messages,
@@ -1395,6 +1400,7 @@ function AdventureSlot({
                 </button>
                 <button
                   type="button"
+                  onMouseDown={(event) => event.preventDefault()}
                   onClick={() => {
                     setAdventureMessages((messages) => [
                       ...messages,
@@ -1423,6 +1429,7 @@ function AdventureSlot({
                     key={`${encounterIndex}-${option.key}`}
                     type="button"
                     disabled={resolvingChoice}
+                    onMouseDown={(event) => event.preventDefault()}
                     onClick={() => chooseAdventureOption(option)}
                   >
                     <span>{option.key}</span>
