@@ -152,17 +152,35 @@ function decorateAccount(account: Record<string, unknown> | null, walletAddress 
   };
 }
 
+function normalizePartyTokenIds(partyTokenIds: unknown) {
+  if (!Array.isArray(partyTokenIds)) return [] as string[];
+  return [...new Set(partyTokenIds.map((id) => String(id)))].slice(0, 5);
+}
+
 function controlMessage(payload: {
   walletAddress: string;
   sessionId: string;
   action: string;
   nonce: string;
 }) {
-  return `IMPLINGz Adventure Control\n${JSON.stringify(payload)}`;
+  return [
+    "IMPLINGz Adventure Control",
+    "",
+    `Wallet: ${payload.walletAddress.toLowerCase()}`,
+    `Session: ${payload.sessionId}`,
+    `Action: ${payload.action}`,
+    `Nonce: ${payload.nonce}`,
+  ].join("\n");
 }
 
 function startMessage(payload: { walletAddress: string; partyTokenIds: string[]; nonce: string }) {
-  return `IMPLINGz Adventure Start\n${JSON.stringify(payload)}`;
+  return [
+    "IMPLINGz Adventure Start",
+    "",
+    `Wallet: ${payload.walletAddress.toLowerCase()}`,
+    `Party: ${payload.partyTokenIds.join(", ")}`,
+    `Nonce: ${payload.nonce}`,
+  ].join("\n");
 }
 
 async function sha256Hex(value: string) {
@@ -694,19 +712,25 @@ Deno.serve(async (request: Request) => {
       await ensureAccount(walletAddress);
       const nonce = crypto.randomUUID();
       const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+      const partyTokenIds = normalizePartyTokenIds(body.partyTokenIds);
+      const sessionId = String(body.sessionId ?? "");
+      const intent = String(body.intent ?? "");
       const { error } = await supabase.from("adventure_challenges").upsert(
         { wallet_address: walletAddress, nonce, expires_at: expiresAt },
         { onConflict: "wallet_address" },
       );
       if (error) throw error;
-      return json({ nonce, expiresAt });
+      const message = partyTokenIds.length
+        ? startMessage({ walletAddress, partyTokenIds, nonce })
+        : sessionId && intent
+          ? controlMessage({ walletAddress, sessionId, action: intent, nonce })
+          : "";
+      return json({ nonce, expiresAt, ...(message ? { message } : {}) });
     }
 
     if (action === "start") {
       const walletAddress = String(body.walletAddress ?? "").toLowerCase();
-      const partyTokenIds = Array.isArray(body.partyTokenIds)
-        ? [...new Set(body.partyTokenIds.map((id: unknown) => String(id)))].slice(0, 5)
-        : [];
+      const partyTokenIds = normalizePartyTokenIds(body.partyTokenIds);
       const nonce = String(body.nonce ?? "");
       const signature = String(body.signature ?? "");
 

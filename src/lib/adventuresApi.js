@@ -69,21 +69,33 @@ export function clearSessionSecret(sessionId) {
   writeJsonStore(SESSION_STORAGE_KEY, secrets);
 }
 
+export function normalizeAdventurePartyIds(partyTokenIds) {
+  return [...new Set((Array.isArray(partyTokenIds) ? partyTokenIds : []).map((id) => String(id)))].slice(
+    0,
+    5
+  );
+}
+
 export function buildAdventureStartMessage({ walletAddress, partyTokenIds, nonce }) {
-  return `IMPLINGz Adventure Start\n${JSON.stringify({
-    walletAddress: walletAddress.toLowerCase(),
-    partyTokenIds,
-    nonce,
-  })}`;
+  const party = normalizeAdventurePartyIds(partyTokenIds).join(', ');
+  return [
+    'IMPLINGz Adventure Start',
+    '',
+    `Wallet: ${String(walletAddress || '').toLowerCase()}`,
+    `Party: ${party}`,
+    `Nonce: ${nonce}`,
+  ].join('\n');
 }
 
 export function buildAdventureControlMessage({ walletAddress, sessionId, action, nonce }) {
-  return `IMPLINGz Adventure Control\n${JSON.stringify({
-    walletAddress: walletAddress.toLowerCase(),
-    sessionId,
-    action,
-    nonce,
-  })}`;
+  return [
+    'IMPLINGz Adventure Control',
+    '',
+    `Wallet: ${String(walletAddress || '').toLowerCase()}`,
+    `Session: ${sessionId}`,
+    `Action: ${action}`,
+    `Nonce: ${nonce}`,
+  ].join('\n');
 }
 
 export async function fetchAdventurerAccount(walletAddress, { signal } = {}) {
@@ -103,12 +115,12 @@ export async function fetchAdventureBoard({ signal } = {}) {
   };
 }
 
-export async function requestAdventureChallenge(walletAddress) {
+export async function requestAdventureChallenge(walletAddress, extra = {}) {
   return readResponse(
     await fetch(ADVENTURES_API, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'challenge', walletAddress }),
+      body: JSON.stringify({ action: 'challenge', walletAddress, ...extra }),
     })
   );
 }
@@ -146,16 +158,22 @@ async function ownerProof(action, sessionId) {
     throw new Error('Connect the adventure wallet to continue this session.');
   }
 
-  const challenge = await requestAdventureChallenge(walletAddress);
+  const challenge = await requestAdventureChallenge(walletAddress, { sessionId, intent: action });
   if (!challenge.nonce) throw new Error('Could not start wallet verification.');
 
-  const signature = await sessionAuth.signMessageAsync({
-    message: buildAdventureControlMessage({
+  const message =
+    challenge.message ||
+    buildAdventureControlMessage({
       walletAddress,
       sessionId,
       action,
       nonce: challenge.nonce,
-    }),
+    });
+  if (!String(message).trim()) throw new Error('Could not prepare a wallet signature.');
+
+  const signature = await sessionAuth.signMessageAsync({
+    account: walletAddress,
+    message,
   });
 
   return {

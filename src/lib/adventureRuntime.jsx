@@ -144,7 +144,16 @@ export function AdventureRuntimeProvider({ walletAccount, signMessageAsync, chil
   }, [dripMessage]);
 
   useEffect(() => {
-    setAdventureSessionAuth({ walletAddress: walletAccount, signMessageAsync });
+    setAdventureSessionAuth({
+      walletAddress: walletAccount,
+      signMessageAsync: signMessageAsync
+        ? (vars) =>
+            signMessageAsync({
+              account: walletAccount,
+              ...vars,
+            })
+        : null,
+    });
   }, [walletAccount, signMessageAsync]);
 
   const busyTokenIds = useMemo(() => {

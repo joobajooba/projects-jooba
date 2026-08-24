@@ -380,6 +380,15 @@ export default function App() {
   const { openConnectModal } = useConnectModal();
   const walletAccount = address ?? '';
   const walletName = connector?.name ?? 'Wallet';
+  const signAdventureMessage = useCallback(
+    (vars) =>
+      signMessageAsync({
+        ...(connector ? { connector } : {}),
+        account: address,
+        ...vars,
+      }),
+    [address, connector, signMessageAsync]
+  );
   const currentTrack = PLAYLIST[trackIndex] ?? PLAYLIST[0];
   musicEnabledRef.current = musicEnabled;
 
@@ -596,7 +605,7 @@ export default function App() {
       </aside>
 
       <main className="page-content">
-        <AdventureRuntimeProvider walletAccount={walletAccount} signMessageAsync={signMessageAsync}>
+        <AdventureRuntimeProvider walletAccount={walletAccount} signMessageAsync={signAdventureMessage}>
           <Outlet
             context={{
               walletAccount,

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { usePublicClient, useSignMessage, useWalletClient } from 'wagmi';
+import { useAccount, usePublicClient, useSignMessage, useWalletClient } from 'wagmi';
 import collection from '../data/collection.json';
 import { derpTreasureChatMessage, dripStatusMessage, useAdventureRuntime } from '../lib/adventureRuntime';
 import { useAdventuresServerAccess } from '../lib/adventuresAccess';
@@ -10,6 +10,7 @@ import {
   discardFoundDungeon,
   fetchAdventureBoard,
   markDungeonMinted,
+  normalizeAdventurePartyIds,
   requestAdventureChallenge,
   requestDungeonMint,
   resolveAdventurePrompt,
@@ -225,6 +226,7 @@ function AdventureSlot({
   showStackHeader = false,
 }) {
   const { walletAccount, walletName } = useOutletContext();
+  const { address, connector } = useAccount();
   const publicClient = usePublicClient({ chainId: 4663 });
   const { data: walletClient } = useWalletClient({ chainId: 4663 });
   const { signMessageAsync } = useSignMessage();
@@ -764,14 +766,23 @@ function AdventureSlot({
         ...impling,
         tier: resolveImplingTier(impling) || 'Tier 1',
       }));
-      const partyTokenIds = enrichedParty.map((impling) => String(impling.id));
-      const { nonce } = await requestAdventureChallenge(walletAccount);
-      const signature = await signMessageAsync({
-        message: buildAdventureStartMessage({
+      const partyTokenIds = normalizeAdventurePartyIds(enrichedParty.map((impling) => String(impling.id)));
+      const challenge = await requestAdventureChallenge(walletAccount, { partyTokenIds });
+      const nonce = challenge.nonce;
+      const message =
+        challenge.message ||
+        buildAdventureStartMessage({
           walletAddress: walletAccount,
           partyTokenIds,
           nonce,
-        }),
+        });
+      if (!nonce || !String(message).trim()) {
+        throw new Error('Could not prepare a wallet signature.');
+      }
+      const signature = await signMessageAsync({
+        ...(connector ? { connector } : {}),
+        account: address || walletAccount,
+        message,
       });
       const data = await startAdventureSession({
         walletAddress: walletAccount,
