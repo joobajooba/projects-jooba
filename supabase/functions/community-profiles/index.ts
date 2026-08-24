@@ -318,29 +318,32 @@ Deno.serve(async (request: Request) => {
       const { data, error } = await query;
       if (error) throw error;
 
-      const refreshed = await mapPool(data ?? [], 6, async (profile) => {
-        try {
-          const counts = await countWalletHoldings(profile.wallet_address);
-          await applyHoldingsFloor(profile.wallet_address, counts.total_implingz);
-          if (holdingsUnchanged(profile, counts)) return { ...profile, ...counts };
-          const { data: updated, error: updateError } = await supabase
-            .from("community_profiles")
-            .update(counts)
-            .eq("wallet_address", profile.wallet_address)
-            .select(PROFILE_COLUMNS)
-            .single();
-          if (updateError) throw updateError;
-          return updated;
-        } catch (lookupError) {
-          console.error("implingz holdings refresh failed", profile.wallet_address, lookupError);
-          try {
-            await applyHoldingsFloor(profile.wallet_address, Number(profile.total_implingz ?? 0));
-          } catch (floorError) {
-            console.error("holdings floor failed", profile.wallet_address, floorError);
-          }
-          return profile;
-        }
-      });
+      // List views must stay fast. Live Blockscout refresh is only for a single wallet.
+      const refreshed = wallet
+        ? await mapPool(data ?? [], 1, async (profile) => {
+            try {
+              const counts = await countWalletHoldings(profile.wallet_address);
+              await applyHoldingsFloor(profile.wallet_address, counts.total_implingz);
+              if (holdingsUnchanged(profile, counts)) return { ...profile, ...counts };
+              const { data: updated, error: updateError } = await supabase
+                .from("community_profiles")
+                .update(counts)
+                .eq("wallet_address", profile.wallet_address)
+                .select(PROFILE_COLUMNS)
+                .single();
+              if (updateError) throw updateError;
+              return updated;
+            } catch (lookupError) {
+              console.error("implingz holdings refresh failed", profile.wallet_address, lookupError);
+              try {
+                await applyHoldingsFloor(profile.wallet_address, Number(profile.total_implingz ?? 0));
+              } catch (floorError) {
+                console.error("holdings floor failed", profile.wallet_address, floorError);
+              }
+              return profile;
+            }
+          })
+        : (data ?? []);
 
       const wallets = refreshed.map((profile) => profile.wallet_address);
       const accountByWallet = new Map();

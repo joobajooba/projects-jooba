@@ -1780,13 +1780,18 @@ function AdventureBoard() {
 
   useEffect(() => {
     const controller = new AbortController();
-    Promise.all([
-      fetchAdventureBoard({ signal: controller.signal }),
-      fetchCommunityProfiles({ signal: controller.signal }).catch(() => []),
-    ])
-      .then(([board, profiles]) => {
+    fetchAdventureBoard({ signal: controller.signal })
+      .then((board) => {
         setEvents(board.events ?? []);
         setPayouts(board.payouts ?? []);
+      })
+      .catch((error) => {
+        if (error?.name === 'AbortError') return;
+        setEvents([]);
+        setPayouts([]);
+      });
+    fetchCommunityProfiles({ signal: controller.signal })
+      .then((profiles) => {
         setProfilesByWallet(
           Object.fromEntries(
             (profiles ?? []).map((profile) => [
@@ -1796,11 +1801,7 @@ function AdventureBoard() {
           )
         );
       })
-      .catch(() => {
-        setEvents([]);
-        setPayouts([]);
-        setProfilesByWallet({});
-      });
+      .catch(() => {});
     return () => controller.abort();
   }, []);
 
