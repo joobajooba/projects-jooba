@@ -2,7 +2,7 @@ import {
   COLLECTION_SIZE,
   listReservedTraitAssignments,
   rollKeepTraits,
-} from '../api/lib/dungeonTraits.js';
+} from '../api/_lib/dungeonTraits.js';
 
 const TYPES = ['Standard', 'Keep', 'Hive', 'Spiral', 'Labyrinth', 'Gauntlet'];
 const BOSSES = {

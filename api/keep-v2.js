@@ -1,6 +1,6 @@
 import { createPublicClient, http } from 'viem';
-import { describeDungeon } from './lib/generateDungeon.js';
-import { KEEP_DESCRIPTION, dungeonPreviewPath, openseaMetadata } from './lib/dungeonTraits.js';
+import { describeDungeon } from './_lib/generateDungeon.js';
+import { KEEP_DESCRIPTION, dungeonPreviewPath, openseaMetadata } from './_lib/dungeonTraits.js';
 
 const KEEP_ADDRESS =
   process.env.DUNGEON_KEEP_V2_ADDRESS ||

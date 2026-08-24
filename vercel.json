@@ -3,16 +3,16 @@
   "outputDirectory": "dist",
   "functions": {
     "api/dungeon-preview.js": {
-      "includeFiles": "{api/lib/**,scripts/**,dungeon_generator/**,Tiles/**,Tall Tiles/**,Mini-Bosses/**,tall_tiles/**}"
+      "includeFiles": "{api/_lib/**,scripts/**,dungeon_generator/**,Tiles/**,Tall Tiles/**,Mini-Bosses/**,tall_tiles/**}"
     },
     "api/keep.js": {
-      "includeFiles": "{api/lib/**}"
+      "includeFiles": "{api/_lib/**}"
     },
     "api/keeps.js": {
-      "includeFiles": "{api/lib/**}"
+      "includeFiles": "{api/_lib/**}"
     },
     "api/keep-v2.js": {
-      "includeFiles": "{api/lib/**}"
+      "includeFiles": "{api/_lib/**}"
     }
   },
   "rewrites": [

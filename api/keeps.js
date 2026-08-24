@@ -1,5 +1,5 @@
 import { createPublicClient, http } from 'viem';
-import { optionsFromSeed } from './lib/dungeonTraits.js';
+import { optionsFromSeed } from './_lib/dungeonTraits.js';
 
 const KEEP_COLLECTIONS = [
   {

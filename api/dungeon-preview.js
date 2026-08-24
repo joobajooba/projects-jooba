@@ -1,10 +1,10 @@
-import { renderDungeonPreview } from './lib/renderDungeonPng.js';
+import { renderDungeonPreview } from './_lib/renderDungeonPng.js';
 import {
   KEEP_DESCRIPTION,
   dungeonPreviewPath,
   openseaMetadata,
   parseKeepTokenId,
-} from './lib/dungeonTraits.js';
+} from './_lib/dungeonTraits.js';
 
 function siteOrigin(request) {
   const header = request.headers['x-forwarded-host'] || request.headers.host;

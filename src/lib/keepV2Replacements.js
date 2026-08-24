@@ -5,4 +5,4 @@ export {
   isKeepV2OpsWallet,
   replacementForWallet,
   replacementSourceTokenId,
-} from '../../api/lib/keepV2Replacements.js';
+} from '../../api/_lib/keepV2Replacements.js';

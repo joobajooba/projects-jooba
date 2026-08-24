@@ -1,8 +1,8 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import adventuresGateHandler from './api/adventures-gate.js';
-import { KEEP_DESCRIPTION, dungeonPreviewPath, openseaMetadata, parseKeepTokenId } from './api/lib/dungeonTraits.js';
-import { renderDungeonPreview } from './api/lib/renderDungeonPng.js';
+import { KEEP_DESCRIPTION, dungeonPreviewPath, openseaMetadata, parseKeepTokenId } from './api/_lib/dungeonTraits.js';
+import { renderDungeonPreview } from './api/_lib/renderDungeonPng.js';
 
 function sendJson(res, status, body) {
   res.statusCode = status;
