@@ -282,7 +282,7 @@ function AdventureSlot({
   const [keepMetadata, setKeepMetadata] = useState(null);
   const [nextKeepTokenId, setNextKeepTokenId] = useState(null);
   const [impSpeechStates, setImpSpeechStates] = useState(EMPTY_SPEECH_STATES);
-  const chatEndRef = useRef(null);
+  const chatWindowRef = useRef(null);
   const nextEncounterTimerRef = useRef(null);
   const idleTimerRef = useRef(null);
   const lastIdleNarrationRef = useRef(null);
@@ -381,7 +381,9 @@ function AdventureSlot({
   }, [adventureStarted, session?.id]);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    const log = chatWindowRef.current;
+    if (!log) return;
+    log.scrollTo({ top: log.scrollHeight, behavior: 'smooth' });
   }, [adventureMessages, encounterIndex]);
 
   useEffect(() => {
@@ -1315,6 +1317,7 @@ function AdventureSlot({
         </div>
 
         <div
+          ref={chatWindowRef}
           className={`adventure-chat__window${
             adventureStarted ? ' adventure-chat__window--active' : ''
           }`}
@@ -1353,7 +1356,6 @@ function AdventureSlot({
                   <p>Dungeon Master is thinking…</p>
                 </div>
               ) : null}
-              <div ref={chatEndRef} />
             </div>
           ) : (
             <div className="adventure-chat__empty">
