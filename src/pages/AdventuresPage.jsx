@@ -171,37 +171,39 @@ function normalizeImageUrl(imageUrl) {
 }
 
 async function fetchOwnedImplingz(walletAccount) {
-  const response = await fetch(`/api/implingz?owner=${encodeURIComponent(walletAccount)}`);
-  const data = await response.json().catch(() => ({}));
+  let lastError = new Error('Could not load IMPLINGz.');
 
-  if (!response.ok) {
-    throw new Error(data.error || 'Could not load IMPLINGz.');
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const response = await fetch(`/api/implingz?owner=${encodeURIComponent(walletAccount)}`);
+    const data = await response.json().catch(() => ({}));
+    if (response.ok) {
+      const uniqueInstances = new Map();
+      (data.items ?? []).forEach((instance) => {
+        const tokenId = String(instance.id);
+        const localImpling = COLLECTION_BY_ID.get(tokenId);
+        uniqueInstances.set(tokenId, {
+          id: tokenId,
+          name: localImpling?.name ?? instance.metadata?.name ?? `IMPLINGZ #${tokenId}`,
+          image:
+            localImpling?.image ??
+            normalizeImageUrl(instance.image_url || instance.metadata?.image || ''),
+          tier:
+            resolveImplingTier(localImpling) ||
+            resolveImplingTier({
+              attributes: instance.metadata?.attributes,
+              tier: instance.metadata?.attributes?.Tier,
+            }) ||
+            'Tier 1',
+          attributes: localImpling?.attributes ?? instance.metadata?.attributes,
+        });
+      });
+      return [...uniqueInstances.values()].sort((a, b) => Number(a.id) - Number(b.id));
+    }
+    lastError = new Error(data.error || 'Could not load IMPLINGz.');
+    if (attempt === 0) await new Promise((resolve) => window.setTimeout(resolve, 800));
   }
 
-  const uniqueInstances = new Map();
-
-  (data.items ?? []).forEach((instance) => {
-    const tokenId = String(instance.id);
-    const localImpling = COLLECTION_BY_ID.get(tokenId);
-
-    uniqueInstances.set(tokenId, {
-      id: tokenId,
-      name: localImpling?.name ?? instance.metadata?.name ?? `IMPLINGZ #${tokenId}`,
-      image:
-        localImpling?.image ??
-        normalizeImageUrl(instance.image_url || instance.metadata?.image || ''),
-      tier:
-        resolveImplingTier(localImpling) ||
-        resolveImplingTier({
-          attributes: instance.metadata?.attributes,
-          tier: instance.metadata?.attributes?.Tier,
-        }) ||
-        'Tier 1',
-      attributes: localImpling?.attributes ?? instance.metadata?.attributes,
-    });
-  });
-
-  return [...uniqueInstances.values()].sort((a, b) => Number(a.id) - Number(b.id));
+  throw lastError;
 }
 
 async function verifyImplingOwnership(publicClient, walletAccount, tokenId) {

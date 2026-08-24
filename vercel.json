@@ -2,6 +2,9 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "functions": {
+    "api/implingz.js": {
+      "maxDuration": 10
+    },
     "api/dungeon-preview.js": {
       "includeFiles": "{api/_lib/**,scripts/**,dungeon_generator/**,Tiles/**,Tall Tiles/**,Mini-Bosses/**,tall_tiles/**}"
     },
