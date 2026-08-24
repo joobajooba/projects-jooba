@@ -373,7 +373,7 @@ async function sendDerpDrip(rewardsAddress: string, to: string, amount: number) 
       functionName: "drip",
       args: [to as `0x${string}`, wei],
     });
-    await publicClient.waitForTransactionReceipt({ hash });
+    await publicClient.waitForTransactionReceipt({ hash, timeout: 8_000 });
     return { status: "sent" as const, txHash: hash };
   } catch (error) {
     console.error("derp drip send failed", String(error));
@@ -687,11 +687,10 @@ Deno.serve(async (request: Request) => {
         .in("status", ["running", "found"])
         .order("started_at", { ascending: false });
       if (error) throw error;
-      const settled = await settlePendingDrips(wallet);
       return json({
         account,
         sessions: sessions ?? [],
-        drip: settled.find((row) => row.status === "sent") ?? settled.at(-1) ?? null,
+        drip: null,
       });
     }
 

@@ -1,5 +1,7 @@
 export const ADVENTURES_API =
   'https://jitkwbatwymqtlzxiyil.supabase.co/functions/v1/adventures';
+export const ADVENTURE_AUTH_API =
+  'https://jitkwbatwymqtlzxiyil.supabase.co/functions/v1/adventure-auth';
 export const KEEP_REPLACEMENT_API =
   'https://jitkwbatwymqtlzxiyil.supabase.co/functions/v1/keep-replacement';
 const ADVENTURES_DB =
@@ -167,10 +169,11 @@ export async function fetchAdventureBoard({ signal } = {}) {
 
 export async function requestAdventureChallenge(walletAddress, extra = {}) {
   return readResponse(
-    await fetch(ADVENTURES_API, {
+    await fetch(ADVENTURE_AUTH_API, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'challenge', walletAddress, ...extra }),
+      signal: AbortSignal.timeout(12000),
     })
   );
 }
@@ -182,7 +185,7 @@ export async function startAdventureSession({
   signature,
 }) {
   const data = await readResponse(
-    await fetch(ADVENTURES_API, {
+    await fetch(ADVENTURE_AUTH_API, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

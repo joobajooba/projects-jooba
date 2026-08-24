@@ -779,11 +779,16 @@ function AdventureSlot({
       if (!nonce || !String(message).trim()) {
         throw new Error('Could not prepare a wallet signature.');
       }
-      const signature = await signMessageAsync({
-        ...(connector ? { connector } : {}),
-        account: address || walletAccount,
-        message,
-      });
+      const signature = walletClient
+        ? await walletClient.signMessage({
+            account: address || walletAccount,
+            message,
+          })
+        : await signMessageAsync({
+            ...(connector ? { connector } : {}),
+            account: address || walletAccount,
+            message,
+          });
       const data = await startAdventureSession({
         walletAddress: walletAccount,
         partyTokenIds,
@@ -1282,7 +1287,7 @@ function AdventureSlot({
                 onClick={startAdventure}
               >
                 {starting
-                  ? 'Signing…'
+                  ? 'Confirm in wallet…'
                   : usedSlots >= adventurer.slots
                     ? 'No free slots'
                     : 'Start Adventure'}
