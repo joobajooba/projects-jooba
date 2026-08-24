@@ -80,6 +80,13 @@ export const IMP_KEEPS_V2_ABI = [
     inputs: [{ name: 'seed', type: 'uint256' }],
     outputs: [{ type: 'bool' }],
   },
+  {
+    type: 'function',
+    name: 'totalSupply',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ type: 'uint256' }],
+  },
 ];
 
 export function keepV2Configured() {

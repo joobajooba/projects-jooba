@@ -17,10 +17,21 @@ export function buildAdventuresAccessMessage(nonce) {
   return `IMPLINGz Adventures Access\n${nonce}`;
 }
 
-export async function fetchAdventuresAccess() {
+export async function fetchAdventuresGate() {
   const response = await fetch('/api/adventures-gate', { credentials: 'same-origin' });
   const data = await response.json().catch(() => ({}));
-  return Boolean(response.ok && data.unlocked);
+  return {
+    unlocked: Boolean(response.ok && data.unlocked),
+    chapterOpen: Boolean(data.chapterOpen),
+    soldOut: Boolean(data.soldOut),
+    totalSupply: Number(data.totalSupply) || 0,
+    maxSupply: Number(data.maxSupply) || 2222,
+  };
+}
+
+export async function fetchAdventuresAccess() {
+  const gate = await fetchAdventuresGate();
+  return gate.unlocked && !gate.soldOut;
 }
 
 export function useAdventuresServerAccess() {
@@ -28,51 +39,65 @@ export function useAdventuresServerAccess() {
   const [unlocked, setUnlocked] = useState(false);
   const [ready, setReady] = useState(false);
   const [chapterOpen, setChapterOpen] = useState(() => isAdventuresChapter1Open());
+  const [soldOut, setSoldOut] = useState(false);
   const walletAllowed =
-    !ADVENTURES_CLOSED && (chapterOpen || isAdventuresTesterWallet(walletAccount));
+    !ADVENTURES_CLOSED && !soldOut && (chapterOpen || isAdventuresTesterWallet(walletAccount));
 
   useEffect(() => {
-    const syncChapter = () => setChapterOpen(isAdventuresChapter1Open());
+    const syncChapter = () => setChapterOpen(isAdventuresChapter1Open() && !soldOut);
     syncChapter();
     const id = window.setInterval(syncChapter, 1000);
     return () => window.clearInterval(id);
-  }, []);
+  }, [soldOut]);
 
   useEffect(() => {
     let cancelled = false;
 
-    if (chapterOpen) {
-      setUnlocked(true);
-      setReady(true);
-      return undefined;
+    function applyGate(gate) {
+      setSoldOut(Boolean(gate.soldOut));
+      setChapterOpen(Boolean(gate.chapterOpen) && !gate.soldOut);
+      setUnlocked(Boolean(gate.unlocked) && !gate.soldOut);
     }
 
-    if (!walletAllowed) {
+    if (ADVENTURES_CLOSED) {
+      setSoldOut(false);
       setUnlocked(false);
       setReady(true);
       return undefined;
     }
 
     setReady(false);
-    fetchAdventuresAccess()
-      .then((value) => {
-        if (!cancelled) setUnlocked(value);
+    fetchAdventuresGate()
+      .then((gate) => {
+        if (!cancelled) applyGate(gate);
       })
       .catch(() => {
-        if (!cancelled) setUnlocked(false);
+        if (!cancelled) {
+          setUnlocked(false);
+        }
       })
       .finally(() => {
         if (!cancelled) setReady(true);
       });
 
+    const id = window.setInterval(() => {
+      fetchAdventuresGate()
+        .then((gate) => {
+          if (!cancelled) applyGate(gate);
+        })
+        .catch(() => {});
+    }, 20000);
+
     return () => {
       cancelled = true;
+      window.clearInterval(id);
     };
-  }, [walletAllowed, walletAccount, chapterOpen]);
+  }, [walletAccount]);
 
   return {
     ready,
-    unlocked: ready && (chapterOpen || (unlocked && walletAllowed)),
-    chapterOpen,
+    unlocked: ready && !soldOut && (chapterOpen || (unlocked && walletAllowed)),
+    chapterOpen: chapterOpen && !soldOut,
+    soldOut,
   };
 }

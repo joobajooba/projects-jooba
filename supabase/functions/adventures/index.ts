@@ -39,6 +39,8 @@ const ADVENTURES_TESTER_WALLETS = new Set([
   "0xb05b214b21801c18b40be098782f32970d29cea1",
 ]);
 const KEEP_V2_ADDRESS = "0x51eA8743109F1b9C70C9d1a9A56cCaA5C2877ee9";
+const KEEP_MAX_SUPPLY = 2222;
+const CHAPTER1_SOLD_OUT_MESSAGE = "Chapter 1 is complete. All 2222 Imp Keeps have been minted.";
 const BANNED_WALLETS = new Set([
   "0x6a69c91eab620fe31ff6cd30b3a00edfb347e32b",
   "0xfc8d2794f75dc008fe0fba2d585aeb49ab4b68a1",
@@ -78,6 +80,15 @@ const DERP_REWARDS_ABI = [
   {
     type: "function",
     name: "potBalance",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ type: "uint256" }],
+  },
+] as const;
+const KEEP_TOTAL_SUPPLY_ABI = [
+  {
+    type: "function",
+    name: "totalSupply",
     stateMutability: "view",
     inputs: [],
     outputs: [{ type: "uint256" }],
@@ -320,8 +331,34 @@ function keepContractAddress() {
   return Deno.env.get("DUNGEON_KEEP_V2_ADDRESS") || KEEP_V2_ADDRESS;
 }
 
+let keepSoldOut = false;
+let keepSupplyCheckedAt = 0;
+
+async function isKeepSupplySoldOut() {
+  if (ADVENTURES_CLOSED || keepSoldOut) return true;
+  if (Date.now() - keepSupplyCheckedAt < 15_000) return keepSoldOut;
+  try {
+    const rpc = Deno.env.get("ROBINHOOD_RPC_URL")?.trim() || ROBINHOOD_RPC_URL;
+    const supply = await createPublicClient({
+      chain: ROBINHOOD_CHAIN,
+      transport: http(rpc),
+    }).readContract({
+      address: (Deno.env.get("DUNGEON_KEEP_V2_ADDRESS") || KEEP_V2_ADDRESS) as `0x${string}`,
+      abi: KEEP_TOTAL_SUPPLY_ABI,
+      functionName: "totalSupply",
+    });
+    keepSoldOut = Number(supply) >= KEEP_MAX_SUPPLY;
+    keepSupplyCheckedAt = Date.now();
+    return keepSoldOut;
+  } catch (error) {
+    console.error("keep supply lookup failed", error);
+    keepSupplyCheckedAt = Date.now();
+    return keepSoldOut;
+  }
+}
+
 function adventuresPausedFor(wallet = "") {
-  if (ADVENTURES_CLOSED) return true;
+  if (ADVENTURES_CLOSED || keepSoldOut) return true;
   if (Date.now() >= ADVENTURES_CHAPTER1_OPENS_AT_MS) return false;
   return !ADVENTURES_TESTER_WALLETS.has(String(wallet).toLowerCase());
 }
@@ -386,8 +423,9 @@ Deno.serve(async (request: Request) => {
     return new Response("ok", { headers: CORS_HEADERS });
   }
 
-  if (ADVENTURES_CLOSED && request.method === "POST") {
-    return json({ error: "Adventures are paused." }, 503);
+  if (request.method === "POST") {
+    if (ADVENTURES_CLOSED) return json({ error: "Adventures are paused." }, 503);
+    if (await isKeepSupplySoldOut()) return json({ error: CHAPTER1_SOLD_OUT_MESSAGE }, 503);
   }
 
   const secretKeys = JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") ?? "{}");
@@ -700,8 +738,8 @@ Deno.serve(async (request: Request) => {
     const action = String(body.action ?? "");
 
     if (action === "challenge" || action === "start") {
-      if (adventuresPausedFor(String(body.walletAddress ?? ""))) {
-        return json({ error: "Adventures open shortly. Keep minting resumes until all 2222 are minted." }, 503);
+      if (await isKeepSupplySoldOut() || adventuresPausedFor(String(body.walletAddress ?? ""))) {
+        return json({ error: keepSoldOut ? CHAPTER1_SOLD_OUT_MESSAGE : "Adventures open shortly. Keep minting resumes until all 2222 are minted." }, 503);
       }
     }
 
@@ -809,8 +847,8 @@ Deno.serve(async (request: Request) => {
 
     const session = await authorizeSession(body, action);
     if (!session) return json({ error: "This adventure session is invalid." }, 401);
-    if (adventuresPausedFor(session.wallet_address)) {
-      return json({ error: "Adventures open shortly. Keep minting resumes until all 2222 are minted." }, 503);
+    if (await isKeepSupplySoldOut() || adventuresPausedFor(session.wallet_address)) {
+      return json({ error: keepSoldOut ? CHAPTER1_SOLD_OUT_MESSAGE : "Adventures open shortly. Keep minting resumes until all 2222 are minted." }, 503);
     }
 
     if (action === "prompt") {

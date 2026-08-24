@@ -13,6 +13,9 @@ const SESSION_COLUMNS =
   "id,wallet_address,party_token_ids,status,hashes_checked,winning_nonce,winning_hash,dungeon_seed,mint_deadline,minted_token_id,xp_awarded,lives,started_at,ended_at,updated_at";
 const ADVENTURE_LIVES = 5;
 const IMPLINGZ_ADDRESS = "0x81D2D1f0e92285CdD22Aa3cbc6956B6E1724d029";
+const KEEP_V2_ADDRESS = "0x51eA8743109F1b9C70C9d1a9A56cCaA5C2877ee9";
+const KEEP_MAX_SUPPLY = 2222;
+const CHAPTER1_SOLD_OUT_MESSAGE = "Chapter 1 is complete. All 2222 Imp Keeps have been minted.";
 const BANNED_WALLETS = new Set([
   "0x6a69c91eab620fe31ff6cd30b3a00edfb347e32b",
   "0xfc8d2794f75dc008fe0fba2d585aeb49ab4b68a1",
@@ -42,6 +45,15 @@ const ERC721_OWNER_ABI = [
     stateMutability: "view",
     inputs: [{ name: "tokenId", type: "uint256" }],
     outputs: [{ type: "address" }],
+  },
+] as const;
+const KEEP_TOTAL_SUPPLY_ABI = [
+  {
+    type: "function",
+    name: "totalSupply",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ type: "uint256" }],
   },
 ] as const;
 
@@ -93,6 +105,31 @@ function randomSecret() {
   return [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
+let keepSoldOut = false;
+let keepSupplyCheckedAt = 0;
+
+async function isKeepSupplySoldOut() {
+  if (keepSoldOut) return true;
+  if (Date.now() - keepSupplyCheckedAt < 15_000) return keepSoldOut;
+  try {
+    const supply = await createPublicClient({
+      chain: ROBINHOOD_CHAIN,
+      transport: http("https://rpc.mainnet.chain.robinhood.com"),
+    }).readContract({
+      address: KEEP_V2_ADDRESS as `0x${string}`,
+      abi: KEEP_TOTAL_SUPPLY_ABI,
+      functionName: "totalSupply",
+    });
+    keepSoldOut = Number(supply) >= KEEP_MAX_SUPPLY;
+    keepSupplyCheckedAt = Date.now();
+    return keepSoldOut;
+  } catch (error) {
+    console.error("keep supply lookup failed", error);
+    keepSupplyCheckedAt = Date.now();
+    return keepSoldOut;
+  }
+}
+
 Deno.serve(async (request: Request) => {
   if (request.method === "OPTIONS") return new Response("ok", { headers: CORS_HEADERS });
   if (request.method !== "POST") return json({ error: "Method not allowed." }, 405);
@@ -112,6 +149,9 @@ Deno.serve(async (request: Request) => {
     if (!ADDRESS_PATTERN.test(walletAddress)) return json({ error: "Invalid wallet address." }, 400);
     if (BANNED_WALLETS.has(walletAddress)) {
       return json({ error: "This wallet cannot use Adventures." }, 403);
+    }
+    if (await isKeepSupplySoldOut()) {
+      return json({ error: CHAPTER1_SOLD_OUT_MESSAGE }, 503);
     }
 
     async function ensureAccount() {

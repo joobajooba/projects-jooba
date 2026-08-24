@@ -5,6 +5,7 @@ import {
   chapter1CountdownParts,
   padCountdownUnit,
 } from '../lib/adventuresChapter';
+import { fetchAdventuresGate } from '../lib/adventuresAccess';
 
 function chapter1OpensLabel() {
   const date = new Date(ADVENTURES_CHAPTER1_OPENS_AT_MS);
@@ -17,6 +18,7 @@ function chapter1OpensLabel() {
 
 export function AdventuresChapterCountdown() {
   const [parts, setParts] = useState(() => chapter1CountdownParts());
+  const [soldOut, setSoldOut] = useState(false);
 
   useEffect(() => {
     const tick = () => setParts(chapter1CountdownParts());
@@ -25,11 +27,31 @@ export function AdventuresChapterCountdown() {
     return () => window.clearInterval(id);
   }, []);
 
-  if (parts.closed) {
+  useEffect(() => {
+    let cancelled = false;
+    fetchAdventuresGate()
+      .then((gate) => {
+        if (!cancelled) setSoldOut(Boolean(gate.soldOut));
+      })
+      .catch(() => {});
+    const id = window.setInterval(() => {
+      fetchAdventuresGate()
+        .then((gate) => {
+          if (!cancelled) setSoldOut(Boolean(gate.soldOut));
+        })
+        .catch(() => {});
+    }, 20000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, []);
+
+  if (soldOut || parts.closed) {
     return (
       <div className="home-countdown" aria-live="polite">
         <p className="home-countdown__title">Adventures Chapter 1</p>
-        <p className="home-countdown__live">Paused</p>
+        <p className="home-countdown__live">{soldOut ? 'Sold out' : 'Paused'}</p>
       </div>
     );
   }

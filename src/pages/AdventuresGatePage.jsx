@@ -4,6 +4,7 @@ import { useSignMessage } from 'wagmi';
 import {
   buildAdventuresAccessMessage,
   fetchAdventuresAccess,
+  fetchAdventuresGate,
   isAdventuresTesterWallet,
 } from '../lib/adventuresAccess';
 import { ADVENTURES_CLOSED, isAdventuresChapter1Open } from '../lib/adventuresChapter';
@@ -41,23 +42,59 @@ export default function AdventuresGatePage() {
   const { walletAccount } = useOutletContext();
   const { signMessageAsync } = useSignMessage();
   const [chapterOpen, setChapterOpen] = useState(() => isAdventuresChapter1Open());
+  const [soldOut, setSoldOut] = useState(false);
   const [serverUnlocked, setServerUnlocked] = useState(false);
   const [checking, setChecking] = useState(true);
   const [signing, setSigning] = useState(false);
   const [error, setError] = useState('');
   const signingRef = useRef(false);
   const walletAllowed =
-    !ADVENTURES_CLOSED && (chapterOpen || isAdventuresTesterWallet(walletAccount));
-  const allowed = chapterOpen || (serverUnlocked && walletAllowed);
+    !ADVENTURES_CLOSED && !soldOut && (chapterOpen || isAdventuresTesterWallet(walletAccount));
+  const allowed = !soldOut && (chapterOpen || (serverUnlocked && walletAllowed));
 
   useEffect(() => {
-    const syncChapter = () => setChapterOpen(isAdventuresChapter1Open());
-    syncChapter();
-    const id = window.setInterval(syncChapter, 1000);
-    return () => window.clearInterval(id);
+    let cancelled = false;
+
+    function applyGate(gate) {
+      setSoldOut(Boolean(gate.soldOut));
+      setChapterOpen(Boolean(gate.chapterOpen) && !gate.soldOut);
+      if (gate.soldOut) setServerUnlocked(false);
+    }
+
+    fetchAdventuresGate()
+      .then((gate) => {
+        if (!cancelled) applyGate(gate);
+      })
+      .catch(() => {});
+
+    const id = window.setInterval(() => {
+      fetchAdventuresGate()
+        .then((gate) => {
+          if (!cancelled) applyGate(gate);
+        })
+        .catch(() => {});
+    }, 20000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
   }, []);
 
   useEffect(() => {
+    const syncChapter = () => setChapterOpen(isAdventuresChapter1Open() && !soldOut);
+    syncChapter();
+    const id = window.setInterval(syncChapter, 1000);
+    return () => window.clearInterval(id);
+  }, [soldOut]);
+
+  useEffect(() => {
+    if (soldOut) {
+      setServerUnlocked(false);
+      setChecking(false);
+      return undefined;
+    }
+
     if (chapterOpen) {
       setServerUnlocked(true);
       setChecking(false);
@@ -81,10 +118,10 @@ export default function AdventuresGatePage() {
     return () => {
       cancelled = true;
     };
-  }, [walletAccount, chapterOpen]);
+  }, [walletAccount, chapterOpen, soldOut]);
 
   useEffect(() => {
-    if (chapterOpen || !walletAllowed || serverUnlocked || checking || signingRef.current) {
+    if (soldOut || chapterOpen || !walletAllowed || serverUnlocked || checking || signingRef.current) {
       return undefined;
     }
 
@@ -145,7 +182,24 @@ export default function AdventuresGatePage() {
     return () => {
       cancelled = true;
     };
-  }, [chapterOpen, walletAllowed, serverUnlocked, checking, signMessageAsync, walletAccount]);
+  }, [soldOut, chapterOpen, walletAllowed, serverUnlocked, checking, signMessageAsync, walletAccount]);
+
+  if (soldOut) {
+    return (
+      <div
+        className="adventures-gate-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="adventures-wip-title"
+      >
+        <div className="adventures-gate__panel">
+          <p className="adventures-gate__eyebrow">Adventures</p>
+          <h1 id="adventures-wip-title">Chapter 1 is complete</h1>
+          <p>All 2222 Imp Keeps have been minted. Adventures are closed.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (allowed) {
     return <AdventuresSuspense />;

@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from 'crypto';
 import { verifyMessage } from 'viem';
+import { KEEP_MAX_SUPPLY, readKeepSupplySafe } from './_lib/keepSupply.js';
 
 const COOKIE_NAME = 'adventures_gate';
 const COOKIE_SECRET = process.env.ADVENTURES_GATE_SECRET || 'j00ba-adventures-gate-v3';
@@ -44,8 +45,8 @@ function hmacValue(value) {
   return createHmac('sha256', COOKIE_SECRET).update(String(value)).digest('hex');
 }
 
-function isAllowedWallet(address) {
-  if (ADVENTURES_CLOSED) return false;
+function isAllowedWallet(address, soldOut = false) {
+  if (ADVENTURES_CLOSED || soldOut) return false;
   if (isChapter1Open()) return true;
   const wallet = String(address || '').toLowerCase();
   return ALLOWED_WALLETS.some((allowed) => tokensMatch(wallet, allowed));
@@ -55,8 +56,8 @@ function expectedToken(wallet) {
   return hmacValue(`adventures-unlocked:${wallet}`);
 }
 
-function isUnlocked(request) {
-  if (ADVENTURES_CLOSED) return false;
+function isUnlocked(request, soldOut = false) {
+  if (ADVENTURES_CLOSED || soldOut) return false;
   if (isChapter1Open()) return true;
   const cookie = readCookie(request, COOKIE_NAME);
   return ALLOWED_WALLETS.some((wallet) => tokensMatch(cookie, expectedToken(wallet)));
@@ -107,12 +108,26 @@ function parseBody(request) {
   return body && typeof body === 'object' ? body : {};
 }
 
+function gatePayload(request, supply) {
+  const soldOut = Boolean(supply.soldOut);
+  const chapterOpen = isChapter1Open() && !soldOut;
+  return {
+    unlocked: isUnlocked(request, soldOut),
+    chapterOpen,
+    soldOut,
+    totalSupply: supply.totalSupply,
+    maxSupply: supply.maxSupply || KEEP_MAX_SUPPLY,
+  };
+}
+
 export default async function handler(request, response) {
   response.setHeader('Cache-Control', 'no-store');
-  const chapterOpen = isChapter1Open();
+  const supply = await readKeepSupplySafe();
+  const soldOut = Boolean(supply.soldOut);
+  const chapterOpen = isChapter1Open() && !soldOut;
 
   if (request.method === 'GET') {
-    return response.status(200).json({ unlocked: isUnlocked(request), chapterOpen });
+    return response.status(200).json(gatePayload(request, supply));
   }
 
   if (request.method !== 'POST') {
@@ -123,8 +138,15 @@ export default async function handler(request, response) {
   const body = parseBody(request);
   const action = String(body.action || 'unlock');
 
+  if (soldOut) {
+    return response.status(200).json({
+      ...gatePayload(request, supply),
+      error: 'Chapter 1 is complete. All 2222 Imp Keeps have been minted.',
+    });
+  }
+
   if (action === 'challenge') {
-    return response.status(200).json({ nonce: makeChallenge(), chapterOpen });
+    return response.status(200).json({ nonce: makeChallenge(), chapterOpen, soldOut: false });
   }
 
   if (action !== 'unlock') {
@@ -132,14 +154,14 @@ export default async function handler(request, response) {
   }
 
   if (chapterOpen) {
-    return response.status(200).json({ unlocked: true, chapterOpen: true });
+    return response.status(200).json({ unlocked: true, chapterOpen: true, soldOut: false });
   }
 
   const walletAddress = String(body.walletAddress || '').toLowerCase();
   const nonce = String(body.nonce || '');
   const signature = String(body.signature || '');
 
-  if (!ADDRESS_PATTERN.test(walletAddress) || !isAllowedWallet(walletAddress)) {
+  if (!ADDRESS_PATTERN.test(walletAddress) || !isAllowedWallet(walletAddress, soldOut)) {
     return response.status(403).json({ unlocked: false, error: 'This wallet cannot open Adventures.' });
   }
   if (!challengeValid(nonce) || !SIGNATURE_PATTERN.test(signature)) {
@@ -157,5 +179,5 @@ export default async function handler(request, response) {
   }
 
   setUnlockCookie(response, walletAddress);
-  return response.status(200).json({ unlocked: true, chapterOpen: false });
+  return response.status(200).json({ unlocked: true, chapterOpen: false, soldOut: false });
 }

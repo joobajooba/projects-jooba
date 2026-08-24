@@ -1992,7 +1992,11 @@ export default function AdventuresPage() {
         <div className="adventures-gate__panel">
           <p className="adventures-gate__eyebrow">Adventures</p>
           <h1 id="adventures-wip-title">Work in progress</h1>
-          <p>This page is being built/tested.</p>
+          {access.soldOut ? (
+            <p>All 2222 Imp Keeps have been minted. Adventures are closed.</p>
+          ) : (
+            <p>This page is being built/tested.</p>
+          )}
         </div>
       </div>
     );

@@ -2,6 +2,9 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "functions": {
+    "api/adventures-gate.js": {
+      "includeFiles": "{api/_lib/**}"
+    },
     "api/implingz.js": {
       "maxDuration": 10
     },
