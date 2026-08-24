@@ -10,7 +10,7 @@ import { createConfig, http } from 'wagmi';
 import { defineChain } from 'viem';
 
 const ROBINHOOD_RPC_URL = 'https://rpc.mainnet.chain.robinhood.com';
-const DEFAULT_WALLETCONNECT_PROJECT_ID = '361ec8f5dca47dfe686b1e00143128fe';
+const DEFAULT_WALLETCONNECT_PROJECT_ID = '597c0c8ff1767d6501aab3c89efc92ab';
 
 export const robinhoodChain = defineChain({
   id: 4663,
