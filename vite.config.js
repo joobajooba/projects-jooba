@@ -1,8 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import adventuresGateHandler from './api/adventures-gate.js';
-import stakingGateHandler from './api/staking-gate.js';
-import keepsHandler from './api/keeps.js';
 import { KEEP_DESCRIPTION, dungeonPreviewPath, openseaMetadata, parseKeepTokenId } from './api/lib/dungeonTraits.js';
 import { renderDungeonPreview } from './api/lib/renderDungeonPng.js';
 
@@ -67,11 +65,13 @@ function localAdventureApis() {
         }
 
         if (url.pathname === '/api/staking-gate') {
+          const { default: stakingGateHandler } = await import('./api/staking-gate.js');
           handleGate(stakingGateHandler);
           return;
         }
 
         if (url.pathname === '/api/keeps') {
+          const { default: keepsHandler } = await import('./api/keeps.js');
           Promise.resolve(
             keepsHandler(
               { method: req.method, headers: req.headers, query: Object.fromEntries(url.searchParams) },
