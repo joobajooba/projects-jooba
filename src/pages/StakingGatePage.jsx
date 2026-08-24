@@ -2,10 +2,10 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { useSignMessage } from 'wagmi';
 import {
-  buildAdventuresAccessMessage,
-  fetchAdventuresAccess,
-  isAdventuresTesterWallet,
-} from '../lib/adventuresAccess';
+  buildStakingAccessMessage,
+  fetchStakingAccess,
+  isStakingTesterWallet,
+} from '../lib/stakingAccess';
 
 const StakingPage = lazy(() => import('./StakingPage'));
 
@@ -35,13 +35,13 @@ export default function StakingGatePage() {
   const [signing, setSigning] = useState(false);
   const [error, setError] = useState('');
   const signingRef = useRef(false);
-  const walletAllowed = isAdventuresTesterWallet(walletAccount);
+  const walletAllowed = isStakingTesterWallet(walletAccount);
   const allowed = serverUnlocked && walletAllowed;
 
   useEffect(() => {
     let cancelled = false;
 
-    fetchAdventuresAccess()
+    fetchStakingAccess()
       .then((value) => {
         if (!cancelled) setServerUnlocked(value);
       })
@@ -67,7 +67,7 @@ export default function StakingGatePage() {
 
     (async () => {
       try {
-        const challengeResponse = await fetch('/api/adventures-gate', {
+        const challengeResponse = await fetch('/api/staking-gate', {
           method: 'POST',
           credentials: 'same-origin',
           headers: { 'Content-Type': 'application/json' },
@@ -79,10 +79,10 @@ export default function StakingGatePage() {
         }
 
         const signature = await signMessageAsync({
-          message: buildAdventuresAccessMessage(challenge.nonce),
+          message: buildStakingAccessMessage(challenge.nonce),
         });
 
-        const unlockResponse = await fetch('/api/adventures-gate', {
+        const unlockResponse = await fetch('/api/staking-gate', {
           method: 'POST',
           credentials: 'same-origin',
           headers: { 'Content-Type': 'application/json' },
@@ -134,7 +134,9 @@ export default function StakingGatePage() {
           ? 'Confirm the wallet signature to open this test page.'
           : checking
             ? 'Checking access…'
-            : 'This page is being built/tested.'
+            : walletAccount
+              ? 'This page is being built/tested.'
+              : 'Connect an allowed wallet to open Staking.'
       }
       error={error}
     />

@@ -1,6 +1,8 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import adventuresGateHandler from './api/adventures-gate.js';
+import stakingGateHandler from './api/staking-gate.js';
+import keepsHandler from './api/keeps.js';
 import { KEEP_DESCRIPTION, dungeonPreviewPath, openseaMetadata, parseKeepTokenId } from './api/lib/dungeonTraits.js';
 import { renderDungeonPreview } from './api/lib/renderDungeonPng.js';
 
@@ -17,8 +19,8 @@ function localAdventureApis() {
       server.middlewares.use(async (req, res, next) => {
         const url = new URL(req.url || '/', 'http://localhost');
 
-        if (url.pathname === '/api/adventures-gate') {
-          const wrapped = {
+        function vercelJson() {
+          return {
             statusCode: 200,
             setHeader(name, value) {
               res.setHeader(name, value);
@@ -31,13 +33,16 @@ function localAdventureApis() {
               sendJson(res, this.statusCode || 200, data);
             },
           };
+        }
 
+        function handleGate(handler) {
+          const wrapped = vercelJson();
           if (req.method === 'GET' || req.method === 'HEAD') {
-            Promise.resolve(
-              adventuresGateHandler({ method: req.method, headers: req.headers, body: {} }, wrapped)
-            ).catch(() => {
-              sendJson(res, 500, { error: 'Access check failed.' });
-            });
+            Promise.resolve(handler({ method: req.method, headers: req.headers, body: {} }, wrapped)).catch(
+              () => {
+                sendJson(res, 500, { error: 'Access check failed.' });
+              }
+            );
             return;
           }
 
@@ -50,14 +55,30 @@ function localAdventureApis() {
             } catch {
               body = {};
             }
-            Promise.resolve(
-              adventuresGateHandler(
-                { method: req.method, headers: req.headers, body },
-                wrapped
-              )
-            ).catch(() => {
+            Promise.resolve(handler({ method: req.method, headers: req.headers, body }, wrapped)).catch(() => {
               sendJson(res, 500, { error: 'Access check failed.' });
             });
+          });
+        }
+
+        if (url.pathname === '/api/adventures-gate') {
+          handleGate(adventuresGateHandler);
+          return;
+        }
+
+        if (url.pathname === '/api/staking-gate') {
+          handleGate(stakingGateHandler);
+          return;
+        }
+
+        if (url.pathname === '/api/keeps') {
+          Promise.resolve(
+            keepsHandler(
+              { method: req.method, headers: req.headers, query: Object.fromEntries(url.searchParams) },
+              vercelJson()
+            )
+          ).catch(() => {
+            sendJson(res, 500, { error: 'Keep lookup failed.' });
           });
           return;
         }

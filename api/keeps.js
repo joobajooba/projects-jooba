@@ -1,7 +1,18 @@
 import { createPublicClient, http } from 'viem';
 import { optionsFromSeed } from './lib/dungeonTraits.js';
 
-const KEEP_CONTRACT = '0x639061b01ab4261b4283a0AC9D3bB8B99013Bad4';
+const KEEP_COLLECTIONS = [
+  {
+    address: '0x639061b01ab4261b4283a0AC9D3bB8B99013Bad4',
+    version: 'v1',
+    namePrefix: 'Imp Keep',
+  },
+  {
+    address: '0x51eA8743109F1b9C70C9d1a9A56cCaA5C2877ee9',
+    version: 'v2',
+    namePrefix: 'IMPLINGz Keep',
+  },
+];
 const BLOCKSCOUT_V2 = 'https://robinhoodchain.blockscout.com/api/v2';
 const BLOCKSCOUT_V1 = 'https://robinhoodchain.blockscout.com/api';
 const RPC_URL = 'https://rpc.mainnet.chain.robinhood.com';
@@ -67,8 +78,8 @@ function applyNextPage(url, nextPageParams) {
   });
 }
 
-async function fetchOwnedFromInstances(owner) {
-  const url = new URL(`${BLOCKSCOUT_V2}/tokens/${KEEP_CONTRACT}/instances`);
+async function fetchOwnedFromInstances(owner, contract) {
+  const url = new URL(`${BLOCKSCOUT_V2}/tokens/${contract}/instances`);
   url.searchParams.set('holder_address_hash', owner);
   const tokenIds = new Set();
 
@@ -84,17 +95,17 @@ async function fetchOwnedFromInstances(owner) {
   return tokenIds;
 }
 
-async function fetchOwnedFromInventory(owner) {
+async function fetchOwnedFromInventory(owner, contract) {
   const url = new URL(`${BLOCKSCOUT_V2}/addresses/${owner}/nft`);
   url.searchParams.set('type', 'ERC-721');
-  const contract = KEEP_CONTRACT.toLowerCase();
+  const wanted = contract.toLowerCase();
   const tokenIds = new Set();
 
   for (let page = 0; page < 50; page += 1) {
     const data = await fetchJson(url, 2500);
     for (const item of data.items ?? []) {
       const address = String(item?.token?.address_hash || item?.token?.address || '').toLowerCase();
-      if (address === contract && item?.id) tokenIds.add(String(item.id));
+      if (address === wanted && item?.id) tokenIds.add(String(item.id));
     }
     if (!data.next_page_params) break;
     applyNextPage(url, data.next_page_params);
@@ -103,7 +114,7 @@ async function fetchOwnedFromInventory(owner) {
   return tokenIds;
 }
 
-async function fetchOwnedFromTransfers(owner) {
+async function fetchOwnedFromTransfers(owner, contract) {
   const owned = new Set();
   const wallet = owner.toLowerCase();
 
@@ -111,7 +122,7 @@ async function fetchOwnedFromTransfers(owner) {
     const url = new URL(BLOCKSCOUT_V1);
     url.searchParams.set('module', 'account');
     url.searchParams.set('action', 'tokennfttx');
-    url.searchParams.set('contractaddress', KEEP_CONTRACT);
+    url.searchParams.set('contractaddress', contract);
     url.searchParams.set('address', owner);
     url.searchParams.set('page', String(page));
     url.searchParams.set('offset', '100');
@@ -134,8 +145,12 @@ async function fetchOwnedFromTransfers(owner) {
   return owned;
 }
 
-async function fetchOwnedTokenIds(owner) {
-  const lookups = [fetchOwnedFromTransfers, fetchOwnedFromInstances, fetchOwnedFromInventory];
+async function fetchOwnedTokenIds(owner, contract) {
+  const lookups = [
+    (wallet) => fetchOwnedFromTransfers(wallet, contract),
+    (wallet) => fetchOwnedFromInstances(wallet, contract),
+    (wallet) => fetchOwnedFromInventory(wallet, contract),
+  ];
   let lastError = null;
   let sawSuccess = false;
   let empty = new Set();
@@ -155,13 +170,13 @@ async function fetchOwnedTokenIds(owner) {
   return empty;
 }
 
-async function stillOwnedIds(client, owner, tokenIds) {
+async function stillOwnedIds(client, owner, contract, tokenIds) {
   const wallet = owner.toLowerCase();
   const rows = await Promise.all(
     [...tokenIds].map(async (tokenId) => {
       try {
         const current = await client.readContract({
-          address: KEEP_CONTRACT,
+          address: contract,
           abi: KEEP_ABI,
           functionName: 'ownerOf',
           args: [BigInt(tokenId)],
@@ -175,10 +190,10 @@ async function stillOwnedIds(client, owner, tokenIds) {
   return rows.filter(Boolean);
 }
 
-async function enrichKeep(client, tokenId) {
+async function enrichKeep(client, collection, tokenId) {
   try {
     const seed = await client.readContract({
-      address: KEEP_CONTRACT,
+      address: collection.address,
       abi: KEEP_ABI,
       functionName: 'seedOf',
       args: [BigInt(tokenId)],
@@ -187,25 +202,42 @@ async function enrichKeep(client, tokenId) {
     const opts = optionsFromSeed(hex, Number(tokenId));
     return {
       id: tokenId,
-      name: `Imp Keep #${tokenId}`,
+      name: `${collection.namePrefix} #${tokenId}`,
       image: previewUrl(hex, tokenId),
       seed: hex,
       tileset: opts.tileset,
       biome: opts.biome,
       dungeonType: opts.dungeonType,
       miniBoss: opts.miniBoss,
+      contract: collection.address,
+      version: collection.version,
     };
   } catch {
     return {
       id: tokenId,
-      name: `Imp Keep #${tokenId}`,
+      name: `${collection.namePrefix} #${tokenId}`,
       image: '',
       seed: '',
       tileset: '',
       biome: 'Unknown',
       dungeonType: '',
       miniBoss: '',
+      contract: collection.address,
+      version: collection.version,
     };
+  }
+}
+
+async function loadCollection(client, owner, collection) {
+  try {
+    const tokenIds = await fetchOwnedTokenIds(owner, collection.address);
+    const ownedIds = tokenIds.size
+      ? await stillOwnedIds(client, owner, collection.address, tokenIds)
+      : [];
+    return Promise.all(ownedIds.map((tokenId) => enrichKeep(client, collection, tokenId)));
+  } catch (error) {
+    console.error(`Failed to load ${collection.version} Imp Keeps`, error);
+    return [];
   }
 }
 
@@ -220,17 +252,25 @@ export default async function handler(request, response) {
     return response.status(400).json({ error: 'A valid wallet address is required.' });
   }
 
+  const all =
+    String(Array.isArray(request.query.all) ? request.query.all[0] : request.query.all || '') === '1';
+  const collections = all
+    ? KEEP_COLLECTIONS
+    : KEEP_COLLECTIONS.filter((collection) => collection.version === 'v1');
+
   try {
-    const tokenIds = await fetchOwnedTokenIds(owner);
     const client = createKeepClient();
-    const ownedIds = tokenIds.size ? await stillOwnedIds(client, owner, tokenIds) : [];
-    const keeps = (
-      await Promise.all(ownedIds.map((tokenId) => enrichKeep(client, tokenId)))
-    ).sort((a, b) => Number(a.id) - Number(b.id));
+    const groups = await Promise.all(
+      collections.map((collection) => loadCollection(client, owner, collection))
+    );
+    const keeps = groups.flat().sort((a, b) => {
+      if (a.version !== b.version) return a.version.localeCompare(b.version);
+      return Number(a.id) - Number(b.id);
+    });
 
     response.setHeader('Cache-Control', 'public, s-maxage=15, stale-while-revalidate=30');
     return response.status(200).json({
-      contract: KEEP_CONTRACT,
+      contracts: collections.map((collection) => collection.address),
       items: keeps,
     });
   } catch (error) {
