@@ -127,6 +127,14 @@ function previewUrlForSeed(seed) {
   return `/api/dungeon-preview?seed=${encodeURIComponent(seed)}&format=png`;
 }
 
+function isLivesLostRuntimeError(message) {
+  return /You lost all \d+ lives/.test(String(message || ''));
+}
+
+function sessionIsLive(session) {
+  return ['running', 'found'].includes(session?.status);
+}
+
 export function AdventureRuntimeProvider({ walletAccount, signMessageAsync, children }) {
   const [adventurer, setAdventurer] = useState(() => emptyAdventurerAccount());
   const [adventures, setAdventures] = useState([]);
@@ -143,6 +151,12 @@ export function AdventureRuntimeProvider({ walletAccount, signMessageAsync, chil
     const timer = window.setTimeout(() => setDripMessage(''), 15_000);
     return () => window.clearTimeout(timer);
   }, [dripMessage]);
+
+  useEffect(() => {
+    if (!isLivesLostRuntimeError(runtimeError)) return;
+    if (!adventures.some((row) => sessionIsLive(row.session))) return;
+    setRuntimeError('');
+  }, [adventures, runtimeError]);
 
   useEffect(() => {
     setAdventureSessionAuth({
@@ -261,6 +275,7 @@ export function AdventureRuntimeProvider({ walletAccount, signMessageAsync, chil
     ({ account, session: nextSession, nextNonce }) => {
       const nonce = Math.max(0, Number(nextNonce) || 0);
       setAdventurer(decorateAccount(account));
+      setRuntimeError('');
       persistNonce(nextSession.id, nonce);
       updateRun(nextSession.id, (run) => ({
         ...run,
@@ -336,6 +351,7 @@ export function AdventureRuntimeProvider({ walletAccount, signMessageAsync, chil
 
       setAdventures(restored);
       persistParties(restored);
+      setRuntimeError((message) => (isLivesLostRuntimeError(message) ? '' : message));
       writeJson(NONCE_STORAGE_KEY, nonceMapRef.current);
     },
     [clearActiveAdventure, persistParties]
@@ -361,6 +377,7 @@ export function AdventureRuntimeProvider({ walletAccount, signMessageAsync, chil
   useEffect(() => {
     if (!walletAccount) {
       setAdventurer(emptyAdventurerAccount());
+      setRuntimeError('');
       clearActiveAdventure();
       return undefined;
     }

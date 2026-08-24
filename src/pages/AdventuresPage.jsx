@@ -73,6 +73,11 @@ const IMPLING_IDLE_QUOTES = [
 ];
 
 const ADVENTURE_LIVES = 5;
+
+function isLivesLostRuntimeError(message) {
+  return /You lost all \d+ lives/.test(String(message || ''));
+}
+
 const LIVES_STORAGE_KEY = 'implingz-adventure-lives';
 
 function readLivesStore() {
@@ -297,7 +302,13 @@ function AdventureSlot({
   const partyHashRate = hashesPerTickForParty(activeParty);
   const adventureStarted = Boolean(session);
   const currentEncounter = encounterIndex === null ? null : DND_ENCOUNTERS[encounterIndex];
-  const combinedError = startError || (slotIndex === 0 ? runtimeError : '');
+  const combinedError =
+    startError ||
+    (isLivesLostRuntimeError(runtimeError) && adventureStarted
+      ? ''
+      : slotIndex === 0
+        ? runtimeError
+        : '');
   const adventureLabel = `Adventure ${slotIndex + 1}`;
   const partyNames = activeParty.map((impling) => `#${impling.id}`).join(', ');
 
@@ -922,7 +933,17 @@ function AdventureSlot({
         ...(treasure ? [treasure] : []),
       ]);
       if (defeated) {
-        setRuntimeError(`You lost all ${ADVENTURE_LIVES} lives. The adventure has ended. Start again.`);
+        const otherLive = adventures.some(
+          (row) =>
+            row.session?.id !== session.id && ['running', 'found'].includes(row.session?.status),
+        );
+        if (!otherLive) {
+          setRuntimeError(
+            `You lost all ${ADVENTURE_LIVES} lives. The adventure has ended. Start again.`,
+          );
+        } else {
+          setRuntimeError('');
+        }
         clearAdventureTimers();
         setEncounterIndex(null);
         if (result.session && !['running', 'found'].includes(result.session.status)) {
@@ -1706,7 +1727,10 @@ function StartAdventurePanel() {
         </p>
       ) : null}
       {dripMessage ? <p className="adventure-party__drip">{dripMessage}</p> : null}
-      {runtimeError ? <p className="adventure-party__error">{runtimeError}</p> : null}
+      {runtimeError &&
+      !(isLivesLostRuntimeError(runtimeError) && visibleUsed > 0) ? (
+        <p className="adventure-party__error">{runtimeError}</p>
+      ) : null}
 
       {adventures.map((run, index) => (
         <AdventureSlot
