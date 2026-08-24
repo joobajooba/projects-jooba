@@ -2,6 +2,10 @@ export const ADVENTURES_API =
   'https://jitkwbatwymqtlzxiyil.supabase.co/functions/v1/adventures';
 export const KEEP_REPLACEMENT_API =
   'https://jitkwbatwymqtlzxiyil.supabase.co/functions/v1/keep-replacement';
+const ADVENTURES_DB =
+  'https://jitkwbatwymqtlzxiyil.supabase.co/rest/v1/adventurer_accounts';
+const ADVENTURES_DB_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppdGt3YmF0d3ltcXRsenhpeWlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyMzYxNjQsImV4cCI6MjA4NjgxMjE2NH0.0rDEnkYYAQpboD707PQ0QPptqhrU-TqEweoVZXbBYMo';
 
 const SESSION_STORAGE_KEY = 'implingz-adventure-sessions';
 
@@ -101,8 +105,30 @@ export function buildAdventureControlMessage({ walletAddress, sessionId, action,
 export async function fetchAdventurerAccount(walletAddress, { signal } = {}) {
   const url = new URL(ADVENTURES_API);
   if (walletAddress) url.searchParams.set('wallet', walletAddress);
-  const data = await readResponse(await fetch(url, { signal }));
-  return data;
+  try {
+    return await readResponse(await fetch(url, { signal }));
+  } catch (error) {
+    if (!walletAddress) throw error;
+    const account = await fetchAccountRow(walletAddress, { signal });
+    if (!account) throw error;
+    return { account };
+  }
+}
+
+async function fetchAccountRow(walletAddress, { signal } = {}) {
+  const url = new URL(ADVENTURES_DB);
+  url.searchParams.set('wallet_address', `eq.${String(walletAddress).toLowerCase()}`);
+  url.searchParams.set('select', '*');
+  const response = await fetch(url, {
+    signal,
+    headers: {
+      apikey: ADVENTURES_DB_KEY,
+      Authorization: `Bearer ${ADVENTURES_DB_KEY}`,
+    },
+  });
+  const rows = await response.json().catch(() => []);
+  if (!response.ok || !Array.isArray(rows) || !rows[0]) return null;
+  return rows[0];
 }
 
 export async function fetchAdventureBoard({ signal } = {}) {

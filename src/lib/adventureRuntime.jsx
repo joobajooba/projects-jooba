@@ -299,7 +299,8 @@ export function AdventureRuntimeProvider({ walletAccount, signMessageAsync, chil
     (data) => {
       if (data.account) setAdventurer(decorateAccount(data.account));
       if (data.drip) setDripMessage(dripStatusMessage(data.drip));
-      const active = (data.sessions ?? []).filter(
+      if (!Array.isArray(data.sessions)) return;
+      const active = data.sessions.filter(
         (row) => row.status === 'running' || row.status === 'found'
       );
       if (!active.length) {
