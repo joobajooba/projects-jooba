@@ -38,10 +38,15 @@ const NAV_SECTIONS = [
 ];
 
 const FONT_STORAGE_KEY = 'j00ba-font-mode';
+const TEXT_SCALE_STORAGE_KEY = 'j00ba-text-scale';
 const VOLUME_STORAGE_KEY = 'j00ba-music-volume';
 const TRACK_STORAGE_KEY = 'j00ba-music-track';
 const MUSIC_ENABLED_STORAGE_KEY = 'j00ba-music-enabled';
 const DEFAULT_VOLUME = 0.15;
+const DEFAULT_TEXT_SCALE = 1;
+const MIN_TEXT_SCALE = 1;
+const MAX_TEXT_SCALE = 1.6;
+const TEXT_SCALE_STEP = 0.05;
 
 const PLAYLIST = [
   { id: 'adventure-time', title: 'Adventure Time', src: '/audio/adventure-time.mp3' },
@@ -57,6 +62,24 @@ function readFontMode() {
   } catch {
     return 'pixel';
   }
+}
+
+function clampTextScale(value) {
+  const stepped = Math.round(Number(value) / TEXT_SCALE_STEP) * TEXT_SCALE_STEP;
+  if (!Number.isFinite(stepped)) return DEFAULT_TEXT_SCALE;
+  return Math.min(MAX_TEXT_SCALE, Math.max(MIN_TEXT_SCALE, Number(stepped.toFixed(2))));
+}
+
+function readTextScale() {
+  try {
+    return clampTextScale(window.localStorage.getItem(TEXT_SCALE_STORAGE_KEY));
+  } catch {
+    return DEFAULT_TEXT_SCALE;
+  }
+}
+
+function applyTextScale(scale) {
+  document.documentElement.style.setProperty('--text-scale', String(scale));
 }
 
 function readVolume() {
@@ -218,6 +241,8 @@ function SiteSettingsModal({
   fontMode,
   onClose,
   onFontModeChange,
+  textScale,
+  onTextScaleChange,
   volume,
   onVolumeChange,
   trackTitle,
@@ -271,6 +296,22 @@ function SiteSettingsModal({
               Pixel art font
             </button>
           </div>
+          <label className="site-settings-modal__volume">
+            <span>Text size {Math.round(textScale * 100)}%</span>
+            <input
+              type="range"
+              min={Math.round(MIN_TEXT_SCALE * 100)}
+              max={Math.round(MAX_TEXT_SCALE * 100)}
+              step={Math.round(TEXT_SCALE_STEP * 100)}
+              value={Math.round(textScale * 100)}
+              onChange={(event) => onTextScaleChange(Number(event.target.value) / 100)}
+              aria-valuemin={Math.round(MIN_TEXT_SCALE * 100)}
+              aria-valuemax={Math.round(MAX_TEXT_SCALE * 100)}
+              aria-valuenow={Math.round(textScale * 100)}
+              aria-label="Text size"
+            />
+          </label>
+          <p>Increase this if site text is hard to read on a phone.</p>
         </SettingsSection>
 
         <SettingsSection id="sound-title" title="Sound settings">
@@ -318,6 +359,9 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [fontMode, setFontMode] = useState(() =>
     typeof window === 'undefined' ? 'pixel' : readFontMode()
+  );
+  const [textScale, setTextScale] = useState(() =>
+    typeof window === 'undefined' ? DEFAULT_TEXT_SCALE : readTextScale()
   );
   const [volume, setVolume] = useState(() =>
     typeof window === 'undefined' ? DEFAULT_VOLUME : readVolume()
@@ -373,6 +417,15 @@ export default function App() {
       // Ignore storage failures.
     }
   }, [fontMode]);
+
+  useEffect(() => {
+    applyTextScale(textScale);
+    try {
+      window.localStorage.setItem(TEXT_SCALE_STORAGE_KEY, String(textScale));
+    } catch {
+      // Ignore storage failures.
+    }
+  }, [textScale]);
 
   useEffect(() => {
     try {
@@ -480,6 +533,8 @@ export default function App() {
           fontMode={fontMode}
           onClose={() => setSettingsOpen(false)}
           onFontModeChange={setFontMode}
+          textScale={textScale}
+          onTextScaleChange={(value) => setTextScale(clampTextScale(value))}
           volume={volume}
           onVolumeChange={setVolume}
           trackTitle={currentTrack.title}

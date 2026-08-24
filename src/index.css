@@ -9,6 +9,7 @@
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  font-size: calc(100% * var(--text-scale, 1));
 }
 
 html,
@@ -765,6 +766,7 @@ button:active:not(:disabled),
 .site-settings-modal__font-options {
   display: grid;
   gap: 0.55rem;
+  margin-bottom: 1rem;
 }
 
 .site-settings-modal__font-options button {
@@ -820,6 +822,7 @@ button:active:not(:disabled),
 
 .site-settings-modal__volume input[type='range'] {
   width: 100%;
+  min-height: 1.6rem;
   accent-color: #ff5a5a;
   cursor: pointer;
 }

@@ -19,6 +19,10 @@
         if (localStorage.getItem('j00ba-font-mode') === 'readable') {
           document.documentElement.classList.add('font-readable');
         }
+        const textScale = Number(localStorage.getItem('j00ba-text-scale'));
+        if (Number.isFinite(textScale) && textScale >= 1 && textScale <= 1.6) {
+          document.documentElement.style.setProperty('--text-scale', String(textScale));
+        }
       } catch (error) {}
     </script>
     <div id="root"></div>
