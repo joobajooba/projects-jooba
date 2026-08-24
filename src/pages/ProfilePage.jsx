@@ -120,7 +120,8 @@ export default function ProfilePage() {
       .then((data) => {
         setAdventurer(decorateAccount(data.account));
       })
-      .catch(() => {
+      .catch((error) => {
+        if (error?.name === 'AbortError') return;
         setAdventurer(emptyAdventurerAccount(walletAccount.toLowerCase()));
       });
 

@@ -103,19 +103,22 @@ export function buildAdventureControlMessage({ walletAddress, sessionId, action,
 }
 
 export async function fetchAdventurerAccount(walletAddress, { signal } = {}) {
+  const rowPromise = walletAddress ? fetchAccountRow(walletAddress, { signal }) : Promise.resolve(null);
   const url = new URL(ADVENTURES_API);
   if (walletAddress) url.searchParams.set('wallet', walletAddress);
+  const apiPromise = fetch(url, { signal }).then(readResponse);
+
   try {
-    return await readResponse(await fetch(url, { signal }));
+    return await withTimeout(apiPromise, 3500, signal);
   } catch (error) {
-    if (!walletAddress) throw error;
-    const account = await fetchAccountRow(walletAddress, { signal });
-    if (!account) throw error;
-    return { account };
+    if (error?.name === 'AbortError') throw error;
+    const account = await rowPromise;
+    if (account) return { account };
+    return apiPromise;
   }
 }
 
-async function fetchAccountRow(walletAddress, { signal } = {}) {
+export async function fetchAccountRow(walletAddress, { signal } = {}) {
   const url = new URL(ADVENTURES_DB);
   url.searchParams.set('wallet_address', `eq.${String(walletAddress).toLowerCase()}`);
   url.searchParams.set('select', '*');
@@ -129,6 +132,27 @@ async function fetchAccountRow(walletAddress, { signal } = {}) {
   const rows = await response.json().catch(() => []);
   if (!response.ok || !Array.isArray(rows) || !rows[0]) return null;
   return rows[0];
+}
+
+function withTimeout(promise, ms, signal) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('Adventure service timed out.')), ms);
+    const onAbort = () => {
+      clearTimeout(timer);
+      reject(signal?.reason || new DOMException('Aborted', 'AbortError'));
+    };
+    signal?.addEventListener?.('abort', onAbort, { once: true });
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      }
+    );
+  });
 }
 
 export async function fetchAdventureBoard({ signal } = {}) {

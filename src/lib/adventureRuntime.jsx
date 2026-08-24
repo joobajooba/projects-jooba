@@ -3,6 +3,7 @@ import collection from '../data/collection.json';
 import { decorateAccount, emptyAdventurerAccount } from './adventurerProgress';
 import {
   abandonAdventure,
+  fetchAccountRow,
   fetchAdventurerAccount,
   reportMiningProgress,
   setAdventureSessionAuth,
@@ -365,12 +366,18 @@ export function AdventureRuntimeProvider({ walletAccount, signMessageAsync, chil
     }
 
     const controller = new AbortController();
+    fetchAccountRow(walletAccount, { signal: controller.signal })
+      .then((account) => {
+        if (account) setAdventurer(decorateAccount(account));
+      })
+      .catch(() => {});
     fetchAdventurerAccount(walletAccount, { signal: controller.signal })
       .then((data) => {
         hydrateFromAccountData(data);
       })
-      .catch(() => {
-        setAdventurer(emptyAdventurerAccount(walletAccount.toLowerCase()));
+      .catch((error) => {
+        if (error?.name === 'AbortError') return;
+        setRuntimeError('Could not load adventurer progress.');
       });
 
     return () => controller.abort();
