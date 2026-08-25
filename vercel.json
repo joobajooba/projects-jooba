@@ -6,7 +6,7 @@
       "includeFiles": "{api/_lib/**}"
     },
     "api/implingz.js": {
-      "maxDuration": 10
+      "maxDuration": 20
     },
     "api/dungeon-preview.js": {
       "includeFiles": "{api/_lib/**,scripts/**,dungeon_generator/**,Tiles/**,Tall Tiles/**,Mini-Bosses/**,tall_tiles/**}"
