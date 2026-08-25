@@ -351,21 +351,21 @@ export default function StakingPage() {
     }
   }
 
-  async function signControl(action, stake) {
-    setBusy(`${action}:${stake.id}`);
-    setStatus(action === 'claim' ? 'Claiming ImpCoin…' : 'Unstaking…');
+  async function signUnstake(stake) {
+    setBusy(`unstake:${stake.id}`);
+    setStatus('Unstaking…');
     try {
       const { nonce } = await requestStakeChallenge(walletAccount);
       const signature = await signMessageAsync({
         message: buildStakeControlMessage({
           walletAddress: walletAccount,
-          action,
+          action: 'unstake',
           stakeId: stake.id,
           nonce,
         }),
       });
       const result = await submitStakeControl({
-        action,
+        action: 'unstake',
         walletAddress: walletAccount,
         stakeId: stake.id,
         nonce,
@@ -374,19 +374,11 @@ export default function StakingPage() {
       setStakes((current) => current.map((item) => (item.id === stake.id ? result.stake : item)));
       setBalance(Number(result.balance ?? balance));
       setLifetimeEarned(Number(result.lifetimeEarned ?? lifetimeEarned));
-      if (action === 'claim') {
-        setStatus(
-          result.payout
-            ? `Claimed ${formatImpCoin(result.payout)}. The squad is still staked.`
-            : 'Nothing to claim yet.'
-        );
-      } else {
-        setStatus(
-          result.payout
-            ? `Unstaked and claimed ${formatImpCoin(result.payout)}.`
-            : 'Unstaked. The NFTs are free to move again.'
-        );
-      }
+      setStatus(
+        result.payout
+          ? `Unstaked and claimed ${formatImpCoin(result.payout)}.`
+          : 'Unstaked. The NFTs are free to move again.'
+      );
     } catch (error) {
       setStatus(
         error?.code === 4001
@@ -409,9 +401,9 @@ export default function StakingPage() {
           <h1 className="adventures-page__title">Staking</h1>
           <p className="adventures-page__intro">
             Pair an Imp with Keeps. NFTs stay in your wallet. Sign to stake, then ImpCoin accrues
-            until you unstake. Matching Body colour to Keep environment adds ImpCoin. Robin&apos;s
-            Lair is a {ROBINS_LAIR_MULTIPLIER}x bonus for any Imp. Void is a {VOID_MULTIPLIER}x bonus
-            for any Imp.
+            until you unstake. Matching Body colour to Keep environment adds ImpCoin. Void is a{' '}
+            {VOID_MULTIPLIER}x bonus for any Imp. Robin&apos;s Lair is a {ROBINS_LAIR_MULTIPLIER}x
+            bonus for any Imp.
           </p>
         </header>
 
@@ -423,7 +415,7 @@ export default function StakingPage() {
           </div>
           <p>
             ImpCoin is an in-game balance, not an on-chain token. Transferring a staked NFT burns
-            pending ImpCoin from that squad. Claim anytime without unstaking.
+            pending ImpCoin from that squad. Unstake to claim what has accrued.
           </p>
         </section>
 
@@ -447,7 +439,7 @@ export default function StakingPage() {
             <div className="staking-panel__header">
               <p className="adventure-panel__eyebrow">Staked squads</p>
               <h2>Active stakes</h2>
-              <p>NFTs stay in the wallet. Claim accrued ImpCoin, or unstake anytime and take what has accrued.</p>
+              <p>NFTs stay in the wallet. Unstake to finish the stake and claim accrued ImpCoin.</p>
             </div>
             <div className="staking-active">
               {activeStakes.map((stake) => {
@@ -481,21 +473,13 @@ export default function StakingPage() {
                       <p>
                         {stake.imp_body} {stake.imp_tier} · {stake.aligned_count} aligned Keep
                         {stake.aligned_count === 1 ? '' : 's'}
-                        {keepsHaveRobinsLair(stake.keeps) ? ` · Robin's Lair ${ROBINS_LAIR_MULTIPLIER}x` : ''}
                         {keepsHaveVoid(stake.keeps) || stake.has_void ? ` · Void ${VOID_MULTIPLIER}x` : ''}
+                        {keepsHaveRobinsLair(stake.keeps) ? ` · Robin's Lair ${ROBINS_LAIR_MULTIPLIER}x` : ''}
                       </p>
                       <p>
                         {stakedFor} · {formatImpCoin(pending)} pending
                       </p>
                       <div className="staking-active__actions">
-                        <button
-                          type="button"
-                          className="staking-summary__action staking-summary__action--live"
-                          disabled={Boolean(busy) || pending <= 0}
-                          onClick={() => signControl('claim', stake)}
-                        >
-                          {busy === `claim:${stake.id}` ? 'Claiming…' : 'Claim ImpCoin'}
-                        </button>
                         <button
                           type="button"
                           className="staking-summary__action staking-summary__action--danger"
@@ -545,8 +529,8 @@ export default function StakingPage() {
           <p>
             {selectedKeeps.length}/{layout.keepCount} Keeps placed
             {estimate.alignedCount ? ` · ${estimate.alignedCount} aligned` : ''}
-            {estimate.hasRobinsLair ? ` · Robin's Lair ${ROBINS_LAIR_MULTIPLIER}x` : ''}
             {estimate.hasVoid ? ` · Void ${VOID_MULTIPLIER}x` : ''}
+            {estimate.hasRobinsLair ? ` · Robin's Lair ${ROBINS_LAIR_MULTIPLIER}x` : ''}
           </p>
         </section>
 
@@ -617,8 +601,8 @@ export default function StakingPage() {
                       {keep.biome || keep.tileset}
                       {keep.version === 'v2' ? ' · v2' : ''}
                       {aligned ? ' · aligned' : ''}
-                      {robin ? ` · ${ROBINS_LAIR_MULTIPLIER}x` : ''}
                       {voidKeep ? ` · ${VOID_MULTIPLIER}x` : ''}
+                      {robin ? ` · ${ROBINS_LAIR_MULTIPLIER}x` : ''}
                     </span>
                   </button>
                 );
@@ -636,8 +620,8 @@ export default function StakingPage() {
               {selectedKeeps.length
                 ? ` · ${estimate.alignedCount}/${selectedKeeps.length} aligned`
                 : ''}
-              {estimate.hasRobinsLair ? ` · Robin's Lair ${ROBINS_LAIR_MULTIPLIER}x` : ''}
               {estimate.hasVoid ? ` · Void ${VOID_MULTIPLIER}x` : ''}
+              {estimate.hasRobinsLair ? ` · Robin's Lair ${ROBINS_LAIR_MULTIPLIER}x` : ''}
             </p>
           </div>
           <ul className="staking-summary__mods">
@@ -652,18 +636,18 @@ export default function StakingPage() {
               </strong>
             </li>
             <li>
-              <span>Robin&apos;s Lair</span>
-              <strong>{estimate.hasRobinsLair ? `${ROBINS_LAIR_MULTIPLIER}x` : '—'}</strong>
-            </li>
-            <li>
               <span>Void</span>
               <strong>{estimate.hasVoid ? `${VOID_MULTIPLIER}x` : '—'}</strong>
+            </li>
+            <li>
+              <span>Robin&apos;s Lair</span>
+              <strong>{estimate.hasRobinsLair ? `${ROBINS_LAIR_MULTIPLIER}x` : '—'}</strong>
             </li>
           </ul>
           {selectedImp ? (
             <p className="staking-summary__hint">
-              {selectedImp.body} matches {alignmentLabels(selectedImp.body)}. Unstake anytime — you
-              keep accrued ImpCoin. Transferring a staked NFT burns pending ImpCoin from this squad.
+              {selectedImp.body} matches {alignmentLabels(selectedImp.body)}. Unstake to claim
+              accrued ImpCoin. Transferring a staked NFT burns pending ImpCoin from this squad.
             </p>
           ) : null}
           <button
@@ -686,8 +670,8 @@ export default function StakingPage() {
             <h2>Alignment chart</h2>
             <p>
               Each aligned Keep adds +{ALIGNMENT_BONUS_PER_KEEP} ImpCoin / day. Gold and Diamond match
-              every environment. Any Imp with Robin&apos;s Lair gets a {ROBINS_LAIR_MULTIPLIER}x
-              bonus. Any Imp with Void gets a {VOID_MULTIPLIER}x bonus.
+              every environment. Any Imp with Void gets a {VOID_MULTIPLIER}x bonus. Any Imp with
+              Robin&apos;s Lair gets a {ROBINS_LAIR_MULTIPLIER}x bonus.
             </p>
           </div>
           <div className="staking-alignments">
@@ -704,11 +688,11 @@ export default function StakingPage() {
             ))}
             <div className="staking-alignments__row">
               <strong>All Impz</strong>
-              <span>Robin&apos;s Lair · {ROBINS_LAIR_MULTIPLIER}x</span>
+              <span>Void · {VOID_MULTIPLIER}x</span>
             </div>
             <div className="staking-alignments__row">
               <strong>All Impz</strong>
-              <span>Void · {VOID_MULTIPLIER}x</span>
+              <span>Robin&apos;s Lair · {ROBINS_LAIR_MULTIPLIER}x</span>
             </div>
           </div>
         </section>
@@ -731,7 +715,7 @@ export default function StakingPage() {
                 type="button"
                 className="staking-summary__action staking-summary__action--danger"
                 disabled={Boolean(busy)}
-                onClick={() => signControl('unstake', confirmStake)}
+                onClick={() => signUnstake(confirmStake)}
               >
                 {busy.startsWith('unstake:') ? 'Unstaking…' : 'Unstake'}
               </button>

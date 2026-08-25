@@ -441,7 +441,11 @@ Deno.serve(async (request: Request) => {
       return json({ stake: withPending(stake as StakeRow) });
     }
 
-    if (action === "unstake" || action === "claim") {
+    if (action === "claim") {
+      return json({ error: "ImpCoin is paid when you unstake. Stakes cannot be claimed while they are still active." }, 400);
+    }
+
+    if (action === "unstake") {
       const stakeId = String(body.stakeId ?? "");
       if (!stakeId) return json({ error: "A stake id is required." }, 400);
       await consumeChallenge(
@@ -450,7 +454,7 @@ Deno.serve(async (request: Request) => {
         signature,
         canonicalStakeMessage({
           walletAddress,
-          action,
+          action: "unstake",
           stakeId,
           nonce,
         }),
@@ -478,23 +482,6 @@ Deno.serve(async (request: Request) => {
       const now = new Date();
       const payout = pendingFromStake(stake as StakeRow, now.getTime());
       const credited = await creditImpCoin(walletAddress, payout);
-
-      if (action === "claim") {
-        const { data: updated, error: updateError } = await supabase
-          .from("imp_stakes")
-          .update({ last_accrued_at: now.toISOString(), estimated_payout: 0 })
-          .eq("id", stakeId)
-          .eq("status", "active")
-          .select(STAKE_COLUMNS)
-          .maybeSingle();
-        if (updateError) throw updateError;
-        if (!updated) return json({ error: "This stake is no longer active." }, 400);
-        return json({
-          stake: withPending(updated as StakeRow, now.getTime()),
-          payout,
-          ...credited,
-        });
-      }
 
       const { data: updated, error: updateError } = await supabase
         .from("imp_stakes")
