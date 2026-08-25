@@ -4806,6 +4806,10 @@ button:active:not(:disabled),
   box-shadow: inset 0 0 0 1px rgba(255, 200, 90, 0.55);
 }
 
+.staking-card--robin {
+  box-shadow: inset 0 0 0 1px rgba(255, 90, 160, 0.7);
+}
+
 .staking-card img {
   display: block;
   width: 100%;
@@ -4836,7 +4840,7 @@ button:active:not(:disabled),
 
 .staking-durations {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.65rem;
   margin-top: 0.85rem;
 }
@@ -5038,12 +5042,15 @@ button:active:not(:disabled),
 
 @media (max-width: 900px) {
   .staking-layout,
-  .staking-durations,
   .staking-summary,
   .staking-canvases,
   .staking-balance,
   .staking-active__card {
     grid-template-columns: 1fr;
+  }
+
+  .staking-durations {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .staking-summary {

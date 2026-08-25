@@ -8,12 +8,11 @@ async function readResponse(response) {
   return data;
 }
 
-export function buildStakeMessage({ walletAddress, canvasId, durationId, impTokenId, keepKeys, nonce }) {
+export function buildStakeMessage({ walletAddress, canvasId, impTokenId, keepKeys, nonce }) {
   return `IMPLINGz ImpCoin Stake\n${JSON.stringify({
     walletAddress: walletAddress.toLowerCase(),
     action: 'stake',
     canvasId,
-    durationId,
     impTokenId: String(impTokenId),
     keepKeys,
     nonce,

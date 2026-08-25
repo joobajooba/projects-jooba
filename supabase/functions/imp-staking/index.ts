@@ -34,35 +34,26 @@ const ERC721_OWNER_ABI = [
   },
 ] as const;
 const STAKE_COLUMNS =
-  "id,wallet_address,canvas_id,duration_id,duration_days,imp_contract,imp_token_id,imp_body,imp_tier,imp_image,keeps,aligned_count,keep_count,estimated_payout,modifiers,canvas_image,status,started_at,unlocks_at,ended_at,created_at";
-const BASE_IMPCOIN_PER_DAY = 10;
-const KEEP_PAIR_BONUS = 0.18;
-const KEEP_ALIGNMENT_BONUS = 0.32;
-const TIER_BONUS: Record<string, number> = { "Tier 1": 1, "Tier 2": 1.12, "Tier 3": 1.28 };
-const DURATIONS: Record<string, { days: number; multiplier: number }> = {
-  "7d": { days: 7, multiplier: 1 },
-  "14d": { days: 14, multiplier: 1.12 },
-  "30d": { days: 30, multiplier: 1.28 },
-  "90d": { days: 90, multiplier: 1.5 },
-  "180d": { days: 180, multiplier: 1.8 },
-  "365d": { days: 365, multiplier: 2.25 },
-};
-const CANVASES: Record<string, { keepCount: number; multiplier: number; keepSlots: string[] }> = {
-  pair: { keepCount: 1, multiplier: 1, keepSlots: ["right"] },
-  cross: { keepCount: 4, multiplier: 1.12, keepSlots: ["north", "east", "south", "west"] },
-  nine: { keepCount: 8, multiplier: 1.25, keepSlots: ["nw", "north", "ne", "west", "east", "sw", "south", "se"] },
+  "id,wallet_address,canvas_id,duration_id,duration_days,imp_contract,imp_token_id,imp_body,imp_tier,imp_image,keeps,aligned_count,keep_count,estimated_payout,modifiers,canvas_image,status,started_at,unlocks_at,ended_at,created_at,daily_rate,last_accrued_at,has_robins_lair";
+const BASE_IMPCOIN_PER_DAY = 5;
+const ALIGNMENT_BONUS_PER_KEEP = 2;
+const ROBINS_LAIR_MULTIPLIER = 1.5;
+const ROBINS_LAIR_TILESET = "robins_lair";
+const ALIGN_ALL_BODIES = new Set(["Gold", "Diamond"]);
+const CANVASES: Record<string, { keepCount: number; keepSlots: string[] }> = {
+  pair: { keepCount: 1, keepSlots: ["right"] },
+  cross: { keepCount: 4, keepSlots: ["north", "east", "south", "west"] },
+  nine: { keepCount: 8, keepSlots: ["nw", "north", "ne", "west", "east", "sw", "south", "se"] },
 };
 const ALIGNMENTS: Record<string, string[]> = {
-  Red: ["underworld", "volcano", "desert"],
-  Green: ["plains", "mossy", "forgotten_ruins"],
-  Khaki: ["mossy", "mushroom", "forgotten_ruins"],
-  Blue: ["clouds", "icy", "storm", "limestone"],
-  Cyan: ["clouds", "storm", "icy"],
-  Purple: ["shortcake", "dreamcore", "void", "lunar"],
-  Pink: ["shortcake", "dreamcore", "lunar"],
-  Silver: ["castle", "the_vault", "void"],
-  Gold: ["desert", "castle", "the_vault"],
-  Diamond: ["void", "lunar", "dreamcore"],
+  Red: ["underworld", "volcano", "the_vault"],
+  Green: ["plains", "forgotten_ruins", "mushroom"],
+  Khaki: ["desert", "limestone", "plains"],
+  Blue: ["icy", "clouds", "storm"],
+  Cyan: ["mossy", "storm", "icy"],
+  Purple: ["dreamcore", "shortcake", "void"],
+  Pink: ["mushroom", "shortcake", "underworld"],
+  Silver: ["lunar", "castle", "limestone"],
 };
 
 type KeepInput = {
@@ -75,6 +66,18 @@ type KeepInput = {
   name?: string;
 };
 
+type StakeRow = Record<string, unknown> & {
+  id: string;
+  wallet_address: string;
+  status: string;
+  imp_contract: string;
+  imp_token_id: string;
+  keeps: KeepInput[] | null;
+  daily_rate?: number | string;
+  last_accrued_at?: string;
+  started_at?: string;
+};
+
 function json(data: unknown, status = 200) {
   return Response.json(data, { status, headers: CORS_HEADERS });
 }
@@ -83,34 +86,58 @@ function canonicalStakeMessage(payload: Record<string, unknown>) {
   return `IMPLINGz ImpCoin Stake\n${JSON.stringify(payload)}`;
 }
 
-function isAligned(body: string, tileset: string) {
-  return (ALIGNMENTS[body] ?? []).includes(String(tileset || "").toLowerCase());
+function tilesetSlug(tileset: string) {
+  return String(tileset || "").toLowerCase();
 }
 
-function estimatePayout(body: string, tier: string, canvasId: string, durationId: string, keeps: KeepInput[]) {
-  const canvas = CANVASES[canvasId];
-  const duration = DURATIONS[durationId];
+function isRobinsLair(tileset: string) {
+  return tilesetSlug(tileset) === ROBINS_LAIR_TILESET;
+}
+
+function isAligned(body: string, tileset: string) {
+  const slug = tilesetSlug(tileset);
+  if (!slug) return false;
+  if (ALIGN_ALL_BODIES.has(body)) return true;
+  return (ALIGNMENTS[body] ?? []).includes(slug);
+}
+
+function dailyRateFor(alignedCount: number, hasRobinsLair: boolean) {
+  const raw =
+    (BASE_IMPCOIN_PER_DAY + ALIGNMENT_BONUS_PER_KEEP * alignedCount) *
+    (hasRobinsLair ? ROBINS_LAIR_MULTIPLIER : 1);
+  return Math.round(raw * 10000) / 10000;
+}
+
+function pendingFromStake(stake: StakeRow, now = Date.now()) {
+  if (stake.status !== "active") return 0;
+  const last = new Date(String(stake.last_accrued_at || stake.started_at || "")).getTime();
+  const rate = Number(stake.daily_rate ?? 0);
+  if (!Number.isFinite(last) || !Number.isFinite(rate) || rate <= 0) return 0;
+  return Math.max(0, Math.floor((rate * (now - last)) / 86_400_000));
+}
+
+function estimateStake(body: string, keeps: KeepInput[]) {
   const alignedCount = keeps.filter((keep) => isAligned(body, String(keep.tileset || ""))).length;
-  const keepMultiplier = 1 + KEEP_PAIR_BONUS * keeps.length + KEEP_ALIGNMENT_BONUS * alignedCount;
-  const payout = Math.round(
-    BASE_IMPCOIN_PER_DAY *
-      duration.days *
-      duration.multiplier *
-      canvas.multiplier *
-      keepMultiplier *
-      (TIER_BONUS[tier] || 1),
-  );
+  const hasRobinsLair = keeps.some((keep) => isRobinsLair(String(keep.tileset || "")));
+  const dailyRate = dailyRateFor(alignedCount, hasRobinsLair);
   return {
     alignedCount,
     keepCount: keeps.length,
-    payout,
+    hasRobinsLair,
+    dailyRate,
     modifiers: {
-      durationMultiplier: duration.multiplier,
-      canvasMultiplier: canvas.multiplier,
-      keepMultiplier,
-      tierMultiplier: TIER_BONUS[tier] || 1,
+      base: BASE_IMPCOIN_PER_DAY,
+      alignmentBonusPerKeep: ALIGNMENT_BONUS_PER_KEEP,
+      alignedCount,
+      robinsLairMultiplier: hasRobinsLair ? ROBINS_LAIR_MULTIPLIER : 1,
+      dailyRate,
     },
   };
+}
+
+function withPending(stake: StakeRow, now = Date.now()) {
+  const pending = pendingFromStake(stake, now);
+  return { ...stake, pending, estimated_payout: pending };
 }
 
 async function ownerOf(contract: string, tokenId: string) {
@@ -169,6 +196,61 @@ Deno.serve(async (request: Request) => {
     await supabase.from("imp_stake_challenges").delete().eq("wallet_address", walletAddress);
   }
 
+  async function creditImpCoin(walletAddress: string, payout: number) {
+    if (payout <= 0) {
+      const { data: current } = await supabase
+        .from("imp_coin_balances")
+        .select("balance,lifetime_earned")
+        .eq("wallet_address", walletAddress)
+        .maybeSingle();
+      return {
+        balance: Number(current?.balance ?? 0),
+        lifetimeEarned: Number(current?.lifetime_earned ?? 0),
+      };
+    }
+    const { data: current } = await supabase
+      .from("imp_coin_balances")
+      .select("balance,lifetime_earned")
+      .eq("wallet_address", walletAddress)
+      .maybeSingle();
+    const nextBalance = Number(current?.balance ?? 0) + payout;
+    const nextLifetime = Number(current?.lifetime_earned ?? 0) + payout;
+    const { error: balanceError } = await supabase.from("imp_coin_balances").upsert(
+      {
+        wallet_address: walletAddress,
+        balance: nextBalance,
+        lifetime_earned: nextLifetime,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "wallet_address" },
+    );
+    if (balanceError) throw balanceError;
+    return { balance: nextBalance, lifetimeEarned: nextLifetime };
+  }
+
+  async function stillOwned(walletAddress: string, stake: StakeRow) {
+    try {
+      const impOwner = await ownerOf(stake.imp_contract, stake.imp_token_id);
+      if (impOwner !== walletAddress) return false;
+      for (const keep of stake.keeps ?? []) {
+        const keepOwner = await ownerOf(String(keep.contract), String(keep.id));
+        if (keepOwner !== walletAddress) return false;
+      }
+      return true;
+    } catch {
+      return true;
+    }
+  }
+
+  async function slashStake(stake: StakeRow) {
+    await supabase
+      .from("imp_stakes")
+      .update({ status: "slashed", ended_at: new Date().toISOString() })
+      .eq("id", stake.id)
+      .eq("status", "active");
+    await supabase.from("imp_staked_tokens").delete().eq("stake_id", stake.id);
+  }
+
   try {
     if (request.method === "GET") {
       const wallet = new URL(request.url).searchParams.get("wallet")?.toLowerCase() || "";
@@ -182,10 +264,20 @@ Deno.serve(async (request: Request) => {
           .order("started_at", { ascending: false }),
       ]);
       if (stakeError) throw stakeError;
+      const now = Date.now();
+      const decorated: ReturnType<typeof withPending>[] = [];
+      for (const row of (stakes ?? []) as StakeRow[]) {
+        if (row.status === "active" && !(await stillOwned(wallet, row))) {
+          await slashStake(row);
+          decorated.push(withPending({ ...row, status: "slashed" }, now));
+          continue;
+        }
+        decorated.push(withPending(row, now));
+      }
       return json({
         balance: Number(balance?.balance ?? 0),
         lifetimeEarned: Number(balance?.lifetime_earned ?? 0),
-        stakes: stakes ?? [],
+        stakes: decorated,
       });
     }
 
@@ -212,12 +304,10 @@ Deno.serve(async (request: Request) => {
 
     if (action === "stake") {
       const canvasId = String(body.canvasId ?? "");
-      const durationId = String(body.durationId ?? "");
       const canvas = CANVASES[canvasId];
-      const duration = DURATIONS[durationId];
       const impTokenId = String(body.impTokenId ?? "");
       const keeps = Array.isArray(body.keeps) ? (body.keeps as KeepInput[]) : [];
-      if (!canvas || !duration) return json({ error: "Choose a canvas and lock length." }, 400);
+      if (!canvas) return json({ error: "Choose a canvas." }, 400);
       if (!/^\d+$/.test(impTokenId)) return json({ error: "Choose an Imp to stake." }, 400);
       if (keeps.length !== canvas.keepCount) {
         return json({ error: `This canvas needs ${canvas.keepCount} Keep${canvas.keepCount === 1 ? "" : "s"}.` }, 400);
@@ -232,7 +322,6 @@ Deno.serve(async (request: Request) => {
           walletAddress,
           action: "stake",
           canvasId,
-          durationId,
           impTokenId,
           keepKeys,
           nonce,
@@ -261,7 +350,7 @@ Deno.serve(async (request: Request) => {
           contract,
           slot,
           image: String(keep.image || "").slice(0, 500),
-          tileset: String(keep.tileset || "").toLowerCase().slice(0, 48),
+          tileset: tilesetSlug(String(keep.tileset || "")).slice(0, 48),
           biome: String(keep.biome || "").slice(0, 48),
           name: String(keep.name || `Keep #${tokenId}`).slice(0, 64),
         });
@@ -280,9 +369,8 @@ Deno.serve(async (request: Request) => {
 
       const bodyColor = impBody(impTokenId);
       const tier = impTier(impTokenId);
-      const estimate = estimatePayout(bodyColor, tier, canvasId, durationId, normalizedKeeps);
+      const estimate = estimateStake(bodyColor, normalizedKeeps);
       const startedAt = new Date();
-      const unlocksAt = new Date(startedAt.getTime() + duration.days * 24 * 60 * 60 * 1000);
       const canvasImage = String(body.canvasImage || "");
       const storedImage = canvasImage.startsWith("data:image/") && canvasImage.length <= 350000 ? canvasImage : "";
 
@@ -291,8 +379,8 @@ Deno.serve(async (request: Request) => {
         .insert({
           wallet_address: walletAddress,
           canvas_id: canvasId,
-          duration_id: durationId,
-          duration_days: duration.days,
+          duration_id: "open",
+          duration_days: 1,
           imp_contract: IMPLINGZ_ADDRESS.toLowerCase(),
           imp_token_id: impTokenId,
           imp_body: bodyColor,
@@ -301,13 +389,16 @@ Deno.serve(async (request: Request) => {
           keeps: normalizedKeeps,
           aligned_count: estimate.alignedCount,
           keep_count: estimate.keepCount,
-          estimated_payout: estimate.payout,
+          estimated_payout: 0,
           modifiers: estimate.modifiers,
           canvas_image: storedImage || null,
           stake_signature: signature,
           status: "active",
           started_at: startedAt.toISOString(),
-          unlocks_at: unlocksAt.toISOString(),
+          unlocks_at: startedAt.toISOString(),
+          daily_rate: estimate.dailyRate,
+          last_accrued_at: startedAt.toISOString(),
+          has_robins_lair: estimate.hasRobinsLair,
         })
         .select(STAKE_COLUMNS)
         .single();
@@ -336,7 +427,7 @@ Deno.serve(async (request: Request) => {
         throw lockError;
       }
 
-      return json({ stake });
+      return json({ stake: withPending(stake as StakeRow) });
     }
 
     if (action === "unstake" || action === "claim") {
@@ -365,50 +456,50 @@ Deno.serve(async (request: Request) => {
         return json({ error: "This stake is no longer active." }, 400);
       }
 
-      const unlocked = new Date(stake.unlocks_at).getTime() <= Date.now();
-      if (action === "claim" && !unlocked) {
-        return json({ error: "This lock has not finished yet." }, 400);
-      }
-      if (action === "unstake" && unlocked) {
-        return json({ error: "This lock is finished. Claim the ImpCoin instead of forfeiting it." }, 400);
+      const owned = await stillOwned(walletAddress, stake as StakeRow);
+      if (!owned) {
+        await slashStake(stake as StakeRow);
+        return json({
+          error: "An NFT left this wallet. Pending ImpCoin from that stake was burned.",
+        }, 409);
       }
 
-      const nextStatus = action === "claim" ? "claimed" : "forfeited";
+      const now = new Date();
+      const payout = pendingFromStake(stake as StakeRow, now.getTime());
+      const credited = await creditImpCoin(walletAddress, payout);
+
+      if (action === "claim") {
+        const { data: updated, error: updateError } = await supabase
+          .from("imp_stakes")
+          .update({ last_accrued_at: now.toISOString(), estimated_payout: 0 })
+          .eq("id", stakeId)
+          .eq("status", "active")
+          .select(STAKE_COLUMNS)
+          .maybeSingle();
+        if (updateError) throw updateError;
+        if (!updated) return json({ error: "This stake is no longer active." }, 400);
+        return json({
+          stake: withPending(updated as StakeRow, now.getTime()),
+          payout,
+          ...credited,
+        });
+      }
+
       const { data: updated, error: updateError } = await supabase
         .from("imp_stakes")
-        .update({ status: nextStatus, ended_at: new Date().toISOString() })
+        .update({ status: "unstaked", ended_at: now.toISOString(), estimated_payout: payout })
         .eq("id", stakeId)
         .eq("status", "active")
         .select(STAKE_COLUMNS)
         .maybeSingle();
       if (updateError) throw updateError;
       if (!updated) return json({ error: "This stake is no longer active." }, 400);
-
       await supabase.from("imp_staked_tokens").delete().eq("stake_id", stakeId);
-
-      if (action === "claim") {
-        const payout = Number(updated.estimated_payout ?? 0);
-        const { data: current } = await supabase
-          .from("imp_coin_balances")
-          .select("balance,lifetime_earned")
-          .eq("wallet_address", walletAddress)
-          .maybeSingle();
-        const nextBalance = Number(current?.balance ?? 0) + payout;
-        const nextLifetime = Number(current?.lifetime_earned ?? 0) + payout;
-        const { error: balanceError } = await supabase.from("imp_coin_balances").upsert(
-          {
-            wallet_address: walletAddress,
-            balance: nextBalance,
-            lifetime_earned: nextLifetime,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "wallet_address" },
-        );
-        if (balanceError) throw balanceError;
-        return json({ stake: updated, balance: nextBalance, lifetimeEarned: nextLifetime, payout });
-      }
-
-      return json({ stake: updated, forfeited: updated.estimated_payout });
+      return json({
+        stake: withPending(updated as StakeRow, now.getTime()),
+        payout,
+        ...credited,
+      });
     }
 
     return json({ error: "Unknown action." }, 400);
