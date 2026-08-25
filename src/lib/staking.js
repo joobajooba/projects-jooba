@@ -53,6 +53,17 @@ export const STAKE_DURATIONS = [
 ];
 
 export const CANVAS_LAYOUTS = {
+  solo: {
+    id: 'solo',
+    label: 'Solo',
+    title: 'Solo Imp',
+    description: 'Just the Imp. No Keeps needed.',
+    keepCount: 0,
+    cols: 1,
+    rows: 1,
+    cells: ['imp'],
+    keepSlots: [],
+  },
   pair: {
     id: 'pair',
     label: '1–1',

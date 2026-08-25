@@ -51,6 +51,7 @@ const VOID_MULTIPLIER = 1.25;
 const VOID_TILESET = "void";
 const ALIGN_ALL_BODIES = new Set(["Gold", "Diamond"]);
 const CANVASES: Record<string, { keepCount: number; keepSlots: string[] }> = {
+  solo: { keepCount: 0, keepSlots: [] },
   pair: { keepCount: 1, keepSlots: ["right"] },
   cross: { keepCount: 4, keepSlots: ["north", "east", "south", "west"] },
   nine: { keepCount: 8, keepSlots: ["nw", "north", "ne", "west", "east", "sw", "south", "se"] },
@@ -369,6 +370,9 @@ Deno.serve(async (request: Request) => {
       if (!duration) return json({ error: "Choose a lock of 7 days, 2 weeks, 1 month, 2 months, or 3 months." }, 400);
       if (!/^\d+$/.test(impTokenId)) return json({ error: "Choose an Imp to stake." }, 400);
       if (keeps.length !== canvas.keepCount) {
+        if (canvas.keepCount === 0) {
+          return json({ error: "Solo Imp stakes cannot include Keeps." }, 400);
+        }
         return json({ error: `This canvas needs ${canvas.keepCount} Keep${canvas.keepCount === 1 ? "" : "s"}.` }, 400);
       }
 

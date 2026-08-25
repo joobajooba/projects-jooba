@@ -4604,6 +4604,10 @@ button:active:not(:disabled),
   gap: clamp(0.85rem, 2vw, 1.15rem);
 }
 
+.staking-layout--solo {
+  grid-template-columns: 1fr;
+}
+
 .staking-panel {
   padding: 1rem 0.95rem 1.1rem;
   border: 2px solid rgba(255, 255, 255, 0.22);
@@ -4652,7 +4656,7 @@ button:active:not(:disabled),
 
 .staking-canvases {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.75rem;
   margin-top: 0.85rem;
 }
@@ -4701,6 +4705,10 @@ button:active:not(:disabled),
   aspect-ratio: 2 / 1;
 }
 
+.stake-diagram--solo {
+  width: 3.4rem;
+}
+
 .stake-diagram span {
   display: block;
   min-height: 0.7rem;
@@ -4744,6 +4752,10 @@ button:active:not(:disabled),
 
 .stake-board--pair {
   width: min(100%, 22rem);
+}
+
+.stake-board--solo {
+  width: min(100%, 12rem);
 }
 
 .stake-board__empty {
@@ -5087,15 +5099,22 @@ button:active:not(:disabled),
   .staking-durations {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+
+  .staking-canvases {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 900px) {
   .staking-layout,
   .staking-summary,
-  .staking-canvases,
   .staking-balance,
   .staking-active__card {
     grid-template-columns: 1fr;
+  }
+
+  .staking-canvases {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .staking-durations {

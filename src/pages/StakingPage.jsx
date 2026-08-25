@@ -158,7 +158,7 @@ export default function StakingPage() {
   const [lifetimeEarned, setLifetimeEarned] = useState(0);
   const [stakes, setStakes] = useState([]);
   const [stateError, setStateError] = useState('');
-  const [canvasId, setCanvasId] = useState('pair');
+  const [canvasId, setCanvasId] = useState('solo');
   const [durationId, setDurationId] = useState('7d');
   const [selectedImpId, setSelectedImpId] = useState('');
   const [keepSlots, setKeepSlots] = useState({});
@@ -445,10 +445,10 @@ export default function StakingPage() {
           <p className="adventures-page__eyebrow">ImpCoin</p>
           <h1 className="adventures-page__title">Staking</h1>
           <p className="adventures-page__intro">
-            Pair an Imp with Keeps, then choose a lock. NFTs stay in your wallet. ImpCoin accrues
-            while the squad is staked, and you can unstake when the lock ends. Matching Body colour to
-            Keep environment adds ImpCoin. Void is a {VOID_MULTIPLIER}x bonus for any Imp. Robin&apos;s
-            Lair is a {ROBINS_LAIR_MULTIPLIER}x bonus for any Imp.
+            Stake an Imp on its own, or pair it with Keeps, then choose a lock. NFTs stay in your
+            wallet. ImpCoin accrues while the squad is staked, and you can unstake when the lock ends.
+            Matching Body colour to Keep environment adds ImpCoin. Void is a {VOID_MULTIPLIER}x bonus
+            for any Imp. Robin&apos;s Lair is a {ROBINS_LAIR_MULTIPLIER}x bonus for any Imp.
           </p>
         </header>
 
@@ -520,8 +520,10 @@ export default function StakingPage() {
                         {stakeLayout.title} · {formatRate(stake.daily_rate)}
                       </h3>
                       <p>
-                        {stake.imp_body} {stake.imp_tier} · {stake.aligned_count} aligned Keep
-                        {stake.aligned_count === 1 ? '' : 's'}
+                        {stake.imp_body} {stake.imp_tier}
+                        {Number(stake.keep_count) === 0
+                          ? ' · Solo Imp'
+                          : ` · ${stake.aligned_count} aligned Keep${stake.aligned_count === 1 ? '' : 's'}`}
                         {keepsHaveVoid(stake.keeps) || stake.has_void ? ` · Void ${VOID_MULTIPLIER}x` : ''}
                         {keepsHaveRobinsLair(stake.keeps) ? ` · Robin's Lair ${ROBINS_LAIR_MULTIPLIER}x` : ''}
                       </p>
@@ -560,7 +562,7 @@ export default function StakingPage() {
           <div className="staking-panel__header">
             <p className="adventure-panel__eyebrow">Step 1</p>
             <h2>Choose a canvas</h2>
-            <p>The layout is the squad image. Staking does not move the NFTs.</p>
+            <p>The layout is the squad image. Solo is just the Imp. Staking does not move the NFTs.</p>
           </div>
           <div className="staking-canvases">
             {Object.values(CANVAS_LAYOUTS).map((option) => (
@@ -586,19 +588,25 @@ export default function StakingPage() {
             alignedSlots={alignedSlots}
           />
           <p>
-            {selectedKeeps.length}/{layout.keepCount} Keeps placed
+            {layout.keepCount === 0
+              ? 'Solo Imp'
+              : `${selectedKeeps.length}/${layout.keepCount} Keeps placed`}
             {estimate.alignedCount ? ` · ${estimate.alignedCount} aligned` : ''}
             {estimate.hasVoid ? ` · Void ${VOID_MULTIPLIER}x` : ''}
             {estimate.hasRobinsLair ? ` · Robin's Lair ${ROBINS_LAIR_MULTIPLIER}x` : ''}
           </p>
         </section>
 
-        <div className="staking-layout">
+        <div className={`staking-layout${layout.keepCount === 0 ? ' staking-layout--solo' : ''}`}>
           <section className="staking-panel">
             <div className="staking-panel__header">
               <p className="adventure-panel__eyebrow">Step 2</p>
               <h2>Choose an Imp</h2>
-              <p>One Imp sits at the heart of the canvas.</p>
+              <p>
+                {layout.keepCount === 0
+                  ? 'This stake is just the Imp.'
+                  : 'One Imp sits at the heart of the canvas.'}
+              </p>
             </div>
             {loadingNfts ? <p className="staking-panel__message">Loading IMPLINGz…</p> : null}
             {nftError ? (
@@ -627,6 +635,7 @@ export default function StakingPage() {
             </div>
           </section>
 
+          {layout.keepCount > 0 ? (
           <section className="staking-panel">
             <div className="staking-panel__header">
               <p className="adventure-panel__eyebrow">Step 3</p>
@@ -668,11 +677,14 @@ export default function StakingPage() {
               })}
             </div>
           </section>
+          ) : null}
         </div>
 
         <section className="staking-panel staking-panel--wide">
           <div className="staking-panel__header">
-            <p className="adventure-panel__eyebrow">Step 4</p>
+            <p className="adventure-panel__eyebrow">
+              {layout.keepCount === 0 ? 'Step 3' : 'Step 4'}
+            </p>
             <h2>Choose a lock</h2>
             <p>
               The squad stays staked until this lock ends. Transferring a staked NFT still burns
@@ -699,7 +711,9 @@ export default function StakingPage() {
             <p className="adventure-panel__eyebrow">Daily rate</p>
             <h2>{selectedImp ? formatRate(estimate.dailyRate) : 'Pick an Imp'}</h2>
             <p>
-              {selectedImp ? `${selectedImp.name} · ${layout.title} · ${duration.label}` : 'Choose a canvas, Imp, Keeps, and lock.'}
+              {selectedImp
+                ? `${selectedImp.name} · ${layout.title} · ${duration.label}`
+                : `Choose a canvas, Imp${layout.keepCount ? ', Keeps' : ''}, and lock.`}
               {selectedKeeps.length
                 ? ` · ${estimate.alignedCount}/${selectedKeeps.length} aligned`
                 : ''}
@@ -733,10 +747,9 @@ export default function StakingPage() {
           </ul>
           {selectedImp ? (
             <p className="staking-summary__hint">
-              {selectedImp.body} matches {alignmentLabels(selectedImp.body)}. About{' '}
-              {formatImpCoin(estimatedLockPayout(estimate.dailyRate, duration.days))} if this squad
-              stays staked for the full {duration.label.toLowerCase()}. Transferring a staked NFT
-              burns pending ImpCoin from this squad.
+              {layout.keepCount === 0
+                ? `A solo Imp earns ${formatImpCoin(BASE_IMPCOIN_PER_DAY)} / day. Pair Keeps on another canvas for alignment, Void, and Robin's Lair bonuses. About ${formatImpCoin(estimatedLockPayout(estimate.dailyRate, duration.days))} if this Imp stays staked for the full ${duration.label.toLowerCase()}.`
+                : `${selectedImp.body} matches ${alignmentLabels(selectedImp.body)}. About ${formatImpCoin(estimatedLockPayout(estimate.dailyRate, duration.days))} if this squad stays staked for the full ${duration.label.toLowerCase()}. Transferring a staked NFT burns pending ImpCoin from this squad.`}
             </p>
           ) : null}
           <button
@@ -749,7 +762,9 @@ export default function StakingPage() {
               ? 'Staking…'
               : canStake
                 ? 'Sign and stake'
-                : `Place ${layout.keepCount} Keep${layout.keepCount === 1 ? '' : 's'} to stake`}
+                : layout.keepCount === 0
+                  ? 'Choose an Imp to stake'
+                  : `Place ${layout.keepCount} Keep${layout.keepCount === 1 ? '' : 's'} to stake`}
           </button>
         </section>
         {status ? <p className="staking-status">{status}</p> : null}
@@ -758,9 +773,10 @@ export default function StakingPage() {
           <div className="staking-panel__header">
             <h2>Alignment chart</h2>
             <p>
-              Each aligned Keep adds +{ALIGNMENT_BONUS_PER_KEEP} ImpCoin / day. Gold and Diamond match
-              every environment. Any Imp with Void gets a {VOID_MULTIPLIER}x bonus. Any Imp with
-              Robin&apos;s Lair gets a {ROBINS_LAIR_MULTIPLIER}x bonus.
+              Each aligned Keep adds +{ALIGNMENT_BONUS_PER_KEEP} ImpCoin / day. A solo Imp still earns
+              the base {BASE_IMPCOIN_PER_DAY} ImpCoin / day. Gold and Diamond match every environment.
+              Any Imp with Void gets a {VOID_MULTIPLIER}x bonus. Any Imp with Robin&apos;s Lair gets a{' '}
+              {ROBINS_LAIR_MULTIPLIER}x bonus.
             </p>
           </div>
           <div className="staking-alignments">
