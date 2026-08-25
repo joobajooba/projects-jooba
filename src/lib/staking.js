@@ -44,12 +44,20 @@ export const ALIGNMENTS = {
   Diamond: '*',
 };
 
+export const LOCK_MULTIPLIERS = {
+  '7d': 1,
+  '14d': 1.25,
+  '30d': 1.5,
+  '60d': 1.75,
+  '90d': 2,
+};
+
 export const STAKE_DURATIONS = [
-  { id: '7d', label: '7 days', detail: 'Lock for 7 days', days: 7 },
-  { id: '14d', label: '2 weeks', detail: 'Lock for 14 days', days: 14 },
-  { id: '30d', label: '1 month', detail: 'Lock for 30 days', days: 30 },
-  { id: '60d', label: '2 months', detail: 'Lock for 60 days', days: 60 },
-  { id: '90d', label: '3 months', detail: 'Lock for 90 days', days: 90 },
+  { id: '7d', label: '7 days', detail: '1x daily rate', days: 7, multiplier: 1 },
+  { id: '14d', label: '2 weeks', detail: '1.25x daily rate', days: 14, multiplier: 1.25 },
+  { id: '30d', label: '1 month', detail: '1.5x daily rate', days: 30, multiplier: 1.5 },
+  { id: '60d', label: '2 months', detail: '1.75x daily rate', days: 60, multiplier: 1.75 },
+  { id: '90d', label: '3 months', detail: '2x daily rate', days: 90, multiplier: 2 },
 ];
 
 export const CANVAS_LAYOUTS = {
@@ -153,6 +161,10 @@ export function durationById(durationId) {
   return STAKE_DURATIONS.find((option) => option.id === durationId) || STAKE_DURATIONS[0];
 }
 
+export function lockMultiplierFor(durationId) {
+  return LOCK_MULTIPLIERS[durationId] || durationById(durationId).multiplier || 1;
+}
+
 export function durationLabel(durationId, durationDays) {
   const option = STAKE_DURATIONS.find((item) => item.id === durationId);
   if (option) return option.label;
@@ -178,25 +190,33 @@ export function estimatedLockPayout(dailyRate, days) {
   return Math.max(0, Math.floor(rate * length));
 }
 
-export function dailyRateFor({ alignedCount = 0, hasRobinsLair = false, hasVoid = false } = {}) {
+export function dailyRateFor({
+  alignedCount = 0,
+  hasRobinsLair = false,
+  hasVoid = false,
+  durationId = '7d',
+} = {}) {
   const raw =
     (BASE_IMPCOIN_PER_DAY + ALIGNMENT_BONUS_PER_KEEP * Number(alignedCount || 0)) *
     (hasRobinsLair ? ROBINS_LAIR_MULTIPLIER : 1) *
-    (hasVoid ? VOID_MULTIPLIER : 1);
+    (hasVoid ? VOID_MULTIPLIER : 1) *
+    lockMultiplierFor(durationId);
   return Math.round(raw * 10000) / 10000;
 }
 
-export function estimateStake({ imp, keeps }) {
+export function estimateStake({ imp, keeps, durationId = '7d' }) {
   const keepList = (keeps ?? []).filter(Boolean);
   const alignedCount = keepList.filter((keep) => isAlignedPair(imp?.body, keep.tileset)).length;
   const hasRobinsLair = keepsHaveRobinsLair(keepList);
   const hasVoid = keepsHaveVoid(keepList);
-  const dailyRate = dailyRateFor({ alignedCount, hasRobinsLair, hasVoid });
+  const lockMultiplier = lockMultiplierFor(durationId);
+  const dailyRate = dailyRateFor({ alignedCount, hasRobinsLair, hasVoid, durationId });
   return {
     alignedCount,
     keepCount: keepList.length,
     hasRobinsLair,
     hasVoid,
+    lockMultiplier,
     dailyRate,
   };
 }

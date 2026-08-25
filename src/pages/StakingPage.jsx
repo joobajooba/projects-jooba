@@ -25,6 +25,7 @@ import {
   isVoidKeep,
   keepsHaveRobinsLair,
   keepsHaveVoid,
+  lockMultiplierFor,
   pendingFromStake,
   ROBINS_LAIR_MULTIPLIER,
   STAKE_DURATIONS,
@@ -191,8 +192,8 @@ export default function StakingPage() {
     return next;
   }, [selectedImp, keepsBySlot]);
   const estimate = useMemo(
-    () => estimateStake({ imp: selectedImp, keeps: selectedKeeps }),
-    [selectedImp, selectedKeeps]
+    () => estimateStake({ imp: selectedImp, keeps: selectedKeeps, durationId }),
+    [selectedImp, selectedKeeps, durationId]
   );
   const lockedKeys = useMemo(() => {
     const keys = new Set();
@@ -447,8 +448,9 @@ export default function StakingPage() {
           <p className="adventures-page__intro">
             Stake an Imp on its own, or pair it with Keeps, then choose a lock. NFTs stay in your
             wallet. ImpCoin accrues while the squad is staked, and you can unstake when the lock ends.
-            Matching Body colour to Keep environment adds ImpCoin. Void is a {VOID_MULTIPLIER}x bonus
-            for any Imp. Robin&apos;s Lair is a {ROBINS_LAIR_MULTIPLIER}x bonus for any Imp.
+            Longer locks pay more ImpCoin per day. Matching Body colour to Keep environment adds
+            ImpCoin. Void is a {VOID_MULTIPLIER}x bonus for any Imp. Robin&apos;s Lair is a{' '}
+            {ROBINS_LAIR_MULTIPLIER}x bonus for any Imp.
           </p>
         </header>
 
@@ -687,8 +689,8 @@ export default function StakingPage() {
             </p>
             <h2>Choose a lock</h2>
             <p>
-              The squad stays staked until this lock ends. Transferring a staked NFT still burns
-              pending ImpCoin.
+              Longer locks pay a higher daily rate. The squad stays staked until this lock ends.
+              Transferring a staked NFT still burns pending ImpCoin.
             </p>
           </div>
           <div className="staking-durations">
@@ -709,7 +711,7 @@ export default function StakingPage() {
         <section className="staking-summary">
           <div className="staking-summary__copy">
             <p className="adventure-panel__eyebrow">Daily rate</p>
-            <h2>{selectedImp ? formatRate(estimate.dailyRate) : 'Pick an Imp'}</h2>
+            <h2>{formatRate(estimate.dailyRate)}</h2>
             <p>
               {selectedImp
                 ? `${selectedImp.name} · ${layout.title} · ${duration.label}`
@@ -719,6 +721,7 @@ export default function StakingPage() {
                 : ''}
               {estimate.hasVoid ? ` · Void ${VOID_MULTIPLIER}x` : ''}
               {estimate.hasRobinsLair ? ` · Robin's Lair ${ROBINS_LAIR_MULTIPLIER}x` : ''}
+              {` · Lock ${estimate.lockMultiplier}x`}
             </p>
           </div>
           <ul className="staking-summary__mods">
@@ -742,14 +745,16 @@ export default function StakingPage() {
             </li>
             <li>
               <span>Lock</span>
-              <strong>{duration.label}</strong>
+              <strong>
+                {estimate.lockMultiplier}x · {duration.label}
+              </strong>
             </li>
           </ul>
           {selectedImp ? (
             <p className="staking-summary__hint">
               {layout.keepCount === 0
-                ? `A solo Imp earns ${formatImpCoin(BASE_IMPCOIN_PER_DAY)} / day. Pair Keeps on another canvas for alignment, Void, and Robin's Lair bonuses. About ${formatImpCoin(estimatedLockPayout(estimate.dailyRate, duration.days))} if this Imp stays staked for the full ${duration.label.toLowerCase()}.`
-                : `${selectedImp.body} matches ${alignmentLabels(selectedImp.body)}. About ${formatImpCoin(estimatedLockPayout(estimate.dailyRate, duration.days))} if this squad stays staked for the full ${duration.label.toLowerCase()}. Transferring a staked NFT burns pending ImpCoin from this squad.`}
+                ? `A solo Imp earns ${formatImpCoin(BASE_IMPCOIN_PER_DAY)} / day before lock. This ${duration.label.toLowerCase()} lock is ${estimate.lockMultiplier}x, so ${formatRate(estimate.dailyRate)}. Pair Keeps on another canvas for alignment, Void, and Robin's Lair bonuses. About ${formatImpCoin(estimatedLockPayout(estimate.dailyRate, duration.days))} if this Imp stays staked for the full ${duration.label.toLowerCase()}.`
+                : `${selectedImp.body} matches ${alignmentLabels(selectedImp.body)}. This ${duration.label.toLowerCase()} lock is ${estimate.lockMultiplier}x. About ${formatImpCoin(estimatedLockPayout(estimate.dailyRate, duration.days))} if this squad stays staked for the full ${duration.label.toLowerCase()}. Transferring a staked NFT burns pending ImpCoin from this squad.`}
             </p>
           ) : null}
           <button
@@ -774,9 +779,10 @@ export default function StakingPage() {
             <h2>Alignment chart</h2>
             <p>
               Each aligned Keep adds +{ALIGNMENT_BONUS_PER_KEEP} ImpCoin / day. A solo Imp still earns
-              the base {BASE_IMPCOIN_PER_DAY} ImpCoin / day. Gold and Diamond match every environment.
-              Any Imp with Void gets a {VOID_MULTIPLIER}x bonus. Any Imp with Robin&apos;s Lair gets a{' '}
-              {ROBINS_LAIR_MULTIPLIER}x bonus.
+              the base {BASE_IMPCOIN_PER_DAY} ImpCoin / day before lock. Gold and Diamond match every
+              environment. Any Imp with Void gets a {VOID_MULTIPLIER}x bonus. Any Imp with
+              Robin&apos;s Lair gets a {ROBINS_LAIR_MULTIPLIER}x bonus. Longer locks multiply the
+              daily rate up to {lockMultiplierFor('90d')}x.
             </p>
           </div>
           <div className="staking-alignments">
@@ -799,6 +805,17 @@ export default function StakingPage() {
               <strong>All Impz</strong>
               <span>Robin&apos;s Lair · {ROBINS_LAIR_MULTIPLIER}x</span>
             </div>
+            {STAKE_DURATIONS.map((option) => (
+              <div
+                key={option.id}
+                className={`staking-alignments__row${
+                  durationId === option.id ? ' staking-alignments__row--active' : ''
+                }`}
+              >
+                <strong>{option.label}</strong>
+                <span>Lock · {option.multiplier}x</span>
+              </div>
+            ))}
           </div>
         </section>
       </div>

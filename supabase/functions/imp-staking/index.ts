@@ -56,12 +56,12 @@ const CANVASES: Record<string, { keepCount: number; keepSlots: string[] }> = {
   cross: { keepCount: 4, keepSlots: ["north", "east", "south", "west"] },
   nine: { keepCount: 8, keepSlots: ["nw", "north", "ne", "west", "east", "sw", "south", "se"] },
 };
-const STAKE_DURATIONS: Record<string, { id: string; days: number }> = {
-  "7d": { id: "7d", days: 7 },
-  "14d": { id: "14d", days: 14 },
-  "30d": { id: "30d", days: 30 },
-  "60d": { id: "60d", days: 60 },
-  "90d": { id: "90d", days: 90 },
+const STAKE_DURATIONS: Record<string, { id: string; days: number; multiplier: number }> = {
+  "7d": { id: "7d", days: 7, multiplier: 1 },
+  "14d": { id: "14d", days: 14, multiplier: 1.25 },
+  "30d": { id: "30d", days: 30, multiplier: 1.5 },
+  "60d": { id: "60d", days: 60, multiplier: 1.75 },
+  "90d": { id: "90d", days: 90, multiplier: 2 },
 };
 const ALIGNMENTS: Record<string, string[]> = {
   Red: ["underworld", "volcano", "the_vault"],
@@ -123,11 +123,21 @@ function isAligned(body: string, tileset: string) {
   return (ALIGNMENTS[body] ?? []).includes(slug);
 }
 
-function dailyRateFor(alignedCount: number, hasRobinsLair: boolean, hasVoid: boolean) {
+function lockMultiplierFor(durationId: string) {
+  return STAKE_DURATIONS[durationId]?.multiplier || 1;
+}
+
+function dailyRateFor(
+  alignedCount: number,
+  hasRobinsLair: boolean,
+  hasVoid: boolean,
+  durationId = "7d",
+) {
   const raw =
     (BASE_IMPCOIN_PER_DAY + ALIGNMENT_BONUS_PER_KEEP * alignedCount) *
     (hasRobinsLair ? ROBINS_LAIR_MULTIPLIER : 1) *
-    (hasVoid ? VOID_MULTIPLIER : 1);
+    (hasVoid ? VOID_MULTIPLIER : 1) *
+    lockMultiplierFor(durationId);
   return Math.round(raw * 10000) / 10000;
 }
 
@@ -139,16 +149,18 @@ function pendingFromStake(stake: StakeRow, now = Date.now()) {
   return Math.max(0, Math.floor((rate * (now - last)) / 86_400_000));
 }
 
-function estimateStake(body: string, keeps: KeepInput[]) {
+function estimateStake(body: string, keeps: KeepInput[], durationId = "7d") {
   const alignedCount = keeps.filter((keep) => isAligned(body, String(keep.tileset || ""))).length;
   const hasRobinsLair = keeps.some((keep) => isRobinsLair(String(keep.tileset || "")));
   const hasVoid = keeps.some((keep) => isVoidKeep(String(keep.tileset || "")));
-  const dailyRate = dailyRateFor(alignedCount, hasRobinsLair, hasVoid);
+  const lockMultiplier = lockMultiplierFor(durationId);
+  const dailyRate = dailyRateFor(alignedCount, hasRobinsLair, hasVoid, durationId);
   return {
     alignedCount,
     keepCount: keeps.length,
     hasRobinsLair,
     hasVoid,
+    lockMultiplier,
     dailyRate,
     modifiers: {
       base: BASE_IMPCOIN_PER_DAY,
@@ -156,6 +168,8 @@ function estimateStake(body: string, keeps: KeepInput[]) {
       alignedCount,
       robinsLairMultiplier: hasRobinsLair ? ROBINS_LAIR_MULTIPLIER : 1,
       voidMultiplier: hasVoid ? VOID_MULTIPLIER : 1,
+      lockMultiplier,
+      durationId,
       dailyRate,
     },
   };
@@ -436,7 +450,7 @@ Deno.serve(async (request: Request) => {
 
       const bodyColor = impBody(impTokenId);
       const tier = impTier(impTokenId);
-      const estimate = estimateStake(bodyColor, normalizedKeeps);
+      const estimate = estimateStake(bodyColor, normalizedKeeps, duration.id);
       const startedAt = new Date();
       const unlocksAt = new Date(startedAt.getTime() + duration.days * 86_400_000);
       const canvasImage = String(body.canvasImage || "");
