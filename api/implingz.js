@@ -1,4 +1,4 @@
-import { createPublicClient, defineChain, http, parseAbiItem } from 'viem';
+import { createPublicClient, defineChain, http } from 'viem';
 
 const IMPLINGZ_CONTRACT = '0x81D2D1f0e92285CdD22Aa3cbc6956B6E1724d029';
 const MULTICALL3_ADDRESS = '0xca11bde05977b3631167028862be2a173976ca11';
@@ -8,13 +8,11 @@ const RPC_URL = 'https://rpc.mainnet.chain.robinhood.com';
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 const TOTAL_SUPPLY_FALLBACK = 2222;
 const SCAN_CHUNK = 250;
+const CHAIN_FILL_MS = 5000;
 const BLOCKSCOUT_HEADERS = {
   Accept: 'application/json',
   'User-Agent': 'Mozilla/5.0 (compatible; j00ba.xyz/implingz-ownership)',
 };
-const TRANSFER_EVENT = parseAbiItem(
-  'event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)'
-);
 const ERC721_ABI = [
   {
     type: 'function',
@@ -58,11 +56,21 @@ function toItems(tokenIds) {
 function rpcClient() {
   return createPublicClient({
     chain: ROBINHOOD_CHAIN,
-    transport: http(RPC_URL, { timeout: 15_000 }),
+    transport: http(RPC_URL, { timeout: 8_000 }),
   });
 }
 
-async function fetchJson(url, signal, timeoutMs = 6000) {
+function withTimeout(promise, ms, label) {
+  let timer;
+  return Promise.race([
+    promise.finally(() => clearTimeout(timer)),
+    new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error(`${label} timed out`)), ms);
+    }),
+  ]);
+}
+
+async function fetchJson(url, signal, timeoutMs = 8000) {
   const response = await fetch(url, {
     headers: BLOCKSCOUT_HEADERS,
     signal: signal ?? AbortSignal.timeout(timeoutMs),
@@ -82,7 +90,7 @@ function applyNextPage(url, nextPageParams) {
 }
 
 async function paginateV2(url, onItem, signal) {
-  for (let page = 0; page < 50; page += 1) {
+  for (let page = 0; page < 20; page += 1) {
     if (signal?.aborted) break;
     const data = await fetchJson(url, signal);
     for (const item of data.items ?? []) onItem(item);
@@ -199,7 +207,7 @@ async function fetchOwnedFromInventory(owner, signal) {
 async function fetchIncomingTransfers(owner, signal) {
   const owned = new Set();
   const wallet = owner.toLowerCase();
-  for (let page = 1; page <= 50; page += 1) {
+  for (let page = 1; page <= 20; page += 1) {
     if (signal?.aborted) break;
     const url = new URL(BLOCKSCOUT_V1);
     url.searchParams.set('module', 'account');
@@ -225,81 +233,40 @@ async function fetchIncomingTransfers(owner, signal) {
   return owned;
 }
 
-async function fetchOwnedFromLogs(owner) {
-  const client = rpcClient();
-  const latest = await client.getBlockNumber();
-  const windows = [20_000n, 80_000n, 400_000n];
-  const incoming = new Set();
-
-  for (const window of windows) {
-    try {
-      const fromBlock = latest > window ? latest - window : 0n;
-      const logs = await client.getLogs({
-        address: IMPLINGZ_CONTRACT,
-        event: TRANSFER_EVENT,
-        args: { to: owner },
-        fromBlock,
-        toBlock: latest,
-      });
-      for (const log of logs) {
-        if (log.args?.tokenId != null) incoming.add(String(log.args.tokenId));
-      }
-      if (incoming.size > 0) return incoming;
-    } catch (error) {
-      console.error('implingz transfer logs failed', window.toString(), error);
-    }
-  }
-
-  return incoming;
-}
-
-async function collectCandidateIds(owner, signal) {
-  const results = await Promise.allSettled([
-    fetchOwnedFromInstances(owner, signal),
-    fetchOwnedFromInventory(owner, signal),
-    fetchIncomingTransfers(owner, signal),
-    fetchOwnedFromLogs(owner),
-  ]);
-
-  const candidates = new Set();
-  let lastError = null;
-  let sawSuccess = false;
-  for (const result of results) {
-    if (result.status === 'fulfilled') {
-      sawSuccess = true;
-      for (const id of result.value) candidates.add(String(id));
-    } else {
-      lastError = result.reason;
-    }
-  }
-
-  return { candidates, sawSuccess, lastError };
-}
-
 async function lookupOwned(owner, balance) {
   const expected = balance == null ? null : Number(balance);
-  let owned = new Set();
-  let chainError = null;
+  const client = rpcClient();
+  const owned = new Set();
 
   try {
-    owned = await fetchOwnedFromChain(owner);
-    if (expected == null || owned.size === expected) return owned;
-  } catch (error) {
-    chainError = error;
-    console.error('implingz on-chain ownership scan failed', error);
-  }
-
-  const { candidates, sawSuccess, lastError } = await collectCandidateIds(owner);
-  const extraIds = [...candidates].filter((id) => !owned.has(id));
-  if (extraIds.length > 0) {
-    const verified = await ownerOfIds(rpcClient(), owner, extraIds);
+    const verified = await ownerOfIds(client, owner, [...(await fetchOwnedFromInstances(owner))]);
     for (const id of verified) owned.add(id);
+    if (owned.size > 0 && (expected == null || owned.size === expected)) return owned;
+    if (owned.size > 0) return owned;
+  } catch (error) {
+    console.error('implingz holder index failed', error);
   }
 
-  if (expected == null || owned.size === expected || owned.size > 0) return owned;
-  if (expected === 0) return owned;
-  if (sawSuccess && expected == null) return owned;
-  throw chainError ?? lastError ?? new Error('Could not load wallet IMPLINGz.');
+  try {
+    const extras = await withTimeout(
+      Promise.allSettled([fetchIncomingTransfers(owner), fetchOwnedFromInventory(owner)]),
+      5000,
+      'implingz explorer fill'
+    );
+    const ids = [];
+    for (const result of extras) {
+      if (result.status === 'fulfilled') ids.push(...result.value);
+    }
+    const fresh = ids.filter((id) => !owned.has(String(id)));
+    if (fresh.length > 0) {
+      const verified = await ownerOfIds(client, owner, fresh);
+      for (const id of verified) owned.add(id);
+    }
+  } catch (error) {
+    console.error('implingz explorer fill skipped', error);
+  }
+
+  return owned;
 }
 
 export default async function handler(request, response) {

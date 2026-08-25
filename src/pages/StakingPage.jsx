@@ -259,26 +259,17 @@ export default function StakingPage() {
         }
       });
 
-    Promise.all([
-      fetch(`/api/implingz?owner=${encodeURIComponent(walletAccount)}`, {
-        signal: controller.signal,
-        cache: 'no-store',
-      }).then(async (response) => {
+    const implingzRequest = fetch(`/api/implingz?owner=${encodeURIComponent(walletAccount)}`, {
+      signal: controller.signal,
+      cache: 'no-store',
+    })
+      .then(async (response) => {
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.error || 'Could not load your IMPLINGz.');
         return mapOwnedImplingz(data.items ?? []);
-      }),
-      fetch(`/api/keeps?owner=${encodeURIComponent(walletAccount)}&all=1`, {
-        signal: controller.signal,
-      }).then(async (response) => {
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data.error || 'Could not load your Imp Keeps.');
-        return mapOwnedKeeps(data.items ?? []);
-      }),
-    ])
-      .then(([implingz, keeps]) => {
+      })
+      .then((implingz) => {
         setOwnedImplingz(implingz);
-        setOwnedKeeps(keeps);
         setSelectedImpId((current) =>
           implingz.some((imp) => imp.id === current) ? current : implingz[0]?.id || ''
         );
@@ -287,10 +278,29 @@ export default function StakingPage() {
         if (error.name !== 'AbortError') {
           setNftError(error.message || 'Could not load your NFTs.');
         }
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoadingNfts(false);
       });
+
+    const keepsRequest = fetch(`/api/keeps?owner=${encodeURIComponent(walletAccount)}&all=1`, {
+      signal: controller.signal,
+      cache: 'no-store',
+    })
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'Could not load your Imp Keeps.');
+        return mapOwnedKeeps(data.items ?? []);
+      })
+      .then((keeps) => {
+        setOwnedKeeps(keeps);
+      })
+      .catch((error) => {
+        if (error.name !== 'AbortError') {
+          setNftError((current) => current || error.message || 'Could not load your Imp Keeps.');
+        }
+      });
+
+    Promise.allSettled([implingzRequest, keepsRequest]).finally(() => {
+      if (!controller.signal.aborted) setLoadingNfts(false);
+    });
 
     return () => controller.abort();
   }, [walletAccount]);

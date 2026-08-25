@@ -20,6 +20,7 @@ const RPC_URL = 'https://rpc.mainnet.chain.robinhood.com';
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 const TOTAL_SUPPLY_FALLBACK = 2222;
 const SCAN_CHUNK = 250;
+const CHAIN_FILL_MS = 5000;
 const BLOCKSCOUT_HEADERS = {
   Accept: 'application/json',
   'User-Agent': 'Mozilla/5.0 (compatible; j00ba.xyz/keep-ownership)',
@@ -76,11 +77,21 @@ function previewUrl(seed, tokenId) {
 function createKeepClient() {
   return createPublicClient({
     chain: ROBINHOOD_CHAIN,
-    transport: http(RPC_URL, { timeout: 15_000 }),
+    transport: http(RPC_URL, { timeout: 8_000 }),
   });
 }
 
-async function fetchJson(url, timeoutMs = 6000) {
+function withTimeout(promise, ms, label) {
+  let timer;
+  return Promise.race([
+    promise.finally(() => clearTimeout(timer)),
+    new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error(`${label} timed out`)), ms);
+    }),
+  ]);
+}
+
+async function fetchJson(url, timeoutMs = 8000) {
   const response = await fetch(url, {
     headers: BLOCKSCOUT_HEADERS,
     signal: AbortSignal.timeout(timeoutMs),
@@ -100,7 +111,7 @@ function applyNextPage(url, nextPageParams) {
 }
 
 async function paginateV2(url, onItem) {
-  for (let page = 0; page < 50; page += 1) {
+  for (let page = 0; page < 20; page += 1) {
     const data = await fetchJson(url);
     for (const item of data.items ?? []) onItem(item);
     if (!data.next_page_params) break;
@@ -208,7 +219,7 @@ async function fetchOwnedFromTransfers(owner, contract) {
   const owned = new Set();
   const wallet = owner.toLowerCase();
 
-  for (let page = 1; page <= 50; page += 1) {
+  for (let page = 1; page <= 20; page += 1) {
     const url = new URL(BLOCKSCOUT_V1);
     url.searchParams.set('module', 'account');
     url.searchParams.set('action', 'tokennfttx');
@@ -234,58 +245,78 @@ async function fetchOwnedFromTransfers(owner, contract) {
   return owned;
 }
 
-async function collectCandidateIds(owner, contract) {
-  const results = await Promise.allSettled([
-    fetchOwnedFromInstances(owner, contract),
-    fetchOwnedFromInventory(owner, contract),
-    fetchOwnedFromTransfers(owner, contract),
-  ]);
-  const candidates = new Set();
-  let lastError = null;
-  for (const result of results) {
-    if (result.status === 'fulfilled') {
-      for (const id of result.value) candidates.add(String(id));
-    } else {
-      lastError = result.reason;
-    }
-  }
-  return { candidates, lastError };
-}
-
-async function lookupOwned(client, owner, contract, balance) {
-  const expected = balance == null ? null : Number(balance);
-  let owned = new Set();
-  let chainError = null;
+async function lookupOwned(client, owner, contract) {
+  const owned = new Set();
 
   try {
-    owned = await fetchOwnedFromChain(client, owner, contract);
-    if (expected == null || owned.size === expected) return owned;
-  } catch (error) {
-    chainError = error;
-    console.error('keep on-chain ownership scan failed', contract, error);
-  }
-
-  const { candidates, lastError } = await collectCandidateIds(owner, contract);
-  const extraIds = [...candidates].filter((id) => !owned.has(id));
-  if (extraIds.length > 0) {
-    const verified = await ownerOfIds(client, owner, contract, extraIds);
+    const verified = await ownerOfIds(client, owner, contract, [
+      ...(await fetchOwnedFromInstances(owner, contract)),
+    ]);
     for (const id of verified) owned.add(id);
+    if (owned.size > 0) return owned;
+  } catch (error) {
+    console.error('keep holder index failed', contract, error);
   }
 
-  if (expected == null || owned.size === expected || owned.size > 0) return owned;
-  if (expected === 0) return owned;
-  throw chainError ?? lastError ?? new Error('Could not load wallet Imp Keeps.');
+  try {
+    const extras = await withTimeout(
+      Promise.allSettled([
+        fetchOwnedFromTransfers(owner, contract),
+        fetchOwnedFromInventory(owner, contract),
+      ]),
+      5000,
+      'keep explorer fill'
+    );
+    const ids = [];
+    for (const result of extras) {
+      if (result.status === 'fulfilled') ids.push(...result.value);
+    }
+    const fresh = ids.filter((id) => !owned.has(String(id)));
+    if (fresh.length > 0) {
+      const verified = await ownerOfIds(client, owner, contract, fresh);
+      for (const id of verified) owned.add(id);
+    }
+  } catch (error) {
+    console.error('keep explorer fill skipped', contract, error);
+  }
+
+  return owned;
 }
 
-async function enrichKeep(client, collection, tokenId) {
-  try {
-    const seed = await client.readContract({
-      address: collection.address,
-      abi: KEEP_ABI,
-      functionName: 'seedOf',
-      args: [BigInt(tokenId)],
+async function enrichKeeps(client, collection, tokenIds) {
+  const seeds = new Map();
+  for (let start = 0; start < tokenIds.length; start += SCAN_CHUNK) {
+    const slice = tokenIds.slice(start, start + SCAN_CHUNK);
+    const results = await client.multicall({
+      allowFailure: true,
+      contracts: slice.map((id) => ({
+        address: collection.address,
+        abi: KEEP_ABI,
+        functionName: 'seedOf',
+        args: [BigInt(id)],
+      })),
     });
-    const hex = seedHex(seed);
+    results.forEach((row, index) => {
+      if (row.status === 'success') seeds.set(slice[index], seedHex(row.result));
+    });
+  }
+
+  return tokenIds.map((tokenId) => {
+    const hex = seeds.get(tokenId);
+    if (!hex) {
+      return {
+        id: tokenId,
+        name: `${collection.namePrefix} #${tokenId}`,
+        image: '',
+        seed: '',
+        tileset: '',
+        biome: 'Unknown',
+        dungeonType: '',
+        miniBoss: '',
+        contract: collection.address,
+        version: collection.version,
+      };
+    }
     const opts = optionsFromSeed(hex, Number(tokenId));
     return {
       id: tokenId,
@@ -299,20 +330,7 @@ async function enrichKeep(client, collection, tokenId) {
       contract: collection.address,
       version: collection.version,
     };
-  } catch {
-    return {
-      id: tokenId,
-      name: `${collection.namePrefix} #${tokenId}`,
-      image: '',
-      seed: '',
-      tileset: '',
-      biome: 'Unknown',
-      dungeonType: '',
-      miniBoss: '',
-      contract: collection.address,
-      version: collection.version,
-    };
-  }
+  });
 }
 
 async function loadCollection(client, owner, collection) {
@@ -320,8 +338,8 @@ async function loadCollection(client, owner, collection) {
     const balance = await fetchBalance(client, owner, collection.address).catch(() => null);
     if (balance != null && BigInt(balance) === 0n) return [];
 
-    const ownedIds = [...(await lookupOwned(client, owner, collection.address, balance))];
-    return Promise.all(ownedIds.map((tokenId) => enrichKeep(client, collection, tokenId)));
+    const ownedIds = [...(await lookupOwned(client, owner, collection.address))];
+    return enrichKeeps(client, collection, ownedIds);
   } catch (error) {
     console.error(`Failed to load ${collection.version} Imp Keeps`, error);
     return [];
