@@ -1,6 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { createPublicClient, defineChain, http, verifyMessage } from "npm:viem";
 import { impBody, impTier } from "./impTraits.ts";
+import { keepEnvironment, seedHex } from "./keepTraits.ts";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -31,6 +32,13 @@ const ERC721_OWNER_ABI = [
     stateMutability: "view",
     inputs: [{ name: "tokenId", type: "uint256" }],
     outputs: [{ type: "address" }],
+  },
+  {
+    type: "function",
+    name: "seedOf",
+    stateMutability: "view",
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    outputs: [{ type: "uint256" }],
   },
 ] as const;
 const STAKE_COLUMNS =
@@ -151,19 +159,37 @@ function withPending(stake: StakeRow, now = Date.now()) {
   return { ...stake, pending, estimated_payout: pending, has_void: hasVoid };
 }
 
-async function ownerOf(contract: string, tokenId: string) {
-  const client = createPublicClient({
+function chainClient() {
+  return createPublicClient({
     chain: ROBINHOOD_CHAIN,
     transport: http(ROBINHOOD_RPC_URL),
   });
+}
+
+function isChainUnavailable(error: unknown) {
+  const message = String((error as { message?: string })?.message || error || "");
+  return /timeout|fetch|network|ECONN|502|503|429|unavailable/i.test(message);
+}
+
+async function ownerOf(contract: string, tokenId: string) {
   return String(
-    await client.readContract({
+    await chainClient().readContract({
       address: contract as `0x${string}`,
       abi: ERC721_OWNER_ABI,
       functionName: "ownerOf",
       args: [BigInt(tokenId)],
     }),
   ).toLowerCase();
+}
+
+async function keepTraitsFromChain(contract: string, tokenId: string) {
+  const seed = await chainClient().readContract({
+    address: contract as `0x${string}`,
+    abi: ERC721_OWNER_ABI,
+    functionName: "seedOf",
+    args: [BigInt(tokenId)],
+  });
+  return keepEnvironment(seedHex(seed), tokenId);
 }
 
 Deno.serve(async (request: Request) => {
@@ -248,8 +274,11 @@ Deno.serve(async (request: Request) => {
         if (keepOwner !== walletAddress) return false;
       }
       return true;
-    } catch {
-      return true;
+    } catch (error) {
+      if (isChainUnavailable(error)) {
+        throw Object.assign(new Error("Could not verify NFT ownership on-chain. Try again."), { status: 503 });
+      }
+      return false;
     }
   }
 
@@ -278,10 +307,20 @@ Deno.serve(async (request: Request) => {
       const now = Date.now();
       const decorated: ReturnType<typeof withPending>[] = [];
       for (const row of (stakes ?? []) as StakeRow[]) {
-        if (row.status === "active" && !(await stillOwned(wallet, row))) {
-          await slashStake(row);
-          decorated.push(withPending({ ...row, status: "slashed" }, now));
-          continue;
+        if (row.status === "active") {
+          try {
+            if (!(await stillOwned(wallet, row))) {
+              await slashStake(row);
+              decorated.push(withPending({ ...row, status: "slashed" }, now));
+              continue;
+            }
+          } catch (error) {
+            if (Number((error as { status?: number })?.status) === 503) {
+              decorated.push(withPending(row, now));
+              continue;
+            }
+            throw error;
+          }
         }
         decorated.push(withPending(row, now));
       }
@@ -376,6 +415,9 @@ Deno.serve(async (request: Request) => {
         if (keepOwner !== walletAddress) {
           return json({ error: `This wallet does not hold ${keep.name}.` }, 403);
         }
+        const traits = await keepTraitsFromChain(String(keep.contract), String(keep.id));
+        keep.tileset = traits.tileset;
+        keep.biome = traits.biome;
       }
 
       const bodyColor = impBody(impTokenId);
@@ -503,7 +545,7 @@ Deno.serve(async (request: Request) => {
     return json({ error: "Unknown action." }, 400);
   } catch (error) {
     const status = Number((error as { status?: number })?.status || 0);
-    if (status >= 400 && status < 500) {
+    if ((status >= 400 && status < 500) || status === 503) {
       return json({ error: (error as Error).message }, status);
     }
     console.error("imp-staking error", error);

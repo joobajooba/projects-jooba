@@ -4,7 +4,6 @@ import { useAccount, useSignMessage } from 'wagmi';
 import { NavLink, Outlet } from 'react-router-dom';
 import { AdventureRuntimeProvider } from './lib/adventureRuntime';
 import { isAdventuresTesterWallet } from './lib/adventuresAccess';
-import { isStakingTesterWallet } from './lib/stakingAccess';
 
 const NAV_SECTIONS = [
   {
@@ -32,7 +31,7 @@ const NAV_SECTIONS = [
       { label: 'Collection', to: '/collection' },
       { label: 'Adventures', to: '/adventures' },
       { label: 'The Dungeon', to: '/the-dungeon' },
-      { label: 'Staking', to: '/staking', stakingTesterOnly: true },
+      { label: 'Staking', to: '/staking' },
     ],
   },
 ];
@@ -570,9 +569,7 @@ export default function App() {
         <nav className="sidebar-nav" aria-label="Main">
           {NAV_SECTIONS.map((section) => {
             const items = section.items.filter(
-              (item) =>
-                (!item.testerOnly || isAdventuresTesterWallet(walletAccount)) &&
-                (!item.stakingTesterOnly || isStakingTesterWallet(walletAccount))
+              (item) => !item.testerOnly || isAdventuresTesterWallet(walletAccount)
             );
             if (items.length === 0) return null;
 
