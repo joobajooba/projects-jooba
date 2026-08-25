@@ -6,6 +6,8 @@ export const BASE_IMPCOIN_PER_DAY = 5;
 export const ALIGNMENT_BONUS_PER_KEEP = 2;
 export const ROBINS_LAIR_MULTIPLIER = 1.5;
 export const ROBINS_LAIR_TILESET = 'robins_lair';
+export const VOID_MULTIPLIER = 1.25;
+export const VOID_TILESET = 'void';
 export const ALIGN_ALL_BODIES = ['Gold', 'Diamond'];
 
 export const TILESET_LABELS = {
@@ -35,7 +37,7 @@ export const ALIGNMENTS = {
   Khaki: ['desert', 'limestone', 'plains'],
   Blue: ['icy', 'clouds', 'storm'],
   Cyan: ['mossy', 'storm', 'icy'],
-  Purple: ['dreamcore', 'shortcake', 'void'],
+  Purple: ['dreamcore', 'shortcake', 'mushroom'],
   Pink: ['mushroom', 'shortcake', 'underworld'],
   Silver: ['lunar', 'castle', 'limestone'],
   Gold: '*',
@@ -101,6 +103,18 @@ export function isRobinsLair(tileset) {
   return tilesetSlug(tileset) === ROBINS_LAIR_TILESET;
 }
 
+export function isVoidKeep(tileset) {
+  return tilesetSlug(tileset) === VOID_TILESET;
+}
+
+export function keepsHaveRobinsLair(keeps) {
+  return (keeps ?? []).some((keep) => isRobinsLair(keep?.tileset));
+}
+
+export function keepsHaveVoid(keeps) {
+  return (keeps ?? []).some((keep) => isVoidKeep(keep?.tileset));
+}
+
 export function isAlignedPair(body, tileset) {
   const slug = tilesetSlug(tileset);
   if (!slug) return false;
@@ -116,22 +130,25 @@ export function canvasById(canvasId) {
   return CANVAS_LAYOUTS[canvasId] ?? CANVAS_LAYOUTS.pair;
 }
 
-export function dailyRateFor({ alignedCount = 0, hasRobinsLair = false } = {}) {
+export function dailyRateFor({ alignedCount = 0, hasRobinsLair = false, hasVoid = false } = {}) {
   const raw =
     (BASE_IMPCOIN_PER_DAY + ALIGNMENT_BONUS_PER_KEEP * Number(alignedCount || 0)) *
-    (hasRobinsLair ? ROBINS_LAIR_MULTIPLIER : 1);
+    (hasRobinsLair ? ROBINS_LAIR_MULTIPLIER : 1) *
+    (hasVoid ? VOID_MULTIPLIER : 1);
   return Math.round(raw * 10000) / 10000;
 }
 
 export function estimateStake({ imp, keeps }) {
   const keepList = (keeps ?? []).filter(Boolean);
   const alignedCount = keepList.filter((keep) => isAlignedPair(imp?.body, keep.tileset)).length;
-  const hasRobinsLair = keepList.some((keep) => isRobinsLair(keep.tileset));
-  const dailyRate = dailyRateFor({ alignedCount, hasRobinsLair });
+  const hasRobinsLair = keepsHaveRobinsLair(keepList);
+  const hasVoid = keepsHaveVoid(keepList);
+  const dailyRate = dailyRateFor({ alignedCount, hasRobinsLair, hasVoid });
   return {
     alignedCount,
     keepCount: keepList.length,
     hasRobinsLair,
+    hasVoid,
     dailyRate,
   };
 }

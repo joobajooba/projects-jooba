@@ -17,10 +17,14 @@ import {
   formatStakedFor,
   isAlignedPair,
   isRobinsLair,
+  isVoidKeep,
+  keepsHaveRobinsLair,
+  keepsHaveVoid,
   pendingFromStake,
   ROBINS_LAIR_MULTIPLIER,
   STAKING_IMPLINGZ_ADDRESS,
   tokenKey,
+  VOID_MULTIPLIER,
 } from '../lib/staking';
 import {
   buildStakeControlMessage,
@@ -406,7 +410,8 @@ export default function StakingPage() {
           <p className="adventures-page__intro">
             Pair an Imp with Keeps. NFTs stay in your wallet. Sign to stake, then ImpCoin accrues
             until you unstake. Matching Body colour to Keep environment adds ImpCoin. Robin&apos;s
-            Lair is a {ROBINS_LAIR_MULTIPLIER}x bonus for any Imp.
+            Lair is a {ROBINS_LAIR_MULTIPLIER}x bonus for any Imp. Void is a {VOID_MULTIPLIER}x bonus
+            for any Imp.
           </p>
         </header>
 
@@ -476,7 +481,8 @@ export default function StakingPage() {
                       <p>
                         {stake.imp_body} {stake.imp_tier} · {stake.aligned_count} aligned Keep
                         {stake.aligned_count === 1 ? '' : 's'}
-                        {stake.has_robins_lair ? ` · Robin's Lair ${ROBINS_LAIR_MULTIPLIER}x` : ''}
+                        {keepsHaveRobinsLair(stake.keeps) ? ` · Robin's Lair ${ROBINS_LAIR_MULTIPLIER}x` : ''}
+                        {keepsHaveVoid(stake.keeps) || stake.has_void ? ` · Void ${VOID_MULTIPLIER}x` : ''}
                       </p>
                       <p>
                         {stakedFor} · {formatImpCoin(pending)} pending
@@ -540,6 +546,7 @@ export default function StakingPage() {
             {selectedKeeps.length}/{layout.keepCount} Keeps placed
             {estimate.alignedCount ? ` · ${estimate.alignedCount} aligned` : ''}
             {estimate.hasRobinsLair ? ` · Robin's Lair ${ROBINS_LAIR_MULTIPLIER}x` : ''}
+            {estimate.hasVoid ? ` · Void ${VOID_MULTIPLIER}x` : ''}
           </p>
         </section>
 
@@ -593,6 +600,7 @@ export default function StakingPage() {
               {availableKeeps.map((keep) => {
                 const aligned = selectedImp ? isAlignedPair(selectedImp.body, keep.tileset) : false;
                 const robin = isRobinsLair(keep.tileset);
+                const voidKeep = isVoidKeep(keep.tileset);
                 const selected = Object.values(keepSlots).includes(keep.key);
                 return (
                   <button
@@ -600,7 +608,7 @@ export default function StakingPage() {
                     type="button"
                     className={`staking-card${selected ? ' staking-card--selected' : ''}${
                       aligned ? ' staking-card--aligned' : ''
-                    }${robin ? ' staking-card--robin' : ''}`}
+                    }${robin ? ' staking-card--robin' : ''}${voidKeep ? ' staking-card--void' : ''}`}
                     onClick={() => toggleKeep(keep)}
                   >
                     {keep.image ? <img src={keep.image} alt={`${keep.name} ${keep.biome}`} /> : null}
@@ -610,6 +618,7 @@ export default function StakingPage() {
                       {keep.version === 'v2' ? ' · v2' : ''}
                       {aligned ? ' · aligned' : ''}
                       {robin ? ` · ${ROBINS_LAIR_MULTIPLIER}x` : ''}
+                      {voidKeep ? ` · ${VOID_MULTIPLIER}x` : ''}
                     </span>
                   </button>
                 );
@@ -628,6 +637,7 @@ export default function StakingPage() {
                 ? ` · ${estimate.alignedCount}/${selectedKeeps.length} aligned`
                 : ''}
               {estimate.hasRobinsLair ? ` · Robin's Lair ${ROBINS_LAIR_MULTIPLIER}x` : ''}
+              {estimate.hasVoid ? ` · Void ${VOID_MULTIPLIER}x` : ''}
             </p>
           </div>
           <ul className="staking-summary__mods">
@@ -644,6 +654,10 @@ export default function StakingPage() {
             <li>
               <span>Robin&apos;s Lair</span>
               <strong>{estimate.hasRobinsLair ? `${ROBINS_LAIR_MULTIPLIER}x` : '—'}</strong>
+            </li>
+            <li>
+              <span>Void</span>
+              <strong>{estimate.hasVoid ? `${VOID_MULTIPLIER}x` : '—'}</strong>
             </li>
           </ul>
           {selectedImp ? (
@@ -673,7 +687,7 @@ export default function StakingPage() {
             <p>
               Each aligned Keep adds +{ALIGNMENT_BONUS_PER_KEEP} ImpCoin / day. Gold and Diamond match
               every environment. Any Imp with Robin&apos;s Lair gets a {ROBINS_LAIR_MULTIPLIER}x
-              bonus.
+              bonus. Any Imp with Void gets a {VOID_MULTIPLIER}x bonus.
             </p>
           </div>
           <div className="staking-alignments">
@@ -691,6 +705,10 @@ export default function StakingPage() {
             <div className="staking-alignments__row">
               <strong>All Impz</strong>
               <span>Robin&apos;s Lair · {ROBINS_LAIR_MULTIPLIER}x</span>
+            </div>
+            <div className="staking-alignments__row">
+              <strong>All Impz</strong>
+              <span>Void · {VOID_MULTIPLIER}x</span>
             </div>
           </div>
         </section>

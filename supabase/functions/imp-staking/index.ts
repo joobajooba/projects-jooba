@@ -39,6 +39,8 @@ const BASE_IMPCOIN_PER_DAY = 5;
 const ALIGNMENT_BONUS_PER_KEEP = 2;
 const ROBINS_LAIR_MULTIPLIER = 1.5;
 const ROBINS_LAIR_TILESET = "robins_lair";
+const VOID_MULTIPLIER = 1.25;
+const VOID_TILESET = "void";
 const ALIGN_ALL_BODIES = new Set(["Gold", "Diamond"]);
 const CANVASES: Record<string, { keepCount: number; keepSlots: string[] }> = {
   pair: { keepCount: 1, keepSlots: ["right"] },
@@ -51,7 +53,7 @@ const ALIGNMENTS: Record<string, string[]> = {
   Khaki: ["desert", "limestone", "plains"],
   Blue: ["icy", "clouds", "storm"],
   Cyan: ["mossy", "storm", "icy"],
-  Purple: ["dreamcore", "shortcake", "void"],
+  Purple: ["dreamcore", "shortcake", "mushroom"],
   Pink: ["mushroom", "shortcake", "underworld"],
   Silver: ["lunar", "castle", "limestone"],
 };
@@ -94,6 +96,10 @@ function isRobinsLair(tileset: string) {
   return tilesetSlug(tileset) === ROBINS_LAIR_TILESET;
 }
 
+function isVoidKeep(tileset: string) {
+  return tilesetSlug(tileset) === VOID_TILESET;
+}
+
 function isAligned(body: string, tileset: string) {
   const slug = tilesetSlug(tileset);
   if (!slug) return false;
@@ -101,10 +107,11 @@ function isAligned(body: string, tileset: string) {
   return (ALIGNMENTS[body] ?? []).includes(slug);
 }
 
-function dailyRateFor(alignedCount: number, hasRobinsLair: boolean) {
+function dailyRateFor(alignedCount: number, hasRobinsLair: boolean, hasVoid: boolean) {
   const raw =
     (BASE_IMPCOIN_PER_DAY + ALIGNMENT_BONUS_PER_KEEP * alignedCount) *
-    (hasRobinsLair ? ROBINS_LAIR_MULTIPLIER : 1);
+    (hasRobinsLair ? ROBINS_LAIR_MULTIPLIER : 1) *
+    (hasVoid ? VOID_MULTIPLIER : 1);
   return Math.round(raw * 10000) / 10000;
 }
 
@@ -119,17 +126,20 @@ function pendingFromStake(stake: StakeRow, now = Date.now()) {
 function estimateStake(body: string, keeps: KeepInput[]) {
   const alignedCount = keeps.filter((keep) => isAligned(body, String(keep.tileset || ""))).length;
   const hasRobinsLair = keeps.some((keep) => isRobinsLair(String(keep.tileset || "")));
-  const dailyRate = dailyRateFor(alignedCount, hasRobinsLair);
+  const hasVoid = keeps.some((keep) => isVoidKeep(String(keep.tileset || "")));
+  const dailyRate = dailyRateFor(alignedCount, hasRobinsLair, hasVoid);
   return {
     alignedCount,
     keepCount: keeps.length,
     hasRobinsLair,
+    hasVoid,
     dailyRate,
     modifiers: {
       base: BASE_IMPCOIN_PER_DAY,
       alignmentBonusPerKeep: ALIGNMENT_BONUS_PER_KEEP,
       alignedCount,
       robinsLairMultiplier: hasRobinsLair ? ROBINS_LAIR_MULTIPLIER : 1,
+      voidMultiplier: hasVoid ? VOID_MULTIPLIER : 1,
       dailyRate,
     },
   };
@@ -137,7 +147,8 @@ function estimateStake(body: string, keeps: KeepInput[]) {
 
 function withPending(stake: StakeRow, now = Date.now()) {
   const pending = pendingFromStake(stake, now);
-  return { ...stake, pending, estimated_payout: pending };
+  const hasVoid = (stake.keeps ?? []).some((keep) => isVoidKeep(String(keep.tileset || "")));
+  return { ...stake, pending, estimated_payout: pending, has_void: hasVoid };
 }
 
 async function ownerOf(contract: string, tokenId: string) {
