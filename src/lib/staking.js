@@ -44,6 +44,14 @@ export const ALIGNMENTS = {
   Diamond: '*',
 };
 
+export const STAKE_DURATIONS = [
+  { id: '7d', label: '7 days', detail: 'Lock for 7 days', days: 7 },
+  { id: '14d', label: '2 weeks', detail: 'Lock for 14 days', days: 14 },
+  { id: '30d', label: '1 month', detail: 'Lock for 30 days', days: 30 },
+  { id: '60d', label: '2 months', detail: 'Lock for 60 days', days: 60 },
+  { id: '90d', label: '3 months', detail: 'Lock for 90 days', days: 90 },
+];
+
 export const CANVAS_LAYOUTS = {
   pair: {
     id: 'pair',
@@ -130,6 +138,35 @@ export function canvasById(canvasId) {
   return CANVAS_LAYOUTS[canvasId] ?? CANVAS_LAYOUTS.pair;
 }
 
+export function durationById(durationId) {
+  return STAKE_DURATIONS.find((option) => option.id === durationId) || STAKE_DURATIONS[0];
+}
+
+export function durationLabel(durationId, durationDays) {
+  const option = STAKE_DURATIONS.find((item) => item.id === durationId);
+  if (option) return option.label;
+  if (durationId === 'open') return 'Open';
+  const days = Number(durationDays);
+  if (Number.isFinite(days) && days > 0) return `${days} day${days === 1 ? '' : 's'}`;
+  return 'Lock';
+}
+
+export function stakeUnlocksAt(stake) {
+  const unlocks = new Date(stake?.unlocks_at || 0).getTime();
+  return Number.isFinite(unlocks) ? unlocks : 0;
+}
+
+export function isStakeLocked(stake, now = Date.now()) {
+  return stakeUnlocksAt(stake) > now;
+}
+
+export function estimatedLockPayout(dailyRate, days) {
+  const rate = Number(dailyRate) || 0;
+  const length = Number(days) || 0;
+  if (rate <= 0 || length <= 0) return 0;
+  return Math.max(0, Math.floor(rate * length));
+}
+
 export function dailyRateFor({ alignedCount = 0, hasRobinsLair = false, hasVoid = false } = {}) {
   const raw =
     (BASE_IMPCOIN_PER_DAY + ALIGNMENT_BONUS_PER_KEEP * Number(alignedCount || 0)) *
@@ -181,6 +218,16 @@ export function formatStakedFor(ms) {
   const minutes = Math.floor((total % 3600) / 60);
   if (hours > 0) return `${hours}h ${minutes}m staked`;
   return `${Math.max(1, minutes)}m staked`;
+}
+
+export function formatLockRemaining(ms) {
+  const total = Math.max(0, Math.ceil(Number(ms) / 1000));
+  const days = Math.floor(total / 86400);
+  const hours = Math.floor((total % 86400) / 3600);
+  if (days > 0) return `${days}d ${hours}h left`;
+  const minutes = Math.floor((total % 3600) / 60);
+  if (hours > 0) return `${hours}h ${minutes}m left`;
+  return `${Math.max(1, minutes)}m left`;
 }
 
 export function shortAddress(address) {

@@ -55,6 +55,13 @@ const CANVASES: Record<string, { keepCount: number; keepSlots: string[] }> = {
   cross: { keepCount: 4, keepSlots: ["north", "east", "south", "west"] },
   nine: { keepCount: 8, keepSlots: ["nw", "north", "ne", "west", "east", "sw", "south", "se"] },
 };
+const STAKE_DURATIONS: Record<string, { id: string; days: number }> = {
+  "7d": { id: "7d", days: 7 },
+  "14d": { id: "14d", days: 14 },
+  "30d": { id: "30d", days: 30 },
+  "60d": { id: "60d", days: 60 },
+  "90d": { id: "90d", days: 90 },
+};
 const ALIGNMENTS: Record<string, string[]> = {
   Red: ["underworld", "volcano", "the_vault"],
   Green: ["plains", "forgotten_ruins", "mushroom"],
@@ -355,9 +362,11 @@ Deno.serve(async (request: Request) => {
     if (action === "stake") {
       const canvasId = String(body.canvasId ?? "");
       const canvas = CANVASES[canvasId];
+      const duration = STAKE_DURATIONS[String(body.durationId ?? "")];
       const impTokenId = String(body.impTokenId ?? "");
       const keeps = Array.isArray(body.keeps) ? (body.keeps as KeepInput[]) : [];
       if (!canvas) return json({ error: "Choose a canvas." }, 400);
+      if (!duration) return json({ error: "Choose a lock of 7 days, 2 weeks, 1 month, 2 months, or 3 months." }, 400);
       if (!/^\d+$/.test(impTokenId)) return json({ error: "Choose an Imp to stake." }, 400);
       if (keeps.length !== canvas.keepCount) {
         return json({ error: `This canvas needs ${canvas.keepCount} Keep${canvas.keepCount === 1 ? "" : "s"}.` }, 400);
@@ -372,6 +381,7 @@ Deno.serve(async (request: Request) => {
           walletAddress,
           action: "stake",
           canvasId,
+          durationId: duration.id,
           impTokenId,
           keepKeys,
           nonce,
@@ -424,6 +434,7 @@ Deno.serve(async (request: Request) => {
       const tier = impTier(impTokenId);
       const estimate = estimateStake(bodyColor, normalizedKeeps);
       const startedAt = new Date();
+      const unlocksAt = new Date(startedAt.getTime() + duration.days * 86_400_000);
       const canvasImage = String(body.canvasImage || "");
       const storedImage = canvasImage.startsWith("data:image/") && canvasImage.length <= 350000 ? canvasImage : "";
 
@@ -432,8 +443,8 @@ Deno.serve(async (request: Request) => {
         .insert({
           wallet_address: walletAddress,
           canvas_id: canvasId,
-          duration_id: "open",
-          duration_days: 1,
+          duration_id: duration.id,
+          duration_days: duration.days,
           imp_contract: IMPLINGZ_ADDRESS.toLowerCase(),
           imp_token_id: impTokenId,
           imp_body: bodyColor,
@@ -448,7 +459,7 @@ Deno.serve(async (request: Request) => {
           stake_signature: signature,
           status: "active",
           started_at: startedAt.toISOString(),
-          unlocks_at: startedAt.toISOString(),
+          unlocks_at: unlocksAt.toISOString(),
           daily_rate: estimate.dailyRate,
           last_accrued_at: startedAt.toISOString(),
           has_robins_lair: estimate.hasRobinsLair,
@@ -511,6 +522,11 @@ Deno.serve(async (request: Request) => {
       if (stakeError) throw stakeError;
       if (!stake || stake.status !== "active") {
         return json({ error: "This stake is no longer active." }, 400);
+      }
+
+      const unlocksAt = new Date(String(stake.unlocks_at || 0)).getTime();
+      if (Number.isFinite(unlocksAt) && unlocksAt > Date.now()) {
+        return json({ error: "This squad is still locked. Unstake when the lock ends." }, 400);
       }
 
       const owned = await stillOwned(walletAddress, stake as StakeRow);

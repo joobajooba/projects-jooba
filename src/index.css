@@ -4865,7 +4865,7 @@ button:active:not(:disabled),
 
 .staking-durations {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0.65rem;
   margin-top: 0.85rem;
 }
@@ -4874,6 +4874,7 @@ button:active:not(:disabled),
   appearance: none;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 0.2rem;
   padding: 0.85rem 0.7rem;
   border: 2px solid rgba(255, 255, 255, 0.16);
@@ -4881,6 +4882,7 @@ button:active:not(:disabled),
   background: rgba(0, 0, 0, 0.22);
   color: #f0f0f0;
   font: inherit;
+  text-align: center;
   cursor: pointer;
 }
 
@@ -4971,6 +4973,11 @@ button:active:not(:disabled),
   background: rgba(255, 80, 80, 0.16);
   color: #ffd4d4;
   cursor: pointer;
+}
+
+.staking-summary__action--danger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .staking-status {
@@ -5074,6 +5081,12 @@ button:active:not(:disabled),
   color: #f5f5f5;
   font: inherit;
   cursor: pointer;
+}
+
+@media (max-width: 1100px) {
+  .staking-durations {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 900px) {

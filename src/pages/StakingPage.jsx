@@ -11,18 +11,25 @@ import {
   BASE_IMPCOIN_PER_DAY,
   CANVAS_LAYOUTS,
   canvasById,
+  durationById,
+  durationLabel,
+  estimatedLockPayout,
   estimateStake,
   formatImpCoin,
+  formatLockRemaining,
   formatRate,
   formatStakedFor,
   isAlignedPair,
   isRobinsLair,
+  isStakeLocked,
   isVoidKeep,
   keepsHaveRobinsLair,
   keepsHaveVoid,
   pendingFromStake,
   ROBINS_LAIR_MULTIPLIER,
+  STAKE_DURATIONS,
   STAKING_IMPLINGZ_ADDRESS,
+  stakeUnlocksAt,
   tokenKey,
   VOID_MULTIPLIER,
 } from '../lib/staking';
@@ -152,6 +159,7 @@ export default function StakingPage() {
   const [stakes, setStakes] = useState([]);
   const [stateError, setStateError] = useState('');
   const [canvasId, setCanvasId] = useState('pair');
+  const [durationId, setDurationId] = useState('7d');
   const [selectedImpId, setSelectedImpId] = useState('');
   const [keepSlots, setKeepSlots] = useState({});
   const [busy, setBusy] = useState('');
@@ -160,6 +168,7 @@ export default function StakingPage() {
   const [confirmStake, setConfirmStake] = useState(null);
 
   const layout = canvasById(canvasId);
+  const duration = durationById(durationId);
   const selectedImp = ownedImplingz.find((imp) => imp.id === selectedImpId) ?? null;
   const selectedKeeps = useMemo(
     () => keepsFromSlots(layout, keepSlots, ownedKeeps),
@@ -309,6 +318,7 @@ export default function StakingPage() {
       const message = buildStakeMessage({
         walletAddress: walletAccount,
         canvasId,
+        durationId: duration.id,
         impTokenId: selectedImp.id,
         keepKeys,
         nonce,
@@ -330,6 +340,7 @@ export default function StakingPage() {
       const result = await submitStake({
         walletAddress: walletAccount,
         canvasId,
+        durationId: duration.id,
         impTokenId: selectedImp.id,
         impImage: selectedImp.image,
         keeps: layout.keepSlots.map((slot) => ({ ...keepsBySlot[slot], slot })),
@@ -339,7 +350,9 @@ export default function StakingPage() {
       });
       setStakes((current) => [result.stake, ...current.filter((item) => item.id !== result.stake.id)]);
       setKeepSlots({});
-      setStatus(`Staked. Accruing ${formatRate(result.stake?.daily_rate || estimate.dailyRate)}.`);
+      setStatus(
+        `Staked for ${durationLabel(result.stake?.duration_id, result.stake?.duration_days)}. Accruing ${formatRate(result.stake?.daily_rate || estimate.dailyRate)}.`
+      );
     } catch (error) {
       setStatus(
         error?.code === 4001
@@ -352,6 +365,11 @@ export default function StakingPage() {
   }
 
   async function signUnstake(stake) {
+    if (isStakeLocked(stake, Date.now())) {
+      setStatus(`This squad is locked for ${formatLockRemaining(stakeUnlocksAt(stake) - Date.now())}.`);
+      setConfirmStake(null);
+      return;
+    }
     setBusy(`unstake:${stake.id}`);
     setStatus('Unstaking…');
     try {
@@ -427,10 +445,10 @@ export default function StakingPage() {
           <p className="adventures-page__eyebrow">ImpCoin</p>
           <h1 className="adventures-page__title">Staking</h1>
           <p className="adventures-page__intro">
-            Pair an Imp with Keeps. NFTs stay in your wallet. Sign to stake, then ImpCoin accrues
-            while the squad is staked. Matching Body colour to Keep environment adds ImpCoin. Void is
-            a {VOID_MULTIPLIER}x bonus for any Imp. Robin&apos;s Lair is a {ROBINS_LAIR_MULTIPLIER}x
-            bonus for any Imp.
+            Pair an Imp with Keeps, then choose a lock. NFTs stay in your wallet. ImpCoin accrues
+            while the squad is staked, and you can unstake when the lock ends. Matching Body colour to
+            Keep environment adds ImpCoin. Void is a {VOID_MULTIPLIER}x bonus for any Imp. Robin&apos;s
+            Lair is a {ROBINS_LAIR_MULTIPLIER}x bonus for any Imp.
           </p>
         </header>
 
@@ -466,12 +484,16 @@ export default function StakingPage() {
             <div className="staking-panel__header">
               <p className="adventure-panel__eyebrow">Staked squads</p>
               <h2>Active stakes</h2>
-              <p>NFTs stay in the wallet while ImpCoin accrues.</p>
+              <p>NFTs stay in the wallet while ImpCoin accrues. Unstake when the lock ends.</p>
             </div>
             <div className="staking-active">
               {activeStakes.map((stake) => {
                 const pending = Number(stake.pending ?? pendingFromStake(stake, now));
                 const stakedFor = formatStakedFor(now - new Date(stake.started_at).getTime());
+                const locked = isStakeLocked(stake, now);
+                const lockCopy = locked
+                  ? formatLockRemaining(stakeUnlocksAt(stake) - now)
+                  : 'Ready to unstake';
                 const stakeLayout = canvasById(stake.canvas_id);
                 const stakeKeeps = Object.fromEntries(
                   (stake.keeps || []).map((keep) => [keep.slot, keep])
@@ -504,8 +526,10 @@ export default function StakingPage() {
                         {keepsHaveRobinsLair(stake.keeps) ? ` · Robin's Lair ${ROBINS_LAIR_MULTIPLIER}x` : ''}
                       </p>
                       <p>
-                        {stakedFor} · {formatImpCoin(pending)} pending
+                        {durationLabel(stake.duration_id, stake.duration_days)} · {stakedFor} ·{' '}
+                        {formatImpCoin(pending)} pending
                       </p>
+                      <p>{lockCopy}</p>
                       <div className="staking-active__actions">
                         <button
                           type="button"
@@ -518,10 +542,10 @@ export default function StakingPage() {
                         <button
                           type="button"
                           className="staking-summary__action staking-summary__action--danger"
-                          disabled={Boolean(busy)}
+                          disabled={Boolean(busy) || locked}
                           onClick={() => setConfirmStake(stake)}
                         >
-                          Unstake
+                          {locked ? lockCopy : 'Unstake'}
                         </button>
                       </div>
                     </div>
@@ -646,12 +670,36 @@ export default function StakingPage() {
           </section>
         </div>
 
+        <section className="staking-panel staking-panel--wide">
+          <div className="staking-panel__header">
+            <p className="adventure-panel__eyebrow">Step 4</p>
+            <h2>Choose a lock</h2>
+            <p>
+              The squad stays staked until this lock ends. Transferring a staked NFT still burns
+              pending ImpCoin.
+            </p>
+          </div>
+          <div className="staking-durations">
+            {STAKE_DURATIONS.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                className={`staking-duration${durationId === option.id ? ' staking-duration--selected' : ''}`}
+                onClick={() => setDurationId(option.id)}
+              >
+                <strong>{option.label}</strong>
+                <span>{option.detail}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+
         <section className="staking-summary">
           <div className="staking-summary__copy">
             <p className="adventure-panel__eyebrow">Daily rate</p>
             <h2>{selectedImp ? formatRate(estimate.dailyRate) : 'Pick an Imp'}</h2>
             <p>
-              {selectedImp ? `${selectedImp.name} · ${layout.title}` : 'Choose a canvas, Imp, and Keeps.'}
+              {selectedImp ? `${selectedImp.name} · ${layout.title} · ${duration.label}` : 'Choose a canvas, Imp, Keeps, and lock.'}
               {selectedKeeps.length
                 ? ` · ${estimate.alignedCount}/${selectedKeeps.length} aligned`
                 : ''}
@@ -678,11 +726,17 @@ export default function StakingPage() {
               <span>Robin&apos;s Lair</span>
               <strong>{estimate.hasRobinsLair ? `${ROBINS_LAIR_MULTIPLIER}x` : '—'}</strong>
             </li>
+            <li>
+              <span>Lock</span>
+              <strong>{duration.label}</strong>
+            </li>
           </ul>
           {selectedImp ? (
             <p className="staking-summary__hint">
-              {selectedImp.body} matches {alignmentLabels(selectedImp.body)}. Transferring a staked
-              NFT burns pending ImpCoin from this squad.
+              {selectedImp.body} matches {alignmentLabels(selectedImp.body)}. About{' '}
+              {formatImpCoin(estimatedLockPayout(estimate.dailyRate, duration.days))} if this squad
+              stays staked for the full {duration.label.toLowerCase()}. Transferring a staked NFT
+              burns pending ImpCoin from this squad.
             </p>
           ) : null}
           <button
