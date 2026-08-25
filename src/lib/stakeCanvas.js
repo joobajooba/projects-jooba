@@ -99,3 +99,42 @@ export async function composeStakeCanvas({
 
   return board.toDataURL('image/jpeg', 0.84);
 }
+
+export function downloadPngFromImageSrc(src, filename) {
+  return new Promise((resolve, reject) => {
+    if (!src) {
+      reject(new Error('No canvas image to download.'));
+      return;
+    }
+    const image = new Image();
+    image.crossOrigin = 'anonymous';
+    image.onload = () => {
+      const board = document.createElement('canvas');
+      board.width = image.naturalWidth || image.width;
+      board.height = image.naturalHeight || image.height;
+      const ctx = board.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Canvas is unavailable.'));
+        return;
+      }
+      ctx.drawImage(image, 0, 0);
+      board.toBlob((blob) => {
+        if (!blob) {
+          reject(new Error('Could not export PNG.'));
+          return;
+        }
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        resolve();
+      }, 'image/png');
+    };
+    image.onerror = () => reject(new Error('Could not load the canvas image.'));
+    image.src = src;
+  });
+}

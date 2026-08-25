@@ -3,7 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import { useSignMessage } from 'wagmi';
 import collection from '../data/collection.json';
 import { resolveImplingTier } from '../lib/hashMining';
-import { composeStakeCanvas } from '../lib/stakeCanvas';
+import { composeStakeCanvas, downloadPngFromImageSrc } from '../lib/stakeCanvas';
 import {
   ALIGNMENTS,
   ALIGNMENT_BONUS_PER_KEEP,
@@ -391,6 +391,33 @@ export default function StakingPage() {
     }
   }
 
+  async function downloadStakePng(stake) {
+    setBusy(`png:${stake.id}`);
+    setStatus('Preparing PNG…');
+    try {
+      const keepsBySlot = Object.fromEntries((stake.keeps || []).map((keep) => [keep.slot, keep]));
+      const alignedSlots = new Set(
+        (stake.keeps || [])
+          .filter((keep) => isAlignedPair(stake.imp_body, keep.tileset))
+          .map((keep) => keep.slot)
+      );
+      const src =
+        stake.canvas_image ||
+        (await composeStakeCanvas({
+          canvasId: stake.canvas_id,
+          imp: { name: `IMPLINGZ #${stake.imp_token_id}`, image: stake.imp_image },
+          keepsBySlot,
+          alignedSlots,
+        }));
+      await downloadPngFromImageSrc(src, `implingz-stake-${stake.imp_token_id}.png`);
+      setStatus('Canvas PNG saved.');
+    } catch (error) {
+      setStatus(error?.message || 'Could not download the canvas PNG.');
+    } finally {
+      setBusy('');
+    }
+  }
+
   const activeStakes = stakes.filter((stake) => stake.status === 'active');
 
   return (
@@ -401,8 +428,8 @@ export default function StakingPage() {
           <h1 className="adventures-page__title">Staking</h1>
           <p className="adventures-page__intro">
             Pair an Imp with Keeps. NFTs stay in your wallet. Sign to stake, then ImpCoin accrues
-            until you unstake. Matching Body colour to Keep environment adds ImpCoin. Void is a{' '}
-            {VOID_MULTIPLIER}x bonus for any Imp. Robin&apos;s Lair is a {ROBINS_LAIR_MULTIPLIER}x
+            while the squad is staked. Matching Body colour to Keep environment adds ImpCoin. Void is
+            a {VOID_MULTIPLIER}x bonus for any Imp. Robin&apos;s Lair is a {ROBINS_LAIR_MULTIPLIER}x
             bonus for any Imp.
           </p>
         </header>
@@ -415,7 +442,7 @@ export default function StakingPage() {
           </div>
           <p>
             ImpCoin is an in-game balance, not an on-chain token. Transferring a staked NFT burns
-            pending ImpCoin from that squad. Unstake to claim what has accrued.
+            pending ImpCoin from that squad.
           </p>
         </section>
 
@@ -439,7 +466,7 @@ export default function StakingPage() {
             <div className="staking-panel__header">
               <p className="adventure-panel__eyebrow">Staked squads</p>
               <h2>Active stakes</h2>
-              <p>NFTs stay in the wallet. Unstake to finish the stake and claim accrued ImpCoin.</p>
+              <p>NFTs stay in the wallet while ImpCoin accrues.</p>
             </div>
             <div className="staking-active">
               {activeStakes.map((stake) => {
@@ -480,6 +507,14 @@ export default function StakingPage() {
                         {stakedFor} · {formatImpCoin(pending)} pending
                       </p>
                       <div className="staking-active__actions">
+                        <button
+                          type="button"
+                          className="staking-summary__action staking-summary__action--live"
+                          disabled={Boolean(busy)}
+                          onClick={() => downloadStakePng(stake)}
+                        >
+                          {busy === `png:${stake.id}` ? 'Saving…' : 'Download PNG'}
+                        </button>
                         <button
                           type="button"
                           className="staking-summary__action staking-summary__action--danger"
@@ -646,8 +681,8 @@ export default function StakingPage() {
           </ul>
           {selectedImp ? (
             <p className="staking-summary__hint">
-              {selectedImp.body} matches {alignmentLabels(selectedImp.body)}. Unstake to claim
-              accrued ImpCoin. Transferring a staked NFT burns pending ImpCoin from this squad.
+              {selectedImp.body} matches {alignmentLabels(selectedImp.body)}. Transferring a staked
+              NFT burns pending ImpCoin from this squad.
             </p>
           ) : null}
           <button
