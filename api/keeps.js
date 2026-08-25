@@ -91,15 +91,18 @@ function withTimeout(promise, ms, label) {
   ]);
 }
 
-async function fetchJson(url, timeoutMs = 8000) {
-  const response = await fetch(url, {
-    headers: BLOCKSCOUT_HEADERS,
-    signal: AbortSignal.timeout(timeoutMs),
-  });
-  if (!response.ok) {
-    throw new Error(`Blockscout returned ${response.status}.`);
-  }
-  return response.json();
+async function fetchJson(url, timeoutMs = 4000) {
+  return withTimeout(
+    (async () => {
+      const response = await fetch(url, { headers: BLOCKSCOUT_HEADERS });
+      if (!response.ok) {
+        throw new Error(`Blockscout returned ${response.status}.`);
+      }
+      return response.json();
+    })(),
+    timeoutMs,
+    'blockscout'
+  );
 }
 
 function applyNextPage(url, nextPageParams) {
@@ -111,7 +114,7 @@ function applyNextPage(url, nextPageParams) {
 }
 
 async function paginateV2(url, onItem) {
-  for (let page = 0; page < 20; page += 1) {
+  for (let page = 0; page < 8; page += 1) {
     const data = await fetchJson(url);
     for (const item of data.items ?? []) onItem(item);
     if (!data.next_page_params) break;
@@ -245,42 +248,25 @@ async function fetchOwnedFromTransfers(owner, contract) {
   return owned;
 }
 
-async function lookupOwned(client, owner, contract) {
-  const owned = new Set();
-
+async function lookupOwned(owner, contract) {
   try {
-    const verified = await ownerOfIds(client, owner, contract, [
-      ...(await fetchOwnedFromInstances(owner, contract)),
-    ]);
-    for (const id of verified) owned.add(id);
-    if (owned.size > 0) return owned;
+    const ids = await fetchOwnedFromInstances(owner, contract);
+    if (ids.size > 0) return ids;
   } catch (error) {
     console.error('keep holder index failed', contract, error);
   }
-
   try {
-    const extras = await withTimeout(
-      Promise.allSettled([
-        fetchOwnedFromTransfers(owner, contract),
-        fetchOwnedFromInventory(owner, contract),
-      ]),
-      5000,
-      'keep explorer fill'
-    );
-    const ids = [];
-    for (const result of extras) {
-      if (result.status === 'fulfilled') ids.push(...result.value);
-    }
-    const fresh = ids.filter((id) => !owned.has(String(id)));
-    if (fresh.length > 0) {
-      const verified = await ownerOfIds(client, owner, contract, fresh);
-      for (const id of verified) owned.add(id);
-    }
+    const ids = await withTimeout(fetchOwnedFromInventory(owner, contract), 4000, 'keep inventory');
+    if (ids.size > 0) return ids;
   } catch (error) {
-    console.error('keep explorer fill skipped', contract, error);
+    console.error('keep inventory lookup skipped', contract, error);
   }
-
-  return owned;
+  try {
+    return await withTimeout(fetchOwnedFromTransfers(owner, contract), 4000, 'keep transfers');
+  } catch (error) {
+    console.error('keep transfer lookup skipped', contract, error);
+  }
+  return new Set();
 }
 
 async function enrichKeeps(client, collection, tokenIds) {
@@ -335,11 +321,33 @@ async function enrichKeeps(client, collection, tokenIds) {
 
 async function loadCollection(client, owner, collection) {
   try {
-    const balance = await fetchBalance(client, owner, collection.address).catch(() => null);
-    if (balance != null && BigInt(balance) === 0n) return [];
-
-    const ownedIds = [...(await lookupOwned(client, owner, collection.address))];
-    return enrichKeeps(client, collection, ownedIds);
+    return await withTimeout(
+      (async () => {
+        const balance = await fetchBalance(client, owner, collection.address).catch(() => null);
+        if (balance != null && BigInt(balance) === 0n) return [];
+        const ownedIds = [...(await lookupOwned(owner, collection.address))];
+        if (ownedIds.length === 0) return [];
+        try {
+          return await withTimeout(enrichKeeps(client, collection, ownedIds), 3000, 'keep enrich');
+        } catch (error) {
+          console.error(`Keep trait enrich skipped for ${collection.version}`, error);
+          return ownedIds.map((tokenId) => ({
+            id: tokenId,
+            name: `${collection.namePrefix} #${tokenId}`,
+            image: '',
+            seed: '',
+            tileset: '',
+            biome: 'Unknown',
+            dungeonType: '',
+            miniBoss: '',
+            contract: collection.address,
+            version: collection.version,
+          }));
+        }
+      })(),
+      8000,
+      `load ${collection.version}`
+    );
   } catch (error) {
     console.error(`Failed to load ${collection.version} Imp Keeps`, error);
     return [];
