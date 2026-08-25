@@ -259,20 +259,30 @@ export default function StakingPage() {
         }
       });
 
-    const implingzRequest = fetch(`/api/implingz?owner=${encodeURIComponent(walletAccount)}`, {
-      signal: controller.signal,
-      cache: 'no-store',
-    })
-      .then(async (response) => {
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data.error || 'Could not load your IMPLINGz.');
-        return mapOwnedImplingz(data.items ?? []);
-      })
+    const loadImplingz = async () => {
+      let lastError = new Error('Could not load your IMPLINGz.');
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        if (controller.signal.aborted) return [];
+        try {
+          const response = await fetch(`/api/implingz?owner=${encodeURIComponent(walletAccount)}`, {
+            signal: controller.signal,
+            cache: 'no-store',
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(data.error || 'Could not load your IMPLINGz.');
+          return mapOwnedImplingz(data.items ?? []);
+        } catch (error) {
+          if (error?.name === 'AbortError') throw error;
+          lastError = error instanceof Error ? error : lastError;
+          if (attempt === 0) await new Promise((resolve) => window.setTimeout(resolve, 600));
+        }
+      }
+      throw lastError;
+    };
+
+    const implingzRequest = loadImplingz()
       .then((implingz) => {
         setOwnedImplingz(implingz);
-        setSelectedImpId((current) =>
-          implingz.some((imp) => imp.id === current) ? current : implingz[0]?.id || ''
-        );
       })
       .catch((error) => {
         if (error.name !== 'AbortError') {
@@ -627,24 +637,35 @@ export default function StakingPage() {
                 {nftError}
               </p>
             ) : null}
-            {!loadingNfts && walletAccount && availableImps.length === 0 ? (
-              <p className="staking-panel__message">No free IMPLINGz in this wallet.</p>
+            {!loadingNfts && walletAccount && ownedImplingz.length === 0 ? (
+              <p className="staking-panel__message">No IMPLINGz in this wallet.</p>
+            ) : null}
+            {!loadingNfts && walletAccount && ownedImplingz.length > 0 && availableImps.length === 0 ? (
+              <p className="staking-panel__message">All IMPLINGz in this wallet are already staked.</p>
             ) : null}
             <div className="staking-grid">
-              {availableImps.map((imp) => (
-                <button
-                  key={imp.id}
-                  type="button"
-                  className={`staking-card${selectedImpId === imp.id ? ' staking-card--selected' : ''}`}
-                  onClick={() => setSelectedImpId(imp.id)}
-                >
-                  {imp.image ? <img src={imp.image} alt={imp.name} /> : null}
-                  <span className="staking-card__name">{imp.name}</span>
-                  <span className="staking-card__meta">
-                    {imp.body} · {imp.tier}
-                  </span>
-                </button>
-              ))}
+              {ownedImplingz.map((imp) => {
+                const staked = lockedKeys.has(tokenKey(imp.contract, imp.id));
+                return (
+                  <button
+                    key={imp.id}
+                    type="button"
+                    className={`staking-card${selectedImpId === imp.id ? ' staking-card--selected' : ''}${
+                      staked ? ' staking-card--staked' : ''
+                    }`}
+                    disabled={staked}
+                    onClick={() => {
+                      if (!staked) setSelectedImpId(imp.id);
+                    }}
+                  >
+                    {imp.image ? <img src={imp.image} alt={imp.name} /> : null}
+                    <span className="staking-card__name">{imp.name}</span>
+                    <span className="staking-card__meta">
+                      {staked ? 'Already staked' : `${imp.body} · ${imp.tier}`}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </section>
 

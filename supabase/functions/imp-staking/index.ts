@@ -327,25 +327,9 @@ Deno.serve(async (request: Request) => {
       ]);
       if (stakeError) throw stakeError;
       const now = Date.now();
-      const decorated: ReturnType<typeof withPending>[] = [];
-      for (const row of (stakes ?? []) as StakeRow[]) {
-        if (row.status === "active") {
-          try {
-            if (!(await stillOwned(wallet, row))) {
-              await slashStake(row);
-              decorated.push(withPending({ ...row, status: "slashed" }, now));
-              continue;
-            }
-          } catch (error) {
-            if (Number((error as { status?: number })?.status) === 503) {
-              decorated.push(withPending(row, now));
-              continue;
-            }
-            throw error;
-          }
-        }
-        decorated.push(withPending(row, now));
-      }
+      // Ownership slash checks run on unstake. Doing them on every wallet load
+      // times out for large squads and blanks the staking page.
+      const decorated = ((stakes ?? []) as StakeRow[]).map((row) => withPending(row, now));
       return json({
         balance: Number(balance?.balance ?? 0),
         lifetimeEarned: Number(balance?.lifetime_earned ?? 0),
