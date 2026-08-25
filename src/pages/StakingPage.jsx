@@ -296,6 +296,7 @@ export default function StakingPage() {
   }, [walletAccount]);
 
   function toggleKeep(keep) {
+    if (lockedKeys.has(keep.key)) return;
     setKeepSlots((current) => {
       const already = Object.entries(current).find(([, key]) => key === keep.key);
       if (already) {
@@ -647,32 +648,41 @@ export default function StakingPage() {
                 rings mark a Body / Environment match.
               </p>
             </div>
-            {!loadingNfts && walletAccount && availableKeeps.length === 0 ? (
-              <p className="staking-panel__message">No free Imp Keeps in this wallet.</p>
+            {!loadingNfts && walletAccount && ownedKeeps.length === 0 ? (
+              <p className="staking-panel__message">No Imp Keeps in this wallet.</p>
+            ) : null}
+            {!loadingNfts && walletAccount && ownedKeeps.length > 0 && availableKeeps.length === 0 ? (
+              <p className="staking-panel__message">All Imp Keeps in this wallet are already staked.</p>
             ) : null}
             <div className="staking-grid">
-              {availableKeeps.map((keep) => {
+              {ownedKeeps.map((keep) => {
                 const aligned = selectedImp ? isAlignedPair(selectedImp.body, keep.tileset) : false;
                 const robin = isRobinsLair(keep.tileset);
                 const voidKeep = isVoidKeep(keep.tileset);
                 const selected = Object.values(keepSlots).includes(keep.key);
+                const staked = lockedKeys.has(keep.key);
                 return (
                   <button
                     key={keep.key}
                     type="button"
                     className={`staking-card${selected ? ' staking-card--selected' : ''}${
-                      aligned ? ' staking-card--aligned' : ''
-                    }${robin ? ' staking-card--robin' : ''}${voidKeep ? ' staking-card--void' : ''}`}
+                      aligned && !staked ? ' staking-card--aligned' : ''
+                    }${robin && !staked ? ' staking-card--robin' : ''}${
+                      voidKeep && !staked ? ' staking-card--void' : ''
+                    }${staked ? ' staking-card--staked' : ''}`}
+                    disabled={staked}
                     onClick={() => toggleKeep(keep)}
                   >
                     {keep.image ? <img src={keep.image} alt={`${keep.name} ${keep.biome}`} /> : null}
                     <span className="staking-card__name">{keep.name}</span>
                     <span className="staking-card__meta">
-                      {keep.biome || keep.tileset}
-                      {keep.version === 'v2' ? ' · v2' : ''}
-                      {aligned ? ' · aligned' : ''}
-                      {voidKeep ? ` · ${VOID_MULTIPLIER}x` : ''}
-                      {robin ? ` · ${ROBINS_LAIR_MULTIPLIER}x` : ''}
+                      {staked
+                        ? 'Already staked'
+                        : `${keep.biome || keep.tileset}${keep.version === 'v2' ? ' · v2' : ''}${
+                            aligned ? ' · aligned' : ''
+                          }${voidKeep ? ` · ${VOID_MULTIPLIER}x` : ''}${
+                            robin ? ` · ${ROBINS_LAIR_MULTIPLIER}x` : ''
+                          }`}
                     </span>
                   </button>
                 );

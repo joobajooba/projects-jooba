@@ -15,7 +15,8 @@
       "includeFiles": "{api/_lib/**}"
     },
     "api/keeps.js": {
-      "includeFiles": "{api/_lib/**}"
+      "includeFiles": "{api/_lib/**}",
+      "maxDuration": 20
     },
     "api/keep-v2.js": {
       "includeFiles": "{api/_lib/**}"

@@ -1,4 +1,4 @@
-import { createPublicClient, http } from 'viem';
+import { createPublicClient, defineChain, http } from 'viem';
 import { optionsFromSeed } from './_lib/dungeonTraits.js';
 
 const KEEP_COLLECTIONS = [
@@ -13,10 +13,13 @@ const KEEP_COLLECTIONS = [
     namePrefix: 'IMPLINGz Keep',
   },
 ];
+const MULTICALL3_ADDRESS = '0xca11bde05977b3631167028862be2a173976ca11';
 const BLOCKSCOUT_V2 = 'https://robinhoodchain.blockscout.com/api/v2';
 const BLOCKSCOUT_V1 = 'https://robinhoodchain.blockscout.com/api';
 const RPC_URL = 'https://rpc.mainnet.chain.robinhood.com';
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
+const TOTAL_SUPPLY_FALLBACK = 2222;
+const SCAN_CHUNK = 250;
 const BLOCKSCOUT_HEADERS = {
   Accept: 'application/json',
   'User-Agent': 'Mozilla/5.0 (compatible; j00ba.xyz/keep-ownership)',
@@ -24,9 +27,9 @@ const BLOCKSCOUT_HEADERS = {
 const KEEP_ABI = [
   {
     type: 'function',
-    name: 'seedOf',
+    name: 'balanceOf',
     stateMutability: 'view',
-    inputs: [{ name: 'tokenId', type: 'uint256' }],
+    inputs: [{ name: 'owner', type: 'address' }],
     outputs: [{ type: 'uint256' }],
   },
   {
@@ -36,7 +39,30 @@ const KEEP_ABI = [
     inputs: [{ name: 'tokenId', type: 'uint256' }],
     outputs: [{ type: 'address' }],
   },
+  {
+    type: 'function',
+    name: 'seedOf',
+    stateMutability: 'view',
+    inputs: [{ name: 'tokenId', type: 'uint256' }],
+    outputs: [{ type: 'uint256' }],
+  },
+  {
+    type: 'function',
+    name: 'totalSupply',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ type: 'uint256' }],
+  },
 ];
+const ROBINHOOD_CHAIN = defineChain({
+  id: 4663,
+  name: 'Robinhood Chain',
+  nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+  rpcUrls: { default: { http: [RPC_URL] } },
+  contracts: {
+    multicall3: { address: MULTICALL3_ADDRESS },
+  },
+});
 
 function seedHex(value) {
   return `0x${BigInt(value).toString(16).padStart(64, '0')}`;
@@ -49,17 +75,12 @@ function previewUrl(seed, tokenId) {
 
 function createKeepClient() {
   return createPublicClient({
-    chain: {
-      id: 4663,
-      name: 'Robinhood Chain',
-      nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-      rpcUrls: { default: { http: [RPC_URL] } },
-    },
-    transport: http(RPC_URL),
+    chain: ROBINHOOD_CHAIN,
+    transport: http(RPC_URL, { timeout: 15_000 }),
   });
 }
 
-async function fetchJson(url, timeoutMs = 4000) {
+async function fetchJson(url, timeoutMs = 6000) {
   const response = await fetch(url, {
     headers: BLOCKSCOUT_HEADERS,
     signal: AbortSignal.timeout(timeoutMs),
@@ -78,20 +99,96 @@ function applyNextPage(url, nextPageParams) {
   });
 }
 
+async function paginateV2(url, onItem) {
+  for (let page = 0; page < 50; page += 1) {
+    const data = await fetchJson(url);
+    for (const item of data.items ?? []) onItem(item);
+    if (!data.next_page_params) break;
+    applyNextPage(url, data.next_page_params);
+  }
+}
+
+async function fetchBalance(client, owner, contract) {
+  return client.readContract({
+    address: contract,
+    abi: KEEP_ABI,
+    functionName: 'balanceOf',
+    args: [owner],
+  });
+}
+
+async function fetchTotalSupply(client, contract) {
+  try {
+    const supply = await client.readContract({
+      address: contract,
+      abi: KEEP_ABI,
+      functionName: 'totalSupply',
+    });
+    const numeric = Number(supply);
+    return Number.isInteger(numeric) && numeric > 0 ? numeric : TOTAL_SUPPLY_FALLBACK;
+  } catch {
+    return TOTAL_SUPPLY_FALLBACK;
+  }
+}
+
+async function ownerOfIds(client, owner, contract, tokenIds) {
+  const wallet = owner.toLowerCase();
+  const owned = new Set();
+  const ids = tokenIds.map((id) => String(id)).filter((id) => /^\d+$/.test(id));
+
+  for (let start = 0; start < ids.length; start += SCAN_CHUNK) {
+    const slice = ids.slice(start, start + SCAN_CHUNK);
+    const results = await client.multicall({
+      allowFailure: true,
+      contracts: slice.map((id) => ({
+        address: contract,
+        abi: KEEP_ABI,
+        functionName: 'ownerOf',
+        args: [BigInt(id)],
+      })),
+    });
+    const retry = [];
+    results.forEach((row, index) => {
+      const tokenId = slice[index];
+      if (row.status === 'success') {
+        if (String(row.result).toLowerCase() === wallet) owned.add(tokenId);
+        return;
+      }
+      retry.push(tokenId);
+    });
+    if (retry.length === 0) continue;
+    const retries = await Promise.all(
+      retry.map((id) =>
+        client
+          .readContract({
+            address: contract,
+            abi: KEEP_ABI,
+            functionName: 'ownerOf',
+            args: [BigInt(id)],
+          })
+          .then((address) => (String(address).toLowerCase() === wallet ? id : null))
+          .catch(() => null)
+      )
+    );
+    retries.filter(Boolean).forEach((id) => owned.add(id));
+  }
+
+  return owned;
+}
+
+async function fetchOwnedFromChain(client, owner, contract) {
+  const totalSupply = await fetchTotalSupply(client, contract);
+  const ids = Array.from({ length: totalSupply }, (_, index) => String(index + 1));
+  return ownerOfIds(client, owner, contract, ids);
+}
+
 async function fetchOwnedFromInstances(owner, contract) {
   const url = new URL(`${BLOCKSCOUT_V2}/tokens/${contract}/instances`);
   url.searchParams.set('holder_address_hash', owner);
   const tokenIds = new Set();
-
-  for (let page = 0; page < 50; page += 1) {
-    const data = await fetchJson(url, 2500);
-    for (const item of data.items ?? []) {
-      if (item?.id) tokenIds.add(String(item.id));
-    }
-    if (!data.next_page_params) break;
-    applyNextPage(url, data.next_page_params);
-  }
-
+  await paginateV2(url, (item) => {
+    if (item?.id) tokenIds.add(String(item.id));
+  });
   return tokenIds;
 }
 
@@ -100,17 +197,10 @@ async function fetchOwnedFromInventory(owner, contract) {
   url.searchParams.set('type', 'ERC-721');
   const wanted = contract.toLowerCase();
   const tokenIds = new Set();
-
-  for (let page = 0; page < 50; page += 1) {
-    const data = await fetchJson(url, 2500);
-    for (const item of data.items ?? []) {
-      const address = String(item?.token?.address_hash || item?.token?.address || '').toLowerCase();
-      if (address === wanted && item?.id) tokenIds.add(String(item.id));
-    }
-    if (!data.next_page_params) break;
-    applyNextPage(url, data.next_page_params);
-  }
-
+  await paginateV2(url, (item) => {
+    const address = String(item?.token?.address_hash || item?.token?.address || '').toLowerCase();
+    if (address === wanted && item?.id) tokenIds.add(String(item.id));
+  });
   return tokenIds;
 }
 
@@ -127,12 +217,11 @@ async function fetchOwnedFromTransfers(owner, contract) {
     url.searchParams.set('page', String(page));
     url.searchParams.set('offset', '100');
     url.searchParams.set('sort', 'asc');
-    const data = await fetchJson(url, 6000);
+    const data = await fetchJson(url);
     if (!Array.isArray(data.result)) {
       if (data.message === 'No transactions found' || data.status === '0') break;
       throw new Error('Blockscout transfer inventory is unavailable.');
     }
-
     for (const row of data.result) {
       const tokenId = String(row.tokenID ?? '');
       if (!tokenId) continue;
@@ -145,49 +234,47 @@ async function fetchOwnedFromTransfers(owner, contract) {
   return owned;
 }
 
-async function fetchOwnedTokenIds(owner, contract) {
-  const lookups = [
-    (wallet) => fetchOwnedFromTransfers(wallet, contract),
-    (wallet) => fetchOwnedFromInstances(wallet, contract),
-    (wallet) => fetchOwnedFromInventory(wallet, contract),
-  ];
+async function collectCandidateIds(owner, contract) {
+  const results = await Promise.allSettled([
+    fetchOwnedFromInstances(owner, contract),
+    fetchOwnedFromInventory(owner, contract),
+    fetchOwnedFromTransfers(owner, contract),
+  ]);
+  const candidates = new Set();
   let lastError = null;
-  let sawSuccess = false;
-  let empty = new Set();
-
-  for (const lookup of lookups) {
-    try {
-      const tokenIds = await lookup(owner);
-      sawSuccess = true;
-      if (tokenIds.size > 0) return tokenIds;
-      empty = tokenIds;
-    } catch (error) {
-      lastError = error;
+  for (const result of results) {
+    if (result.status === 'fulfilled') {
+      for (const id of result.value) candidates.add(String(id));
+    } else {
+      lastError = result.reason;
     }
   }
-
-  if (!sawSuccess) throw lastError ?? new Error('Could not load wallet Imp Keeps.');
-  return empty;
+  return { candidates, lastError };
 }
 
-async function stillOwnedIds(client, owner, contract, tokenIds) {
-  const wallet = owner.toLowerCase();
-  const rows = await Promise.all(
-    [...tokenIds].map(async (tokenId) => {
-      try {
-        const current = await client.readContract({
-          address: contract,
-          abi: KEEP_ABI,
-          functionName: 'ownerOf',
-          args: [BigInt(tokenId)],
-        });
-        return String(current).toLowerCase() === wallet ? tokenId : null;
-      } catch {
-        return null;
-      }
-    })
-  );
-  return rows.filter(Boolean);
+async function lookupOwned(client, owner, contract, balance) {
+  const expected = balance == null ? null : Number(balance);
+  let owned = new Set();
+  let chainError = null;
+
+  try {
+    owned = await fetchOwnedFromChain(client, owner, contract);
+    if (expected == null || owned.size === expected) return owned;
+  } catch (error) {
+    chainError = error;
+    console.error('keep on-chain ownership scan failed', contract, error);
+  }
+
+  const { candidates, lastError } = await collectCandidateIds(owner, contract);
+  const extraIds = [...candidates].filter((id) => !owned.has(id));
+  if (extraIds.length > 0) {
+    const verified = await ownerOfIds(client, owner, contract, extraIds);
+    for (const id of verified) owned.add(id);
+  }
+
+  if (expected == null || owned.size === expected || owned.size > 0) return owned;
+  if (expected === 0) return owned;
+  throw chainError ?? lastError ?? new Error('Could not load wallet Imp Keeps.');
 }
 
 async function enrichKeep(client, collection, tokenId) {
@@ -230,10 +317,10 @@ async function enrichKeep(client, collection, tokenId) {
 
 async function loadCollection(client, owner, collection) {
   try {
-    const tokenIds = await fetchOwnedTokenIds(owner, collection.address);
-    const ownedIds = tokenIds.size
-      ? await stillOwnedIds(client, owner, collection.address, tokenIds)
-      : [];
+    const balance = await fetchBalance(client, owner, collection.address).catch(() => null);
+    if (balance != null && BigInt(balance) === 0n) return [];
+
+    const ownedIds = [...(await lookupOwned(client, owner, collection.address, balance))];
     return Promise.all(ownedIds.map((tokenId) => enrichKeep(client, collection, tokenId)));
   } catch (error) {
     console.error(`Failed to load ${collection.version} Imp Keeps`, error);
@@ -268,7 +355,7 @@ export default async function handler(request, response) {
       return Number(a.id) - Number(b.id);
     });
 
-    response.setHeader('Cache-Control', 'public, s-maxage=15, stale-while-revalidate=30');
+    response.setHeader('Cache-Control', 'private, no-store');
     return response.status(200).json({
       contracts: collections.map((collection) => collection.address),
       items: keeps,
