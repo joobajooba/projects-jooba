@@ -125,7 +125,7 @@ export default function ProfilePage() {
         setAdventurer(emptyAdventurerAccount(walletAccount.toLowerCase()));
       });
 
-    fetch(`/api/implingz?owner=${encodeURIComponent(walletAccount)}`, {
+    fetch(`/api/implingz?owner=${encodeURIComponent(walletAccount)}&fresh=${Date.now()}`, {
       signal: controller.signal,
       cache: 'no-store',
     })

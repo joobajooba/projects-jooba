@@ -167,6 +167,7 @@ export default function StakingPage() {
   const [status, setStatus] = useState('');
   const [now, setNow] = useState(() => Date.now());
   const [confirmStake, setConfirmStake] = useState(null);
+  const [nftRefresh, setNftRefresh] = useState(0);
 
   const layout = canvasById(canvasId);
   const duration = durationById(durationId);
@@ -218,6 +219,24 @@ export default function StakingPage() {
   }, []);
 
   useEffect(() => {
+    if (!walletAccount) return undefined;
+    let lastRefresh = Date.now();
+    const refreshWalletNfts = () => {
+      if (document.visibilityState !== 'visible') return;
+      const now = Date.now();
+      if (now - lastRefresh < 4000) return;
+      lastRefresh = now;
+      setNftRefresh((value) => value + 1);
+    };
+    document.addEventListener('visibilitychange', refreshWalletNfts);
+    window.addEventListener('focus', refreshWalletNfts);
+    return () => {
+      document.removeEventListener('visibilitychange', refreshWalletNfts);
+      window.removeEventListener('focus', refreshWalletNfts);
+    };
+  }, [walletAccount]);
+
+  useEffect(() => {
     setKeepSlots({});
   }, [canvasId]);
 
@@ -259,18 +278,42 @@ export default function StakingPage() {
         }
       });
 
+    const cacheBust = `fresh=${Date.now()}`;
+    const nftFetch = { signal: controller.signal, cache: 'no-store' };
+
     const loadImplingz = async () => {
       let lastError = new Error('Could not load your IMPLINGz.');
       for (let attempt = 0; attempt < 2; attempt += 1) {
         if (controller.signal.aborted) return [];
         try {
-          const response = await fetch(`/api/implingz?owner=${encodeURIComponent(walletAccount)}`, {
-            signal: controller.signal,
-            cache: 'no-store',
-          });
+          const response = await fetch(
+            `/api/implingz?owner=${encodeURIComponent(walletAccount)}&${cacheBust}`,
+            nftFetch
+          );
           const data = await response.json().catch(() => ({}));
           if (!response.ok) throw new Error(data.error || 'Could not load your IMPLINGz.');
           return mapOwnedImplingz(data.items ?? []);
+        } catch (error) {
+          if (error?.name === 'AbortError') throw error;
+          lastError = error instanceof Error ? error : lastError;
+          if (attempt === 0) await new Promise((resolve) => window.setTimeout(resolve, 600));
+        }
+      }
+      throw lastError;
+    };
+
+    const loadKeeps = async () => {
+      let lastError = new Error('Could not load your Imp Keeps.');
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        if (controller.signal.aborted) return [];
+        try {
+          const response = await fetch(
+            `/api/keeps?owner=${encodeURIComponent(walletAccount)}&all=1&${cacheBust}`,
+            nftFetch
+          );
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(data.error || 'Could not load your Imp Keeps.');
+          return mapOwnedKeeps(data.items ?? []);
         } catch (error) {
           if (error?.name === 'AbortError') throw error;
           lastError = error instanceof Error ? error : lastError;
@@ -290,15 +333,7 @@ export default function StakingPage() {
         }
       });
 
-    const keepsRequest = fetch(`/api/keeps?owner=${encodeURIComponent(walletAccount)}&all=1`, {
-      signal: controller.signal,
-      cache: 'no-store',
-    })
-      .then(async (response) => {
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data.error || 'Could not load your Imp Keeps.');
-        return mapOwnedKeeps(data.items ?? []);
-      })
+    const keepsRequest = loadKeeps()
       .then((keeps) => {
         setOwnedKeeps(keeps);
       })
@@ -313,7 +348,7 @@ export default function StakingPage() {
     });
 
     return () => controller.abort();
-  }, [walletAccount]);
+  }, [walletAccount, nftRefresh]);
 
   function toggleKeep(keep) {
     if (lockedKeys.has(keep.key)) return;
@@ -485,6 +520,16 @@ export default function StakingPage() {
             ImpCoin is an in-game balance, not an on-chain token. Transferring a staked NFT burns
             pending ImpCoin from that squad.
           </p>
+          {walletAccount ? (
+            <button
+              type="button"
+              className="staking-balance__refresh"
+              disabled={loadingNfts}
+              onClick={() => setNftRefresh((value) => value + 1)}
+            >
+              {loadingNfts ? 'Reading wallet…' : 'Refresh wallet NFTs'}
+            </button>
+          ) : null}
         </section>
 
         {!walletAccount ? (
@@ -631,13 +676,13 @@ export default function StakingPage() {
                   : 'One Imp sits at the heart of the canvas.'}
               </p>
             </div>
-            {loadingNfts ? <p className="staking-panel__message">Loading IMPLINGz…</p> : null}
+            {loadingNfts ? <p className="staking-panel__message">Loading IMPLINGz from your wallet…</p> : null}
             {nftError ? (
               <p className="staking-panel__message staking-panel__message--error" role="alert">
                 {nftError}
               </p>
             ) : null}
-            {!loadingNfts && walletAccount && ownedImplingz.length === 0 ? (
+            {!loadingNfts && !nftError && walletAccount && ownedImplingz.length === 0 ? (
               <p className="staking-panel__message">No IMPLINGz in this wallet.</p>
             ) : null}
             {!loadingNfts && walletAccount && ownedImplingz.length > 0 && availableImps.length === 0 ? (
@@ -679,7 +724,8 @@ export default function StakingPage() {
                 rings mark a Body / Environment match.
               </p>
             </div>
-            {!loadingNfts && walletAccount && ownedKeeps.length === 0 ? (
+            {loadingNfts ? <p className="staking-panel__message">Loading Imp Keeps from your wallet…</p> : null}
+            {!loadingNfts && !nftError && walletAccount && ownedKeeps.length === 0 ? (
               <p className="staking-panel__message">No Imp Keeps in this wallet.</p>
             ) : null}
             {!loadingNfts && walletAccount && ownedKeeps.length > 0 && availableKeeps.length === 0 ? (

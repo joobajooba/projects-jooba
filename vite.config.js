@@ -83,6 +83,19 @@ function localAdventureApis() {
           return;
         }
 
+        if (url.pathname === '/api/implingz') {
+          const { default: implingzHandler } = await import('./api/implingz.js');
+          Promise.resolve(
+            implingzHandler(
+              { method: req.method, headers: req.headers, query: Object.fromEntries(url.searchParams) },
+              vercelJson()
+            )
+          ).catch(() => {
+            sendJson(res, 500, { error: 'IMPLINGz lookup failed.' });
+          });
+          return;
+        }
+
         if (url.pathname === '/api/dungeon-preview') {
           const seed = url.searchParams.get('seed') || '42';
           const format = (url.searchParams.get('format') || 'png').toLowerCase();
@@ -153,11 +166,5 @@ export default defineConfig({
   plugins: [react(), localAdventureApis()],
   server: {
     port: 5173,
-    proxy: {
-      '/api/implingz': {
-        target: 'https://j00ba.xyz',
-        changeOrigin: true,
-      },
-    },
   },
 });

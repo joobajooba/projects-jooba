@@ -4598,6 +4598,25 @@ button:active:not(:disabled),
   line-height: 1.5;
 }
 
+.staking-balance__refresh {
+  appearance: none;
+  margin-top: 0.15rem;
+  padding: 0.45rem 0.8rem;
+  border: 2px solid rgba(184, 255, 46, 0.45);
+  border-radius: 2px;
+  background: rgba(184, 255, 46, 0.1);
+  color: #d8ff8a;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.staking-balance__refresh:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 .staking-layout {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
