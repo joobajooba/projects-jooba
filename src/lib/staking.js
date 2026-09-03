@@ -221,12 +221,23 @@ export function estimateStake({ imp, keeps, durationId = '7d' }) {
   };
 }
 
-export function pendingFromStake(stake, now = Date.now()) {
+export function pendingExactFromStake(stake, now = Date.now()) {
   if (!stake || stake.status !== 'active') return 0;
   const last = new Date(stake.last_accrued_at || stake.started_at).getTime();
   const rate = Number(stake.daily_rate ?? 0);
   if (!Number.isFinite(last) || !Number.isFinite(rate) || rate <= 0) return 0;
-  return Math.max(0, Math.floor((rate * (now - last)) / 86_400_000));
+  return Math.max(0, (rate * (now - last)) / 86_400_000);
+}
+
+export function pendingFromStake(stake, now = Date.now()) {
+  return Math.floor(pendingExactFromStake(stake, now));
+}
+
+export function displayPendingAmount(stake, now = Date.now()) {
+  const exact = pendingExactFromStake(stake, now);
+  if (exact <= 0) return 0;
+  if (exact < 1) return Math.round(exact * 10) / 10;
+  return Math.floor(exact);
 }
 
 export function formatImpCoin(amount) {

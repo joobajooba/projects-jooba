@@ -4598,6 +4598,11 @@ button:active:not(:disabled),
   line-height: 1.5;
 }
 
+.staking-balance h2 + p {
+  color: rgba(232, 232, 232, 0.92);
+  font-weight: 700;
+}
+
 .staking-balance__refresh {
   appearance: none;
   margin-top: 0.15rem;
@@ -4984,10 +4989,17 @@ button:active:not(:disabled),
   grid-area: hint;
 }
 
-.staking-summary__action {
+.staking-summary__actions {
   grid-area: action;
-  appearance: none;
+  display: grid;
+  gap: 0.55rem;
+  width: min(100%, 16rem);
   justify-self: center;
+}
+
+.staking-summary__action {
+  appearance: none;
+  width: 100%;
   padding: 0.85rem 1rem;
   border: 2px solid rgba(255, 255, 255, 0.22);
   border-radius: 2px;
@@ -5003,6 +5015,12 @@ button:active:not(:disabled),
   background: #b8ff2e;
   color: #111;
   cursor: pointer;
+}
+
+.staking-summary__action--secondary.staking-summary__action--live {
+  border-color: rgba(184, 255, 46, 0.45);
+  background: rgba(184, 255, 46, 0.14);
+  color: #e8ffb0;
 }
 
 .staking-summary__action--danger {
@@ -5154,7 +5172,8 @@ button:active:not(:disabled),
       'action';
   }
 
-  .staking-summary__action {
+  .staking-summary__actions {
+    width: 100%;
     justify-self: stretch;
   }
 }

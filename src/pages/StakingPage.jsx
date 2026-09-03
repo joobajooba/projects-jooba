@@ -26,7 +26,9 @@ import {
   keepsHaveRobinsLair,
   keepsHaveVoid,
   lockMultiplierFor,
+  pendingExactFromStake,
   pendingFromStake,
+  displayPendingAmount,
   ROBINS_LAIR_MULTIPLIER,
   STAKE_DURATIONS,
   STAKING_IMPLINGZ_ADDRESS,
@@ -212,6 +214,11 @@ export default function StakingPage() {
   const availableKeeps = ownedKeeps.filter((keep) => !lockedKeys.has(keep.key));
   const canStake =
     Boolean(walletAccount && selectedImp && selectedKeeps.length === layout.keepCount && !busy);
+  const canStakeAll = Boolean(walletAccount && availableImps.length > 0 && !busy);
+  const soloLockEstimate = useMemo(
+    () => estimateStake({ imp: availableImps[0] || selectedImp, keeps: [], durationId }),
+    [availableImps, selectedImp, durationId]
+  );
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(Date.now()), 1000);
@@ -365,45 +372,61 @@ export default function StakingPage() {
     });
   }
 
+  async function stakeOneImp({
+    imp,
+    stakeCanvasId,
+    stakeDurationId,
+    keeps,
+    keepsForCanvas,
+    alignedForCanvas,
+  }) {
+    const { nonce } = await requestStakeChallenge(walletAccount);
+    const keepKeys = keeps.map((keep) => tokenKey(keep.contract, keep.id));
+    const message = buildStakeMessage({
+      walletAddress: walletAccount,
+      canvasId: stakeCanvasId,
+      durationId: stakeDurationId,
+      impTokenId: imp.id,
+      keepKeys,
+      nonce,
+    });
+    const signature = await signMessageAsync({ message });
+    let canvasImage = '';
+    try {
+      canvasImage = await composeStakeCanvas({
+        canvasId: stakeCanvasId,
+        imp,
+        keepsBySlot: keepsForCanvas,
+        alignedSlots: alignedForCanvas,
+      });
+    } catch {
+      canvasImage = '';
+    }
+    return submitStake({
+      walletAddress: walletAccount,
+      canvasId: stakeCanvasId,
+      durationId: stakeDurationId,
+      impTokenId: imp.id,
+      impImage: imp.image,
+      keeps,
+      canvasImage,
+      nonce,
+      signature,
+    });
+  }
+
   async function signAndStake() {
     if (!canStake) return;
     setBusy('stake');
     setStatus('Preparing a wallet signature…');
     try {
-      const { nonce } = await requestStakeChallenge(walletAccount);
-      const keepKeys = selectedKeeps.map((keep) => tokenKey(keep.contract, keep.id));
-      const message = buildStakeMessage({
-        walletAddress: walletAccount,
-        canvasId,
-        durationId: duration.id,
-        impTokenId: selectedImp.id,
-        keepKeys,
-        nonce,
-      });
-      const signature = await signMessageAsync({ message });
-      setStatus('Composing your squad canvas…');
-      let canvasImage = '';
-      try {
-        canvasImage = await composeStakeCanvas({
-          canvasId,
-          imp: selectedImp,
-          keepsBySlot,
-          alignedSlots,
-        });
-      } catch {
-        canvasImage = '';
-      }
-      setStatus('Confirming the stake…');
-      const result = await submitStake({
-        walletAddress: walletAccount,
-        canvasId,
-        durationId: duration.id,
-        impTokenId: selectedImp.id,
-        impImage: selectedImp.image,
+      const result = await stakeOneImp({
+        imp: selectedImp,
+        stakeCanvasId: canvasId,
+        stakeDurationId: duration.id,
         keeps: layout.keepSlots.map((slot) => ({ ...keepsBySlot[slot], slot })),
-        canvasImage,
-        nonce,
-        signature,
+        keepsForCanvas: keepsBySlot,
+        alignedForCanvas: alignedSlots,
       });
       setStakes((current) => [result.stake, ...current.filter((item) => item.id !== result.stake.id)]);
       setKeepSlots({});
@@ -415,6 +438,55 @@ export default function StakingPage() {
         error?.code === 4001
           ? 'Staking signature was cancelled.'
           : error?.message || 'This squad could not be staked.'
+      );
+    } finally {
+      setBusy('');
+    }
+  }
+
+  async function signAndStakeAll() {
+    if (!canStakeAll) return;
+    const queue = [...availableImps];
+    const total = queue.length;
+    setBusy('stake-all');
+    setCanvasId('solo');
+    setKeepSlots({});
+    setStatus(`Staking all ${total} Imp${total === 1 ? '' : 's'} as Solo · ${duration.label}…`);
+
+    let stakedCount = 0;
+    try {
+      for (let index = 0; index < queue.length; index += 1) {
+        const imp = queue[index];
+        setSelectedImpId(imp.id);
+        setStatus(`Sign to stake ${index + 1}/${total}: ${imp.name}…`);
+        const result = await stakeOneImp({
+          imp,
+          stakeCanvasId: 'solo',
+          stakeDurationId: duration.id,
+          keeps: [],
+          keepsForCanvas: {},
+          alignedForCanvas: new Set(),
+        });
+        stakedCount += 1;
+        setStakes((current) => [
+          result.stake,
+          ...current.filter((item) => item.id !== result.stake.id),
+        ]);
+      }
+      setStatus(
+        stakedCount === total
+          ? `Staked all ${total} Imp${total === 1 ? '' : 's'} as Solo for ${duration.label}. Each earns ${formatRate(soloLockEstimate.dailyRate)}.`
+          : `Staked ${stakedCount}/${total} Imps.`
+      );
+    } catch (error) {
+      setStatus(
+        error?.code === 4001
+          ? stakedCount > 0
+            ? `Staking stopped after ${stakedCount}/${total}. Signature cancelled.`
+            : 'Stake-all signature was cancelled.'
+          : stakedCount > 0
+            ? `Staked ${stakedCount}/${total} before an error: ${error?.message || 'could not finish.'}`
+            : error?.message || 'Could not stake all Imps.'
       );
     } finally {
       setBusy('');
@@ -494,6 +566,18 @@ export default function StakingPage() {
   }
 
   const activeStakes = stakes.filter((stake) => stake.status === 'active');
+  const pendingTotal = activeStakes.reduce((sum, stake) => sum + pendingFromStake(stake, now), 0);
+  const pendingExactTotal = activeStakes.reduce(
+    (sum, stake) => sum + pendingExactFromStake(stake, now),
+    0
+  );
+  const pendingShown =
+    pendingTotal > 0
+      ? pendingTotal
+      : pendingExactTotal > 0
+        ? Math.round(pendingExactTotal * 10) / 10
+        : 0;
+  const earnedSoFar = lifetimeEarned + pendingTotal;
 
   return (
     <div className="staking-page">
@@ -503,22 +587,26 @@ export default function StakingPage() {
           <h1 className="adventures-page__title">Staking</h1>
           <p className="adventures-page__intro">
             Stake an Imp on its own, or pair it with Keeps, then choose a lock. NFTs stay in your
-            wallet. ImpCoin accrues while the squad is staked, and you can unstake when the lock ends.
-            Longer locks pay more ImpCoin per day. Matching Body colour to Keep environment adds
-            ImpCoin. Void is a {VOID_MULTIPLIER}x bonus for any Imp. Robin&apos;s Lair is a{' '}
-            {ROBINS_LAIR_MULTIPLIER}x bonus for any Imp.
+            wallet. ImpCoin accrues on each squad while it is staked. Pending ImpCoin is added to this
+            wallet when you unstake. Longer locks pay more ImpCoin per day. Matching Body colour to
+            Keep environment adds ImpCoin. Void is a {VOID_MULTIPLIER}x bonus for any Imp.
+            Robin&apos;s Lair is a {ROBINS_LAIR_MULTIPLIER}x bonus for any Imp.
           </p>
         </header>
 
         <section className="staking-balance">
           <div>
             <p className="adventure-panel__eyebrow">Wallet</p>
-            <h2>{formatImpCoin(balance)}</h2>
-            <p>{formatImpCoin(lifetimeEarned)} earned all-time</p>
+            <h2>{formatImpCoin(balance + pendingTotal)}</h2>
+            <p>
+              {formatImpCoin(balance)} claimed
+              {walletAccount ? ` · ${formatImpCoin(pendingShown)} pending from staking` : ''}
+            </p>
+            <p>{formatImpCoin(earnedSoFar)} earned all-time</p>
           </div>
           <p>
-            ImpCoin is an in-game balance, not an on-chain token. Transferring a staked NFT burns
-            pending ImpCoin from that squad.
+            ImpCoin is an in-game balance, not an on-chain token. Pending ImpCoin is paid into this
+            wallet when you unstake. Transferring a staked NFT burns pending ImpCoin from that squad.
           </p>
           {walletAccount ? (
             <button
@@ -552,11 +640,11 @@ export default function StakingPage() {
             <div className="staking-panel__header">
               <p className="adventure-panel__eyebrow">Staked squads</p>
               <h2>Active stakes</h2>
-              <p>NFTs stay in the wallet while ImpCoin accrues. Unstake when the lock ends.</p>
+              <p>NFTs stay in the wallet while ImpCoin accrues. Unstake to add pending ImpCoin to this wallet.</p>
             </div>
             <div className="staking-active">
               {activeStakes.map((stake) => {
-                const pending = Number(stake.pending ?? pendingFromStake(stake, now));
+                const pending = displayPendingAmount(stake, now);
                 const stakedFor = formatStakedFor(now - new Date(stake.started_at).getTime());
                 const locked = isStakeLocked(stake, now);
                 const lockCopy = locked
@@ -597,7 +685,7 @@ export default function StakingPage() {
                       </p>
                       <p>
                         {durationLabel(stake.duration_id, stake.duration_days)} · {stakedFor} ·{' '}
-                        {formatImpCoin(pending)} pending
+                        {pending > 0 ? `${formatImpCoin(pending)} pending` : 'Accruing'}
                       </p>
                       <p>{lockCopy}</p>
                       <div className="staking-active__actions">
@@ -844,20 +932,37 @@ export default function StakingPage() {
                 : `${selectedImp.body} matches ${alignmentLabels(selectedImp.body)}. This ${duration.label.toLowerCase()} lock is ${estimate.lockMultiplier}x. About ${formatImpCoin(estimatedLockPayout(estimate.dailyRate, duration.days))} if this squad stays staked for the full ${duration.label.toLowerCase()}. Transferring a staked NFT burns pending ImpCoin from this squad.`}
             </p>
           ) : null}
-          <button
-            type="button"
-            className={`staking-summary__action${canStake ? ' staking-summary__action--live' : ''}`}
-            disabled={!canStake}
-            onClick={signAndStake}
-          >
-            {busy === 'stake'
-              ? 'Staking…'
-              : canStake
-                ? 'Sign and stake'
-                : layout.keepCount === 0
-                  ? 'Choose an Imp to stake'
-                  : `Place ${layout.keepCount} Keep${layout.keepCount === 1 ? '' : 's'} to stake`}
-          </button>
+          <div className="staking-summary__actions">
+            <button
+              type="button"
+              className={`staking-summary__action${canStake ? ' staking-summary__action--live' : ''}`}
+              disabled={!canStake}
+              onClick={signAndStake}
+            >
+              {busy === 'stake'
+                ? 'Staking…'
+                : canStake
+                  ? 'Sign and stake'
+                  : layout.keepCount === 0
+                    ? 'Choose an Imp to stake'
+                    : `Place ${layout.keepCount} Keep${layout.keepCount === 1 ? '' : 's'} to stake`}
+            </button>
+            <button
+              type="button"
+              className={`staking-summary__action staking-summary__action--secondary${
+                canStakeAll ? ' staking-summary__action--live' : ''
+              }`}
+              disabled={!canStakeAll}
+              onClick={signAndStakeAll}
+              title={`Stake every unstaked Imp as Solo with the ${duration.label} lock. You will sign once per Imp.`}
+            >
+              {busy === 'stake-all'
+                ? 'Staking all…'
+                : canStakeAll
+                  ? `Stake all ${availableImps.length} Imp${availableImps.length === 1 ? '' : 's'}`
+                  : 'No Imps left to stake'}
+            </button>
+          </div>
         </section>
         {status ? <p className="staking-status">{status}</p> : null}
 
