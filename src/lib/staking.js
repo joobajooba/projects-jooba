@@ -1,4 +1,6 @@
 export const STAKING_IMPLINGZ_ADDRESS = '0x81D2D1f0e92285CdD22Aa3cbc6956B6E1724d029';
+/** Existing stakes keep accruing. Flip this when new staking should open again. */
+export const NEW_STAKES_ENABLED = false;
 export const STAKING_KEEP_V1_ADDRESS = '0x639061b01ab4261b4283a0AC9D3bB8B99013Bad4';
 export const STAKING_KEEP_V2_ADDRESS = '0x51eA8743109F1b9C70C9d1a9A56cCaA5C2877ee9';
 

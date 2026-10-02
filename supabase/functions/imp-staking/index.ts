@@ -43,6 +43,7 @@ const ERC721_OWNER_ABI = [
 ] as const;
 const STAKE_COLUMNS =
   "id,wallet_address,canvas_id,duration_id,duration_days,imp_contract,imp_token_id,imp_body,imp_tier,imp_image,keeps,aligned_count,keep_count,estimated_payout,modifiers,canvas_image,status,started_at,unlocks_at,ended_at,created_at,daily_rate,last_accrued_at,has_robins_lair";
+const NEW_STAKES_ENABLED = false;
 const BASE_IMPCOIN_PER_DAY = 5;
 const ALIGNMENT_BONUS_PER_KEEP = 2;
 const ROBINS_LAIR_MULTIPLIER = 1.5;
@@ -333,6 +334,7 @@ Deno.serve(async (request: Request) => {
       return json({
         balance: Number(balance?.balance ?? 0),
         lifetimeEarned: Number(balance?.lifetime_earned ?? 0),
+        newStakesEnabled: NEW_STAKES_ENABLED,
         stakes: decorated,
       });
     }
@@ -359,6 +361,11 @@ Deno.serve(async (request: Request) => {
     const signature = String(body.signature ?? "");
 
     if (action === "stake") {
+      if (!NEW_STAKES_ENABLED) {
+        return json({
+          error: "New staking is paused. Existing stakes keep accruing until you unstake.",
+        }, 403);
+      }
       const canvasId = String(body.canvasId ?? "");
       const canvas = CANVASES[canvasId];
       const duration = STAKE_DURATIONS[String(body.durationId ?? "")];

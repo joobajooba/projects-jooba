@@ -26,6 +26,7 @@ import {
   keepsHaveRobinsLair,
   keepsHaveVoid,
   lockMultiplierFor,
+  NEW_STAKES_ENABLED,
   pendingExactFromStake,
   pendingFromStake,
   displayPendingAmount,
@@ -213,8 +214,9 @@ export default function StakingPage() {
   );
   const availableKeeps = ownedKeeps.filter((keep) => !lockedKeys.has(keep.key));
   const canStake =
+    NEW_STAKES_ENABLED &&
     Boolean(walletAccount && selectedImp && selectedKeeps.length === layout.keepCount && !busy);
-  const canStakeAll = Boolean(walletAccount && availableImps.length > 0 && !busy);
+  const canStakeAll = NEW_STAKES_ENABLED && Boolean(walletAccount && availableImps.length > 0 && !busy);
   const soloLockEstimate = useMemo(
     () => estimateStake({ imp: availableImps[0] || selectedImp, keeps: [], durationId }),
     [availableImps, selectedImp, durationId]
@@ -269,10 +271,8 @@ export default function StakingPage() {
     }
 
     const controller = new AbortController();
-    setLoadingNfts(true);
     setNftError('');
     setStateError('');
-
     fetchStakingState(walletAccount, { signal: controller.signal })
       .then((data) => {
         setBalance(Number(data.balance ?? 0));
@@ -284,6 +284,13 @@ export default function StakingPage() {
           setStateError(error.message || 'Could not load staking state.');
         }
       });
+
+    if (!NEW_STAKES_ENABLED) {
+      setLoadingNfts(false);
+      return () => controller.abort();
+    }
+
+    setLoadingNfts(true);
 
     const cacheBust = `fresh=${Date.now()}`;
     const nftFetch = { signal: controller.signal, cache: 'no-store' };
@@ -416,7 +423,7 @@ export default function StakingPage() {
   }
 
   async function signAndStake() {
-    if (!canStake) return;
+    if (!NEW_STAKES_ENABLED || !canStake) return;
     setBusy('stake');
     setStatus('Preparing a wallet signature…');
     try {
@@ -445,7 +452,7 @@ export default function StakingPage() {
   }
 
   async function signAndStakeAll() {
-    if (!canStakeAll) return;
+    if (!NEW_STAKES_ENABLED || !canStakeAll) return;
     const queue = [...availableImps];
     const total = queue.length;
     setBusy('stake-all');
@@ -586,11 +593,9 @@ export default function StakingPage() {
           <p className="adventures-page__eyebrow">ImpCoin</p>
           <h1 className="adventures-page__title">Staking</h1>
           <p className="adventures-page__intro">
-            Stake an Imp on its own, or pair it with Keeps, then choose a lock. NFTs stay in your
-            wallet. ImpCoin accrues on each squad while it is staked. Pending ImpCoin is added to this
-            wallet when you unstake. Longer locks pay more ImpCoin per day. Matching Body colour to
-            Keep environment adds ImpCoin. Void is a {VOID_MULTIPLIER}x bonus for any Imp.
-            Robin&apos;s Lair is a {ROBINS_LAIR_MULTIPLIER}x bonus for any Imp.
+            {NEW_STAKES_ENABLED
+              ? `Stake an Imp on its own, or pair it with Keeps, then choose a lock. NFTs stay in your wallet. ImpCoin accrues on each squad while it is staked. Pending ImpCoin is added to this wallet when you unstake. Longer locks pay more ImpCoin per day. Matching Body colour to Keep environment adds ImpCoin. Void is a ${VOID_MULTIPLIER}x bonus for any Imp. Robin's Lair is a ${ROBINS_LAIR_MULTIPLIER}x bonus for any Imp.`
+              : 'New staking is paused while the next version is built. Squads you already staked keep accruing ImpCoin. When a lock ends you can unstake and claim, but you cannot start a new stake for now.'}
           </p>
         </header>
 
@@ -608,7 +613,7 @@ export default function StakingPage() {
             ImpCoin is an in-game balance, not an on-chain token. Pending ImpCoin is paid into this
             wallet when you unstake. Transferring a staked NFT burns pending ImpCoin from that squad.
           </p>
-          {walletAccount ? (
+          {walletAccount && NEW_STAKES_ENABLED ? (
             <button
               type="button"
               className="staking-balance__refresh"
@@ -622,7 +627,11 @@ export default function StakingPage() {
 
         {!walletAccount ? (
           <section className="staking-panel staking-panel--wide">
-            <p className="staking-panel__message">Connect a wallet to load IMPLINGz and Imp Keeps.</p>
+            <p className="staking-panel__message">
+              {NEW_STAKES_ENABLED
+                ? 'Connect a wallet to load IMPLINGz and Imp Keeps.'
+                : 'Connect a wallet to see your active stakes and ImpCoin.'}
+            </p>
             <button type="button" className="staking-summary__action staking-summary__action--live" onClick={() => openWalletMenu?.()}>
               Connect wallet
             </button>
@@ -714,6 +723,8 @@ export default function StakingPage() {
           </section>
         ) : null}
 
+        {NEW_STAKES_ENABLED ? (
+        <>
         <section className="staking-panel staking-panel--wide">
           <div className="staking-panel__header">
             <p className="adventure-panel__eyebrow">Step 1</p>
@@ -1010,6 +1021,20 @@ export default function StakingPage() {
             ))}
           </div>
         </section>
+        </>
+        ) : (
+          <section className="staking-panel staking-panel--wide">
+            <div className="staking-panel__header">
+              <p className="adventure-panel__eyebrow">Paused</p>
+              <h2>New staking is closed</h2>
+              <p>
+                Squads you already staked keep accruing ImpCoin until their lock ends. Unstake to
+                claim pending ImpCoin. Starting a new stake is disabled while the next version is
+                built.
+              </p>
+            </div>
+          </section>
+        )}
       </div>
 
       {confirmStake ? (
@@ -1019,7 +1044,10 @@ export default function StakingPage() {
             <h2 id="unstake-title">Unstake this squad?</h2>
             <p>
               You will claim {formatImpCoin(Number(confirmStake.pending ?? pendingFromStake(confirmStake, now)))}{' '}
-              now. The NFTs stay in your wallet and can be staked again.
+              now. The NFTs stay in your wallet
+              {NEW_STAKES_ENABLED
+                ? ' and can be staked again.'
+                : '. New staking is paused, so this squad cannot be restaked yet.'}
             </p>
             <div className="staking-confirm__actions">
               <button type="button" onClick={() => setConfirmStake(null)}>
